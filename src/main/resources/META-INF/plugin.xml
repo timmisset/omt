@@ -1,0 +1,31 @@
+<idea-plugin>
+    <id>com.misset.OMT</id>
+    <name>Plugin display name here</name>
+    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+
+    <description><![CDATA[
+    Enter short description for your plugin here.<br>
+    <em>most HTML tags may be used</em>
+    ]]></description>
+
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <!-- uncomment to enable plugin in all products
+    <depends>com.intellij.modules.lang</depends>
+    -->
+    <depends>com.intellij.modules.java</depends>
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType name="OMT File" implementationClass="com.misset.opp.omt.OMTFileType"
+                  fieldName="INSTANCE" language="OMT" extensions="OMT"/>
+        <lang.parserDefinition language="OMT"
+                               implementationClass="com.misset.opp.omt.OMTParserDefinition"/>
+        <lang.syntaxHighlighterFactory language="OMT"
+                                       implementationClass="com.misset.opp.omt.OMTSyntaxHighlighterFactory"/>
+        <colorSettingsPage implementation="com.misset.opp.omt.OMTColorSettingsPage"/>
+        <annotator language="OMT" implementationClass="com.misset.opp.omt.OMTAnnotator"/>
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+</idea-plugin>
