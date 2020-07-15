@@ -16,7 +16,6 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
             new AttributesDescriptor("Prefix IRI", OMTSyntaxHighlighter.PREFIX_IRI),
             new AttributesDescriptor("Model Item Type", OMTSyntaxHighlighter.MODEL_ITEM_TYPE),
             new AttributesDescriptor("Variable", OMTSyntaxHighlighter.VARIABLE),
-            new AttributesDescriptor("Value", OMTSyntaxHighlighter.VALUE),
             new AttributesDescriptor("Bad Value", OMTSyntaxHighlighter.BAD_CHARACTER)
     };
 

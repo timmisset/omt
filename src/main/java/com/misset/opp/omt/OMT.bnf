@@ -20,25 +20,30 @@ OMTFile ::= item_*
 private item_ ::= (model|modelBlockGroup|COMMENT|CRLF)
 
 modelBlockId ::= (KEY COLON)
-property ::= (KEY EQUALS VALUE) | (variable EQUALS VALUE)
-variable ::= (DOLLAR KEY variableType? variableValue?)
+property ::= ((KEY EQUALS VALUE) | (modelBlockId queryStatement) | propertyScriptBlock | (variable EQUALS VALUE))CRLF
+propertyScriptBlock ::= (modelBlockId PIPE scriptBlock?)
+variable ::= (variableName variableType? variableValue?)
 variableType ::= (PARENTHESIS_OPEN queryPath PARENTHESIS_CLOSED)
-variableValue ::= (EQUALS VALUE)
+variableValue ::= (EQUALS ((variableName queryStatement+) | queryStatement+ | acceptedVariableValue))
+variableName ::= (DOLLAR KEY) | (DOLLAR VALUE)
 listItem ::= (LISTITEM_BULLET variable)
 inputArgument ::= (variable | VALUE)
 inputArguments ::= (PARENTHESIS_OPEN (COMMA inputArgument | inputArgument)* PARENTHESIS_CLOSED )
 
-prefix ::= (KEY EQUALS PREFIX_IRI)
-queryPart ::= (inputArgument | queryPath)
+prefix ::= (KEY COLON PREFIX_IRI)
+queryPart ::= (inputArgument | queryPath | queryOperator)
 queryStatement ::= (SLASH queryPart | queryPart)+
 query ::= (QUERY_DEFINE VALUE inputArguments? QUERY_SEPARATOR queryStatement SEMICOLON)
+queryOperator ::= (KEY inputArguments?)
 queryPath ::= (KEY COLON KEY)
 
 model ::= (modelBlockId modelItem+)
 modelItem ::= (modelBlockId MODEL_ITEM_TYPE modelBlockGroup+)
-modelBlockContent ::= (prefix+ | listItem+ | property+ | query+)+
-modelBlockGroup ::= (modelBlockId modelBlockContent) | (modelBlockId modelBlockGroup) | (modelBlockId PIPE scriptBlock?)
+modelBlockContent ::= (prefix+ | listItem+ | property+ | query+)
+modelBlockGroup ::= (modelBlockId modelBlockContent) | (modelBlockId modelBlockGroup) | propertyScriptBlock
 
-variableDeclare ::= (DECLARE_VAR DOLLAR KEY variableValue?) | (DECLARE_VAR DOLLAR VALUE variableValue?)
-variableAssignment ::= (DOLLAR KEY EQUALS VALUE) | (DOLLAR VALUE EQUALS VALUE)
-scriptBlock ::= (variableDeclare | variableAssignment)*
+acceptedVariableValue ::= (BOOLEAN | NUMBER | STRING | variableName)
+variableDeclare ::= (DECLARE_VAR variableName variableValue?)
+variableAssignment ::= (variableName variableValue)
+scriptLine ::= ((variableDeclare | variableAssignment) SEMICOLON)
+scriptBlock ::= scriptLine*

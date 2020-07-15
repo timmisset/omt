@@ -62,7 +62,7 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
             return MODEL_ITEM_TYPES;
         } else if (tokenType.equals(OMTTypes.PREFIX_IRI)) {
             return PREFIX_IRI_TYPES;
-        } else if (tokenType.equals(OMTTypes.VARIABLE)) {
+        } else if (tokenType.equals(OMTTypes.VARIABLE_NAME)) {
             return VARIABLE_TYPES;
         } else {
             return EMPTY_KEYS;
