@@ -17,30 +17,35 @@
 
 OMTFile ::= item_*
 
-private item_ ::= (model|modelBlockGroup|COMMENT|CRLF)
+private item_ ::= (block)
 
-modelBlockId ::= (KEY COLON)
-property ::= ((KEY EQUALS VALUE) | (modelBlockId queryStatement) | propertyScriptBlock | (variable EQUALS VALUE))CRLF
-propertyScriptBlock ::= (modelBlockId PIPE scriptBlock?)
+block::= (BLOCK_ID INDENT blockContent DEDENT)
+blockContent ::= (block | list)
+
+list ::= (BLOCK_ID INDENT listItem DEDENT)
+comment ::= (END_OF_LINE_COMMENT)
+
+property ::= ((NAME EQUALS SYMBOL) | (BLOCK_ID queryStatement) | propertyScriptBlock | (variableName EQUALS SYMBOL))
+propertyScriptBlock ::= (BLOCK_ID PIPE scriptBlock?)
 variable ::= (variableName variableType? variableValue?)
+variableName ::= (DOLLAR NAME)
 variableType ::= (PARENTHESIS_OPEN queryPath PARENTHESIS_CLOSED)
 variableValue ::= (EQUALS ((variableName queryStatement+) | queryStatement+ | acceptedVariableValue))
-variableName ::= (DOLLAR KEY) | (DOLLAR VALUE)
 listItem ::= (LISTITEM_BULLET variable)
-inputArgument ::= (variable | VALUE)
+inputArgument ::= (variable | variableValue)
 inputArguments ::= (PARENTHESIS_OPEN (COMMA inputArgument | inputArgument)* PARENTHESIS_CLOSED )
 
-prefix ::= (KEY COLON PREFIX_IRI)
+prefix ::= (SYMBOL COLON PREFIX_IRI)
 queryPart ::= (inputArgument | queryPath | queryOperator)
 queryStatement ::= (SLASH queryPart | queryPart)+
-query ::= (QUERY_DEFINE VALUE inputArguments? QUERY_SEPARATOR queryStatement SEMICOLON)
-queryOperator ::= (KEY inputArguments?)
-queryPath ::= (KEY COLON KEY)
+query ::= (QUERY_DEFINE queryOperator LAMBDA_ARROW queryStatement SEMICOLON)
+queryOperator ::= (NAME inputArguments?)
+queryPath ::= (CURIE)
 
-model ::= (modelBlockId modelItem+)
-modelItem ::= (modelBlockId MODEL_ITEM_TYPE modelBlockGroup+)
-modelBlockContent ::= (prefix+ | listItem+ | property+ | query+)
-modelBlockGroup ::= (modelBlockId modelBlockContent) | (modelBlockId modelBlockGroup) | propertyScriptBlock
+model ::= (BLOCK_ID modelItem+)
+modelItem ::= (BLOCK_ID MODEL_ITEM_TYPE modelBlockGroup+)
+modelBlockContent ::= INDENT (prefix+ | listItem+ | property+ | query+) DEDENT
+modelBlockGroup ::= (BLOCK_ID modelBlockContent) | (BLOCK_ID modelBlockGroup) | propertyScriptBlock
 
 acceptedVariableValue ::= (BOOLEAN | NUMBER | STRING | variableName)
 variableDeclare ::= (DECLARE_VAR variableName variableValue?)
