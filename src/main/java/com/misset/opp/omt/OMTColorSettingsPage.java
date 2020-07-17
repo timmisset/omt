@@ -11,7 +11,7 @@ import java.util.Map;
 public class OMTColorSettingsPage implements ColorSettingsPage {
     private static final AttributesDescriptor[] DESCRIPTORS = new AttributesDescriptor[]{
             new AttributesDescriptor("Separator", OMTSyntaxHighlighter.SEPARATOR),
-            new AttributesDescriptor("Prefix IRI", OMTSyntaxHighlighter.PREFIX_IRI),
+            new AttributesDescriptor("Variable Type", OMTSyntaxHighlighter.VARIABLE_TYPE),
             new AttributesDescriptor("Model Item Type", OMTSyntaxHighlighter.MODEL_ITEM_TYPE),
             new AttributesDescriptor("Variable", OMTSyntaxHighlighter.VARIABLE),
             new AttributesDescriptor("Bad Value", OMTSyntaxHighlighter.BAD_CHARACTER)

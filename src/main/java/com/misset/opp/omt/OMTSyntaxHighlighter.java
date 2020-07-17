@@ -14,23 +14,24 @@ import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAtt
 public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     public static final TextAttributesKey SEPARATOR =
             createTextAttributesKey("SIMPLE_SEPARATOR", DefaultLanguageHighlighterColors.OPERATION_SIGN);
-    public static final TextAttributesKey COMMENT =
-            createTextAttributesKey("SIMPLE_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
+    public static final TextAttributesKey COMMENTLINE =
+            createTextAttributesKey("END_OF_LINE_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
+    public static final TextAttributesKey COMMENTBLOCK =
+            createTextAttributesKey("COMMENT_BLOCK", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
     public static final TextAttributesKey BAD_CHARACTER =
             createTextAttributesKey("SIMPLE_BAD_CHARACTER", HighlighterColors.BAD_CHARACTER);
     public static final TextAttributesKey MODEL_ITEM_TYPE =
-            createTextAttributesKey("MODEL_ITEM_TYPE", DefaultLanguageHighlighterColors.MARKUP_ENTITY);
-    public static final TextAttributesKey PREFIX_IRI =
-            createTextAttributesKey("PREFIX_IRI", DefaultLanguageHighlighterColors.METADATA);
+            createTextAttributesKey("MODEL_ITEM_TYPE", DefaultLanguageHighlighterColors.CLASS_NAME);
+    public static final TextAttributesKey VARIABLE_TYPE =
+            createTextAttributesKey("CURIE", DefaultLanguageHighlighterColors.CLASS_NAME);
     public static final TextAttributesKey VARIABLE =
             createTextAttributesKey("VARIABLE", DefaultLanguageHighlighterColors.LOCAL_VARIABLE);
 
     private static final TextAttributesKey[] BAD_CHAR_KEYS = new TextAttributesKey[]{BAD_CHARACTER};
-    private static final TextAttributesKey[] SEPARATOR_KEYS = new TextAttributesKey[]{SEPARATOR};
-    private static final TextAttributesKey[] COMMENT_KEYS = new TextAttributesKey[]{COMMENT};
+    private static final TextAttributesKey[] COMMENTLINE_KEYS = new TextAttributesKey[]{COMMENTLINE};
+    private static final TextAttributesKey[] COMMENTBLOCK_KEYS = new TextAttributesKey[]{COMMENTBLOCK};
     private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
     private static final TextAttributesKey[] MODEL_ITEM_TYPES = new TextAttributesKey[]{MODEL_ITEM_TYPE};
-    private static final TextAttributesKey[] PREFIX_IRI_TYPES = new TextAttributesKey[]{PREFIX_IRI};
     private static final TextAttributesKey[] VARIABLE_TYPES = new TextAttributesKey[]{VARIABLE};
 
     @NotNull
@@ -42,16 +43,16 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     @NotNull
     @Override
     public TextAttributesKey[] getTokenHighlights(IElementType tokenType) {
-        if (isSeperator(tokenType)) {
-            return SEPARATOR_KEYS;
-        } else if (tokenType.equals(OMTTypes.COMMENT)) {
-            return COMMENT_KEYS;
+        if (tokenType.equals(OMTTypes.END_OF_LINE_COMMENT)) {
+            return COMMENTLINE_KEYS;
+        } else if (tokenType.equals(OMTTypes.JAVA_DOCS)) {
+            return COMMENTBLOCK_KEYS;
         } else if (tokenType.equals(TokenType.BAD_CHARACTER)) {
             return BAD_CHAR_KEYS;
         } else if (tokenType.equals(OMTTypes.MODEL_ITEM_TYPE)) {
             return MODEL_ITEM_TYPES;
-        } else if (tokenType.equals(OMTTypes.PREFIX_IRI)) {
-            return PREFIX_IRI_TYPES;
+        } else if (tokenType.equals(OMTTypes.VARIABLE_TYPE)) {
+            return VARIABLE_TYPES;
         } else if (tokenType.equals(OMTTypes.VARIABLE_NAME)) {
             return VARIABLE_TYPES;
         } else {
@@ -59,7 +60,4 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
         }
     }
 
-    private boolean isSeperator(IElementType tokenType) {
-        return tokenType == OMTTypes.COLON || tokenType == OMTTypes.EQUALS;
-    }
 }

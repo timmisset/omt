@@ -22,7 +22,7 @@
         <lang.syntaxHighlighterFactory language="OMT"
                                        implementationClass="com.misset.opp.omt.OMTSyntaxHighlighterFactory"/>
         <colorSettingsPage implementation="com.misset.opp.omt.OMTColorSettingsPage"/>
-        <annotator language="OMT" implementationClass="com.misset.opp.omt.OMTAnnotator"/>
+<!--        <annotator language="OMT" implementationClass="com.misset.opp.omt.OMTAnnotator"/>-->
     </extensions>
 
     <actions>

@@ -15,40 +15,62 @@
   psiImplUtilClass="com.misset.opp.omt.psi.impl.OMTPsiImplUtil"
 }
 
-OMTFile ::= item_*
+OMTFile ::= prefixBlock? block*
 
-private item_ ::= (block)
+// PART I: CONTAINERS
+// Used to group the elements together in every larger blocks to navigate to parents / children
 
-block::= (BLOCK_ID INDENT blockContent DEDENT)
-blockContent ::= (block | list)
+/**
+* Everything should resolve to a block, blocks are nested basted on indentation, like YAML
+* A block can be preceded by JAVA_DOCS comment block, has a PROPERTY label which identifies the block
+* and 0 to many content blocks.
+ */
+block::=                    propertyLabel NEW_LINE (INDENT blockContent* DEDENT?)?
+/**
+ * The content of a block can be a block property or another block
+ */
+blockContent::=             list | blockProperty | block
+/**
+ * A block property is PROPERTY label with a value on the same line or in a multiline block starting from the next line
+ */
+blockProperty::=            propertyLabel (singleLineBlockProperty | multiLineBlockProperty)
 
-list ::= (BLOCK_ID INDENT listItem DEDENT)
-comment ::= (END_OF_LINE_COMMENT)
+prefixBlock::=              PREFIX_BLOCK_START NEW_LINE (INDENT (prefix NEW_LINE)* DEDENT)?
+prefix::=                   PROPERTY IRI  END_OF_LINE_COMMENT?
 
-property ::= ((NAME EQUALS SYMBOL) | (BLOCK_ID queryStatement) | propertyScriptBlock | (variableName EQUALS SYMBOL))
-propertyScriptBlock ::= (BLOCK_ID PIPE scriptBlock?)
-variable ::= (variableName variableType? variableValue?)
-variableName ::= (DOLLAR NAME)
-variableType ::= (PARENTHESIS_OPEN queryPath PARENTHESIS_CLOSED)
-variableValue ::= (EQUALS ((variableName queryStatement+) | queryStatement+ | acceptedVariableValue))
-listItem ::= (LISTITEM_BULLET variable)
-inputArgument ::= (variable | variableValue)
-inputArguments ::= (PARENTHESIS_OPEN (COMMA inputArgument | inputArgument)* PARENTHESIS_CLOSED )
+// PART II: ELEMENTS
+comment::=                  (JAVA_DOCS | END_OF_LINE_COMMENT) NEW_LINE
+/**
+ * A property label identifies the block using the NAME: syntax and can have a END_OF_LINE_COMMENT
+ * A property label can be further identified with MODEL_ITEM_TYPE, such as !Activity or !Component
+ */
+propertyLabel::=            comment? PROPERTY MODEL_ITEM_TYPE? END_OF_LINE_COMMENT?
+/**
+ * A single line block property, i.e. item: $variable
+ */
+singleLineBlockProperty::=  (variableValue) NEW_LINE
+/**
+ * A multi line block property is another container for grouping properties
+ */
+multiLineBlockProperty::=   (NEW_LINE list | (NEW_LINE INDENT list DEDENT)) | script
+/**
+ * A list can consist of 1 or many listitems, all ending with a NEW_LINE
+ */
+list::=                     (listitem NEW_LINE)+
+/**
+ * A list item
+ */
+listitem::=                 LISTITEM_BULLET (listItemVariable) END_OF_LINE_COMMENT?
 
-prefix ::= (SYMBOL COLON PREFIX_IRI)
-queryPart ::= (inputArgument | queryPath | queryOperator)
-queryStatement ::= (SLASH queryPart | queryPart)+
-query ::= (QUERY_DEFINE queryOperator LAMBDA_ARROW queryStatement SEMICOLON)
-queryOperator ::= (NAME inputArguments?)
-queryPath ::= (CURIE)
+// PART III: VARIABLES & PARAMS
+declareVariable::=          DECLARE_VAR (COMMA variableAssignment)* variableAssignment
+variableValue::=            CONSTANT_VALUE | VARIABLE_NAME
+variableAssignment::=       VARIABLE_NAME (EQUALS variableValue)?
+// omt style declaration, supports type specification and default values
+listItemVariable::=         listItemParameter (EQUALS variableValue)?
+listItemParameter::=        VARIABLE_NAME VARIABLE_TYPE?
 
-model ::= (BLOCK_ID modelItem+)
-modelItem ::= (BLOCK_ID MODEL_ITEM_TYPE modelBlockGroup+)
-modelBlockContent ::= INDENT (prefix+ | listItem+ | property+ | query+) DEDENT
-modelBlockGroup ::= (BLOCK_ID modelBlockContent) | (BLOCK_ID modelBlockGroup) | propertyScriptBlock
-
-acceptedVariableValue ::= (BOOLEAN | NUMBER | STRING | variableName)
-variableDeclare ::= (DECLARE_VAR variableName variableValue?)
-variableAssignment ::= (variableName variableValue)
-scriptLine ::= ((variableDeclare | variableAssignment) SEMICOLON)
-scriptBlock ::= scriptLine*
+// PART IV: SCRIPTING
+// ODT scripts that are executed
+script    ::=               PIPE NEW_LINE INDENT (scriptline SEMICOLON END_OF_LINE_COMMENT? NEW_LINE?)* DEDENT
+scriptline::=               (declareVariable | variableAssignment)

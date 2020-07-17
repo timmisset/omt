@@ -23,6 +23,9 @@ NEWLINE=                        [\r\n]
 UNDERSCORE=                     [_]
 DIGIT=                          [0-9]
 STRING=                         (\"[^\"]*\")|(\'[^\']*\')
+INTEGER=                        \-?([1-9][0-9]+|[0-9])
+DECIMAL=                        {INTEGER}\.[0-9]+
+
 LATIN_EXT_A=                    [\u0100-\u017F] // Zie: http://en.wikipedia.org/wiki/Latin_script_in_Unicode
 SYMBOL=                         ({ALPHA}|{DIGIT}|{LATIN_EXT_A}|[_@\-])+
 SCHEME=                         {ALPHA}({ALPHA}|{DIGIT}|[+.-])*
@@ -32,6 +35,8 @@ END_OF_LINE_COMMENT=            ("#" | "\/\/")[^\r\n]*
 JAVADOCS=                       \/\*\*([^]*)\*\/ // all between /** and */
 NAME=                           {ALPHA}({ALPHA}|{DIGIT})*
 CURIE=                          ({NAME})?":"{SYMBOL}
+CURIE_PREFIX=                   ({ALPHA}({ALPHA}|{DIGIT})*)?":"
+TYPED_VALUE=                    {STRING}"^^"({IRI}|{CURIE})
 
 %{
 /* globals to track current indentation */
@@ -40,12 +45,14 @@ int indent_level = 0;          /* indentation level passed to the parser */
 %}
 
 %state INDENT
-%sate DECLARE_VAR
+%state DECLARE_VAR
 
 %%
-<YYINITIAL> {NEWLINE}                                                { current_line_indent = 0; yybegin(indent); return OMTTypes.NEW_LINE; }
+<YYINITIAL> {NEWLINE}                                                { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
 <YYINITIAL> {WHITE_SPACE}                                            { return TokenType.WHITE_SPACE; }
 
+// INDENTATION
+// Required for YAML like grouping of blocks based on indents
 <INDENT>(\ {4})                                                      { current_line_indent++; }
 <INDENT>"\n"                                                         { current_line_indent = 0; /*ignoring blank line */ }
 <INDENT>.                                                            {
@@ -60,23 +67,33 @@ int indent_level = 0;          /* indentation level passed to the parser */
             yybegin(YYINITIAL);
          }
 
+
+// PREFIXES
+<YYINITIAL>"prefixes:"                                               { return OMTTypes.PREFIX_BLOCK_START; }
+<YYINITIAL>{IRI}                                                     { return OMTTypes.IRI; }
+
 // COMMENT
 <YYINITIAL>{JAVADOCS}                                                { return OMTTypes.JAVA_DOCS; }
 <YYINITIAL>{END_OF_LINE_COMMENT}                                     { return OMTTypes.END_OF_LINE_COMMENT; }
 
-
-<YYINITIAL>"$"{NAME}                                                 { return OMTTypes.VARIABLE_NAME; }
 <YYINITIAL>{NAME}":"                                                 { return OMTTypes.PROPERTY; }
 <YYINITIAL>"!"("Activity" | "Component" | "Procedure" | "StandAloneQuery") { return OMTTypes.MODEL_ITEM_TYPE; }
 
-<YYINITIAL>"VAR"                                                     { yystart(DECLARE_VAR); return OMTTypes.DECLARE_VAR; }
+<YYINITIAL>({STRING}|{INTEGER}|{DECIMAL}|{TYPED_VALUE})              { return OMTTypes.CONSTANT_VALUE; }
+
+<YYINITIAL>"VAR"                                                     { yybegin(DECLARE_VAR); return OMTTypes.DECLARE_VAR; }
+<YYINITIAL>"$"{NAME}                                                 { yybegin(DECLARE_VAR); return OMTTypes.VARIABLE_NAME; }
 <DECLARE_VAR>"$"{NAME}                                               { return OMTTypes.VARIABLE_NAME; }
 <DECLARE_VAR>"("{CURIE}")"                                           { return OMTTypes.VARIABLE_TYPE; }
+<DECLARE_VAR>{WHITE_SPACE}                                           { return TokenType.WHITE_SPACE; }
 <DECLARE_VAR>"="                                                     { return OMTTypes.EQUALS; }
-<DECLARE_VAR>"="                                                     { return OMTTypes.EQUALS; }
+<DECLARE_VAR>({STRING}|{INTEGER}|{DECIMAL}|{TYPED_VALUE})            { return OMTTypes.CONSTANT_VALUE; }
+<DECLARE_VAR>{NEWLINE}                                               { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
 
 // SINGLE CHARACTERS
 <YYINITIAL>"-"                                                       { return OMTTypes.LISTITEM_BULLET; }
 <YYINITIAL>"|"                                                       { return OMTTypes.PIPE; }
 <YYINITIAL>"="                                                       { return OMTTypes.EQUALS; }
-[^]                                                                  { return TokenType.BAD_CHARACTER; }
+<YYINITIAL>","                                                       { return OMTTypes.COMMA; }
+<YYINITIAL>";"                                                       { return OMTTypes.COMMA; }
+[^]                                                                  { return OMTTypes.SEMICOLON; }
