@@ -13,8 +13,10 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
             new AttributesDescriptor("Separator", OMTSyntaxHighlighter.SEPARATOR),
             new AttributesDescriptor("Variable Type", OMTSyntaxHighlighter.VARIABLE_TYPE),
             new AttributesDescriptor("Model Item Type", OMTSyntaxHighlighter.MODEL_ITEM_TYPE),
+            new AttributesDescriptor("Constant Value", OMTSyntaxHighlighter.CONSTANT_VALUE),
             new AttributesDescriptor("Variable", OMTSyntaxHighlighter.VARIABLE),
-            new AttributesDescriptor("Bad Value", OMTSyntaxHighlighter.BAD_CHARACTER)
+            new AttributesDescriptor("Bad Value", OMTSyntaxHighlighter.BAD_CHARACTER),
+            new AttributesDescriptor("Comment Block", OMTSyntaxHighlighter.COMMENTBLOCK)
     };
 
     @Nullable
@@ -33,14 +35,35 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
     @Override
     public String getDemoText() {
         return "prefixes:\n" +
-                "    pol = <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "    sldf: <http://www.data.nl>\n" +
+                "\n" +
+                "queries:\n" +
+                "    DEFINE QUERY myFirstQuery() => 'Hello world!' / ^rdf:type;\n" +
                 "\n" +
                 "model:\n" +
+                "    asdfasd: !Activity\n" +
+                "        Anotherblock:\n" +
                 "\n" +
-                "    mijnActiviteit: !Activity\n" +
+                "        /**\n" +
+                "        * Een JavaDoc blok om wat te vertellen over PropertyMetValue\n" +
+                "        */\n" +
+                "        PropertyMetValue: 'Test' // Kan ook via een EndOfLineComment\n" +
                 "\n" +
-                "        variables:\n" +
-                "            - $mijnVariable";
+                "    NewBlock:\n" +
+                "        NewBlockAB:\n" +
+                "            - $myVariable\n" +
+                "            - $sometakaslm\n" +
+                "            - $asdfas\n" +
+                "        asdfasdf: |\n" +
+                "            $myVariable = \"Something\";\n" +
+                "\n" +
+                "        NewBlockCD:\n" +
+                "\n" +
+                "    ThirdBlock:\n" +
+                "\n" +
+                "something:\n" +
+                "\n" +
+                "    Block:\n";
     }
 
     @Nullable

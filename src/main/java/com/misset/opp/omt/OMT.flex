@@ -46,6 +46,7 @@ int indent_level = 0;          /* indentation level passed to the parser */
 
 %state INDENT
 %state DECLARE_VAR
+%state DEFINE
 
 %%
 <YYINITIAL> {NEWLINE}                                                { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
@@ -56,44 +57,82 @@ int indent_level = 0;          /* indentation level passed to the parser */
 <INDENT>(\ {4})                                                      { current_line_indent++; }
 <INDENT>"\n"                                                         { current_line_indent = 0; /*ignoring blank line */ }
 <INDENT>.                                                            {
-          yypushback(1);
-          if (current_line_indent > indent_level) {
+            yypushback(1);
+            yybegin(YYINITIAL);
+            if (current_line_indent > indent_level) {
                indent_level++;
                return OMTTypes.INDENT;
             } else if (current_line_indent < indent_level) {
                indent_level--;
                return OMTTypes.DEDENT;
+            } else {
+                return TokenType.WHITE_SPACE;
             }
-            yybegin(YYINITIAL);
          }
+
+// DEFINE QUERY / COMMAND
+<YYINITIAL>"DEFINE"                                                  { yybegin(DEFINE); return OMTTypes.DEFINE_START; }
+<DEFINE>"QUERY"                                                      { return OMTTypes.DEFINE_QUERY; }
+<DEFINE>"COMMAND"                                                    { return OMTTypes.DEFINE_COMMAND; }
+<DEFINE>{SYMBOL}                                                     { return OMTTypes.NAME; }
+<DEFINE>"("                                                          { return OMTTypes.PARENTHESES_OPEN; }
+<DEFINE>"$"{NAME}                                                    { return OMTTypes.VARIABLE_NAME; }
+<DEFINE>","                                                          { return OMTTypes.COMMA; }
+<DEFINE>")"                                                          { return OMTTypes.PARENTHESES_CLOSE; }
+<DEFINE>"=>"                                                         { yybegin(YYINITIAL); }
+<DEFINE>{WHITE_SPACE}                                                { return TokenType.WHITE_SPACE; }
+<DEFINE>{NEWLINE}{NEWLINE}                                           { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
+<DEFINE>[^]                                                          { return TokenType.BAD_CHARACTER; }
 
 
 // PREFIXES
 <YYINITIAL>"prefixes:"                                               { return OMTTypes.PREFIX_BLOCK_START; }
 <YYINITIAL>{IRI}                                                     { return OMTTypes.IRI; }
 
+// OTHER PREDEFINED BLOCKS
+<YYINITIAL>"commands:"                                               { return OMTTypes.COMMAND_BLOCK_START; }
+<YYINITIAL>"queries:"                                                { return OMTTypes.QUERY_BLOCK_START; }
+<YYINITIAL>"!"("Activity" | "Component" | "Procedure" | "StandAloneQuery") { return OMTTypes.MODEL_ITEM_TYPE; }
+
 // COMMENT
 <YYINITIAL>{JAVADOCS}                                                { return OMTTypes.JAVA_DOCS; }
 <YYINITIAL>{END_OF_LINE_COMMENT}                                     { return OMTTypes.END_OF_LINE_COMMENT; }
 
 <YYINITIAL>{NAME}":"                                                 { return OMTTypes.PROPERTY; }
-<YYINITIAL>"!"("Activity" | "Component" | "Procedure" | "StandAloneQuery") { return OMTTypes.MODEL_ITEM_TYPE; }
 
+// VALUES
 <YYINITIAL>({STRING}|{INTEGER}|{DECIMAL}|{TYPED_VALUE})              { return OMTTypes.CONSTANT_VALUE; }
 
+// ODT
+// DECLARE VARIABLE BLOCK
 <YYINITIAL>"VAR"                                                     { yybegin(DECLARE_VAR); return OMTTypes.DECLARE_VAR; }
 <YYINITIAL>"$"{NAME}                                                 { yybegin(DECLARE_VAR); return OMTTypes.VARIABLE_NAME; }
 <DECLARE_VAR>"$"{NAME}                                               { return OMTTypes.VARIABLE_NAME; }
 <DECLARE_VAR>"("{CURIE}")"                                           { return OMTTypes.VARIABLE_TYPE; }
 <DECLARE_VAR>{WHITE_SPACE}                                           { return TokenType.WHITE_SPACE; }
-<DECLARE_VAR>"="                                                     { return OMTTypes.EQUALS; }
-<DECLARE_VAR>({STRING}|{INTEGER}|{DECIMAL}|{TYPED_VALUE})            { return OMTTypes.CONSTANT_VALUE; }
+<DECLARE_VAR>"="                                                     { yybegin(YYINITIAL); return OMTTypes.EQUALS; }
 <DECLARE_VAR>{NEWLINE}                                               { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
+
+<YYINITIAL>"PREFIX"                                                  { return OMTTypes.PREFIX_DEFINE_START; }
+
+<YYINITIAL>"/"{CURIE}                                                { return OMTTypes.CURIE_CONSTANT; }
+<YYINITIAL>{CURIE}                                                   { return OMTTypes.CURIE; }
 
 // SINGLE CHARACTERS
 <YYINITIAL>"-"                                                       { return OMTTypes.LISTITEM_BULLET; }
 <YYINITIAL>"|"                                                       { return OMTTypes.PIPE; }
 <YYINITIAL>"="                                                       { return OMTTypes.EQUALS; }
 <YYINITIAL>","                                                       { return OMTTypes.COMMA; }
-<YYINITIAL>";"                                                       { return OMTTypes.COMMA; }
+<YYINITIAL>";"                                                       { return OMTTypes.SEMICOLON; }
+<YYINITIAL>"{"                                                       { return OMTTypes.CURLY_OPEN; }
+<YYINITIAL>"}"                                                       { return OMTTypes.CURLY_CLOSED; }
+<YYINITIAL>"/"                                                       { return OMTTypes.FORWARD_SLASH; }
+<YYINITIAL>"^"                                                       { return OMTTypes.CARAT; }
+<YYINITIAL>"["                                                       { return OMTTypes.BRACKET_OPEN; }
+<YYINITIAL>"]"                                                       { return OMTTypes.BRACKET_CLOSED; }
+<YYINITIAL>"+"                                                       { return OMTTypes.PLUS; }
+<YYINITIAL>"("                                                       { return OMTTypes.PARENTHESES_OPEN; }
+<YYINITIAL>")"                                                       { return OMTTypes.PARENTHESES_CLOSE; }
+<YYINITIAL>"."                                                       { return OMTTypes.DOT; }
+
 [^]                                                                  { return OMTTypes.SEMICOLON; }

@@ -15,7 +15,7 @@
   psiImplUtilClass="com.misset.opp.omt.psi.impl.OMTPsiImplUtil"
 }
 
-OMTFile ::= prefixBlock? block*
+OMTFile ::= prefixBlock? (queriesBlocks | commandsBlocks)* block*
 
 // PART I: CONTAINERS
 // Used to group the elements together in every larger blocks to navigate to parents / children
@@ -29,14 +29,22 @@ block::=                    propertyLabel NEW_LINE (INDENT blockContent* DEDENT?
 /**
  * The content of a block can be a block property or another block
  */
-blockContent::=             list | blockProperty | block
+blockContent::=             comment? list | blockProperty | block
 /**
  * A block property is PROPERTY label with a value on the same line or in a multiline block starting from the next line
  */
 blockProperty::=            propertyLabel (singleLineBlockProperty | multiLineBlockProperty)
+curiePrefix::=              PROPERTY
+prefixBlock::=              PREFIX_BLOCK_START NEW_LINE (INDENT (comment? prefix END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
+prefixDefine ::=            PREFIX_DEFINE_START prefix
+prefix::=                   curiePrefix IRI
 
-prefixBlock::=              PREFIX_BLOCK_START NEW_LINE (INDENT (prefix NEW_LINE)* DEDENT)?
-prefix::=                   PROPERTY IRI  END_OF_LINE_COMMENT?
+queriesBlocks::=            QUERY_BLOCK_START NEW_LINE (INDENT (comment? defineQueryStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
+defineQueryStatement ::=    DEFINE_START DEFINE_QUERY NAME define_param? queryPath SEMICOLON
+
+commandsBlocks::=           COMMAND_BLOCK_START NEW_LINE (INDENT (comment? defineCommandStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
+defineCommandStatement ::=  (DEFINE_START DEFINE_COMMAND NAME define_param?)
+
 
 // PART II: ELEMENTS
 comment::=                  (JAVA_DOCS | END_OF_LINE_COMMENT) NEW_LINE
@@ -48,7 +56,7 @@ propertyLabel::=            comment? PROPERTY MODEL_ITEM_TYPE? END_OF_LINE_COMME
 /**
  * A single line block property, i.e. item: $variable
  */
-singleLineBlockProperty::=  (variableValue) NEW_LINE
+singleLineBlockProperty::=  (variableValue) END_OF_LINE_COMMENT? NEW_LINE
 /**
  * A multi line block property is another container for grouping properties
  */
@@ -56,15 +64,15 @@ multiLineBlockProperty::=   (NEW_LINE list | (NEW_LINE INDENT list DEDENT)) | sc
 /**
  * A list can consist of 1 or many listitems, all ending with a NEW_LINE
  */
-list::=                     (listitem NEW_LINE)+
+list::=                     (listitem END_OF_LINE_COMMENT? NEW_LINE)+
 /**
  * A list item
  */
-listitem::=                 LISTITEM_BULLET (listItemVariable) END_OF_LINE_COMMENT?
+listitem::=                 LISTITEM_BULLET (listItemVariable)
 
 // PART III: VARIABLES & PARAMS
 declareVariable::=          DECLARE_VAR (COMMA variableAssignment)* variableAssignment
-variableValue::=            CONSTANT_VALUE | VARIABLE_NAME
+variableValue::=            CONSTANT_VALUE | VARIABLE_NAME | queryPath
 variableAssignment::=       VARIABLE_NAME (EQUALS variableValue)?
 // omt style declaration, supports type specification and default values
 listItemVariable::=         listItemParameter (EQUALS variableValue)?
@@ -72,5 +80,22 @@ listItemParameter::=        VARIABLE_NAME VARIABLE_TYPE?
 
 // PART IV: SCRIPTING
 // ODT scripts that are executed
-script    ::=               PIPE NEW_LINE INDENT (scriptline SEMICOLON END_OF_LINE_COMMENT? NEW_LINE?)* DEDENT
-scriptline::=               (declareVariable | variableAssignment)
+commandBlock ::=            CURLY_OPEN NEW_LINE? INDENT? (commandBlockContent END_OF_LINE_COMMENT? NEW_LINE?) CURLY_CLOSED
+commandBlockContent ::=     (commandBlock | scriptLine)
+script    ::=               PIPE NEW_LINE INDENT (scriptContent NEW_LINE?)* DEDENT
+scriptContent ::=           (commandBlock | scriptLine)
+scriptLine::=               comment* scriptLineContent END_OF_LINE_COMMENT? SEMICOLON
+scriptLineContent ::=       (declareVariable | variableAssignment | prefixDefine)
+
+queryPath ::=               queryPartFirst (FORWARD_SLASH (queryStep | queryReverseStep))*
+queryStep ::=               (curieElement | IRI | queryOneOrMany | queryZeroOrMany) queryFilter?
+queryReverseStep ::=        CARAT queryStep
+queryPartFirst ::=          CONSTANT_VALUE | VARIABLE_NAME | curieConstantElement | DOT
+queryFilter ::=             BRACKET_OPEN queryPath BRACKET_CLOSED
+queryWrap ::=               PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
+queryOneOrMany ::=          queryWrap PLUS
+queryZeroOrMany ::=         queryWrap ASTERIX
+
+define_param ::=            (PARENTHESES_OPEN (COMMA VARIABLE_NAME)* VARIABLE_NAME? PARENTHESES_CLOSE)
+curieElement ::=            CURIE
+curieConstantElement ::=    CURIE_CONSTANT
