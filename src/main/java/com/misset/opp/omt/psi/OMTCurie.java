@@ -1,17 +1,17 @@
 package com.misset.opp.omt.psi;
 
-import com.intellij.lang.Language;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.tree.IElementType;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class OMTCurie {
-    private boolean isConstant = false;
+    private boolean isConstant;
     private PsiElement element;
-    public OMTCurie(PsiElement element, boolean isConstant) {
+    public OMTCurie(OMTCurieElement element) {
         this.element = element;
-        this.isConstant = isConstant;
+        this.isConstant = false;
+    }
+    public OMTCurie(OMTCurieConstantElement element) {
+        this.element = element;
+        this.isConstant = true;
     }
     public PsiElement getElement() {
         return element;
@@ -22,4 +22,7 @@ public class OMTCurie {
         return prefix.getCuriePrefix().getText().equals(getCuriePrefix());
     }
     public String getText() { return element.getText(); }
+    public boolean isPrefixDefinition() {
+        return element.getParent() instanceof OMTPrefix;
+    }
 }

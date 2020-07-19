@@ -79,7 +79,7 @@ int indent_level = 0;          /* indentation level passed to the parser */
 <DEFINE>"$"{NAME}                                                    { return OMTTypes.VARIABLE_NAME; }
 <DEFINE>","                                                          { return OMTTypes.COMMA; }
 <DEFINE>")"                                                          { return OMTTypes.PARENTHESES_CLOSE; }
-<DEFINE>"=>"                                                         { yybegin(YYINITIAL); }
+<DEFINE>"=>"                                                         { yybegin(YYINITIAL); return OMTTypes.LAMBDA; }
 <DEFINE>{WHITE_SPACE}                                                { return TokenType.WHITE_SPACE; }
 <DEFINE>{NEWLINE}{NEWLINE}                                           { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
 <DEFINE>[^]                                                          { return TokenType.BAD_CHARACTER; }
@@ -112,6 +112,11 @@ int indent_level = 0;          /* indentation level passed to the parser */
 <DECLARE_VAR>{WHITE_SPACE}                                           { return TokenType.WHITE_SPACE; }
 <DECLARE_VAR>"="                                                     { yybegin(YYINITIAL); return OMTTypes.EQUALS; }
 <DECLARE_VAR>{NEWLINE}                                               { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
+// Any variablename match will set the Lexer in DECLARE_VAR state, this will make it usuable for
+// variables declared in the OMT properties and setting variable values
+// When one of the following tokens is reached, set the lexer back to the YYINITIAL state
+<DECLARE_VAR>";"                                                     { yybegin(YYINITIAL); return OMTTypes.SEMICOLON; }  // example, after a $variable = '';
+<DECLARE_VAR>"/"                                                     { yybegin(YYINITIAL); return OMTTypes.FORWARD_SLASH; } // example, in a $variable / my:curie
 
 <YYINITIAL>"PREFIX"                                                  { return OMTTypes.PREFIX_DEFINE_START; }
 
@@ -135,4 +140,4 @@ int indent_level = 0;          /* indentation level passed to the parser */
 <YYINITIAL>")"                                                       { return OMTTypes.PARENTHESES_CLOSE; }
 <YYINITIAL>"."                                                       { return OMTTypes.DOT; }
 
-[^]                                                                  { return OMTTypes.SEMICOLON; }
+[^]                                                                  { return TokenType.BAD_CHARACTER; }

@@ -10,15 +10,21 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
+import static com.misset.opp.omt.psi.intentions.prefix.registerPrefixIntention.getRegisterPrefixIntention;
+import static com.misset.opp.omt.psi.intentions.prefix.removePrefixIntention.getRemovePrefixIntention;
+
 
 public class OMTAnnotator implements Annotator {
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
         if(element instanceof OMTCurieElement) {
-            annotateCurie(CurieUtil.toOMTCurie((OMTCurieElement)element), holder);
+            annotateCurie(new OMTCurie((OMTCurieElement)element), holder);
         }
         else if(element instanceof OMTCurieConstantElement) {
-            annotateCurie(CurieUtil.toOMTCurie((OMTCurieConstantElement)element), holder);
+            annotateCurie(new OMTCurie((OMTCurieConstantElement)element), holder);
+        }
+        else if(element instanceof OMTPrefix) {
+            annotatePrefix((OMTPrefix)element, holder);
         }
 //        if(element instanceof OMTQueryPath) {
 //            // annotate queryPath (pol:someThing)
@@ -48,7 +54,17 @@ public class OMTAnnotator implements Annotator {
         Optional<OMTPrefix> definedByPrefix = CurieUtil.getDefinedByPrefix(curie);
         if(!definedByPrefix.isPresent()) {
             Annotation prefix_is_not_defined = holder.createErrorAnnotation(curie.getElement(), "Prefix is not defined");
-            prefix_is_not_defined.registerFix(CurieUtil.getRegisterPrefixIntention(curie));
+            prefix_is_not_defined.registerFix(getRegisterPrefixIntention(curie));
+        }
+    }
+    private void annotatePrefix(@NotNull OMTPrefix prefix, @NotNull AnnotationHolder holder) {
+        if(CurieUtil.isPrefixedDefinedMoreThanOnce(prefix)) {
+            Annotation prefix_is_defined_more_than_once = holder.createErrorAnnotation(prefix, "Prefix is defined more than once");
+            prefix_is_defined_more_than_once.registerFix(getRemovePrefixIntention(prefix));
+        }
+        if(!CurieUtil.isPrefixUsed(prefix)) {
+            Annotation prefix_is_not_used = holder.createWarningAnnotation(prefix, "Prefix is defined but it's value is never used");
+            prefix_is_not_used.registerFix(getRemovePrefixIntention(prefix));
         }
     }
 }

@@ -15,8 +15,8 @@
   psiImplUtilClass="com.misset.opp.omt.psi.impl.OMTPsiImplUtil"
 }
 
-OMTFile ::= prefixBlock? (queriesBlocks | commandsBlocks)* block*
-
+OMTFile ::= prefixBlock? (specificBlock)* block*
+specificBlock ::= queriesBlock | commandsBlock
 // PART I: CONTAINERS
 // Used to group the elements together in every larger blocks to navigate to parents / children
 
@@ -29,7 +29,7 @@ block::=                    propertyLabel NEW_LINE (INDENT blockContent* DEDENT?
 /**
  * The content of a block can be a block property or another block
  */
-blockContent::=             comment? list | blockProperty | block
+blockContent::=             comment? list | blockProperty | specificBlock| block
 /**
  * A block property is PROPERTY label with a value on the same line or in a multiline block starting from the next line
  */
@@ -39,10 +39,10 @@ prefixBlock::=              PREFIX_BLOCK_START NEW_LINE (INDENT (comment? prefix
 prefixDefine ::=            PREFIX_DEFINE_START prefix
 prefix::=                   curiePrefix IRI
 
-queriesBlocks::=            QUERY_BLOCK_START NEW_LINE (INDENT (comment? defineQueryStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
-defineQueryStatement ::=    DEFINE_START DEFINE_QUERY NAME define_param? queryPath SEMICOLON
+queriesBlock::=            QUERY_BLOCK_START NEW_LINE (INDENT (comment? defineQueryStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
+defineQueryStatement ::=    DEFINE_START DEFINE_QUERY NAME define_param? LAMBDA queryPath SEMICOLON
 
-commandsBlocks::=           COMMAND_BLOCK_START NEW_LINE (INDENT (comment? defineCommandStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
+commandsBlock::=           COMMAND_BLOCK_START NEW_LINE (INDENT (comment? defineCommandStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
 defineCommandStatement ::=  (DEFINE_START DEFINE_COMMAND NAME define_param?)
 
 
@@ -96,6 +96,6 @@ queryWrap ::=               PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
 queryOneOrMany ::=          queryWrap PLUS
 queryZeroOrMany ::=         queryWrap ASTERIX
 
-define_param ::=            (PARENTHESES_OPEN (COMMA VARIABLE_NAME)* VARIABLE_NAME? PARENTHESES_CLOSE)
+define_param ::=            PARENTHESES_OPEN VARIABLE_NAME? (COMMA VARIABLE_NAME)* PARENTHESES_CLOSE
 curieElement ::=            CURIE
 curieConstantElement ::=    CURIE_CONSTANT

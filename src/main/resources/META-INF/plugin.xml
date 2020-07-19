@@ -23,6 +23,9 @@
                                        implementationClass="com.misset.opp.omt.OMTSyntaxHighlighterFactory"/>
         <colorSettingsPage implementation="com.misset.opp.omt.OMTColorSettingsPage"/>
         <annotator language="OMT" implementationClass="com.misset.opp.omt.OMTAnnotator"/>
+        <codeStyleSettingsProvider implementation="com.misset.opp.omt.OMTCodeStyleSettingsProvider"/>
+        <langCodeStyleSettingsProvider
+                implementation="com.misset.opp.omt.OMTLanguageCodeStyleSettingsProvider"/>
     </extensions>
 
     <actions>

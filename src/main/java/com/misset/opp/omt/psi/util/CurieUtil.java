@@ -1,18 +1,11 @@
 package com.misset.opp.omt.psi.util;
 
-import com.intellij.codeInsight.intention.IntentionAction;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.IncorrectOperationException;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.impl.OMTCuriePrefixImpl;
-import com.misset.opp.omt.psi.impl.OMTPrefixBlockImpl;
-import com.misset.opp.omt.psi.impl.OMTPrefixImpl;
-import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,15 +13,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class CurieUtil {
-
-    // A curie and curie_constant (= /ont:someOntologyClass) are both used in the query parts
-    // to discriminate between / curie and /curie the latter must be parsed specifically
-    public static OMTCurie toOMTCurie(OMTCurieElement element) {
-        return new OMTCurie(element, false);
-    }
-    public static OMTCurie toOMTCurie(OMTCurieConstantElement element) {
-        return new OMTCurie(element, true);
-    }
 
     public static Optional<OMTPrefix> getDefinedByPrefix(OMTCurie curie) {
         PsiElement element = curie.getElement();
@@ -67,10 +51,11 @@ public class CurieUtil {
         return prefixBlock;
     }
     public static OMTPrefix addPrefix(String leftHand, String rightHand, OMTPrefixBlock block) {
-        OMTPrefix prefix = OMTElementFactory.createPrefix(leftHand, rightHand, block.getProject());
+        Project project = block.getProject();
+        OMTPrefix prefix = OMTElementFactory.createPrefix(leftHand, rightHand, project);
         List<OMTPrefix> prefixList = block.getPrefixList();
-        PsiElement newLine = OMTElementFactory.createNewLine(block.getProject());
-        PsiElement indent = OMTElementFactory.createIdent(block.getProject());
+        PsiElement newLine = OMTElementFactory.createNewLine(project);
+        PsiElement indent = OMTElementFactory.createIdent(project);
         if(prefixList.isEmpty()) {
             // first entry:
             prefix = (OMTPrefix)block.add(prefix);
@@ -83,40 +68,37 @@ public class CurieUtil {
             block.addBefore(indent, prefix);
             block.addAfter(newLine, lastPrefix);
         }
+        CodeStyleManager.getInstance(project).reformat(block);
         return prefix;
     }
+    public static Collection<OMTPrefix> getAllPrefixes(PsiElement element) {
+        return PsiTreeUtil.findChildrenOfType(element.getContainingFile(), OMTPrefix.class);
+    }
+    public static Collection<OMTCurie> getAllCuries(PsiElement element) {
+        Collection<OMTCurieElement> curiePrefixes = PsiTreeUtil.findChildrenOfType(element.getContainingFile(), OMTCurieElement.class);
+        Collection<OMTCurieConstantElement> curieConstants = PsiTreeUtil.findChildrenOfType(element.getContainingFile(), OMTCurieConstantElement.class);
 
-    /**
-     * In case the curie is using a prefix which is not defined, provide a way to fix it
-     * @param curie
-     * @return
-     */
-    public static IntentionAction getRegisterPrefixIntention(OMTCurie curie) {
-        return new IntentionAction() {
-            @Override
-            public @Nls(capitalization = Nls.Capitalization.Sentence) @NotNull String getText() {
-                return "Register prefix";
-            }
-
-            @Override
-            public @NotNull @Nls(capitalization = Nls.Capitalization.Sentence) String getFamilyName() {
-                return "Prefixes";
-            }
-
-            @Override
-            public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
+        List<OMTCurie> curies = new ArrayList<>();
+        curiePrefixes.forEach(omtCuriePrefix -> curies.add(new OMTCurie(omtCuriePrefix)));
+        curieConstants.forEach(omtCurieConstant -> curies.add(new OMTCurie(omtCurieConstant)));
+        return curies;
+    }
+    public static boolean isPrefixedDefinedMoreThanOnce(OMTPrefix prefix) {
+        Collection<OMTPrefix> allPrefixes = getAllPrefixes(prefix);
+        for(OMTPrefix _prefix : allPrefixes) {
+            if(_prefix != prefix && _prefix.getText().equals(prefix.getText())) {
                 return true;
             }
-
-            @Override
-            public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
-                addPrefix(curie.getCuriePrefix(), "", getPrefixBlock(curie.getElement(), true));
-            }
-
-            @Override
-            public boolean startInWriteAction() {
+        }
+        return false;
+    }
+    public static boolean isPrefixUsed(OMTPrefix prefix) {
+        Collection<OMTCurie> allCuries = getAllCuries(prefix);
+        for(OMTCurie curie : allCuries) {
+            if(!curie.isPrefixDefinition() && curie.isDefinedByPrefix(prefix)) {
                 return true;
             }
-        };
+        }
+        return false;
     }
 }
