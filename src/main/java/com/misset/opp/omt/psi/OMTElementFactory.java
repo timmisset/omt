@@ -1,11 +1,9 @@
 package com.misset.opp.omt.psi;
 
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
-import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFileFactory;
 import com.misset.opp.omt.OMTFileType;
-import com.misset.opp.omt.psi.impl.OMTCuriePrefixImpl;
-import com.misset.opp.omt.psi.impl.OMTPrefixImpl;
 import com.misset.opp.omt.psi.util.CurieUtil;
 
 public class OMTElementFactory {

@@ -99,6 +99,7 @@ int indent_level = 0;          /* indentation level passed to the parser */
 <YYINITIAL>{END_OF_LINE_COMMENT}                                     { return OMTTypes.END_OF_LINE_COMMENT; }
 
 <YYINITIAL>{NAME}":"                                                 { return OMTTypes.PROPERTY; }
+<YYINITIAL>"@"{NAME}                                                 { return OMTTypes.COMMAND; }
 
 // VALUES
 <YYINITIAL>({STRING}|{INTEGER}|{DECIMAL}|{TYPED_VALUE})              { return OMTTypes.CONSTANT_VALUE; }
@@ -110,34 +111,33 @@ int indent_level = 0;          /* indentation level passed to the parser */
 <DECLARE_VAR>"$"{NAME}                                               { return OMTTypes.VARIABLE_NAME; }
 <DECLARE_VAR>"("{CURIE}")"                                           { return OMTTypes.VARIABLE_TYPE; }
 <DECLARE_VAR>{WHITE_SPACE}                                           { return TokenType.WHITE_SPACE; }
-<DECLARE_VAR>"="                                                     { yybegin(YYINITIAL); return OMTTypes.EQUALS; }
 <DECLARE_VAR>{NEWLINE}                                               { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
-// Any variablename match will set the Lexer in DECLARE_VAR state, this will make it usuable for
-// variables declared in the OMT properties and setting variable values
-// When one of the following tokens is reached, set the lexer back to the YYINITIAL state
-<DECLARE_VAR>";"                                                     { yybegin(YYINITIAL); return OMTTypes.SEMICOLON; }  // example, after a $variable = '';
-<DECLARE_VAR>"/"                                                     { yybegin(YYINITIAL); return OMTTypes.FORWARD_SLASH; } // example, in a $variable / my:curie
 
 <YYINITIAL>"PREFIX"                                                  { return OMTTypes.PREFIX_DEFINE_START; }
+
+// anything else can be defined as an operator
+<YYINITIAL>{NAME}                                                    { return OMTTypes.OPERATOR; }
 
 <YYINITIAL>"/"{CURIE}                                                { return OMTTypes.CURIE_CONSTANT; }
 <YYINITIAL>{CURIE}                                                   { return OMTTypes.CURIE; }
 
 // SINGLE CHARACTERS
+// Some tokens are accessible from the DECLARE_VAR state after variables are processed
+// When this happens the lexer state must be reset to YYINITIAL. In case of another variable it will set itself to DECLARE_VAR once more
 <YYINITIAL>"-"                                                       { return OMTTypes.LISTITEM_BULLET; }
 <YYINITIAL>"|"                                                       { return OMTTypes.PIPE; }
-<YYINITIAL>"="                                                       { return OMTTypes.EQUALS; }
-<YYINITIAL>","                                                       { return OMTTypes.COMMA; }
-<YYINITIAL>";"                                                       { return OMTTypes.SEMICOLON; }
+<YYINITIAL, DECLARE_VAR>"="                                          { yybegin(YYINITIAL); return OMTTypes.EQUALS; }
+<YYINITIAL, DECLARE_VAR>","                                          { yybegin(YYINITIAL); return OMTTypes.COMMA; }
+<YYINITIAL, DECLARE_VAR>";"                                          { yybegin(YYINITIAL); return OMTTypes.SEMICOLON; }
 <YYINITIAL>"{"                                                       { return OMTTypes.CURLY_OPEN; }
 <YYINITIAL>"}"                                                       { return OMTTypes.CURLY_CLOSED; }
-<YYINITIAL>"/"                                                       { return OMTTypes.FORWARD_SLASH; }
+<YYINITIAL, DECLARE_VAR>"/"                                          { yybegin(YYINITIAL); return OMTTypes.FORWARD_SLASH; }
 <YYINITIAL>"^"                                                       { return OMTTypes.CARAT; }
 <YYINITIAL>"["                                                       { return OMTTypes.BRACKET_OPEN; }
 <YYINITIAL>"]"                                                       { return OMTTypes.BRACKET_CLOSED; }
 <YYINITIAL>"+"                                                       { return OMTTypes.PLUS; }
 <YYINITIAL>"("                                                       { return OMTTypes.PARENTHESES_OPEN; }
-<YYINITIAL>")"                                                       { return OMTTypes.PARENTHESES_CLOSE; }
+<YYINITIAL, DECLARE_VAR>")"                                          { return OMTTypes.PARENTHESES_CLOSE; }
 <YYINITIAL>"."                                                       { return OMTTypes.DOT; }
 
 [^]                                                                  { return TokenType.BAD_CHARACTER; }

@@ -44,7 +44,9 @@ defineQueryStatement ::=    DEFINE_START DEFINE_QUERY NAME define_param? LAMBDA 
 
 commandsBlock::=           COMMAND_BLOCK_START NEW_LINE (INDENT (comment? defineCommandStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
 defineCommandStatement ::=  (DEFINE_START DEFINE_COMMAND NAME define_param?)
-
+operatorCall ::=            (OPERATOR signature) | OPERATOR
+commandCall ::=             (COMMAND signature) | OPERATOR
+signature ::=               PARENTHESES_OPEN variableValue? (COMMA variableValue)* PARENTHESES_CLOSE
 
 // PART II: ELEMENTS
 comment::=                  (JAVA_DOCS | END_OF_LINE_COMMENT) NEW_LINE
@@ -56,7 +58,7 @@ propertyLabel::=            comment? PROPERTY MODEL_ITEM_TYPE? END_OF_LINE_COMME
 /**
  * A single line block property, i.e. item: $variable
  */
-singleLineBlockProperty::=  (variableValue) END_OF_LINE_COMMENT? NEW_LINE
+singleLineBlockProperty::=  (variableAssignmentValue) END_OF_LINE_COMMENT? NEW_LINE
 /**
  * A multi line block property is another container for grouping properties
  */
@@ -73,24 +75,25 @@ listitem::=                 LISTITEM_BULLET (listItemVariable)
 // PART III: VARIABLES & PARAMS
 declareVariable::=          DECLARE_VAR (COMMA variableAssignment)* variableAssignment
 variableValue::=            CONSTANT_VALUE | VARIABLE_NAME | queryPath
-variableAssignment::=       VARIABLE_NAME (EQUALS variableValue)?
+variableAssignment::=       VARIABLE_NAME (EQUALS variableAssignmentValue)?
+variableAssignmentValue::=  queryPath | variableValue | commandCall
 // omt style declaration, supports type specification and default values
-listItemVariable::=         listItemParameter (EQUALS variableValue)?
+listItemVariable::=         listItemParameter (EQUALS variableAssignmentValue)?
 listItemParameter::=        VARIABLE_NAME VARIABLE_TYPE?
 
 // PART IV: SCRIPTING
 // ODT scripts that are executed
 commandBlock ::=            CURLY_OPEN NEW_LINE? INDENT? (commandBlockContent END_OF_LINE_COMMENT? NEW_LINE?) CURLY_CLOSED
 commandBlockContent ::=     (commandBlock | scriptLine)
-script    ::=               PIPE NEW_LINE INDENT (scriptContent NEW_LINE?)* DEDENT
+script    ::=               PIPE NEW_LINE (INDENT (scriptContent NEW_LINE?)* DEDENT)?
 scriptContent ::=           (commandBlock | scriptLine)
 scriptLine::=               comment* scriptLineContent END_OF_LINE_COMMENT? SEMICOLON
 scriptLineContent ::=       (declareVariable | variableAssignment | prefixDefine)
 
 queryPath ::=               queryPartFirst (FORWARD_SLASH (queryStep | queryReverseStep))*
-queryStep ::=               (curieElement | IRI | queryOneOrMany | queryZeroOrMany) queryFilter?
+queryStep ::=               (curieElement | operatorCall | IRI | queryOneOrMany | queryZeroOrMany) queryFilter?
 queryReverseStep ::=        CARAT queryStep
-queryPartFirst ::=          CONSTANT_VALUE | VARIABLE_NAME | curieConstantElement | DOT
+queryPartFirst ::=          CONSTANT_VALUE | VARIABLE_NAME | curieConstantElement | operatorCall | DOT
 queryFilter ::=             BRACKET_OPEN queryPath BRACKET_CLOSED
 queryWrap ::=               PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
 queryOneOrMany ::=          queryWrap PLUS
