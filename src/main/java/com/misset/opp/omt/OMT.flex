@@ -60,14 +60,15 @@ int indent_level = 0;          /* indentation level passed to the parser */
             yypushback(1);
             yybegin(YYINITIAL);
             if (current_line_indent > indent_level) {
-               indent_level++;
+                indent_level = current_line_indent;
                return OMTTypes.INDENT;
             } else if (current_line_indent < indent_level) {
-               indent_level--;
+                indent_level = current_line_indent;
                return OMTTypes.DEDENT;
             } else {
                 return TokenType.WHITE_SPACE;
             }
+
          }
 
 // DEFINE QUERY / COMMAND

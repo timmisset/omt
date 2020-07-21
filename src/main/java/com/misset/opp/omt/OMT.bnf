@@ -35,14 +35,14 @@ blockContent::=             comment? list | blockProperty | specificBlock| block
  */
 blockProperty::=            propertyLabel (singleLineBlockProperty | multiLineBlockProperty)
 curiePrefix::=              PROPERTY
-prefixBlock::=              PREFIX_BLOCK_START NEW_LINE (INDENT (comment? prefix END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
+prefixBlock::=              PREFIX_BLOCK_START NEW_LINE (INDENT (comment? prefix END_OF_LINE_COMMENT? NEW_LINE)* DEDENT?)?
 prefixDefine ::=            PREFIX_DEFINE_START prefix
 prefix::=                   curiePrefix IRI
 
-queriesBlock::=            QUERY_BLOCK_START NEW_LINE (INDENT (comment? defineQueryStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
+queriesBlock::=            QUERY_BLOCK_START NEW_LINE (INDENT (comment? defineQueryStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT?)?
 defineQueryStatement ::=    DEFINE_START DEFINE_QUERY NAME define_param? LAMBDA queryPath SEMICOLON
 
-commandsBlock::=           COMMAND_BLOCK_START NEW_LINE (INDENT (comment? defineCommandStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
+commandsBlock::=           COMMAND_BLOCK_START NEW_LINE (INDENT (comment? defineCommandStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT?)?
 defineCommandStatement ::=  (DEFINE_START DEFINE_COMMAND NAME define_param?)
 operatorCall ::=            (OPERATOR signature) | OPERATOR
 commandCall ::=             (COMMAND signature) | OPERATOR
@@ -73,19 +73,20 @@ list::=                     (listitem END_OF_LINE_COMMENT? NEW_LINE)+
 listitem::=                 LISTITEM_BULLET (listItemVariable)
 
 // PART III: VARIABLES & PARAMS
+variable ::=                VARIABLE_NAME
 declareVariable::=          DECLARE_VAR (COMMA variableAssignment)* variableAssignment
-variableValue::=            CONSTANT_VALUE | VARIABLE_NAME | queryPath
-variableAssignment::=       VARIABLE_NAME (EQUALS variableAssignmentValue)?
+variableValue::=            CONSTANT_VALUE | variable | queryPath
+variableAssignment::=       variable (EQUALS variableAssignmentValue)?
 variableAssignmentValue::=  queryPath | variableValue | commandCall
 // omt style declaration, supports type specification and default values
 listItemVariable::=         listItemParameter (EQUALS variableAssignmentValue)?
-listItemParameter::=        VARIABLE_NAME VARIABLE_TYPE?
+listItemParameter::=        variable VARIABLE_TYPE?
 
 // PART IV: SCRIPTING
 // ODT scripts that are executed
 commandBlock ::=            CURLY_OPEN NEW_LINE? INDENT? (commandBlockContent END_OF_LINE_COMMENT? NEW_LINE?) CURLY_CLOSED
 commandBlockContent ::=     (commandBlock | scriptLine)
-script    ::=               PIPE NEW_LINE (INDENT (scriptContent NEW_LINE?)* DEDENT)?
+script    ::=               PIPE NEW_LINE (INDENT (scriptContent NEW_LINE?)*)?
 scriptContent ::=           (commandBlock | scriptLine)
 scriptLine::=               comment* scriptLineContent END_OF_LINE_COMMENT? SEMICOLON
 scriptLineContent ::=       (declareVariable | variableAssignment | prefixDefine)
@@ -93,12 +94,12 @@ scriptLineContent ::=       (declareVariable | variableAssignment | prefixDefine
 queryPath ::=               queryPartFirst (FORWARD_SLASH (queryStep | queryReverseStep))*
 queryStep ::=               (curieElement | operatorCall | IRI | queryOneOrMany | queryZeroOrMany) queryFilter?
 queryReverseStep ::=        CARAT queryStep
-queryPartFirst ::=          CONSTANT_VALUE | VARIABLE_NAME | curieConstantElement | operatorCall | DOT
+queryPartFirst ::=          CONSTANT_VALUE | variable | curieConstantElement | operatorCall | DOT
 queryFilter ::=             BRACKET_OPEN queryPath BRACKET_CLOSED
 queryWrap ::=               PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
 queryOneOrMany ::=          queryWrap PLUS
 queryZeroOrMany ::=         queryWrap ASTERIX
 
-define_param ::=            PARENTHESES_OPEN VARIABLE_NAME? (COMMA VARIABLE_NAME)* PARENTHESES_CLOSE
+define_param ::=            PARENTHESES_OPEN variable? (COMMA variable)* PARENTHESES_CLOSE
 curieElement ::=            CURIE
 curieConstantElement ::=    CURIE_CONSTANT
