@@ -1,11 +1,12 @@
 package com.misset.opp.omt.psi.util;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.OMTBlock;
-import com.misset.opp.omt.psi.OMTPropertyLabel;
-import org.jetbrains.annotations.Nullable;
+import com.misset.opp.omt.psi.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class ModelUtil {
@@ -17,6 +18,17 @@ public class ModelUtil {
         }
         PsiElement parent = element.getParent();
         return parent != null ? getModelItemBlock(parent) : Optional.empty();
+    }
+
+
+    public static List<OMTDefineQueryStatement> getAllDefinedQueries(PsiElement containingElement) {
+        // from the document in the queries root:
+        List<OMTDefineQueryStatement> definedQueries = new ArrayList<>();
+        OMTQueriesBlock queriesBlock = PsiTreeUtil.findChildOfType(containingElement, OMTQueriesBlock.class);
+        if(queriesBlock != null) {
+            definedQueries.addAll(queriesBlock.getDefineQueryStatementList());
+        }
+        return definedQueries;
     }
 
 }

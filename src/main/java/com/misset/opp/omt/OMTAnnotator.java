@@ -5,7 +5,9 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.psi.util.CurieUtil;
+import com.misset.opp.omt.psi.util.OperatorUtil;
 import com.misset.opp.omt.psi.util.VariableUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,8 +36,22 @@ public class OMTAnnotator implements Annotator {
         else if(element instanceof OMTVariableAssignmentValue) {
             annotateVariableAssignment((OMTVariableAssignmentValue)element, holder);
         }
+        else if(element instanceof OMTOperatorCall) {
+            annotateOperatorCall((OMTOperatorCall)element, holder);
+        }
     }
 
+    private void annotateOperatorCall(@NotNull OMTOperatorCall operatorCall, @NotNull AnnotationHolder holder) {
+        Optional<OMTOperator> optionalOperator = OperatorUtil.getOperator(operatorCall);
+        optionalOperator.ifPresent(omtOperator -> {
+            // check the signature:
+            try {
+                omtOperator.validateSignature(operatorCall);
+            } catch (NumberOfInputParametersMismatchException e) {
+                holder.createErrorAnnotation(operatorCall, e.getMessage());
+            }
+        });
+    }
     private void annotateVariableAssignment(@NotNull OMTVariableAssignmentValue variableAssignmentValue, @NotNull AnnotationHolder holder) {
         // check if the assigned value is ever used:
         if(!VariableUtil.isVariableAssignmentValueUsed(variableAssignmentValue)) {

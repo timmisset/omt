@@ -50,8 +50,7 @@ int indent_level = 0;          /* indentation level passed to the parser */
 
 %%
 <YYINITIAL> {NEWLINE}                                                { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
-<YYINITIAL> {WHITE_SPACE}                                            { return TokenType.WHITE_SPACE; }
-
+<YYINITIAL> {WHITE_SPACE}                                             { return TokenType.WHITE_SPACE; } // ignore whitespace
 // INDENTATION
 // Required for YAML like grouping of blocks based on indents
 <INDENT>(\ {4})                                                      { current_line_indent++; }
@@ -81,10 +80,8 @@ int indent_level = 0;          /* indentation level passed to the parser */
 <DEFINE>","                                                          { return OMTTypes.COMMA; }
 <DEFINE>")"                                                          { return OMTTypes.PARENTHESES_CLOSE; }
 <DEFINE>"=>"                                                         { yybegin(YYINITIAL); return OMTTypes.LAMBDA; }
-<DEFINE>{WHITE_SPACE}                                                { return TokenType.WHITE_SPACE; }
 <DEFINE>{NEWLINE}{NEWLINE}                                           { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
-<DEFINE>[^]                                                          { return TokenType.BAD_CHARACTER; }
-
+<DEFINE>{WHITE_SPACE}                                                { return TokenType.WHITE_SPACE; } // ignore whitespace
 
 // PREFIXES
 <YYINITIAL>"prefixes:"                                               { return OMTTypes.PREFIX_BLOCK_START; }
@@ -111,8 +108,8 @@ int indent_level = 0;          /* indentation level passed to the parser */
 <YYINITIAL>"$"{NAME}                                                 { yybegin(DECLARE_VAR); return OMTTypes.VARIABLE_NAME; }
 <DECLARE_VAR>"$"{NAME}                                               { return OMTTypes.VARIABLE_NAME; }
 <DECLARE_VAR>"("{CURIE}")"                                           { return OMTTypes.VARIABLE_TYPE; }
-<DECLARE_VAR>{WHITE_SPACE}                                           { return TokenType.WHITE_SPACE; }
 <DECLARE_VAR>{NEWLINE}                                               { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
+<DECLARE_VAR> {WHITE_SPACE}                                          { return TokenType.WHITE_SPACE; }
 
 <YYINITIAL>"PREFIX"                                                  { return OMTTypes.PREFIX_DEFINE_START; }
 
