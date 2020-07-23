@@ -26,6 +26,8 @@
         <codeStyleSettingsProvider implementation="com.misset.opp.omt.OMTCodeStyleSettingsProvider"/>
         <langCodeStyleSettingsProvider
                 implementation="com.misset.opp.omt.OMTLanguageCodeStyleSettingsProvider"/>
+        <completion.contributor language="OMT"
+                                implementationClass="com.misset.opp.omt.OMTCompletionContributor"/>
     </extensions>
 
     <actions>

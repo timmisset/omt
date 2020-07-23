@@ -145,47 +145,48 @@ public class VariableUtil {
         return variables;
     }
 
-    public static Optional<OMTVariable> getDeclaredByVariable(OMTVariable variable) {
-        if(isVariableDeclare(variable)) { return Optional.of(variable); }
-
+    /**
+     * Returns the declared variables available at the position of this specific element
+     * @param element
+     * @return
+     */
+    public static List<OMTVariable> getDeclaredVariables(PsiElement element) {
+        List<OMTVariable> variables = new ArrayList<>();
         // a variable can be declared within a script block using the VAR
         // this must happen before it's usage of course:
-        OMTScript script = PsiTreeUtil.getTopmostParentOfType(variable, OMTScript.class);
+        OMTScript script = PsiTreeUtil.getTopmostParentOfType(element, OMTScript.class);
         if(script != null) {
             // now check all the variable declarations that are part of this script:
             final Collection<OMTDeclareVariable> declaredVariables = PsiTreeUtil.findChildrenOfType(script, OMTDeclareVariable.class);
-            Optional<OMTVariable> omtDeclaredVariable = declaredVariables.stream().map(OMTDeclareVariable::getVariableAssignmentList)
+            variables.addAll(declaredVariables.stream().map(OMTDeclareVariable::getVariableAssignmentList)
                     .flatMap(Collection::stream)
                     .filter(variableAssignment ->
-                            ScriptUtil.isBefore(variableAssignment, variable) &&
-                            variableAssignment.getVariable().getText().equals(variable.getText()))
+                            ScriptUtil.isBefore(variableAssignment, element))
                     .map(OMTVariableAssignment::getVariable)
-                    .findFirst();
-            if(omtDeclaredVariable.isPresent()) { return omtDeclaredVariable; }
+                    .collect(Collectors.toList())
+            );
         }
 
         // or it can be declared by its containing method: DECLARE COMMAND($myVar) => $myVar
-        Optional<OMTDefineParam> definedParameters = getDefinedParameters(variable);
-        if(definedParameters.isPresent()) {
-            Optional<OMTVariable> omtDeclaredVariable = definedParameters.get().getVariableList().stream()
-                    .filter(definedParameter -> definedParameter.getText().equals(variable.getText()))
-                    .findFirst();
-            if(omtDeclaredVariable.isPresent()) { return omtDeclaredVariable; }
-        }
+        Optional<OMTDefineParam> definedParameters = getDefinedParameters(element);
+        definedParameters.ifPresent(omtDefineParam -> variables.addAll(omtDefineParam.getVariableList()));
 
-        // and finally, by it's containing model item (!Activity, Procedure etc)
-        Optional<OMTBlock> modelItemBlock = ModelUtil.getModelItemBlock(variable);
-        if(modelItemBlock.isPresent()) {
+        // and finally, by it's containing model item (!Activity, !Procedure etc)
+        Optional<OMTBlock> modelItemBlock = ModelUtil.getModelItemBlock(element);
+        modelItemBlock.ifPresent(omtBlock -> {
             // check all variables and parameters declared as listitem parameters:
-            Collection<OMTListItemParameter> variables = PsiTreeUtil.findChildrenOfType(modelItemBlock.get(), OMTListItemParameter.class);
-            Optional<OMTVariable> omtDeclaredVariable = variables.stream()
-                    .map(OMTListItemParameter::getVariable)
-                    .filter(omtVariable -> omtVariable.getText().equals(variable.getText()))
-                    .findFirst();
-            if(omtDeclaredVariable.isPresent()) { return omtDeclaredVariable; }
-        }
+            Collection<OMTListItemParameter> modelVariables = PsiTreeUtil.findChildrenOfType(modelItemBlock.get(), OMTListItemParameter.class);
+            modelVariables.forEach(omtListItemParameter -> variables.add(omtListItemParameter.getVariable()));
+        });
 
-        return Optional.empty();
+        return variables;
+    }
+    public static Optional<OMTVariable> getDeclaredByVariable(OMTVariable variable) {
+        if(isVariableDeclare(variable)) { return Optional.of(variable); }
+
+        return getDeclaredVariables(variable).stream()
+                .filter(declaredVariable -> declaredVariable.getText().equals(variable.getText()))
+                .findFirst();
     }
 
     public static Optional<OMTDefineParam> getDefinedParameters(PsiElement element) {
