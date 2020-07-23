@@ -51,6 +51,9 @@ public class OMTAnnotator implements Annotator {
                 holder.createErrorAnnotation(operatorCall, e.getMessage());
             }
         });
+        if(!optionalOperator.isPresent()) {
+            holder.createErrorAnnotation(operatorCall.getFirstChild(), "Unknown operator");
+        }
     }
     private void annotateVariableAssignment(@NotNull OMTVariableAssignmentValue variableAssignmentValue, @NotNull AnnotationHolder holder) {
         // check if the assigned value is ever used:

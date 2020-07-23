@@ -112,6 +112,7 @@ int indent_level = 0;          /* indentation level passed to the parser */
 <DECLARE_VAR> {WHITE_SPACE}                                          { return TokenType.WHITE_SPACE; }
 
 <YYINITIAL>"PREFIX"                                                  { return OMTTypes.PREFIX_DEFINE_START; }
+<YYINITIAL>"AND" | "OR" | "NOT" | "IN" | ">=" | "<=" | "=="          { return OMTTypes.CONDITIONAL_OPERATOR; }
 
 // anything else can be defined as an operator
 <YYINITIAL>{NAME}                                                    { return OMTTypes.OPERATOR; }

@@ -92,11 +92,12 @@ scriptContent ::=           (commandBlock | scriptLine)
 scriptLine::=               comment* scriptLineContent END_OF_LINE_COMMENT? SEMICOLON
 scriptLineContent ::=       (declareVariable | variableAssignment | prefixDefine)
 
-queryPath ::=               queryPartFirst (FORWARD_SLASH (queryStep | queryReverseStep))*
-queryStep ::=               (curieElement | operatorCall | IRI | queryOneOrMany | queryZeroOrMany) queryFilter?
+queryPath ::=               queryPartFirst (FORWARD_SLASH (queryStep | queryReverseStep | queryCondition))*
+queryStep ::=               (curieElement | operatorCall | IRI | DOT | queryOneOrMany | queryZeroOrMany) queryFilter*
+queryCondition ::=          (queryPath | queryStep) CONDITIONAL_OPERATOR (CONSTANT_VALUE | queryPath | queryStep)
 queryReverseStep ::=        CARAT queryStep
 queryPartFirst ::=          CONSTANT_VALUE | variable | curieConstantElement | operatorCall | DOT
-queryFilter ::=             BRACKET_OPEN queryPath BRACKET_CLOSED
+queryFilter ::=             BRACKET_OPEN (queryCondition | queryStep | queryPath) BRACKET_CLOSED
 queryWrap ::=               PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
 queryOneOrMany ::=          queryWrap PLUS
 queryZeroOrMany ::=         queryWrap ASTERIX

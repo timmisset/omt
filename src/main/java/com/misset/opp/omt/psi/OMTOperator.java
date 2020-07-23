@@ -4,6 +4,8 @@ import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.exceptions.NumberOfInputParametersMismatchException;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,6 +16,13 @@ public class OMTOperator {
     private boolean isStandAloneQuery;
     private List<OMTParameter> parameters;
 
+    public OMTOperator(String name) {
+        this.name = name;
+    }
+    public OMTOperator(String name, List<OMTParameter> params) {
+        this.name = name;
+        this.parameters = params;
+    }
     public OMTOperator(OMTDefineQueryStatement defineQueryStatement) {
         element = defineQueryStatement;
         name = defineQueryStatement.getDefineName().getText(); // DEFINE QUERY [NAME], WhiteSpace is included
