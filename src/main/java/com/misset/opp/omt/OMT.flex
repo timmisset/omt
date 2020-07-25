@@ -25,6 +25,8 @@ DIGIT=                          [0-9]
 STRING=                         (\"[^\"]*\")|(\'[^\']*\')
 INTEGER=                        \-?([1-9][0-9]+|[0-9])
 DECIMAL=                        {INTEGER}\.[0-9]+
+BOOLEAN=                        "true"|"false"
+NULL=                           "null"
 
 LATIN_EXT_A=                    [\u0100-\u017F] // Zie: http://en.wikipedia.org/wiki/Latin_script_in_Unicode
 SYMBOL=                         ({ALPHA}|{DIGIT}|{LATIN_EXT_A}|[_@\-])+
@@ -90,6 +92,7 @@ int indent_level = 0;          /* indentation level passed to the parser */
 // OTHER PREDEFINED BLOCKS
 <YYINITIAL>"commands:"                                               { return OMTTypes.COMMAND_BLOCK_START; }
 <YYINITIAL>"queries:"                                                { return OMTTypes.QUERY_BLOCK_START; }
+<YYINITIAL>"model:"                                                  { return OMTTypes.MODEL_BLOCK_START; }
 <YYINITIAL>"!"("Activity" | "Component" | "Procedure" | "StandAloneQuery") { return OMTTypes.MODEL_ITEM_TYPE; }
 
 // COMMENT
@@ -100,7 +103,7 @@ int indent_level = 0;          /* indentation level passed to the parser */
 <YYINITIAL>"@"{NAME}                                                 { return OMTTypes.COMMAND; }
 
 // VALUES
-<YYINITIAL>({STRING}|{INTEGER}|{DECIMAL}|{TYPED_VALUE})              { return OMTTypes.CONSTANT_VALUE; }
+<YYINITIAL>({STRING}|{INTEGER}|{DECIMAL}|{TYPED_VALUE}|{BOOLEAN}|{NULL})  { return OMTTypes.CONSTANT_VALUE; }
 
 // ODT
 // DECLARE VARIABLE BLOCK

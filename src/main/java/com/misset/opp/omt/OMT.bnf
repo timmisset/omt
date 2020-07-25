@@ -16,7 +16,7 @@
 }
 
 OMTFile ::= prefixBlock? (specificBlock)* block*
-specificBlock ::= queriesBlock | commandsBlock
+specificBlock ::= queriesBlock | commandsBlock | modelBlock
 // PART I: CONTAINERS
 // Used to group the elements together in every larger blocks to navigate to parents / children
 
@@ -25,7 +25,10 @@ specificBlock ::= queriesBlock | commandsBlock
 * A block can be preceded by JAVA_DOCS comment block, has a PROPERTY label which identifies the block
 * and 0 to many content blocks.
  */
+modelBlock::=               MODEL_BLOCK_START NEW_LINE (INDENT modelItemBlock* DEDENT?)?
+modelItemBlock::=           modelItemLabel NEW_LINE (INDENT blockContent* DEDENT?)?
 block::=                    propertyLabel NEW_LINE (INDENT blockContent* DEDENT?)?
+
 /**
  * The content of a block can be a block property or another block
  */
@@ -44,8 +47,8 @@ defineQueryStatement ::=    DEFINE_START DEFINE_QUERY defineName define_param? L
 
 commandsBlock::=           COMMAND_BLOCK_START NEW_LINE (INDENT (comment? defineCommandStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT?)?
 defineCommandStatement ::=  (DEFINE_START DEFINE_COMMAND defineName define_param?)
-operatorCall ::=            (OPERATOR signature) | OPERATOR
-commandCall ::=             (COMMAND signature) | OPERATOR
+operatorCall ::=            (OPERATOR signature) | OPERATOR | (CONDITIONAL_OPERATOR signature) | CONDITIONAL_OPERATOR
+commandCall ::=             (COMMAND signature) | COMMAND
 signature ::=               PARENTHESES_OPEN variableValue? (COMMA variableValue)* PARENTHESES_CLOSE
 defineName ::=              NAME
 
@@ -55,7 +58,8 @@ comment::=                  (JAVA_DOCS | END_OF_LINE_COMMENT) NEW_LINE
  * A property label identifies the block using the NAME: syntax and can have a END_OF_LINE_COMMENT
  * A property label can be further identified with MODEL_ITEM_TYPE, such as !Activity or !Component
  */
-propertyLabel::=            comment? PROPERTY MODEL_ITEM_TYPE? END_OF_LINE_COMMENT?
+propertyLabel::=            comment? PROPERTY END_OF_LINE_COMMENT?
+modelItemLabel::=           comment? PROPERTY MODEL_ITEM_TYPE END_OF_LINE_COMMENT?
 /**
  * A single line block property, i.e. item: $variable
  */

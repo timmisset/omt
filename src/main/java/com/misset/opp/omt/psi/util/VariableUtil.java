@@ -71,9 +71,9 @@ public class VariableUtil {
     public static boolean isVariableAssignmentValueUsedInModel(OMTVariableAssignmentValue variableAssignmentValue) {
         OMTVariable variable = getVariable((OMTListItemVariable)variableAssignmentValue.getParent());
         // variable can be used somewhere else in the model:
-        Optional<OMTBlock> optionalOMTBlock = ModelUtil.getModelItemBlock(variableAssignmentValue);
+        Optional<OMTModelItemBlock> optionalOMTBlock = ModelUtil.getModelItemBlock(variableAssignmentValue);
         if(optionalOMTBlock.isPresent()) {
-            OMTBlock modelItemBlock = optionalOMTBlock.get();
+            OMTModelItemBlock modelItemBlock = optionalOMTBlock.get();
             // get the variable usages
             List<OMTVariable> allVariableInstances = getAllVariableInstances(variable, modelItemBlock);
             for(OMTVariable variableInstance : allVariableInstances) {
@@ -134,7 +134,7 @@ public class VariableUtil {
         ));
 
         // in the model item
-        Optional<OMTBlock> modelItem = ModelUtil.getModelItemBlock(variable);
+        Optional<OMTModelItemBlock> modelItem = ModelUtil.getModelItemBlock(variable);
         modelItem.ifPresent(omtBlock -> variables.addAll(
                 PsiTreeUtil.findChildrenOfType(omtBlock, OMTVariable.class).stream()
                     .filter(omtVariable -> omtVariable.getText().equals(variable.getText()) &&
@@ -172,7 +172,7 @@ public class VariableUtil {
         definedParameters.ifPresent(omtDefineParam -> variables.addAll(omtDefineParam.getVariableList()));
 
         // and finally, by it's containing model item (!Activity, !Procedure etc)
-        Optional<OMTBlock> modelItemBlock = ModelUtil.getModelItemBlock(element);
+        Optional<OMTModelItemBlock> modelItemBlock = ModelUtil.getModelItemBlock(element);
         modelItemBlock.ifPresent(omtBlock -> {
             // check all variables and parameters declared as listitem parameters:
             Collection<OMTListItemParameter> modelVariables = PsiTreeUtil.findChildrenOfType(modelItemBlock.get(), OMTListItemParameter.class);

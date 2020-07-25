@@ -16,7 +16,10 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
             new AttributesDescriptor("Constant Value", OMTSyntaxHighlighter.CONSTANT_VALUE),
             new AttributesDescriptor("Variable", OMTSyntaxHighlighter.VARIABLE),
             new AttributesDescriptor("Bad Value", OMTSyntaxHighlighter.BAD_CHARACTER),
-            new AttributesDescriptor("Comment Block", OMTSyntaxHighlighter.COMMENTBLOCK)
+            new AttributesDescriptor("Comment Block", OMTSyntaxHighlighter.COMMENTBLOCK),
+            new AttributesDescriptor("Operator and Command names", OMTSyntaxHighlighter.OPERATOR_OR_COMMAND),
+
+
     };
 
     @Nullable
@@ -35,35 +38,46 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
     @Override
     public String getDemoText() {
         return "prefixes:\n" +
-                "    sldf: <http://www.data.nl>\n" +
+                "    pol: <http://www.politie.nl/>\n" +
+                "    polx: <http://enter.your/iri/>\n" +
                 "\n" +
                 "queries:\n" +
-                "    DEFINE QUERY myFirstQuery() => 'Hello world!' / ^rdf:type;\n" +
+                "    DEFINE QUERY MyQuery($queryVariable1, $queryVariable2) => $queryVariable1 / polx:dicate / pol:there;\n" +
                 "\n" +
                 "model:\n" +
-                "    asdfasd: !Activity\n" +
-                "        Anotherblock:\n" +
+                "    mijnActiviteit: !Activity\n" +
+                "        queries:\n" +
+                "            DEFINE QUERY anotherQuery() => $mijnVariable / MyQuery('something');\n" +
                 "\n" +
-                "        /**\n" +
-                "        * Een JavaDoc blok om wat te vertellen over PropertyMetValue\n" +
-                "        */\n" +
-                "        PropertyMetValue: 'Test' // Kan ook via een EndOfLineComment\n" +
+                "        variables:\n" +
+                "            - $eenTweedeVariabel = 'test'\n" +
+                "            - $mijnVariable\n" +
                 "\n" +
-                "    NewBlock:\n" +
-                "        NewBlockAB:\n" +
-                "            - $myVariable\n" +
-                "            - $sometakaslm\n" +
-                "            - $asdfas\n" +
-                "        asdfasdf: |\n" +
-                "            $myVariable = \"Something\";\n" +
+                "        params:\n" +
+                "            - $somethingElse\n" +
+                "            - $anotherOne\n" +
                 "\n" +
-                "        NewBlockCD:\n" +
+                "        payload:\n" +
+                "            somethingElse: $somethingElse\n" +
+                "            anotherOne:\n" +
+                "                variable: $anotherOne\n" +
+                "                list: true\n" +
                 "\n" +
-                "    ThirdBlock:\n" +
+                "        queryWatcher:\n" +
+                "            query: Something()\n" +
+                "            onChange: |\n" +
                 "\n" +
-                "something:\n" +
+                "        onStart: |\n" +
+                "            VAR $x = $eenTweedeVariabel;\n" +
+                "            VAR $s = 'something';\n" +
+                "            VAR $y = 12345.10;\n" +
+                "            VAR $z = $x / pol:bla / anotherQuery();\n" +
+                "            $x = $y / PLUS($z) / MIN($somethingElse);\n" +
                 "\n" +
-                "    Block:\n";
+                "    mijnProcedure: !Procedure\n" +
+                "        variables:\n" +
+                "            - $mijnVariable\n" +
+                "            - $mijnTweedeVariable\n";
     }
 
     @Nullable

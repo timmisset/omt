@@ -28,6 +28,8 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
             createTextAttributesKey("VARIABLE", DefaultLanguageHighlighterColors.LOCAL_VARIABLE);
     public static final TextAttributesKey CONSTANT_VALUE =
             createTextAttributesKey("CONSTANT_VALUE", DefaultLanguageHighlighterColors.STRING);
+    public static final TextAttributesKey OPERATOR_OR_COMMAND =
+            createTextAttributesKey("OPERATOR", DefaultLanguageHighlighterColors.IDENTIFIER);
 
     private static final TextAttributesKey[] BAD_CHAR_KEYS = new TextAttributesKey[]{BAD_CHARACTER};
     private static final TextAttributesKey[] COMMENTLINE_KEYS = new TextAttributesKey[]{COMMENTLINE};
@@ -36,6 +38,7 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
     private static final TextAttributesKey[] MODEL_ITEM_TYPES = new TextAttributesKey[]{MODEL_ITEM_TYPE};
     private static final TextAttributesKey[] VARIABLE_TYPE_KEYS = new TextAttributesKey[]{VARIABLE};
+    private static final TextAttributesKey[] OPERATOR_OR_COMMAND_KEYS = new TextAttributesKey[]{OPERATOR_OR_COMMAND};
 
     @NotNull
     @Override
@@ -58,6 +61,12 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
             return VARIABLE_TYPE_KEYS;
         } else if (tokenType.equals(OMTTypes.VARIABLE_NAME)) {
             return VARIABLE_TYPE_KEYS;
+        } else if (tokenType.equals(OMTTypes.OPERATOR)) {
+            return OPERATOR_OR_COMMAND_KEYS;
+        } else if (tokenType.equals(OMTTypes.CONDITIONAL_OPERATOR)) {
+            return OPERATOR_OR_COMMAND_KEYS;
+        } else if (tokenType.equals(OMTTypes.COMMAND)) {
+            return OPERATOR_OR_COMMAND_KEYS;
         } else if (tokenType.equals(OMTTypes.CONSTANT_VALUE)) {
             return CONSTANT_VALUE_KEYS;
         } else {

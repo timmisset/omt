@@ -1,59 +1,23 @@
 package com.misset.opp.omt.psi;
 
-import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.exceptions.NumberOfInputParametersMismatchException;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class OMTOperator {
-
-    private PsiElement element;
-    private String name;
+public class OMTOperator extends OMTBuiltIn {
     private boolean isStandAloneQuery;
-    private List<OMTParameter> parameters;
 
     public OMTOperator(String name) {
-        this.name = name;
-    }
-    public OMTOperator(String name, List<OMTParameter> params) {
-        this.name = name;
-        this.parameters = params;
-    }
-    public OMTOperator(OMTDefineQueryStatement defineQueryStatement) {
-        element = defineQueryStatement;
-        name = defineQueryStatement.getDefineName().getText(); // DEFINE QUERY [NAME], WhiteSpace is included
-        isStandAloneQuery = false;
-        setParameters(defineQueryStatement.getDefineParam());
+        super(name);
     }
 
-    private void setParameters(OMTDefineParam defineParam) {
-        if(defineParam == null) { return; }
-        parameters = defineParam.getVariableList().stream()
-                .map(OMTParameter::new)
-                .collect(Collectors.toList());
+    public OMTOperator(String name, List<OMTParameter> params) {
+        super(name, params);
+    }
+    public OMTOperator(OMTDefineQueryStatement defineQueryStatement) {
+        super(defineQueryStatement, defineQueryStatement.getDefineName().getText(), defineQueryStatement.getDefineParam());
+        isStandAloneQuery = false;
     }
 
     public boolean canBeCalledBy(OMTOperatorCall operatorCall) {
-        // TODO:
-        // Check the signature of the call also
-        return operatorCall.getFirstChild().getText().equals(name);
+        return operatorCall.getFirstChild().getText().equals(getName());
     }
-
-    public void validateSignature(OMTOperatorCall operatorCall) throws NumberOfInputParametersMismatchException {
-        int minExpected = (int)parameters.stream().filter(OMTParameter::isRequired).count();
-        int maxExpected = parameters.size();
-        int intputParameters = operatorCall.getSignature() != null ? operatorCall.getSignature().getVariableValueList().size() : 0;
-        if(intputParameters < minExpected || intputParameters > maxExpected) {
-            throw new NumberOfInputParametersMismatchException(name, minExpected, maxExpected, intputParameters);
-        }
-    }
-
-    public boolean isStandAloneQuery() { return isStandAloneQuery; }
-    public String getName() { return name; }
-    public PsiElement getElement() { return element; }
-    public List<OMTParameter> getParameters() { return parameters; }
 }

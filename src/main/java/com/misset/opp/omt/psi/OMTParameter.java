@@ -9,6 +9,7 @@ public class OMTParameter {
     private String name;
     private boolean required;
     private OMTVariableValue defaultValue;
+    private boolean rest;
 
     // TODO:
     // private TypeOfParameter
@@ -19,6 +20,7 @@ public class OMTParameter {
             name = primitive.getAsString();
             String typeOfParameter = name.substring(2);
             required = !typeOfParameter.startsWith("optional");
+            rest = typeOfParameter.startsWith("rest");
         }
     }
 
@@ -35,6 +37,7 @@ public class OMTParameter {
     }
 
     public boolean isRequired() { return required; }
+    public boolean isRest() { return rest; }
     public String getName() { return name; }
 
 }

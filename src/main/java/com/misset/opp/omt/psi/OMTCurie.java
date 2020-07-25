@@ -19,10 +19,15 @@ public class OMTCurie {
     public String getCuriePrefix() { return isConstant ? getPrefixPart().substring(1) : getPrefixPart();  }
     private String getPrefixPart() {return getText().substring(0, getText().indexOf(':') + 1);}
     public boolean isDefinedByPrefix(OMTPrefix prefix) {
-        return prefix.getCuriePrefix().getText().equals(getCuriePrefix());
+        try{
+            return prefix.getCuriePrefix().getText().equals(getCuriePrefix());
+        }catch(NullPointerException exception) {
+            return false;
+        }
     }
     public String getText() { return element.getText(); }
     public boolean isPrefixDefinition() {
         return element.getParent() instanceof OMTPrefix;
     }
+    public boolean isConstant() { return isConstant; }
 }

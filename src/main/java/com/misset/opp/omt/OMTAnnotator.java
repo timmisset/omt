@@ -43,10 +43,10 @@ public class OMTAnnotator implements Annotator {
 
     private void annotateOperatorCall(@NotNull OMTOperatorCall operatorCall, @NotNull AnnotationHolder holder) {
         Optional<OMTOperator> optionalOperator = OperatorUtil.getOperator(operatorCall);
-        optionalOperator.ifPresent(omtOperator -> {
+        optionalOperator.ifPresent(OMTOperator -> {
             // check the signature:
             try {
-                omtOperator.validateSignature(operatorCall);
+                OMTOperator.validateSignature(operatorCall);
             } catch (NumberOfInputParametersMismatchException e) {
                 holder.createErrorAnnotation(operatorCall, e.getMessage());
             }
