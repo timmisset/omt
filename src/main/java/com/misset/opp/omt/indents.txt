@@ -1,0 +1,5 @@
+model:          // 0
+    level1:     // 1, 1 > 0 => INDENT, new indent level = 1
+        level2: // 2, 2 > 1 => INDENT, new indent level = 2
+
+back:           // 0, 0 < 2 => DEDENT (we want 2 DEDENTS)

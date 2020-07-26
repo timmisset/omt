@@ -3,7 +3,7 @@ package com.misset.opp.omt;
 
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
-import com.misset.opp.omt.psi.OMTElementType;import com.misset.opp.omt.psi.OMTTokenType;import com.misset.opp.omt.psi.OMTTypes;
+import com.misset.opp.omt.psi.OMTElementType;import com.misset.opp.omt.psi.OMTModelItem;import com.misset.opp.omt.psi.OMTTokenType;import com.misset.opp.omt.psi.OMTTypes;
 import com.intellij.psi.TokenType;
 
 %%
@@ -52,25 +52,34 @@ int indent_level = 0;          /* indentation level passed to the parser */
 
 %%
 <YYINITIAL> {NEWLINE}                                                { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
-<YYINITIAL> {WHITE_SPACE}                                             { return TokenType.WHITE_SPACE; } // ignore whitespace
+<YYINITIAL> {WHITE_SPACE}                                            { return TokenType.WHITE_SPACE; } // ignore whitespace
 // INDENTATION
 // Required for YAML like grouping of blocks based on indents
 <INDENT>(\ {4})                                                      { current_line_indent++; }
 <INDENT>"\n"                                                         { current_line_indent = 0; /*ignoring blank line */ }
 <INDENT>.                                                            {
-            yypushback(1);
-            yybegin(YYINITIAL);
-            if (current_line_indent > indent_level) {
-                indent_level = current_line_indent;
-               return OMTTypes.INDENT;
-            } else if (current_line_indent < indent_level) {
-                indent_level = current_line_indent;
-               return OMTTypes.DEDENT;
-            } else {
-                return TokenType.WHITE_SPACE;
-            }
-
-         }
+                                                                        yypushback(1);
+                                                                        if (current_line_indent > indent_level) {
+                                                                            indent_level++;
+                                                                            return OMTTypes.INDENT_STEP;
+                                                                        } else if (current_line_indent < indent_level) {
+                                                                            indent_level--;
+                                                                            return OMTTypes.DEDENT_STEP;
+                                                                        } else {
+                                                                            yybegin(YYINITIAL);
+                                                                            if (indent_level > 0) { return TokenType.WHITE_SPACE; }
+                                                                        }
+                                                                     }
+<INDENT><<EOF>>                                                      {
+                                                                        // will resolve all remaining dedents
+                                                                        if(indent_level > 0) {
+                                                                            indent_level -= 1;
+                                                                            return OMTTypes.DEDENT_STEP;
+                                                                        }
+                                                                        else {
+                                                                            yybegin(YYINITIAL);
+                                                                        }
+                                                                      }
 
 // DEFINE QUERY / COMMAND
 <YYINITIAL>"DEFINE"                                                  { yybegin(DEFINE); return OMTTypes.DEFINE_START; }
