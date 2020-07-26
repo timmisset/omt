@@ -16,7 +16,7 @@
 }
 
 OMTFile ::= specificBlock*
-specificBlock ::= prefixBlock | queriesBlock | commandsBlock | modelBlock
+specificBlock ::= importBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock | NEW_LINE
 // PART I: CONTAINERS
 // Used to group the elements together in every larger blocks to navigate to parents / children
 
@@ -41,6 +41,9 @@ curiePrefix::=              PROPERTY
 prefixBlock::=              PREFIX_BLOCK_START NEW_LINE (INDENT (comment? prefix END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
 prefixDefine ::=            PREFIX_DEFINE_START prefix
 prefix::=                   curiePrefix IRI
+importBlock::=              IMPORT_START NEW_LINE? (INDENT import* DEDENT)?
+importSource::=             STRING COLON
+import::=                   importSource NEW_LINE? (INDENT importList DEDENT)?
 
 queriesBlock::=            QUERY_BLOCK_START NEW_LINE (INDENT (comment? defineQueryStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
 defineQueryStatement ::=    DEFINE_START DEFINE_QUERY defineName define_param? LAMBDA queryPath SEMICOLON
@@ -76,20 +79,25 @@ multiLineBlockProperty::=   (NEW_LINE list | (NEW_LINE INDENT list DEDENT)) | sc
  * A list can consist of 1 or many listitems, all ending with a NEW_LINE
  */
 list::=                     (listitem END_OF_LINE_COMMENT? NEW_LINE)+
+importList::=               (listItemImport END_OF_LINE_COMMENT? NEW_LINE)+
 /**
  * A list item
  */
-listitem::=                 LISTITEM_BULLET (listItemVariable)
+listitem::=                 LISTITEM_BULLET (listItemVariable | listItemProperty)
 
 // PART III: VARIABLES & PARAMS
+constant_value ::=          STRING | INTEGER | DECIMAL | NULL | BOOLEAN | TYPED_VALUE
 variable ::=                VARIABLE_NAME
 declareVariable::=          DECLARE_VAR (COMMA variableAssignment)* variableAssignment
-variableValue::=            CONSTANT_VALUE | variable | queryPath
+variableValue::=            constant_value | variable | queryPath
 variableAssignment::=       variable (EQUALS variableAssignmentValue)?
 variableAssignmentValue::=  queryPath | variableValue | commandCall
 // omt style declaration, supports type specification and default values
 listItemVariable::=         listItemParameter (EQUALS variableAssignmentValue)?
 listItemParameter::=        variable VARIABLE_TYPE?
+listItemImport::=           LISTITEM_BULLET listItemImportMember
+listItemImportMember::=     OPERATOR
+listItemProperty::=         blockProperty
 
 // PART IV: SCRIPTING
 // ODT scripts that are executed
@@ -102,9 +110,9 @@ scriptLineContent ::=       (declareVariable | variableAssignment | prefixDefine
 
 queryPath ::=               queryPartFirst (FORWARD_SLASH (queryStep | queryReverseStep | queryCondition))*
 queryStep ::=               (curieElement | operatorCall | IRI | DOT | queryOneOrMany | queryZeroOrMany) queryFilter*
-queryCondition ::=          (queryPath | queryStep) CONDITIONAL_OPERATOR (CONSTANT_VALUE | queryPath | queryStep)
+queryCondition ::=          (queryPath | queryStep) CONDITIONAL_OPERATOR (constant_value | queryPath | queryStep)
 queryReverseStep ::=        CARAT queryStep
-queryPartFirst ::=          CONSTANT_VALUE | variable | curieConstantElement | operatorCall | DOT
+queryPartFirst ::=          constant_value | variable | curieConstantElement | operatorCall | DOT
 queryFilter ::=             BRACKET_OPEN (queryCondition | queryStep | queryPath) BRACKET_CLOSED
 queryWrap ::=               PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
 queryOneOrMany ::=          queryWrap PLUS

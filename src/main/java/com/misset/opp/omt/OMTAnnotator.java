@@ -6,13 +6,11 @@ import com.intellij.lang.annotation.Annotator;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.exceptions.NumberOfInputParametersMismatchException;
-import com.misset.opp.omt.psi.util.CurieUtil;
-import com.misset.opp.omt.psi.util.ModelUtil;
-import com.misset.opp.omt.psi.util.OperatorUtil;
-import com.misset.opp.omt.psi.util.VariableUtil;
+import com.misset.opp.omt.psi.util.*;
 import org.apache.maven.model.Model;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +21,7 @@ import static com.misset.opp.omt.psi.intentions.prefix.removePrefixIntention.get
 public class OMTAnnotator implements Annotator {
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
+        System.out.println("Annotating " + element.toString());
         if(element instanceof OMTCurieElement) {
             annotateCurie(new OMTCurie((OMTCurieElement)element), holder);
         }
@@ -44,11 +43,31 @@ public class OMTAnnotator implements Annotator {
         else if(element instanceof OMTModelItemLabel) {
             annotateModelItemBlock((OMTModelItemLabel)element, holder);
         }
+        else if(element instanceof OMTListItemImport) {
+            annotateImport((OMTListItemImport) element, holder);
+        }
+    }
+
+    private void annotateImport(@NotNull OMTListItemImport element, @NotNull AnnotationHolder holder) {
+        // discriminate between a module import and a file import
+        OMTImport omtImport = (OMTImport)element.getParent().getParent(); // get the block, listItem -> list -> block
+        OMTImportSource importSource = omtImport.getImportSource();
+        HashMap<String, Object> allExportingMembers = ImportUtil.getAllExportingMembers(omtImport);
+        if(importSource.toString().startsWith("module:")) {
+            // TODO:
+            // process module imports
+        }
+        else {
+            String memberName = element.getListItemImportMember().getText();
+            if(!allExportingMembers.containsKey(memberName)) {
+                String message = String.format("%s has no exporting member '%s'", omtImport.getImportSource().getText(), memberName);
+                holder.createErrorAnnotation(element.getListItemImportMember(), message);
+            }
+        }
     }
 
     private void annotateModelItemBlock(@NotNull OMTModelItemLabel modelItemLabel, @NotNull AnnotationHolder holder) {
         OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) modelItemLabel.getParent();
-        System.out.println("Annotating model item block: " + modelItemBlock.getModelItemLabel().getModelItemTypeCast().getText());
 
         // bepaal aan de hand van de ingeladen OMT model files of the attributes op het model item wel mogen bestaan:
         OMTModelItem modelItem = ModelUtil.getModelItem(modelItemBlock, modelItemBlock.getProject());

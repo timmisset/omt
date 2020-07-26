@@ -14,16 +14,11 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.misset.opp.omt.psi.util.Helper.getResource;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 
 class ModelUtilTest {
-
-    private File getResource(String item) {
-        URL url = Thread.currentThread().getContextClassLoader().getResource(item);
-        assert url != null;
-        return new File(url.getPath());
-    }
 
     @Mock Project project;
 

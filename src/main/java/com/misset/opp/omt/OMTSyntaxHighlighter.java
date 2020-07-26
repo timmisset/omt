@@ -26,15 +26,21 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
             createTextAttributesKey("CURIE", DefaultLanguageHighlighterColors.CLASS_NAME);
     public static final TextAttributesKey VARIABLE =
             createTextAttributesKey("VARIABLE", DefaultLanguageHighlighterColors.LOCAL_VARIABLE);
-    public static final TextAttributesKey CONSTANT_VALUE =
-            createTextAttributesKey("CONSTANT_VALUE", DefaultLanguageHighlighterColors.STRING);
+    public static final TextAttributesKey STRING =
+            createTextAttributesKey("STRING", DefaultLanguageHighlighterColors.STRING);
+    public static final TextAttributesKey NUMBER =
+            createTextAttributesKey("NUMBER", DefaultLanguageHighlighterColors.NUMBER);
+    public static final TextAttributesKey CONSTANT =
+            createTextAttributesKey("CONSTANT", DefaultLanguageHighlighterColors.CONSTANT);
     public static final TextAttributesKey OPERATOR_OR_COMMAND =
             createTextAttributesKey("OPERATOR", DefaultLanguageHighlighterColors.IDENTIFIER);
 
     private static final TextAttributesKey[] BAD_CHAR_KEYS = new TextAttributesKey[]{BAD_CHARACTER};
     private static final TextAttributesKey[] COMMENTLINE_KEYS = new TextAttributesKey[]{COMMENTLINE};
     private static final TextAttributesKey[] COMMENTBLOCK_KEYS = new TextAttributesKey[]{COMMENTBLOCK};
-    private static final TextAttributesKey[] CONSTANT_VALUE_KEYS = new TextAttributesKey[]{CONSTANT_VALUE};
+    private static final TextAttributesKey[] STRING_KEYS = new TextAttributesKey[]{STRING};
+    private static final TextAttributesKey[] NUMBER_KEYS = new TextAttributesKey[]{NUMBER};
+    private static final TextAttributesKey[] CONSTANT_VALUE_KEYS = new TextAttributesKey[]{CONSTANT};
     private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
     private static final TextAttributesKey[] MODEL_ITEM_TYPES = new TextAttributesKey[]{MODEL_ITEM_TYPE};
     private static final TextAttributesKey[] VARIABLE_TYPE_KEYS = new TextAttributesKey[]{VARIABLE};
@@ -67,8 +73,16 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
             return OPERATOR_OR_COMMAND_KEYS;
         } else if (tokenType.equals(OMTTypes.COMMAND)) {
             return OPERATOR_OR_COMMAND_KEYS;
-        } else if (tokenType.equals(OMTTypes.CONSTANT_VALUE)) {
+        } else if (tokenType.equals(OMTTypes.STRING)) {
+            return STRING_KEYS;
+        } else if (tokenType.equals(OMTTypes.BOOLEAN)) {
             return CONSTANT_VALUE_KEYS;
+        } else if (tokenType.equals(OMTTypes.NULL)) {
+            return CONSTANT_VALUE_KEYS;
+        } else if (tokenType.equals(OMTTypes.INTEGER)) {
+            return NUMBER_KEYS;
+        } else if (tokenType.equals(OMTTypes.DECIMAL)) {
+            return NUMBER_KEYS;
         } else {
             return EMPTY_KEYS;
         }

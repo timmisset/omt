@@ -94,13 +94,13 @@ int indent_level = 0;          /* indentation level passed to the parser */
 <DEFINE>{NEWLINE}{NEWLINE}                                           { current_line_indent = 0; yybegin(INDENT); return OMTTypes.NEW_LINE; }
 <DEFINE>{WHITE_SPACE}                                                { return TokenType.WHITE_SPACE; } // ignore whitespace
 
-// PREFIXES
-<YYINITIAL>"prefixes:"                                               { return OMTTypes.PREFIX_BLOCK_START; }
 <YYINITIAL>{IRI}                                                     { return OMTTypes.IRI; }
 
-// OTHER PREDEFINED BLOCKS
+// SPECIFIC BLOCKS
+<YYINITIAL>"prefixes:"                                               { return OMTTypes.PREFIX_BLOCK_START; }
 <YYINITIAL>"commands:"                                               { return OMTTypes.COMMAND_BLOCK_START; }
 <YYINITIAL>"queries:"                                                { return OMTTypes.QUERY_BLOCK_START; }
+<YYINITIAL>"import:"                                                 { return OMTTypes.IMPORT_START; }
 <YYINITIAL>"model:"                                                  { return OMTTypes.MODEL_BLOCK_START; }
 <YYINITIAL>"!"("Activity" | "Component" | "Procedure" | "StandAloneQuery") { return OMTTypes.MODEL_ITEM_TYPE; }
 
@@ -112,7 +112,12 @@ int indent_level = 0;          /* indentation level passed to the parser */
 <YYINITIAL>"@"{NAME}                                                 { return OMTTypes.COMMAND; }
 
 // VALUES
-<YYINITIAL>({STRING}|{INTEGER}|{DECIMAL}|{TYPED_VALUE}|{BOOLEAN}|{NULL})  { return OMTTypes.CONSTANT_VALUE; }
+<YYINITIAL>{STRING}                                                   { return OMTTypes.STRING; }
+<YYINITIAL>{INTEGER}                                                  { return OMTTypes.INTEGER; }
+<YYINITIAL>{DECIMAL}                                                  { return OMTTypes.DECIMAL; }
+<YYINITIAL>{TYPED_VALUE}                                              { return OMTTypes.TYPED_VALUE; }
+<YYINITIAL>{BOOLEAN}                                                  { return OMTTypes.BOOLEAN; }
+<YYINITIAL>{NULL}                                                     { return OMTTypes.NULL; }
 
 // ODT
 // DECLARE VARIABLE BLOCK
@@ -137,6 +142,7 @@ int indent_level = 0;          /* indentation level passed to the parser */
 // When this happens the lexer state must be reset to YYINITIAL. In case of another variable it will set itself to DECLARE_VAR once more
 <YYINITIAL>"-"                                                       { return OMTTypes.LISTITEM_BULLET; }
 <YYINITIAL>"|"                                                       { return OMTTypes.PIPE; }
+<YYINITIAL>":"                                                       { return OMTTypes.COLON; }
 <YYINITIAL, DECLARE_VAR>"="                                          { yybegin(YYINITIAL); return OMTTypes.EQUALS; }
 <YYINITIAL, DECLARE_VAR>","                                          { yybegin(YYINITIAL); return OMTTypes.COMMA; }
 <YYINITIAL, DECLARE_VAR>";"                                          { yybegin(YYINITIAL); return OMTTypes.SEMICOLON; }
