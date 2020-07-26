@@ -6,6 +6,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,14 +42,21 @@ public class CurieUtil {
     }
     public static  OMTPrefixBlock getPrefixBlock(PsiElement element, boolean createIfNeeded) {
         final PsiFile file = element.getContainingFile();
-        OMTPrefixBlock prefixBlock = PsiTreeUtil.getChildOfType(file, OMTPrefixBlock.class);
-        if(prefixBlock == null && createIfNeeded) {
-            prefixBlock = OMTElementFactory.createPrefixBlock(element.getProject());
+        @Nullable OMTSpecificBlock[] children = PsiTreeUtil.getChildrenOfType(file, OMTSpecificBlock.class);
+        if(children != null) {
+            for(OMTSpecificBlock child : children) {
+                if(child != null && child.getPrefixBlock() != null) { return child.getPrefixBlock(); }
+            }
+        }
+        // create if required:
+        if(createIfNeeded) {
+            OMTPrefixBlock prefixBlock = OMTElementFactory.createPrefixBlock(element.getProject());
             PsiElement firstChild = file.getFirstChild();
             prefixBlock = (OMTPrefixBlock)file.addBefore(prefixBlock, firstChild);
             file.addAfter(OMTElementFactory.createNewLine(element.getProject()), prefixBlock);
+            return prefixBlock;
         }
-        return prefixBlock;
+        return  null;
     }
     public static OMTPrefix addPrefix(String leftHand, String rightHand, OMTPrefixBlock block) {
         Project project = block.getProject();
