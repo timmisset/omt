@@ -58,8 +58,12 @@ comment::=                  (JAVA_DOCS | END_OF_LINE_COMMENT) NEW_LINE
  * A property label identifies the block using the NAME: syntax and can have a END_OF_LINE_COMMENT
  * A property label can be further identified with MODEL_ITEM_TYPE, such as !Activity or !Component
  */
-propertyLabel::=            comment? PROPERTY END_OF_LINE_COMMENT?
-modelItemLabel::=           comment? PROPERTY MODEL_ITEM_TYPE END_OF_LINE_COMMENT?
+
+propertyLabel::=            comment? propertyName END_OF_LINE_COMMENT?
+modelItemLabel::=           comment? propertyName modelItemTypeCast END_OF_LINE_COMMENT?
+modelItemTypeCast::=        MODEL_ITEM_TYPE // make this an element for easier processing
+propertyName::=             PROPERTY // make this an element for easier processing
+
 /**
  * A single line block property, i.e. item: $variable
  */

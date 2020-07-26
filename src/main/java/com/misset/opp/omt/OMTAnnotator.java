@@ -7,8 +7,10 @@ import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.psi.util.CurieUtil;
+import com.misset.opp.omt.psi.util.ModelUtil;
 import com.misset.opp.omt.psi.util.OperatorUtil;
 import com.misset.opp.omt.psi.util.VariableUtil;
+import org.apache.maven.model.Model;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -39,6 +41,38 @@ public class OMTAnnotator implements Annotator {
         else if(element instanceof OMTOperatorCall) {
             annotateOperatorCall((OMTOperatorCall)element, holder);
         }
+        else if(element instanceof OMTModelItemLabel) {
+            annotateModelItemBlock((OMTModelItemLabel)element, holder);
+        }
+    }
+
+    private void annotateModelItemBlock(@NotNull OMTModelItemLabel modelItemLabel, @NotNull AnnotationHolder holder) {
+        OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) modelItemLabel.getParent();
+        System.out.println("Annotating model item block: " + modelItemBlock.getModelItemLabel().getModelItemTypeCast().getText());
+
+        // bepaal aan de hand van de ingeladen OMT model files of the attributes op het model item wel mogen bestaan:
+        OMTModelItem modelItem = ModelUtil.getModelItem(modelItemBlock, modelItemBlock.getProject());
+        if(!ModelUtil.annotateModelItems) { return; } // disabled due to some error with parsing the files.
+        if(modelItem == null) {
+            OMTModelItemTypeCast modelItemTypeCast = modelItemBlock.getModelItemLabel().getModelItemTypeCast();
+            String message = String.format("%s is not a known model item type", modelItemTypeCast.getText().substring(1));
+            holder.createErrorAnnotation(modelItemTypeCast, message);
+            return;
+        }
+
+        // annotate the attributen:
+        List<OMTBlockContent> blockContentList = modelItemBlock.getBlockContentList();
+        blockContentList.forEach(omtBlockContent -> {
+            String label = ModelUtil.getModelItemAttributeLabel(omtBlockContent);
+            if(!modelItem.hasAttribute(label)) {
+                String suggestion = ModelUtil.getModelItemAttributeSuggestion(modelItem, label);
+                String message = String.format("%s is not a known attribute for %s", label, modelItem.getType());
+                if(suggestion != null) {
+                    message = String.format("%s, did you mean '%s'", message, suggestion);
+                }
+                holder.createErrorAnnotation(omtBlockContent, message);
+            };
+        });
     }
 
     private void annotateOperatorCall(@NotNull OMTOperatorCall operatorCall, @NotNull AnnotationHolder holder) {

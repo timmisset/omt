@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
+import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -14,6 +15,7 @@ import java.util.regex.Pattern;
 
 public class ModelUtil {
 
+    public static boolean annotateModelItems = true;
     private static String modelDirectory = "/core/omt/model";
     // Keeps track of all parsed model items, such as Activity, Procedure etc
     // This will be used to determine which attributes are allowed
@@ -48,6 +50,83 @@ public class ModelUtil {
         }
         return definedQueries;
     }
+
+    /**
+     * Returns the String representation of the ModelItem type, dropping the !
+     * !Procedure => Procedure
+     * Can be used to obtain the corresponding ModelItem definition
+     * @param modelItemBlock
+     * @return
+     */
+    public static String getModelItemType(OMTModelItemBlock modelItemBlock) {
+        return modelItemBlock.getModelItemLabel().getModelItemTypeCast().getText().substring(1);
+    }
+    public static OMTModelItem getModelItem(OMTModelItemBlock modelItemBlock, Project project) {
+        OMTModelItem omtModelItem = getModelItems(project).get(getModelItemType(modelItemBlock));
+        if(modelItems.isEmpty()) {
+            // apparently we cannot retrieve the data, don't annotate any model items
+            // TODO: Show user warning that the model item files cannot be located
+            System.out.println("Annotation is disabled for model items");
+            annotateModelItems = false;
+        }
+        return omtModelItem;
+    }
+    public static String getModelItemAttributeLabel(OMTBlockContent content) {
+        // structured sub-block
+        if(content.getBlock() != null) { return cleanUpAttributeLabel(content.getBlock().getPropertyLabel().getPropertyName().getText()); }
+
+        // block property (label with a value or a list)
+        if(content.getBlockProperty() != null) { return cleanUpAttributeLabel(content.getBlockProperty().getPropertyLabel().getPropertyName().getText()); }
+
+        // or one of the specific blocks
+        if(content.getSpecificBlock() != null) { return cleanUpAttributeLabel(getModelItemAttributeLabel(content.getSpecificBlock())); }
+        return null;
+    }
+    public static String getModelItemAttributeLabel(OMTSpecificBlock specificBlock) {
+        if(specificBlock.getPrefixBlock() != null) { return "prefixes"; }
+        if(specificBlock.getCommandsBlock() != null) { return "commands"; }
+        if(specificBlock.getQueriesBlock() != null) { return "queries"; }
+        return null;
+    }
+
+    // TODO: move this to a helper file, preferable external to make it configurable
+    public static String getModelItemAttributeSuggestion(OMTModelItem modelItem, String label) {
+        // some hardcoded suggestions of common mistakes. Let's see how well this holds up:
+        String wrongLabel = label.toLowerCase();
+        if(modelItem.getType().equals("Activity")) {
+            switch (wrongLabel) {
+                case "onrun":
+                case "run":
+                case "oninit":
+                case "init":
+                case "start":
+                case "onstart": // any casing issue
+                    return "onStart";
+
+                case "cancel": return "onCancel";
+                case "bindings": return "params";
+            }
+        }
+        if(modelItem.getType().equals("Component")) {
+            switch (wrongLabel) {
+                case "run":
+                case "onrun":
+                case "oninit": // any casing issue
+                case "init":
+                case "onstart":
+                case "start":
+                    return "onInit";
+                case "params": return "bindings";
+
+            }
+        }
+        return null;
+    }
+    private static String cleanUpAttributeLabel(String label) {
+        // drop the : from the property name
+        if(label.endsWith(":")) { return label.substring(0, label.length() -1); }
+        return label;
+    }
     public static boolean hasModelItemDefinition(String name) {
         return modelItems.containsKey(name);
     }
@@ -70,7 +149,7 @@ public class ModelUtil {
             modelItemAttributes = new HashMap<>();
             modelFileContents = new ArrayList<>();
 
-            String folder = String.format("%s%s", project.getBasePath(), "/core/omt/model");
+            String folder = String.format("%s%s", project.getBasePath(), "/core/omt/src/model");
             List<File> modelFiles = getAllModelFiles(folder);
             for(File file : modelFiles) {
                 try {
