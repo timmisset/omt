@@ -25,12 +25,9 @@ specificBlock ::= prefixBlock | queriesBlock | commandsBlock | modelBlock
 * A block can be preceded by JAVA_DOCS comment block, has a PROPERTY label which identifies the block
 * and 0 to many content blocks.
  */
-modelBlock::=               MODEL_BLOCK_START NEW_LINE (indent modelItemBlock* dedent?)?
-modelItemBlock::=           modelItemLabel NEW_LINE (indent blockContent* dedent?)?
-block::=                    propertyLabel NEW_LINE (indent blockContent* dedent?)?
-
-indent::=                   INDENT_STEP
-dedent::=                   DEDENT_STEP
+modelBlock::=               MODEL_BLOCK_START NEW_LINE (INDENT modelItemBlock* DEDENT)?
+modelItemBlock::=           modelItemLabel NEW_LINE (INDENT blockContent* DEDENT)?
+block::=                    propertyLabel NEW_LINE (INDENT blockContent* DEDENT)?
 
 /**
  * The content of a block can be a block property or another block
@@ -41,14 +38,14 @@ blockContent::=             comment? list | blockProperty | specificBlock| block
  */
 blockProperty::=            propertyLabel (singleLineBlockProperty | multiLineBlockProperty)
 curiePrefix::=              PROPERTY
-prefixBlock::=              PREFIX_BLOCK_START NEW_LINE (indent (comment? prefix END_OF_LINE_COMMENT? NEW_LINE)* dedent?)?
+prefixBlock::=              PREFIX_BLOCK_START NEW_LINE (INDENT (comment? prefix END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
 prefixDefine ::=            PREFIX_DEFINE_START prefix
 prefix::=                   curiePrefix IRI
 
-queriesBlock::=            QUERY_BLOCK_START NEW_LINE (indent (comment? defineQueryStatement END_OF_LINE_COMMENT? NEW_LINE)* dedent?)?
+queriesBlock::=            QUERY_BLOCK_START NEW_LINE (INDENT (comment? defineQueryStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
 defineQueryStatement ::=    DEFINE_START DEFINE_QUERY defineName define_param? LAMBDA queryPath SEMICOLON
 
-commandsBlock::=           COMMAND_BLOCK_START NEW_LINE (indent (comment? defineCommandStatement END_OF_LINE_COMMENT? NEW_LINE)* dedent?)?
+commandsBlock::=           COMMAND_BLOCK_START NEW_LINE (INDENT (comment? defineCommandStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
 defineCommandStatement ::=  (DEFINE_START DEFINE_COMMAND defineName define_param?)
 operatorCall ::=            (OPERATOR signature) | OPERATOR | (CONDITIONAL_OPERATOR signature) | CONDITIONAL_OPERATOR
 commandCall ::=             (COMMAND signature) | COMMAND
@@ -70,7 +67,7 @@ singleLineBlockProperty::=  (variableAssignmentValue) END_OF_LINE_COMMENT? NEW_L
 /**
  * A multi line block property is another container for grouping properties
  */
-multiLineBlockProperty::=   (NEW_LINE list | (NEW_LINE indent list dedent)) | script
+multiLineBlockProperty::=   (NEW_LINE list | (NEW_LINE INDENT list DEDENT)) | script
 /**
  * A list can consist of 1 or many listitems, all ending with a NEW_LINE
  */
@@ -92,9 +89,9 @@ listItemParameter::=        variable VARIABLE_TYPE?
 
 // PART IV: SCRIPTING
 // ODT scripts that are executed
-commandBlock ::=            CURLY_OPEN NEW_LINE? indent? (commandBlockContent END_OF_LINE_COMMENT? NEW_LINE?) CURLY_CLOSED
+commandBlock ::=            CURLY_OPEN NEW_LINE? INDENT? (commandBlockContent END_OF_LINE_COMMENT? NEW_LINE?) DEDENT? CURLY_CLOSED
 commandBlockContent ::=     (commandBlock | scriptLine)
-script    ::=               PIPE NEW_LINE (indent (scriptContent NEW_LINE?)* dedent?)?
+script    ::=               PIPE NEW_LINE (INDENT (scriptContent NEW_LINE?)* DEDENT)?
 scriptContent ::=           (commandBlock | scriptLine)
 scriptLine::=               comment* scriptLineContent END_OF_LINE_COMMENT? SEMICOLON
 scriptLineContent ::=       (declareVariable | variableAssignment | prefixDefine)

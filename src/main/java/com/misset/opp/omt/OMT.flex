@@ -61,10 +61,10 @@ int indent_level = 0;          /* indentation level passed to the parser */
                                                                         yypushback(1);
                                                                         if (current_line_indent > indent_level) {
                                                                             indent_level++;
-                                                                            return OMTTypes.INDENT_STEP;
+                                                                            return OMTTypes.INDENT;
                                                                         } else if (current_line_indent < indent_level) {
                                                                             indent_level--;
-                                                                            return OMTTypes.DEDENT_STEP;
+                                                                            return OMTTypes.DEDENT;
                                                                         } else {
                                                                             yybegin(YYINITIAL);
                                                                             if (indent_level > 0) { return TokenType.WHITE_SPACE; }
@@ -74,7 +74,7 @@ int indent_level = 0;          /* indentation level passed to the parser */
                                                                         // will resolve all remaining dedents
                                                                         if(indent_level > 0) {
                                                                             indent_level -= 1;
-                                                                            return OMTTypes.DEDENT_STEP;
+                                                                            return OMTTypes.DEDENT;
                                                                         }
                                                                         else {
                                                                             yybegin(YYINITIAL);
