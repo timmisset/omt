@@ -2,6 +2,7 @@ package com.misset.opp.omt.psi.util;
 
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.psi.OMTBuiltIn;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,11 +28,11 @@ public class ImportUtilIT extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     public void getAllExportingMembers() {
-        myFixture.configureByFiles("test.OMT");
+        myFixture.configureByFiles("test.omt");
         myFixture.complete(CompletionType.BASIC, 1);
-        File resource = Helper.getResource("test.OMT");
-        HashMap<String, Object> allExportingMembers =
-                ImportUtil.getAllExportingMembers(
+        File resource = Helper.getResource("test.omt");
+        HashMap<String, OMTBuiltIn> allExportingMembers =
+                ImportUtil.getAllExportedMembers(
                         resource.getPath(),
                         myFixture.getProject()
                 );

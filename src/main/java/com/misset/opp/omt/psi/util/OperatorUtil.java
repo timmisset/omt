@@ -9,17 +9,17 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.OMTOperator;
-import com.misset.opp.omt.psi.OMTOperatorCall;
-import com.misset.opp.omt.psi.OMTParameter;
+import com.misset.opp.omt.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class OperatorUtil {
 
@@ -64,10 +64,13 @@ public class OperatorUtil {
         List<OMTOperator> operators = new ArrayList<>();
 
         // Operators can be build in operators, imported, defined queries in the document or standalone queries
-        // TODO: Get builtin operators
         operators.addAll(getBuiltInOperators(element.getProject()));
 
-        // TODO: Get imported operators
+        HashMap<String, OMTBuiltIn> importedMembers = ImportUtil.getAllImportedMembers((OMTFile) element.getContainingFile());
+        operators.addAll(importedMembers.values().stream()
+                .filter(omtBuiltIn -> omtBuiltIn instanceof OMTOperator)
+                .map(omtBuiltIn -> (OMTOperator)omtBuiltIn)
+                .collect(Collectors.toList()));
 
         // Defined in the document
         // from the root queries: block

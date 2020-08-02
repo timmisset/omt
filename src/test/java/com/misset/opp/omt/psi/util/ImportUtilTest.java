@@ -40,10 +40,10 @@ class ImportUtilTest {
 
     @Test
     void resolvePathToSource_client() {
-        String path = "@client/test/someOmtFile.OMT";
+        String path = "@client/test/someOmtFile.omt";
         doReturn(path).when(omtImportSource).getText();
 
-        String expected = String.format("%s/frontend/src/test/someOmtFile.OMT", projectBaseDir);
+        String expected = String.format("%s/frontend/src/test/someOmtFile.omt", projectBaseDir);
 
         assertSamePath(expected, ImportUtil.resolvePathToSource(omtImport));
     }

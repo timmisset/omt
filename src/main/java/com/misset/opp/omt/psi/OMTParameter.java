@@ -29,6 +29,11 @@ public class OMTParameter {
         required = true;
         defaultValue = null;
     }
+    public OMTParameter(OMTListItemParameter parameter) {
+        name = parameter.getText();
+        required = true;
+        defaultValue = null;
+    }
 
     public OMTParameter(OMTVariableAssignment variableAssignment) {
         name = variableAssignment.getVariable().getText();

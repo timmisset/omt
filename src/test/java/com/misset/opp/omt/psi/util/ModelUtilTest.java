@@ -41,6 +41,7 @@ class ModelUtilTest {
         assertTrue(modelItems.containsKey("Activity"));
         assertTrue(modelItems.containsKey("Component"));
         assertTrue(modelItems.containsKey("Procedure"));
+        assertTrue(modelItems.containsKey("StandaloneQuery"));
         // ... and many more
 
     }

@@ -11,22 +11,26 @@ public class OMTBuiltIn {
 
     private PsiElement element;
     private String name;
+    private String typeOfOrigin;
 
     private List<OMTParameter> parameters = new ArrayList<>();
     private int minExpected;
     private int maxExpected;
 
-    public OMTBuiltIn(String name) {
+    public OMTBuiltIn(String name, String typeOfOrigin) {
         this.name = name;
+        this.typeOfOrigin = typeOfOrigin;
         setExpected();
     }
-    public OMTBuiltIn(String name, List<OMTParameter> params) {
+    public OMTBuiltIn(String name, List<OMTParameter> params, String typeOfOrigin) {
         this.name = name;
+        this.typeOfOrigin = typeOfOrigin;
         this.parameters = params;
         setExpected();
     }
-    public OMTBuiltIn(PsiElement element, String name, OMTDefineParam params) {
+    public OMTBuiltIn(PsiElement element, String name, OMTDefineParam params, String typeOfOrigin) {
         this.name = name;
+        this.typeOfOrigin = typeOfOrigin;
         this.element = element;
         setParameters(params);
         setExpected();

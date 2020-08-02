@@ -43,6 +43,7 @@ public class OMTModelItem {
         List<String> missingAttributes = new ArrayList<>();
         for(String modelItemAttributeType : attributes.values()) {
             if(!modelItemAttributeType.startsWith("AttributeType.") &&
+                    !modelItemAttributeType.startsWith("[") && // TODO: fix voor array types
                     !ModelUtil.hasModelItemDefinition(modelItemAttributeType) &&
                     !ModelUtil.hasModelItemAttributeDefinition(modelItemAttributeType)) {
                 missingAttributes.add(modelItemAttributeType);

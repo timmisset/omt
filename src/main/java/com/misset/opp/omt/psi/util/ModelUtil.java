@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class ModelUtil {
 
@@ -49,6 +50,43 @@ public class ModelUtil {
             definedQueries.addAll(queriesBlock.getDefineQueryStatementList());
         }
         return definedQueries;
+    }
+
+    public static List<OMTParameter> getModelItemParameters(OMTModelItemBlock modelItemBlock) {
+        List<OMTParameter> parameters = new ArrayList<>();
+        modelItemBlock.getBlockContentList().forEach(omtBlockContent -> {
+            if(omtBlockContent.getBlockProperty() != null && omtBlockContent.getBlockProperty().getPropertyLabel().getPropertyName().getText().equals("params:")) {
+                OMTMultiLineBlockProperty multiLineBlockProperty = omtBlockContent.getBlockProperty().getMultiLineBlockProperty();
+                if(multiLineBlockProperty != null && multiLineBlockProperty.getList() != null) {
+                    multiLineBlockProperty.getList().getListitemList().forEach(omtListitem -> {
+                        OMTListItemVariable listItemVariable = omtListitem.getListItemVariable();
+                        if(listItemVariable != null) {
+                            parameters.add(new OMTParameter(listItemVariable.getListItemParameter()));
+                        }
+                    });
+                }
+            }
+        });
+        return parameters;
+    }
+
+    public static List<OMTModelItemBlock> getModelItemBlocksOfType(OMTModelBlock modelBlock, String typeOf) {
+        return getModelItemBlocksOfTypes(modelBlock, new String[] { typeOf });
+    }
+    /**
+     * Retrieves the modelItem blocks by their type cast !Procedure, !Component etc.
+     * @param modelBlock
+     * @param typesOf Activity, Component, Procedure etc. Without !
+     * @return
+     */
+    public static List<OMTModelItemBlock> getModelItemBlocksOfTypes(OMTModelBlock modelBlock, String[] typesOf) {
+        List<String> types = Arrays.asList(typesOf);
+        return modelBlock.getModelItemBlockList().stream().filter(modelItemBlock ->
+            types.contains(modelItemBlock
+                    .getModelItemLabel()
+                    .getModelItemTypeCast()
+                    .getText().substring(1)))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -185,6 +223,7 @@ public class ModelUtil {
     }
 
     public static String getModelItemAttributeDef(String name) {
+
         Pattern pattern = Pattern.compile(String.format("export const %s[^{]*((?s).*?(?=;))", name));
         for(String content : modelFileContents) {
             Matcher matcher = pattern.matcher(content);
@@ -249,7 +288,7 @@ public class ModelUtil {
         // first pattern will parse the OTM model into 2 blocks, one that contains the annotation
         // the second that contains the exporting class
         // i.e. @Def and export class BindingDef
-        Pattern fileParser = Pattern.compile("@Def\\s*\\(([^\\)]*)\\)\\s*(export(?s).*?(?=(export)))");
+        Pattern fileParser = Pattern.compile("@Def\\s*\\(([^)]*)\\)\\s*(export(?s)(.)*)(export|class)");
         Matcher matcher = fileParser.matcher(content);
 
         if(!matcher.find()) { return null; } // something is wrong. Probably need to adjust the regEx to a change in the model markup

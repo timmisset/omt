@@ -53,39 +53,39 @@ class OMTBuiltInTest {
 
     @Test
     void constructors() {
-        assertEquals("test", new OMTBuiltIn("test").getName());
-        assertEquals(parameterList, new OMTBuiltIn("test", parameterList).getParameters());
+        assertEquals("test", new OMTBuiltIn("test", "").getName());
+        assertEquals(parameterList, new OMTBuiltIn("test", parameterList, "").getParameters());
 
-        OMTBuiltIn builtIn = new OMTBuiltIn(element, "test", omtDefineParam);
+        OMTBuiltIn builtIn = new OMTBuiltIn(element, "test", omtDefineParam, "");
         assertEquals(3, builtIn.getParameters().size());
     }
 
     @Test
     void getMinExpected() {
         // all required
-        assertEquals(0, new OMTBuiltIn("").getMinExpected());
-        assertEquals(1, new OMTBuiltIn("", Arrays.asList(parameter)).getMinExpected());
-        assertEquals(1, new OMTBuiltIn("", Arrays.asList(parameter, restParameter)).getMinExpected());
+        assertEquals(0, new OMTBuiltIn("", "").getMinExpected());
+        assertEquals(1, new OMTBuiltIn("", Arrays.asList(parameter), "").getMinExpected());
+        assertEquals(1, new OMTBuiltIn("", Arrays.asList(parameter, restParameter), "").getMinExpected());
 
         // optional
-        assertEquals(0, new OMTBuiltIn("", Arrays.asList(optionalParameter)).getMinExpected());
+        assertEquals(0, new OMTBuiltIn("", Arrays.asList(optionalParameter), "").getMinExpected());
     }
 
     @Test
     void getMaxExpected() {
 
-        assertEquals(0, new OMTBuiltIn("").getMaxExpected());
-        assertEquals(1, new OMTBuiltIn("", Arrays.asList(parameter)).getMaxExpected());
-        assertEquals(2, new OMTBuiltIn("", Arrays.asList(parameter, parameter)).getMaxExpected());
-        assertEquals(-1, new OMTBuiltIn("", Arrays.asList(parameter, restParameter)).getMaxExpected());
+        assertEquals(0, new OMTBuiltIn("", "").getMaxExpected());
+        assertEquals(1, new OMTBuiltIn("", Arrays.asList(parameter), "").getMaxExpected());
+        assertEquals(2, new OMTBuiltIn("", Arrays.asList(parameter, parameter), "").getMaxExpected());
+        assertEquals(-1, new OMTBuiltIn("", Arrays.asList(parameter, restParameter), "").getMaxExpected());
 
         // optional
-        assertEquals(0, new OMTBuiltIn("", Arrays.asList(optionalParameter)).getMinExpected());
+        assertEquals(0, new OMTBuiltIn("", Arrays.asList(optionalParameter), "").getMinExpected());
     }
 
     @Test
     void validateSignature_twoRequired() {
-        OMTBuiltIn omtBuiltIn = new OMTBuiltIn("", Arrays.asList(parameter, parameter));
+        OMTBuiltIn omtBuiltIn = new OMTBuiltIn("", Arrays.asList(parameter, parameter), "");
 
         // too few
         assertThrows(NumberOfInputParametersMismatchException.class, () -> omtBuiltIn.validateSignature(call));
@@ -101,7 +101,7 @@ class OMTBuiltInTest {
 
     @Test
     void validateSignature_OneRequired_OneOptional() {
-        OMTBuiltIn omtBuiltIn = new OMTBuiltIn("", Arrays.asList(parameter, optionalParameter));
+        OMTBuiltIn omtBuiltIn = new OMTBuiltIn("", Arrays.asList(parameter, optionalParameter), "");
 
         // too few
         assertThrows(NumberOfInputParametersMismatchException.class, () -> omtBuiltIn.validateSignature(call));
@@ -120,7 +120,7 @@ class OMTBuiltInTest {
 
     @Test
     void validateSignature_OneRequired_OneRest() {
-        OMTBuiltIn omtBuiltIn = new OMTBuiltIn("", Arrays.asList(parameter, restParameter));
+        OMTBuiltIn omtBuiltIn = new OMTBuiltIn("", Arrays.asList(parameter, restParameter), "");
 
         // too few
         assertThrows(NumberOfInputParametersMismatchException.class, () -> omtBuiltIn.validateSignature(call));
@@ -134,16 +134,16 @@ class OMTBuiltInTest {
 
     @Test
     void getName() {
-        assertEquals("name", new OMTBuiltIn("name").getName());
+        assertEquals("name", new OMTBuiltIn("name", "").getName());
     }
 
     @Test
     void getElement() {
-        assertEquals(element, new OMTBuiltIn(element, "name", omtDefineParam).getElement());
+        assertEquals(element, new OMTBuiltIn(element, "name", omtDefineParam, "").getElement());
     }
 
     @Test
     void getParameters() {
-        assertEquals(parameterList, new OMTBuiltIn("name", parameterList).getParameters());
+        assertEquals(parameterList, new OMTBuiltIn("name", parameterList, "").getParameters());
     }
 }

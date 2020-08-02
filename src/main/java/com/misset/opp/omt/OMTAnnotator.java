@@ -21,7 +21,6 @@ import static com.misset.opp.omt.psi.intentions.prefix.removePrefixIntention.get
 public class OMTAnnotator implements Annotator {
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
-        System.out.println("Annotating " + element.toString());
         if(element instanceof OMTCurieElement) {
             annotateCurie(new OMTCurie((OMTCurieElement)element), holder);
         }
@@ -46,18 +45,27 @@ public class OMTAnnotator implements Annotator {
         else if(element instanceof OMTListItemImport) {
             annotateImport((OMTListItemImport) element, holder);
         }
+        else if(element instanceof OMTFile) {
+            ProjectUtil.resetImportedExportedMembers((OMTFile) element);
+        }
     }
 
     private void annotateImport(@NotNull OMTListItemImport element, @NotNull AnnotationHolder holder) {
         // discriminate between a module import and a file import
         OMTImport omtImport = (OMTImport)element.getParent().getParent(); // get the block, listItem -> list -> block
         OMTImportSource importSource = omtImport.getImportSource();
-        HashMap<String, Object> allExportingMembers = ImportUtil.getAllExportingMembers(omtImport);
+
         if(importSource.toString().startsWith("module:")) {
             // TODO:
             // process module imports
         }
         else {
+            OMTFile omtFile = ImportUtil.getOMTFile(omtImport);
+            if(omtFile == null) {
+                holder.createErrorAnnotation(omtImport.getImportSource(), String.format("Cannot find file at: %s", ImportUtil.resolvePathToSource(omtImport)));
+            }
+
+            HashMap<String, OMTBuiltIn> allExportingMembers = ImportUtil.getAllExportedMembers(omtFile);
             String memberName = element.getListItemImportMember().getText();
             if(!allExportingMembers.containsKey(memberName)) {
                 String message = String.format("%s has no exporting member '%s'", omtImport.getImportSource().getText(), memberName);

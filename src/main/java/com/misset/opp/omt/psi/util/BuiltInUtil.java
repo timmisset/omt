@@ -44,9 +44,9 @@ public class BuiltInUtil {
             }
 
             if (type == BuiltInType.Commands) {
-                parsedItems.add((T)new OMTCommand(name, literals));
+                parsedItems.add((T)new OMTCommand(name, literals, "Built-in Command"));
             } else if (type == BuiltInType.Operators) {
-                parsedItems.add((T)new OMTOperator(name, literals));
+                parsedItems.add((T)new OMTOperator(name, literals, "Built-in Operator"));
             }
         });
         return parsedItems;
