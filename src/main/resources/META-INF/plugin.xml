@@ -23,8 +23,8 @@
         <codeStyleSettingsProvider implementation="com.misset.opp.omt.OMTCodeStyleSettingsProvider"/>
         <langCodeStyleSettingsProvider
                 implementation="com.misset.opp.omt.OMTLanguageCodeStyleSettingsProvider"/>
-<!--        <completion.contributor language="OMT"-->
-<!--                                implementationClass="com.misset.opp.omt.OMTCompletionContributor"/>-->
+        <completion.contributor language="OMT"
+                                implementationClass="com.misset.opp.omt.OMTCompletionContributor"/>
         <psi.referenceContributor implementation="com.misset.opp.omt.references.OperatorReferenceContributor"/>
         <postStartupActivity implementation="com.misset.opp.omt.OMTStartupActivity"/>
     </extensions>

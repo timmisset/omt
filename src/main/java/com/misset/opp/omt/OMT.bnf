@@ -15,8 +15,8 @@
   psiImplUtilClass="com.misset.opp.omt.psi.impl.OMTPsiImplUtil"
 }
 
-OMTFile ::= specificBlock*
-specificBlock ::= importBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock | NEW_LINE
+OMTFile ::= (comment | specificBlock | block | NEW_LINE)+
+
 // PART I: CONTAINERS
 // Used to group the elements together in every larger blocks to navigate to parents / children
 
@@ -25,30 +25,34 @@ specificBlock ::= importBlock | prefixBlock | queriesBlock | commandsBlock | mod
 * A block can be preceded by JAVA_DOCS comment block, has a PROPERTY label which identifies the block
 * and 0 to many content blocks.
  */
-modelBlock::=               MODEL_BLOCK_START NEW_LINE (INDENT modelItemBlock* DEDENT)?
-modelItemBlock::=           modelItemLabel NEW_LINE (INDENT blockContent* DEDENT)?
-block::=                    propertyLabel NEW_LINE (INDENT blockContent* DEDENT)?
+specificBlock ::= moduleBlock | importBlock | exportBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock
+modelBlock::=               MODEL_BLOCK_START NEW_LINE (INDENT modelItemBlock+ DEDENT?)?
+modelItemBlock::=           modelItemLabel NEW_LINE (INDENT blockContent+ DEDENT?)?
+block::=                    propertyLabel NEW_LINE (INDENT blockContent+ DEDENT?)?
 
 /**
  * The content of a block can be a block property or another block
  */
-blockContent::=             comment? list | blockProperty | specificBlock| block
+blockContent::=             comment? (list | blockProperty | specificBlock | block)
 /**
  * A block property is PROPERTY label with a value on the same line or in a multiline block starting from the next line
  */
 blockProperty::=            propertyLabel (singleLineBlockProperty | multiLineBlockProperty)
 curiePrefix::=              PROPERTY
-prefixBlock::=              PREFIX_BLOCK_START NEW_LINE (INDENT (comment? prefix END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
+prefixBlock::=              PREFIX_BLOCK_START NEW_LINE (INDENT (comment? prefix END_OF_LINE_COMMENT? NEW_LINE)* DEDENT?)?
 prefixDefine ::=            PREFIX_DEFINE_START prefix
 prefix::=                   curiePrefix IRI
-importBlock::=              IMPORT_START NEW_LINE? (INDENT import* DEDENT)?
-importSource::=             STRING COLON
-import::=                   importSource NEW_LINE? (INDENT importList DEDENT)?
+importBlock::=              IMPORT_START NEW_LINE? (INDENT import+ DEDENT?)?
+importSource::=             STRING COLON | IMPORT_PATH EMPTY_ARRAY?
+import::=                   comment? importSource NEW_LINE? ((INDENT importList DEDENT?) | importList)?
+exportBlock::=              EXPORT_START NEW_LINE? ((INDENT exportList DEDENT?) | exportList)?
+moduleBlock::=              MODULE_NAME_START moduleName
+moduleName::=               STRING | OPERATOR | NAME
 
-queriesBlock::=            QUERY_BLOCK_START NEW_LINE (INDENT (comment? defineQueryStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
-defineQueryStatement ::=    DEFINE_START DEFINE_QUERY defineName define_param? LAMBDA queryPath SEMICOLON
+queriesBlock::=            QUERY_BLOCK_START PIPE? NEW_LINE+ (INDENT (defineQueryStatement NEW_LINE)* DEDENT)?
+defineQueryStatement ::=    comment? DEFINE_START DEFINE_QUERY defineName define_param? LAMBDA queryPath SEMICOLON END_OF_LINE_COMMENT
 
-commandsBlock::=           COMMAND_BLOCK_START NEW_LINE (INDENT (comment? defineCommandStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
+commandsBlock::=           COMMAND_BLOCK_START PIPE? NEW_LINE+ (INDENT (comment? defineCommandStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
 defineCommandStatement ::=  (DEFINE_START DEFINE_COMMAND defineName define_param?)
 operatorCall ::=            (OPERATOR signature) | OPERATOR | (CONDITIONAL_OPERATOR signature) | CONDITIONAL_OPERATOR
 commandCall ::=             (COMMAND signature) | COMMAND
@@ -56,7 +60,7 @@ signature ::=               PARENTHESES_OPEN variableValue? (COMMA variableValue
 defineName ::=              NAME
 
 // PART II: ELEMENTS
-comment::=                  (JAVA_DOCS | END_OF_LINE_COMMENT) NEW_LINE
+comment::=                  ((JAVA_DOCS | END_OF_LINE_COMMENT) NEW_LINE)+
 /**
  * A property label identifies the block using the NAME: syntax and can have a END_OF_LINE_COMMENT
  * A property label can be further identified with MODEL_ITEM_TYPE, such as !Activity or !Component
@@ -74,46 +78,47 @@ singleLineBlockProperty::=  (variableAssignmentValue) END_OF_LINE_COMMENT? NEW_L
 /**
  * A multi line block property is another container for grouping properties
  */
-multiLineBlockProperty::=   (NEW_LINE list | (NEW_LINE INDENT list DEDENT)) | script
+multiLineBlockProperty::=   (NEW_LINE list | (NEW_LINE INDENT list DEDENT?)) | script
 /**
  * A list can consist of 1 or many listitems, all ending with a NEW_LINE
  */
 list::=                     (listitem END_OF_LINE_COMMENT? NEW_LINE)+
 importList::=               (listItemImport END_OF_LINE_COMMENT? NEW_LINE)+
+exportList::=               (listItemExport END_OF_LINE_COMMENT? NEW_LINE)+
 /**
  * A list item
  */
-listitem::=                 LISTITEM_BULLET (listItemVariable | listItemProperty)
+listitem::=                 comment? LISTITEM_BULLET? (listItemVariable | listItemProperty)?
+listItemImport::=           comment? LISTITEM_BULLET? listItemImportMember
+listItemExport::=           comment? LISTITEM_BULLET? listItemExportMember
 
 // PART III: VARIABLES & PARAMS
 constant_value ::=          STRING | INTEGER | DECIMAL | NULL | BOOLEAN | TYPED_VALUE
 variable ::=                VARIABLE_NAME
 declareVariable::=          DECLARE_VAR (COMMA variableAssignment)* variableAssignment
-variableValue::=            constant_value | variable | queryPath
+variableValue::=            queryPath | constant_value | variable
 variableAssignment::=       variable (EQUALS variableAssignmentValue)?
 variableAssignmentValue::=  queryPath | variableValue | commandCall
 // omt style declaration, supports type specification and default values
 listItemVariable::=         listItemParameter (EQUALS variableAssignmentValue)?
 listItemParameter::=        variable VARIABLE_TYPE?
-listItemImport::=           LISTITEM_BULLET listItemImportMember
 listItemImportMember::=     OPERATOR
+listItemExportMember::=     OPERATOR
 listItemProperty::=         blockProperty
 
 // PART IV: SCRIPTING
 // ODT scripts that are executed
 commandBlock ::=            CURLY_OPEN NEW_LINE? INDENT? (commandBlockContent END_OF_LINE_COMMENT? NEW_LINE?) DEDENT? CURLY_CLOSED
 commandBlockContent ::=     (commandBlock | scriptLine)
-script    ::=               PIPE NEW_LINE (INDENT (scriptContent NEW_LINE?)* DEDENT)?
+script    ::=               PIPE NEW_LINE* (INDENT (scriptContent NEW_LINE?)* DEDENT?)?
 scriptContent ::=           (commandBlock | scriptLine)
 scriptLine::=               comment* scriptLineContent END_OF_LINE_COMMENT? SEMICOLON
 scriptLineContent ::=       (declareVariable | variableAssignment | prefixDefine)
 
-queryPath ::=               queryPartFirst (FORWARD_SLASH (queryStep | queryReverseStep | queryCondition))*
-queryStep ::=               (curieElement | operatorCall | IRI | DOT | queryOneOrMany | queryZeroOrMany) queryFilter*
-queryCondition ::=          (queryPath | queryStep) CONDITIONAL_OPERATOR (constant_value | queryPath | queryStep)
+queryPath ::=               (FORWARD_SLASH? (queryStep | queryReverseStep))*
+queryStep ::=               (variable | curieConstantElement | curieElement | operatorCall | IRI | DOT | queryOneOrMany | queryZeroOrMany | CONDITIONAL_OPERATOR | queryFilter | NEW_LINE)
 queryReverseStep ::=        CARAT queryStep
-queryPartFirst ::=          constant_value | variable | curieConstantElement | operatorCall | DOT
-queryFilter ::=             BRACKET_OPEN (queryCondition | queryStep | queryPath) BRACKET_CLOSED
+queryFilter ::=             BRACKET_OPEN queryPath BRACKET_CLOSED
 queryWrap ::=               PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
 queryOneOrMany ::=          queryWrap PLUS
 queryZeroOrMany ::=         queryWrap ASTERIX
