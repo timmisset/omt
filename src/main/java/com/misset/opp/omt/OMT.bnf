@@ -15,114 +15,151 @@
   psiImplUtilClass="com.misset.opp.omt.psi.impl.OMTPsiImplUtil"
 }
 
-OMTFile ::= (comment | specificBlock | block | NEW_LINE)+
+// the end of the file (or the entire file) can be a (set of) comment(s)
+OMTFile ::= block*
 
-// PART I: CONTAINERS
-// Used to group the elements together in every larger blocks to navigate to parents / children
+// a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
+block ::=                                   (specificBlock | blockEntry)+
+blockEntry ::=                              propertyLabel (map | sequence | scalar)
+propertyLabel ::=                           PROPERTY
 
-/**
-* Everything should resolve to a block, blocks are nested basted on indentation, like YAML
-* A block can be preceded by JAVA_DOCS comment block, has a PROPERTY label which identifies the block
-* and 0 to many content blocks.
- */
-specificBlock ::= moduleBlock | importBlock | exportBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock
-modelBlock::=               MODEL_BLOCK_START NEW_LINE (INDENT modelItemBlock+ DEDENT?)?
-modelItemBlock::=           modelItemLabel NEW_LINE (INDENT blockContent+ DEDENT?)?
-block::=                    propertyLabel NEW_LINE (INDENT blockContent+ DEDENT?)?
+// a scalar must follow the property label directly but can be multiple lines
+// it is not affected by indentation
+scalar ::=                                  (scalarValue) (ODT_END | trailing)+
+scalarValue ::=                             constant_value | parameterWithType | script | variableAssignment | queryPath
 
-/**
- * The content of a block can be a block property or another block
- */
-blockContent::=             comment? (list | blockProperty | specificBlock | block)
-/**
- * A block property is PROPERTY label with a value on the same line or in a multiline block starting from the next line
- */
-blockProperty::=            propertyLabel (singleLineBlockProperty | multiLineBlockProperty)
-curiePrefix::=              PROPERTY
-prefixBlock::=              PREFIX_BLOCK_START NEW_LINE (INDENT (comment? prefix END_OF_LINE_COMMENT? NEW_LINE)* DEDENT?)?
-prefixDefine ::=            PREFIX_DEFINE_START prefix
-prefix::=                   curiePrefix IRI
-importBlock::=              IMPORT_START NEW_LINE? (INDENT import+ DEDENT?)?
-importSource::=             STRING COLON | IMPORT_PATH EMPTY_ARRAY?
-import::=                   comment? importSource NEW_LINE? ((INDENT importList DEDENT?) | importList)?
-exportBlock::=              EXPORT_START NEW_LINE? ((INDENT exportList DEDENT?) | exportList)?
-moduleBlock::=              MODULE_NAME_START moduleName
-moduleName::=               STRING | OPERATOR | NAME
+// a sequence must start with a newline followed by items, lead by their bullet (-)
+// indentation is allowed but not required. If INDENT, it must DEDENT
+sequence ::=                                trailing ((INDENT sequenceItem* DEDENT) | sequenceItem*)
+sequenceItem ::=                            leading? SEQUENCE_BULLET? sequenceItemValue (ODT_END | trailing)+
+sequenceItemValue ::=                       parameterWithType | variableAssignment | queryPath
 
-queriesBlock::=            QUERY_BLOCK_START PIPE? NEW_LINE+ (INDENT (defineQueryStatement NEW_LINE)* DEDENT)?
-defineQueryStatement ::=    comment? DEFINE_START DEFINE_QUERY defineName define_param? LAMBDA queryPath SEMICOLON END_OF_LINE_COMMENT
+// a map is nothing more than another block, it must however be indented
+map ::=                                     trailing INDENT block DEDENT
 
-commandsBlock::=           COMMAND_BLOCK_START PIPE? NEW_LINE+ (INDENT (comment? defineCommandStatement END_OF_LINE_COMMENT? NEW_LINE)* DEDENT)?
-defineCommandStatement ::=  (DEFINE_START DEFINE_COMMAND defineName define_param?)
-operatorCall ::=            (OPERATOR signature) | OPERATOR | (CONDITIONAL_OPERATOR signature) | CONDITIONAL_OPERATOR
-commandCall ::=             (COMMAND signature) | COMMAND
-signature ::=               PARENTHESES_OPEN variableValue? (COMMA variableValue)* PARENTHESES_CLOSE
-defineName ::=              NAME
+// SPECIFIC BLOCKS
+specificBlock ::=                          importBlock | exportBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock | moduleBlock
+// todo: check if this can be placed by a generic parser that will throw exceptions based on the content but
+// still using the generic scalar, sequence or map
 
-// PART II: ELEMENTS
-comment::=                  ((JAVA_DOCS | END_OF_LINE_COMMENT) NEW_LINE)+
-/**
- * A property label identifies the block using the NAME: syntax and can have a END_OF_LINE_COMMENT
- * A property label can be further identified with MODEL_ITEM_TYPE, such as !Activity or !Component
- */
+// sequences
+exportBlock ::=                             EXPORT_START trailing ((INDENT memberList DEDENT) | memberList)?
+memberList ::=                              (SEQUENCE_BULLET member trailing)*
+member ::=                                  NAME
 
-propertyLabel::=            comment? propertyName END_OF_LINE_COMMENT?
-modelItemLabel::=           comment? propertyName modelItemTypeCast END_OF_LINE_COMMENT?
-modelItemTypeCast::=        MODEL_ITEM_TYPE // make this an element for easier processing
-propertyName::=             PROPERTY // make this an element for easier processing
+// scalars
+queriesBlock::=                             QUERY_BLOCK_START (PIPE trailing defineQueryStatement* ODT_END)?
+commandsBlock::=                            COMMAND_BLOCK_START (PIPE trailing defineCommandStatement* ODT_END)?
 
-/**
- * A single line block property, i.e. item: $variable
- */
-singleLineBlockProperty::=  (variableAssignmentValue) END_OF_LINE_COMMENT? NEW_LINE
-/**
- * A multi line block property is another container for grouping properties
- */
-multiLineBlockProperty::=   (NEW_LINE list | (NEW_LINE INDENT list DEDENT?)) | script
-/**
- * A list can consist of 1 or many listitems, all ending with a NEW_LINE
- */
-list::=                     (listitem END_OF_LINE_COMMENT? NEW_LINE)+
-importList::=               (listItemImport END_OF_LINE_COMMENT? NEW_LINE)+
-exportList::=               (listItemExport END_OF_LINE_COMMENT? NEW_LINE)+
-/**
- * A list item
- */
-listitem::=                 comment? LISTITEM_BULLET? (listItemVariable | listItemProperty)?
-listItemImport::=           comment? LISTITEM_BULLET? listItemImportMember
-listItemExport::=           comment? LISTITEM_BULLET? listItemExportMember
+moduleBlock::=                              MODULE_NAME_START moduleName
+moduleName::=                               NAME
 
-// PART III: VARIABLES & PARAMS
-constant_value ::=          STRING | INTEGER | DECIMAL | NULL | BOOLEAN | TYPED_VALUE
-variable ::=                VARIABLE_NAME
-declareVariable::=          DECLARE_VAR (COMMA variableAssignment)* variableAssignment
-variableValue::=            queryPath | constant_value | variable
-variableAssignment::=       variable (EQUALS variableAssignmentValue)?
-variableAssignmentValue::=  queryPath | variableValue | commandCall
-// omt style declaration, supports type specification and default values
-listItemVariable::=         listItemParameter (EQUALS variableAssignmentValue)?
-listItemParameter::=        variable VARIABLE_TYPE?
-listItemImportMember::=     OPERATOR
-listItemExportMember::=     OPERATOR
-listItemProperty::=         blockProperty
+// maps
+importBlock ::=                             IMPORT_START trailing (INDENT import* DEDENT)?
+import ::=                                  leading? importSource trailing ((INDENT memberList DEDENT) | memberList)?
+importSource ::=                            leading? STRING COLON | IMPORT_PATH EMPTY_ARRAY? trailing
 
-// PART IV: SCRIPTING
-// ODT scripts that are executed
-commandBlock ::=            CURLY_OPEN NEW_LINE? INDENT? (commandBlockContent END_OF_LINE_COMMENT? NEW_LINE?) DEDENT? CURLY_CLOSED
-commandBlockContent ::=     (commandBlock | scriptLine)
-script    ::=               PIPE NEW_LINE* (INDENT (scriptContent NEW_LINE?)* DEDENT?)?
-scriptContent ::=           (commandBlock | scriptLine)
-scriptLine::=               comment* scriptLineContent END_OF_LINE_COMMENT? SEMICOLON
-scriptLineContent ::=       (declareVariable | variableAssignment | prefixDefine)
+prefixBlock::=                              PREFIX_BLOCK_START trailing (INDENT prefix* DEDENT)?
+prefix::=                                   leading? curiePrefix IRI trailing
+curiePrefix::=                              PROPERTY
+curieElement ::=                            CURIE
+curieConstantElement ::=                    CURIE_CONSTANT
 
-queryPath ::=               (FORWARD_SLASH? (queryStep | queryReverseStep))*
-queryStep ::=               (variable | curieConstantElement | curieElement | operatorCall | IRI | DOT | queryOneOrMany | queryZeroOrMany | CONDITIONAL_OPERATOR | queryFilter | NEW_LINE)
-queryReverseStep ::=        CARAT queryStep
-queryFilter ::=             BRACKET_OPEN queryPath BRACKET_CLOSED
-queryWrap ::=               PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
-queryOneOrMany ::=          queryWrap PLUS
-queryZeroOrMany ::=         queryWrap ASTERIX
+modelBlock::=                               MODEL_BLOCK_START trailing (INDENT modelItemBlock+ DEDENT)?
+modelItemBlock::=                           leading? modelItemLabel trailing (INDENT block DEDENT)?
+modelItemLabel::=                           propertyLabel modelItemTypeElement
+modelItemTypeElement ::=                    MODEL_ITEM_TYPE
 
-define_param ::=            PARENTHESES_OPEN variable? (COMMA variable)* PARENTHESES_CLOSE
-curieElement ::=            CURIE
-curieConstantElement ::=    CURIE_CONSTANT
+// COMMENTS
+// Can occur on empty lines (JavaDocs and End Of Line Comments) or at the end of lines (End of Line Comments)
+comment ::=                                 END_OF_LINE_COMMENT | JAVA_DOCS
+eolComment ::=                              END_OF_LINE_COMMENT
+// trailing is everything at the end of the current line and before NEW_LINE.
+// It can be simply the NEW_LINE or an eolComment followed by a NEW_LINE
+trailing ::=                                eolComment? NEW_LINE+
+// leading is everything before a block or item. Assuming that comments are written above the code they are
+// commenting on, this should help to relate the comment to the code
+leading ::=                                 (comment NEW_LINE)+
+
+// ////////////////////////////////////////////////////
+// ODT
+// ////////////////////////////////////////////////////
+constant_value ::=                          STRING | INTEGER | DECIMAL | NULL | BOOLEAN | TYPED_VALUE
+// a variable is declared using VAR and one or more variable names. Optionally an assignment is added
+// the assignment is deconstructed to the entire set of variables that is declared. i.e. VAR $a, $b = [1, 2]. $a == 1, $b == 2
+// or can be VAR $a = 1, $b = 2 etc. todo: check if this is actually true
+declareVariable ::=                         DECLARE_VAR variableAssignment (COMMA variableAssignment)*
+// a variable assignment is $var = 1234
+variableAssignment::=                       variable EQUALS variableValue
+// a variable can be assigned with anything
+variableValue ::=                           constant_value | queryPath | commandCall
+
+// a parameter type is used to typecast input parameters in OMT model items
+parameter ::=                               VARIABLE_NAME
+variable ::=                                VARIABLE_NAME
+parameterWithType ::=                       parameter PARAMETER_TYPE
+
+
+
+
+// SCRIPT
+// an ODT (script) block is always started by a Yaml scalar node
+// it can start on the same line and be restricted to that line (not required) or it can be started by the
+// literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and INDENT and DEDENT
+script ::=                                  PIPE trailing scriptLine*
+commandBlock ::=                            CURLY_OPEN trailing (script | scriptLine+) CURLY_CLOSED
+// a scriptline is contained by the addition of the semicolon at the end
+scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) trailing
+// the contents of a script, contained by a scriptLine or Scalar
+scriptContent ::=                           declareVariable | variableAssignment | definePrefix | commandCall | assignmentStatement |
+                                            addToCollection | removeFromCollection | logicalBlock | returnStatement
+
+// DEFINED MEMBERS
+// ODT Members are Operators and Commands, both can be created by a DEFINE statement
+// there is also a collection of BuiltIn operators and commands which are included
+// and finally, all runnable OMT modelitems are available as Commands (Activity, Procedure) or Operators (StandAloneQuery)
+// only the Defined members are part of set of the grammar parser
+defineName ::=                              NAME | OPERATOR // element version of name
+defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA queryPath SEMICOLON trailing
+defineCommandStatement ::=                  leading? DEFINE_START DEFINE_COMMAND defineName defineParam? LAMBDA commandBlock trailing
+definePrefix ::=                            leading? PREFIX_DEFINE_START prefix trailing
+defineParam ::=                             PARENTHESES_OPEN (variable (COMMA variable)*)? PARENTHESES_CLOSE
+
+// MEMBER CALLS
+// A call to either an Operator or a Command. In case of the latter, it's always prefixed with @
+operatorCall ::=                            (OPERATOR | CONDITIONAL_OPERATOR | NAME) signature?
+commandCall ::=                             COMMAND flagSignature? signature?
+signature ::=                               PARENTHESES_OPEN (variableValue (COMMA variableValue)*)? PARENTHESES_CLOSE
+flagSignature ::=                           FLAG
+
+logicalBlock ::=                            ifBlock commandBlock (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
+ifBlock ::=                                 IF_OPERATOR (queryPath | (PARENTHESES_OPEN queryPath PARENTHESES_CLOSE))
+elseBlock ::=                               ELSE_OPERATOR (queryPath | (PARENTHESES_OPEN queryPath PARENTHESES_CLOSE))
+returnStatement ::=                         RETURN_OPERATOR queryPath?
+
+// an equation statement should contain a left hand value and 1+ condition operators + right hand values:
+// $value == $value == $value etc...
+equationStatement ::=                       (CONDITIONAL_OPERATOR queryStep)+
+assignmentStatement ::=                     queryPath trailing? EQUALS trailing? (queryPath | commandCall)
+addToCollection ::=                         queryPath trailing? ADD trailing? (queryPath | commandCall)
+removeFromCollection ::=                    queryPath trailing? REMOVE trailing? (queryPath | commandCall)
+
+// QUERIES
+// A queryPath consists of one or more querySteps. A queryStep can be considered forward or reverse (indicated by ^)
+// to reduce the complexity of parsing, slashes will be captured but are not required
+queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+
+queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
+                                            operatorCall | IRI | DOT | queryOneOrMany | queryZeroOrMany | CONDITIONAL_OPERATOR |
+                                            LAMBDA | queryFilter | NEW_LINE
+queryReverseStep ::=                        CARAT queryStep
+
+// a query filter is contained by brackets [] and should resolve to boolean
+queryFilter ::=                             BRACKET_OPEN queryPath BRACKET_CLOSED
+
+// a recursion will continuously collect items based on the outcome of the previous recursion and the path described in the recursion
+// this makes it easy to traverse a graph for nested elements of identical/similar design
+queryRecursion ::=                          PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
+// one or more will not return itself
+queryOneOrMany ::=                          queryRecursion PLUS
+// zero or more will return itself and all descendents
+queryZeroOrMany ::=                         queryRecursion ASTERIX

@@ -1,52 +1,47 @@
 package com.misset.opp.omt;
 
 import com.intellij.psi.tree.IElementType;
-import com.intellij.testFramework.ParsingTestCase;
-import com.misset.opp.omt.psi.util.Helper;
-import org.intellij.sdk.language.parser.OMTParser;
+import com.misset.opp.omt.domain.util.Helper;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-class OMTLexerTest extends ParsingTestCase {
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-    public OMTLexerTest() {
-        super("", "omt", new OMTParserDefinition());
-    }
-
-    /**
-     *
-     * @return path to test data file directory relative to root of this module.
-     */
-    @Override
-    protected String getTestDataPath() {
-        return "src/test/testData/lexer";
-    }
-
-    @Override
-    protected boolean skipSpaces() {
-        return false;
-    }
-
-    @Override
-    protected boolean includeRanges() {
-        return true;
-    }
+class OMTLexerTest {
 
     @Test
-    public void testParsingTestData() {
-        doTest(true);
+    public void testOMTFile() throws IOException {
+        // This method will test an entire OMT file for identical contents with the expected outcome
+        // the expected content is based on the output after parsing was finally successful. Therefore, this method is to make
+        // sure any changes to the lexer won't mess this minimally parsable file
+        String content = Helper.getResourceAsString("test.omt");
+        String validationContent = Helper.getResourceAsString("validate_test_omt.txt");
+        assertEquals(Arrays.asList(validationContent.split("\r\n")), getElements(content));
     }
 
-    @Test
-    void QueryTest() throws IOException {
-        Reader reader = new BufferedReader(new FileReader(Helper.getResource("testData/lexer/queries.omt")));
-        OMTLexer omtLexer = new OMTLexer(reader);
-        int tokenStart = omtLexer.getTokenStart();
+    private List<String> getElements(String content) throws IOException {
+        OMTLexer lexer = new OMTLexer(null);
+        lexer.reset(content, 0, content.length(), 0);
+        List<String> elements = new ArrayList<>();
+        boolean cont = true;
+        while(cont) {
+            IElementType element = lexer.advance();
+            if(element != null) { elements.add(element.toString()); }
+            else { cont = false; }
+        }
+        return elements;
+    }
 
-        String buffer = "";
-        omtLexer.reset(buffer, 0, 100, omtLexer.yystate());
-        IElementType advance = omtLexer.advance();
-        System.out.println(advance);
+    private String getLexerStateName(int state) {
+        if(state == 0) { return "INITIAL"; }
+        if(state == 2) { return "YAML_SCALAR"; }
+        if(state == 4) { return "YAML_SEQUENCE"; }
+        if(state == 6) { return "INDENT"; }
+        if(state == 8) { return "ODT"; }
+        return "UNKNOWN";
     }
 }
