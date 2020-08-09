@@ -77,6 +77,7 @@ int previousState;
 boolean startOfLine;
 boolean inODTBlock = false;
 boolean declaringVariable = false;
+boolean inCurieStatement = false;
 void setState(int state) {
     previousState = state != yystate() ? yystate() : previousState;
     inODTBlock = state == ODT;
@@ -96,6 +97,8 @@ IElementType returnVariable() {
 
 %state INDENT
 %state ODT
+%state CURIE
+
 %%
 // when in initial and newline, start the indent counting
 <YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, INDENT> {NEWLINE}           { current_line_indent = 0; setState(INDENT); return returnElement(OMTTypes.NEW_LINE); }
@@ -180,7 +183,7 @@ IElementType returnVariable() {
                     declaringVariable = false;
                     return returnElement(OMTTypes.ODT_END);
               } else {
-                    return returnElement(OMTTypes.CURIE_PREFIX);
+                    return returnElement(OMTTypes.NAMESPACE_PREFIX);
               }
           }
 
@@ -199,10 +202,15 @@ IElementType returnVariable() {
     "$"{NAME}                                                       { return returnVariable(); }
     "@"{NAME}                                                       { return returnElement(OMTTypes.COMMAND); }
     "!"{NAME}                                                       { return returnElement(OMTTypes.FLAG); }
-    "/"{CURIE}                                                      { return returnElement(OMTTypes.CURIE_CONSTANT); }
-    {CURIE}                                                         { return returnElement(OMTTypes.CURIE); }
-    {CURIE_PREFIX}                                                  { return returnElement(OMTTypes.CURIE_PREFIX); }
-    "("{CURIE}")"                                                   { return returnElement(OMTTypes.PARAMETER_TYPE); }
+
+    "/"{CURIE}                                                      {
+          yypushback(yylength() - 1);
+          return returnElement(OMTTypes.CURIE_CONSTANT_ELEMENT_PREFIX);
+      }
+    {CURIE}                                                         {
+          setState(CURIE);
+          yypushback(yylength() - yytext().toString().indexOf(":"));
+          return returnElement(OMTTypes.NAMESPACE); }
 
     // the lambda is used for assigning the actual query/command block to it's constructor
     // and to assign a path to case condition
@@ -217,8 +225,16 @@ IElementType returnVariable() {
     "RETURN"                                                        { return returnElement(OMTTypes.RETURN_OPERATOR); }
     {NAME}                                                          { return returnElement(OMTTypes.OPERATOR); }
 
+    {IRI}                                                            { return returnElement(OMTTypes.IRI); }
     // start code block:
     "|"                                                             { return returnElement(OMTTypes.PIPE); }
+}
+<CURIE> {
+    ":"                                                             { return OMTTypes.COLON; }
+    {NAME}                                                          {
+                                                                          setState(ODT);
+                                                                          return OMTTypes.NAMESPACE_MEMBER;
+      }
 }
 // Common tokens
 <YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, ODT> {
