@@ -60,10 +60,14 @@ import ::=                                  leading? importSource trailing ((IND
 importSource ::=                            leading? STRING COLON | IMPORT_PATH EMPTY_ARRAY? trailing
 
 prefixBlock::=                              PREFIX_BLOCK_START trailing (INDENT prefix* DEDENT)?
-prefix::=                                   leading? curiePrefix IRI trailing
-curiePrefix::=                              PROPERTY
-curieElement ::=                            CURIE
-curieConstantElement ::=                    CURIE_CONSTANT
+prefix::=                                   leading? namespacePrefix IRI trailing
+namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)            {
+                                                                                         mixin="com.misset.opp.omt.psi.impl.OMTNamespacePrefixNamedElementImpl"
+                                                                                         implements="com.misset.opp.omt.psi.named.OMTNamespacePrefixNamedElement"
+                                                                                         methods=[getName setName getNameIdentifier]
+                                                                                   }
+curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix]}
+curieConstantElement ::=                    CURIE_CONSTANT_ELEMENT_PREFIX curieElement
 
 modelBlock::=                               MODEL_BLOCK_START trailing (INDENT modelItemBlock+ DEDENT)?
 modelItemBlock::=                           leading? modelItemLabel trailing (INDENT block DEDENT)?
@@ -98,11 +102,12 @@ variableValue ::=                           constant_value | queryPath | command
 variable ::=                                VARIABLE_NAME   | declaredVariable {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTVariableNamedElementImpl"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTVariableNamedElement"
-                                                                                 methods=[getName setName getNameIdentifier isDeclaredVariable]
+                                                                                 methods=[getName setName isDeclaredVariable getNameIdentifier]
                                                                                }
 // the lexer should determine if operating in a state of declare and provide a difference response for the discovered variable name
 declaredVariable ::=                        DECLARED_VARIABLE_NAME
-parameterWithType ::=                       variable PARAMETER_TYPE
+parameterWithType ::=                       variable PARENTHESES_OPEN parameterType PARENTHESES_CLOSE
+parameterType ::=                           IRI | (NAMESPACE COLON NAMESPACE_MEMBER)
 
 // SCRIPT
 // an ODT (script) block is always started by a Yaml scalar node

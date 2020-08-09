@@ -4,9 +4,7 @@ import com.intellij.lexer.Lexer;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
-import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
-import com.misset.opp.omt.psi.OMTTypes;
 import org.jetbrains.annotations.NotNull;
 
 import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
@@ -42,7 +40,7 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     private static final TextAttributesKey[] NUMBER_KEYS = new TextAttributesKey[]{NUMBER};
     private static final TextAttributesKey[] CONSTANT_VALUE_KEYS = new TextAttributesKey[]{CONSTANT};
     private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
-    private static final TextAttributesKey[] MODEL_ITEM_TYPES = new TextAttributesKey[]{MODEL_ITEM_TYPE};
+    private static final TextAttributesKey[] MODEL_ITEM_TYPE_KEYS = new TextAttributesKey[]{MODEL_ITEM_TYPE};
     private static final TextAttributesKey[] VARIABLE_TYPE_KEYS = new TextAttributesKey[]{VARIABLE};
     private static final TextAttributesKey[] OPERATOR_OR_COMMAND_KEYS = new TextAttributesKey[]{OPERATOR_OR_COMMAND};
 
@@ -55,36 +53,35 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     @NotNull
     @Override
     public TextAttributesKey[] getTokenHighlights(IElementType tokenType) {
-        if (tokenType.equals(OMTTypes.END_OF_LINE_COMMENT)) {
-            return COMMENTLINE_KEYS;
-        } else if (tokenType.equals(OMTTypes.JAVA_DOCS)) {
-            return COMMENTBLOCK_KEYS;
-        } else if (tokenType.equals(TokenType.BAD_CHARACTER)) {
-            return BAD_CHAR_KEYS;
-        } else if (tokenType.equals(OMTTypes.MODEL_ITEM_TYPE)) {
-            return MODEL_ITEM_TYPES;
-        } else if (tokenType.equals(OMTTypes.VARIABLE_TYPE)) {
-            return VARIABLE_TYPE_KEYS;
-        } else if (tokenType.equals(OMTTypes.VARIABLE_NAME)) {
-            return VARIABLE_TYPE_KEYS;
-        } else if (tokenType.equals(OMTTypes.OPERATOR)) {
-            return OPERATOR_OR_COMMAND_KEYS;
-        } else if (tokenType.equals(OMTTypes.CONDITIONAL_OPERATOR)) {
-            return OPERATOR_OR_COMMAND_KEYS;
-        } else if (tokenType.equals(OMTTypes.COMMAND)) {
-            return OPERATOR_OR_COMMAND_KEYS;
-        } else if (tokenType.equals(OMTTypes.STRING)) {
-            return STRING_KEYS;
-        } else if (tokenType.equals(OMTTypes.BOOLEAN)) {
-            return CONSTANT_VALUE_KEYS;
-        } else if (tokenType.equals(OMTTypes.NULL)) {
-            return CONSTANT_VALUE_KEYS;
-        } else if (tokenType.equals(OMTTypes.INTEGER)) {
-            return NUMBER_KEYS;
-        } else if (tokenType.equals(OMTTypes.DECIMAL)) {
-            return NUMBER_KEYS;
-        } else {
-            return EMPTY_KEYS;
+        switch (tokenType.toString()) {
+            case "OMTTokenType.END_OF_LINE_COMMENT":
+            case "OMTTokenType.JAVA_DOCS":
+                return COMMENTLINE_KEYS;
+            case "BAD_CHARACTER":
+                return BAD_CHAR_KEYS;
+            case "OMTTokenType.MODEL_ITEM_TYPE":
+                return MODEL_ITEM_TYPE_KEYS;
+            case "OMTTokenType.PARAMETER":
+            case "OMTTokenType.VARIABLE_NAME":
+                return VARIABLE_TYPE_KEYS;
+            case "OMTTokenType.OPERATOR":
+            case "OMTTokenType.COMMAND":
+            case "OMTTokenType.CONDITIONAL_OPERATOR":
+            case "OMTTokenType.IF_OPERATOR":
+            case "OMTTokenType.ELSE_OPERATOR":
+            case "OMTTokenType.RETURN_OPERATOR":
+                return OPERATOR_OR_COMMAND_KEYS;
+
+            case "OMTTokenType.STRING":
+                return STRING_KEYS;
+            case "OMTTokenType.BOOLEAN":
+            case "OMTTokenType.NULL":
+                return CONSTANT_VALUE_KEYS;
+            case "OMTTokenType.INTEGER":
+            case "OMTTokenType.DECIMAL":
+                return NUMBER_KEYS;
+
+            default: return EMPTY_KEYS;
         }
     }
 

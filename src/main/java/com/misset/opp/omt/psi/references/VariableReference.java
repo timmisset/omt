@@ -1,31 +1,36 @@
 package com.misset.opp.omt.psi.references;
 
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
-import com.misset.opp.omt.psi.OMTDeclaredVariable;
 import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.psi.util.VariableUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
+/**
+ * The referencing part of IntelliJ is kind of vague in the tutorial. For now it appears to work when the concept of usage -> declaration
+ * referencing is used. Meaning, a reference resolve always points to the declaration and not visa versa. Under the hood, IntelliJ will
+ * provide a quick usages window when resolving the DeclaredVariable from the text editor.
+ * The actual declaration should is resolved to itself, it then magically shows the usage instead of navigating to itself
+ */
 public class VariableReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
     private OMTVariable variable;
-    public VariableReference(@NotNull OMTVariable declaredVariable, TextRange textRange) {
-        super(declaredVariable, textRange);
-        this.variable = declaredVariable;
-        System.out.println("Creating reference " + declaredVariable.getText());
+
+    /**
+     * The reference created for this variable usage
+     * @param variable
+     * @param textRange
+     */
+    public VariableReference(@NotNull OMTVariable variable, TextRange textRange) {
+        super(variable, textRange);
+        this.variable = variable;
     }
 
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
-
-        // get all the usages of this declared variable
         Optional<OMTVariable> declaredByVariable = VariableUtil.getDeclaredByVariable(variable);
         return declaredByVariable
                 .map(omtVariable -> new ResolveResult[]{new PsiElementResolveResult(omtVariable)})
