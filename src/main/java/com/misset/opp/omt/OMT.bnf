@@ -45,7 +45,11 @@ specificBlock ::=                          importBlock | exportBlock | prefixBlo
 // sequences
 exportBlock ::=                             EXPORT_START trailing ((INDENT memberList DEDENT) | memberList)?
 memberList ::=                              (SEQUENCE_BULLET member trailing)*
-member ::=                                  NAME
+member ::=                                  NAME     {
+                                                       mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
+                                                       implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
+                                                       methods=[getName setName getNameIdentifier]
+                                                     }
 
 // scalars
 queriesBlock::=                             QUERY_BLOCK_START (PIPE trailing defineQueryStatement* ODT_END)?
@@ -126,7 +130,11 @@ scriptContent ::=                           declareVariable | variableAssignment
 // there is also a collection of BuiltIn operators and commands which are included
 // and finally, all runnable OMT modelitems are available as Commands (Activity, Procedure) or Operators (StandAloneQuery)
 // only the Defined members are part of set of the grammar parser
-defineName ::=                              NAME | OPERATOR // element version of name
+defineName ::=                              NAME | OPERATOR                         {
+                                                                                       mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
+                                                                                       implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
+                                                                                       methods=[getName setName getNameIdentifier]
+                                                                                     }
 defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA queryPath SEMICOLON trailing
 defineCommandStatement ::=                  leading? DEFINE_START DEFINE_COMMAND defineName defineParam? LAMBDA commandBlock trailing
 definePrefix ::=                            leading? PREFIX_DEFINE_START prefix trailing
@@ -134,7 +142,11 @@ defineParam ::=                             PARENTHESES_OPEN (variable (COMMA va
 
 // MEMBER CALLS
 // A call to either an Operator or a Command. In case of the latter, it's always prefixed with @
-operatorCall ::=                            (OPERATOR | CONDITIONAL_OPERATOR | NAME) signature?
+operatorCall ::=                            (OPERATOR | CONDITIONAL_OPERATOR | NAME) signature? {
+                                                             mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
+                                                             implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
+                                                             methods=[getName setName getNameIdentifier]
+                                                           }
 commandCall ::=                             COMMAND flagSignature? signature?
 signature ::=                               PARENTHESES_OPEN (variableValue (COMMA variableValue)*)? PARENTHESES_CLOSE
 flagSignature ::=                           FLAG
