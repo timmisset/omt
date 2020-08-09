@@ -76,6 +76,7 @@ void yypushback(int number, String id) {
 int previousState;
 boolean startOfLine;
 boolean inODTBlock = false;
+boolean declaringVariable = false;
 void setState(int state) {
     previousState = state != yystate() ? yystate() : previousState;
     inODTBlock = state == ODT;
@@ -85,6 +86,9 @@ IElementType returnElement(IElementType element) {
     startOfLine = element == OMTTypes.NEW_LINE;
     return element;
 }
+IElementType returnVariable() {
+    return declaringVariable ? OMTTypes.DECLARED_VARIABLE_NAME : OMTTypes.VARIABLE_NAME;
+}
 %}
 
 %state YAML_SCALAR
@@ -92,7 +96,6 @@ IElementType returnElement(IElementType element) {
 
 %state INDENT
 %state ODT
-
 %%
 // when in initial and newline, start the indent counting
 <YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, INDENT> {NEWLINE}           { current_line_indent = 0; setState(INDENT); return returnElement(OMTTypes.NEW_LINE); }
@@ -117,10 +120,11 @@ IElementType returnElement(IElementType element) {
 
     {IMPORT_PATH}                                             { setState(YAML_SCALAR); return returnElement(OMTTypes.IMPORT_PATH); }
 
+    "params:" | "variables:"                                  { setState(YAML_SCALAR); declaringVariable = true; return returnElement(OMTTypes.PROPERTY); }
     // the initial state is only used for the key parts and can result in a switch to the scalar or sequence node
     // when a new line is reached in the state of initial (consecutive new lines), scalar or mapping, the state is always returned
     // to initial. This way, the initial state will detect the "-" indicator of the sequence items
-    {NAME}":"                                                 { setState(YAML_SCALAR); return returnElement(OMTTypes.PROPERTY); }
+    {NAME}":"                                                 { setState(YAML_SCALAR); declaringVariable = false; return returnElement(OMTTypes.PROPERTY); }
     "$"{NAME}                                                 { setState(ODT); return returnElement(OMTTypes.VARIABLE_NAME); }
     "-"                                                       { setState(YAML_SEQUENCE); return returnElement(OMTTypes.SEQUENCE_BULLET); }
 }
@@ -130,7 +134,7 @@ IElementType returnElement(IElementType element) {
 // OMT: We can expect variables, imports etc
 <YAML_SEQUENCE> {
     // Variables
-    "$"{NAME}                                                        { setState(ODT); return returnElement(OMTTypes.VARIABLE_NAME);  }
+    "$"{NAME}                                                        { setState(ODT); return returnVariable();  }
     "/"                                                              { yypushback(1, "YAML_SCALAR"); setState(ODT); }
 }
 
@@ -138,7 +142,7 @@ IElementType returnElement(IElementType element) {
 <YAML_SCALAR> {
     {IRI}                                                            { return returnElement(OMTTypes.IRI); }
     "!"{NAME}                                                        { return returnElement(OMTTypes.MODEL_ITEM_TYPE); }
-    "$"{NAME}                                                        { setState(ODT); return returnElement(OMTTypes.VARIABLE_NAME); }
+    "$"{NAME}                                                        { setState(ODT); return returnVariable(); }
     "@"{NAME}                                                        { setState(ODT); return returnElement(OMTTypes.COMMAND); }
     {NAME}                                                           { setState(ODT); return returnElement(OMTTypes.OPERATOR); }
     // a YAML_SCALAR can start with any value, however once any of these prefixes is introduced it should switch to an ODT state
@@ -173,7 +177,7 @@ IElementType returnElement(IElementType element) {
                     // exit code block
                     yypushback(yylength(), "ODT_END");
                     setState(INDENT);
-
+                    declaringVariable = false;
                     return returnElement(OMTTypes.ODT_END);
               } else {
                     return returnElement(OMTTypes.CURIE_PREFIX);
@@ -186,13 +190,13 @@ IElementType returnElement(IElementType element) {
             return returnElement(OMTTypes.ODT_END);
       }
     // statements that identify specific elements within the ODT language
-    "DEFINE"                                                        { return returnElement(OMTTypes.DEFINE_START); }
+    "DEFINE"                                                        { declaringVariable = true; return returnElement(OMTTypes.DEFINE_START); }
     "QUERY"                                                         { return returnElement(OMTTypes.DEFINE_QUERY); }
     "COMMAND"                                                       { return returnElement(OMTTypes.DEFINE_COMMAND); }
-    "VAR"                                                           { return returnElement(OMTTypes.DECLARE_VAR); }
+    "VAR"                                                           { declaringVariable = true; return returnElement(OMTTypes.DECLARE_VAR); }
     "PREFIX"                                                        { return returnElement(OMTTypes.PREFIX_DEFINE_START); }
-    ";"                                                             { return returnElement(OMTTypes.SEMICOLON); }
-    "$"{NAME}                                                       { return returnElement(OMTTypes.VARIABLE_NAME); }
+    ";"                                                             { declaringVariable = false; return returnElement(OMTTypes.SEMICOLON); }
+    "$"{NAME}                                                       { return returnVariable(); }
     "@"{NAME}                                                       { return returnElement(OMTTypes.COMMAND); }
     "!"{NAME}                                                       { return returnElement(OMTTypes.FLAG); }
     "/"{CURIE}                                                      { return returnElement(OMTTypes.CURIE_CONSTANT); }
@@ -202,7 +206,7 @@ IElementType returnElement(IElementType element) {
 
     // the lambda is used for assigning the actual query/command block to it's constructor
     // and to assign a path to case condition
-    "=>"                                                            { setState(ODT); return returnElement(OMTTypes.LAMBDA); }
+    "=>"                                                            { declaringVariable = false; return returnElement(OMTTypes.LAMBDA); }
 
     // ODT operators
     // certain operators are used for assertions and should be recognized. They can be used within querysteps (grammar part)

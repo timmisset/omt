@@ -3,19 +3,14 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
-import org.apache.maven.model.Model;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class VariableUtil {
 
     public static boolean isVariableDeclare(OMTVariable variable) {
-        return variable.getParent() instanceof OMTListItemParameter ||
+        return variable.getParent() instanceof OMTSequenceItemValue ||
                 variable.getParent() instanceof OMTDefineParam ||
                 variable.getParent() instanceof OMTVariableAssignment && isVariableDeclare((OMTVariableAssignment)variable.getParent());
 
@@ -26,8 +21,15 @@ public class VariableUtil {
     public static boolean isVariableAssignment(OMTVariable variable) {
         return variable.getParent() instanceof OMTVariableAssignment;
     }
-    public static OMTVariable getVariable(OMTListItemVariable listItemVariable) {
-        return listItemVariable.getListItemParameter().getVariable();
+    public static OMTVariable getVariable(OMTSequenceItemValue sequenceItemValue) {
+        PsiElement element = sequenceItemValue.getQueryPath() != null ? sequenceItemValue.getQueryPath().getFirstChild() : sequenceItemValue.getFirstChild();
+        if(element == null) { return null; }
+        if(element instanceof OMTVariableAssignment) { return getVariable((OMTVariableAssignment) element); }
+        if(element instanceof OMTQueryStep) { return ((OMTQueryStep) element).getVariable(); }
+        if(element instanceof OMTQueryReverseStep) { return ((OMTQueryReverseStep) element).getQueryStep().getVariable(); }
+        if(element instanceof OMTVariable) { return (OMTVariable) element; }
+        if(element instanceof OMTParameterWithType) { return ((OMTParameterWithType) element).getVariable(); }
+        return null;
     }
     public static OMTVariable getVariable(OMTVariableAssignment variableAssignment) {
         return variableAssignment.getVariable();
@@ -48,9 +50,9 @@ public class VariableUtil {
                 PsiTreeUtil.getTopmostParentOfType(variableInstance, OMTQueryPath.class) != null &&
                 ModelUtil.getModelItemBlock(variableInstance).isPresent();
     }
-    public static boolean isVariableAssignmentValueUsed(OMTVariableAssignmentValue variableAssignmentValue) {
+    public static boolean isVariableAssignmentValueUsed(OMTVariableValue variableAssignmentValue) {
         // first check if the assignmentvalue is part of script or listitem
-        if(variableAssignmentValue.getParent() instanceof OMTListItemVariable) {
+        if(variableAssignmentValue.getParent() instanceof OMTSequenceItem) {
             return isVariableAssignmentValueUsedInModel(variableAssignmentValue);
         }
         OMTScriptContent scriptContent = PsiTreeUtil.getTopmostParentOfType(variableAssignmentValue, OMTScriptContent.class);
@@ -68,8 +70,8 @@ public class VariableUtil {
         }
         return true;
     }
-    public static boolean isVariableAssignmentValueUsedInModel(OMTVariableAssignmentValue variableAssignmentValue) {
-        OMTVariable variable = getVariable((OMTListItemVariable)variableAssignmentValue.getParent());
+    public static boolean isVariableAssignmentValueUsedInModel(OMTVariableValue variableAssignmentValue) {
+        OMTVariable variable = getVariable((OMTVariableAssignment) variableAssignmentValue.getParent());
         // variable can be used somewhere else in the model:
         Optional<OMTModelItemBlock> optionalOMTBlock = ModelUtil.getModelItemBlock(variableAssignmentValue);
         if(optionalOMTBlock.isPresent()) {
@@ -101,44 +103,45 @@ public class VariableUtil {
                 .filter(scriptVariable -> scriptVariable.getText().equals(variable.getText()))
                 .findFirst();
     }
-    public static List<OMTVariable> getVariableUsage(OMTVariable variable) {
+    public static List<OMTVariable> getVariableUsage(OMTDeclaredVariable declaredVariable) {
         List<OMTVariable> variables = new ArrayList<>();
 
         // We first need to determine where the variable declare is part of:
         // a query
-        OMTDefineQueryStatement omtDefineQueryStatement = PsiTreeUtil.getTopmostParentOfType(variable, OMTDefineQueryStatement.class);
+        OMTDefineQueryStatement omtDefineQueryStatement = PsiTreeUtil.getTopmostParentOfType(declaredVariable, OMTDefineQueryStatement.class);
         if(omtDefineQueryStatement != null) {
             variables.addAll(
                     PsiTreeUtil.findChildrenOfType(omtDefineQueryStatement.getQueryPath(), OMTVariable.class).stream()
-                    .filter(omtVariable -> omtVariable.getText().equals(variable.getText()))
+                    .filter(variable -> variable.getText().equals(declaredVariable.getText()))
                     .collect(Collectors.toList())
             );
         }
 
         // a command
-        OMTDefineCommandStatement omtDefineCommandStatement = PsiTreeUtil.getTopmostParentOfType(variable, OMTDefineCommandStatement.class);
+        OMTDefineCommandStatement omtDefineCommandStatement = PsiTreeUtil.getTopmostParentOfType(declaredVariable, OMTDefineCommandStatement.class);
         if(omtDefineCommandStatement != null) {
-            // TODO: OMT Commands
-            // variables.addAll(PsiTreeUtil.findChildrenOfType(omtDefineCommandStatement.(), OMTVariable.class));
+            variables.addAll(
+            PsiTreeUtil.findChildrenOfType(omtDefineCommandStatement.getCommandBlock(), OMTVariable.class).stream()
+                    .filter(variable -> variable.getText().equals(declaredVariable.getText()))
+                    .collect(Collectors.toList()));
         }
 
         // a script line:
-        Optional<OMTScript> script = ScriptUtil.getScript(variable);
+        Optional<OMTScript> script = ScriptUtil.getScript(declaredVariable);
         script.ifPresent(omtScript -> variables.addAll(
                 PsiTreeUtil.findChildrenOfType(omtScript, OMTVariable.class).stream()
-                        .filter(omtVariable ->
-                                !isVariableAssignment(variable) &&
-                                ScriptUtil.isBefore(variable, omtVariable) &&
-                                variable.getText().equals(omtVariable.getText()))
+                        .filter(variable ->
+                                !variable.isDeclaredVariable() &&
+                                ScriptUtil.isBefore(variable, declaredVariable) &&
+                                variable.getText().equals(declaredVariable.getText()))
                         .collect(Collectors.toList())
         ));
 
         // in the model item
-        Optional<OMTModelItemBlock> modelItem = ModelUtil.getModelItemBlock(variable);
+        Optional<OMTModelItemBlock> modelItem = ModelUtil.getModelItemBlock(declaredVariable);
         modelItem.ifPresent(omtBlock -> variables.addAll(
                 PsiTreeUtil.findChildrenOfType(omtBlock, OMTVariable.class).stream()
-                    .filter(omtVariable -> omtVariable.getText().equals(variable.getText()) &&
-                            !VariableUtil.isVariableDeclare(omtVariable))
+                    .filter(variable -> variable.getText().equals(declaredVariable.getText()) && !variable.isDeclaredVariable())
                 .collect(Collectors.toList())
         ));
 
@@ -172,12 +175,8 @@ public class VariableUtil {
         definedParameters.ifPresent(omtDefineParam -> variables.addAll(omtDefineParam.getVariableList()));
 
         // and finally, by it's containing model item (!Activity, !Procedure etc)
-        Optional<OMTModelItemBlock> modelItemBlock = ModelUtil.getModelItemBlock(element);
-        modelItemBlock.ifPresent(omtBlock -> {
-            // check all variables and parameters declared as listitem parameters:
-            Collection<OMTListItemParameter> modelVariables = PsiTreeUtil.findChildrenOfType(modelItemBlock.get(), OMTListItemParameter.class);
-            modelVariables.forEach(omtListItemParameter -> variables.add(omtListItemParameter.getVariable()));
-        });
+        variables.addAll(getModelItemEntryVariables(element, "params"));
+        variables.addAll(getModelItemEntryVariables(element, "variables"));
 
         return variables;
     }
@@ -205,4 +204,15 @@ public class VariableUtil {
         return Optional.empty();
     }
 
+    public static List<OMTVariable> getModelItemEntryVariables(PsiElement element, String propertyLabel) {
+        Optional<OMTBlockEntry> modelItemBlockEntry = ModelUtil.getModelItemBlockEntry(element, propertyLabel);
+        if(modelItemBlockEntry.isPresent()) {
+            return modelItemBlockEntry.get().getSequence().getSequenceItemList().stream()
+                    .map(OMTSequenceItem::getSequenceItemValue)
+                    .map(VariableUtil::getVariable)
+                    .collect(Collectors.toList());
+        } else {
+            return new ArrayList<>();
+        }
+    }
 }
