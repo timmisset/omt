@@ -28,7 +28,9 @@
                                 implementationClass="com.misset.opp.omt.OMTCompletionContributor"/>
         <lang.findUsagesProvider language="OMT"
                                  implementationClass="com.misset.opp.omt.psi.usages.VariablesFindUsageProvider"/>
-<!--        <postStartupActivity implementation="com.misset.opp.omt.OMTStartupActivity"/>-->
+        <lang.findUsagesProvider language="OMT"
+                                 implementationClass="com.misset.opp.omt.psi.usages.NamespacePrefixFindUsageProvider"/>
+        <!--        <postStartupActivity implementation="com.misset.opp.omt.OMTStartupActivity"/>-->
     </extensions>
 
     <actions>

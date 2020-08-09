@@ -61,12 +61,29 @@ public class OMTElementFactory {
         return (OMTVariable)createFile(project, name).getFirstChild();
     }
 
+    public static PsiElement createOperator(Project project, String name) {
+        OMTFile file = createFile(project, String.format("queries: |\n" +
+                "\n" +
+                "            DEFINE QUERY %s() => ''; ", name));
+        OMTDefineQueryStatement defineQueryStatement = PsiTreeUtil.findChildOfType(file, OMTDefineQueryStatement.class);
+        return defineQueryStatement.getDefineName();
+
+    }
+
+    public static PsiElement createMember(Project project, String name) {
+        OMTFile file = createFile(project, String.format("import:\n" +
+                "    '@client/medewerker/src/utils/lidmaatschap.queries.omt':\n" +
+                "        -   %s", name));
+        return PsiTreeUtil.findChildOfType(file, OMTMember.class);
+    }
+
     public static PsiElement createNewLine(Project project) {
         return createFile(project, "\n").getFirstChild();
     }
     public static PsiElement createIdent(Project project) {
         return createFile(project, "\n    a").getChildren()[1];
     }
+
 
 
 }
