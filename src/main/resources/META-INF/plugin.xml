@@ -20,13 +20,15 @@
                                        implementationClass="com.misset.opp.omt.OMTSyntaxHighlighterFactory"/>
         <colorSettingsPage implementation="com.misset.opp.omt.OMTColorSettingsPage"/>
         <annotator language="OMT" implementationClass="com.misset.opp.omt.OMTAnnotator"/>
-        <codeStyleSettingsProvider implementation="com.misset.opp.omt.OMTCodeStyleSettingsProvider"/>
+        <codeStyleSettingsProvider
+                implementation="com.misset.opp.omt.OMTCodeStyleSettingsProvider"/>
         <langCodeStyleSettingsProvider
                 implementation="com.misset.opp.omt.OMTLanguageCodeStyleSettingsProvider"/>
         <completion.contributor language="OMT"
                                 implementationClass="com.misset.opp.omt.OMTCompletionContributor"/>
-        <psi.referenceContributor implementation="com.misset.opp.omt.references.OperatorReferenceContributor"/>
-        <postStartupActivity implementation="com.misset.opp.omt.OMTStartupActivity"/>
+        <lang.findUsagesProvider language="OMT"
+                                 implementationClass="com.misset.opp.omt.psi.usages.VariablesFindUsageProvider"/>
+<!--        <postStartupActivity implementation="com.misset.opp.omt.OMTStartupActivity"/>-->
     </extensions>
 
     <actions>

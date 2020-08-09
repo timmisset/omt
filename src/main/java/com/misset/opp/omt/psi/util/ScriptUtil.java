@@ -9,13 +9,15 @@ import java.util.Optional;
 
 public class ScriptUtil {
 
-    public static Optional<OMTScriptLine> getScriptLine(PsiElement element) {
-        return Optional.ofNullable(PsiTreeUtil.getTopmostParentOfType(element, OMTScriptLine.class));
+    public static boolean isPartOfScript(PsiElement element) {
+        return getScript(element).isPresent();
     }
     public static Optional<OMTScript> getScript(PsiElement element) {
         return Optional.ofNullable(PsiTreeUtil.getTopmostParentOfType(element, OMTScript.class));
     }
-
+    public static Optional<OMTScriptLine> getScriptLine(PsiElement element) {
+        return Optional.ofNullable(PsiTreeUtil.getTopmostParentOfType(element, OMTScriptLine.class));
+    }
     public static boolean isBefore(PsiElement isElement, PsiElement beforeElement) {
         Optional<OMTScriptLine> isElementScriptline = getScriptLine(isElement);
         Optional<OMTScriptLine> beforeElementScriptline = getScriptLine(beforeElement);

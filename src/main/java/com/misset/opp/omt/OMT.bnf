@@ -88,19 +88,21 @@ constant_value ::=                          STRING | INTEGER | DECIMAL | NULL | 
 // a variable is declared using VAR and one or more variable names. Optionally an assignment is added
 // the assignment is deconstructed to the entire set of variables that is declared. i.e. VAR $a, $b = [1, 2]. $a == 1, $b == 2
 // or can be VAR $a = 1, $b = 2 etc. todo: check if this is actually true
-declareVariable ::=                         DECLARE_VAR variableAssignment (COMMA variableAssignment)*
+declareVariable ::=                         DECLARE_VAR (variableAssignment | variable) (COMMA (variableAssignment | variable))*
 // a variable assignment is $var = 1234
 variableAssignment::=                       variable EQUALS variableValue
 // a variable can be assigned with anything
 variableValue ::=                           constant_value | queryPath | commandCall
 
 // a parameter type is used to typecast input parameters in OMT model items
-parameter ::=                               VARIABLE_NAME
-variable ::=                                VARIABLE_NAME
-parameterWithType ::=                       parameter PARAMETER_TYPE
-
-
-
+variable ::=                                VARIABLE_NAME   | declaredVariable {
+                                                                                 mixin="com.misset.opp.omt.psi.impl.OMTVariableNamedElementImpl"
+                                                                                 implements="com.misset.opp.omt.psi.named.OMTVariableNamedElement"
+                                                                                 methods=[getName setName getNameIdentifier isDeclaredVariable]
+                                                                               }
+// the lexer should determine if operating in a state of declare and provide a difference response for the discovered variable name
+declaredVariable ::=                        DECLARED_VARIABLE_NAME
+parameterWithType ::=                       variable PARAMETER_TYPE
 
 // SCRIPT
 // an ODT (script) block is always started by a Yaml scalar node
