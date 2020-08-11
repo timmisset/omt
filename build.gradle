@@ -22,7 +22,7 @@ dependencies {
 test {
     useJUnitPlatform()
     // used for ITs
-    systemProperty "idea.home.path", "C:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2019.3.2"
+    systemProperty "idea.home.path", "C:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2020.2"
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/

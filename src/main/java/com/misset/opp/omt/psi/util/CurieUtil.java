@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
+import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -14,6 +15,10 @@ import java.util.Optional;
 
 public class CurieUtil {
 
+    public static Optional<OMTPrefix> getDefinedByPrefix(OMTParameterType parameterType) {
+        // Otherwise the main prefixes block:
+        return getDefinedByPrefix(getPrefixBlock(parameterType), parameterType);
+    }
     public static Optional<OMTPrefix> getDefinedByPrefix(OMTCurieElement curieElement) {
         // First the script block:
         Optional<OMTPrefix> definedByScript = getDefinedByPrefix(PsiTreeUtil.getParentOfType(curieElement, OMTScript.class), curieElement);
@@ -27,6 +32,13 @@ public class CurieUtil {
         Collection<OMTPrefix> prefixes = PsiTreeUtil.findChildrenOfType(containingElement, OMTPrefix.class);
         return prefixes.stream()
                 .filter(curieElement::isDefinedByPrefix)
+                .findFirst();
+    }
+    public static  Optional<OMTPrefix> getDefinedByPrefix(PsiElement containingElement, OMTParameterType parameterType) {
+        if(containingElement == null) { return Optional.empty(); }
+        Collection<OMTPrefix> prefixes = PsiTreeUtil.findChildrenOfType(containingElement, OMTPrefix.class);
+        return prefixes.stream()
+                .filter(parameterType::isDefinedByPrefix)
                 .findFirst();
     }
 
@@ -72,5 +84,15 @@ public class CurieUtil {
     }
     public static Collection<OMTPrefix> getAllPrefixes(PsiElement element) {
         return PsiTreeUtil.findChildrenOfType(element.getContainingFile(), OMTPrefix.class);
+    }
+
+    public static void annotateNamespacePrefix(@NotNull OMTNamespacePrefix namespacePrefix, @NotNull AnnotationHolder holder) {
+
+        if(namespacePrefix.getParent() instanceof OMTPrefix) {
+            AnnotationUtil.annotateUsage(namespacePrefix, OMTNamespacePrefix.class, holder);
+        } else {
+            AnnotationUtil.annotateOrigin(namespacePrefix, holder);
+        }
+
     }
 }

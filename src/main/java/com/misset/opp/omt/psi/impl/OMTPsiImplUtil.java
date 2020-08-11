@@ -22,6 +22,7 @@ public class OMTPsiImplUtil {
     public static boolean isDeclaredVariable(OMTVariable variable) {
         return variable.getDeclaredVariable() != null;
     }
+    public static boolean isGlobalVariable(OMTVariable variable) { return variable.getGlobalVariable() != null; }
 
 
 
@@ -43,6 +44,15 @@ public class OMTPsiImplUtil {
         return replacement;
     }
     public static PsiElement getNameIdentifier(OMTOperatorCall operatorCall) { return operatorCall.getFirstChild(); }
+
+    // CommandCall
+    public static String getName(OMTCommandCall commandCall) { return commandCall.getFirstChild().getText(); }
+    public static PsiElement setName(OMTCommandCall commandCall, String newName) {
+        PsiElement replacement = OMTElementFactory.createCommand(commandCall.getProject(), newName);
+        commandCall.replace(replacement);
+        return replacement;
+    }
+    public static PsiElement getNameIdentifier(OMTCommandCall commandCall) { return commandCall.getFirstChild(); }
 
     // DefineQueryStatement
     public static String getName(OMTDefineName defineName) { return defineName.getText(); }
@@ -69,5 +79,10 @@ public class OMTPsiImplUtil {
     }
     public static boolean isDefinedByPrefix(OMTCurieElement curieElement, OMTPrefix prefix) {
         return curieElement.getText().startsWith(prefix.getNamespacePrefix().getText());
+    }
+
+    // ParameterTypes
+    public static boolean isDefinedByPrefix(OMTParameterType parameterType, OMTPrefix prefix) {
+        return parameterType.getText().startsWith(prefix.getNamespacePrefix().getText());
     }
 }

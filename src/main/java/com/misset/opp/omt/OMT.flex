@@ -3,8 +3,8 @@ package com.misset.opp.omt;
 
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
-import com.misset.opp.omt.psi.OMTTypes;
-import com.intellij.psi.TokenType;import com.sun.jna.platform.win32.WinNT;import jdk.nashorn.internal.parser.Token;
+import com.misset.opp.omt.psi.OMTTokenType;import com.misset.opp.omt.psi.OMTTypes;
+import com.intellij.psi.TokenType;
 
 %%
 
@@ -27,6 +27,7 @@ INTEGER=                        \-?([1-9][0-9]+|[0-9])
 DECIMAL=                        {INTEGER}\.[0-9]+
 BOOLEAN=                        "true"|"false"
 NULL=                           "null"
+GLOBAL_VARIABLE=                "$username" | "$medewerkerGraph" | "$offline" | "$mockValue[0-9]*"
 
 LATIN_EXT_A=                    [\u0100-\u017F] // Zie: http://en.wikipedia.org/wiki/Latin_script_in_Unicode
 SYMBOL=                         ({ALPHA}|{DIGIT}|{LATIN_EXT_A}|[_@\-])+
@@ -45,15 +46,32 @@ IMPORT_PATH=                    (\.{1,2}[^:]*:)
 /* globals to track current indentation */
 int current_line_indent = 0;   /* indentation of the current line */
 int indent_level = 0;          /* indentation level passed to the parser */
-
+IElementType lastDedentToken;
+IElementType lastIndentToken;
+IElementType returnDedent() {
+    if(lastDedentToken == null || lastDedentToken == OMTTypes.DEDENT2) {
+        lastDedentToken = OMTTypes.DEDENT;
+    } else {
+        lastDedentToken = OMTTypes.DEDENT2;
+    }
+    return lastDedentToken;
+}
+IElementType returnIndent() {
+    if(lastIndentToken == null || lastIndentToken == OMTTypes.INDENT2) {
+        lastIndentToken = OMTTypes.INDENT;
+    } else {
+        lastIndentToken = OMTTypes.INDENT2;
+    }
+    return lastIndentToken;
+}
 IElementType firstAfterIndentation() {
     yypushback(1);
     if (current_line_indent > indent_level) {
         indent_level++;
-        return OMTTypes.INDENT;
+        return returnIndent();
     } else if (current_line_indent < indent_level) {
         indent_level--;
-        return OMTTypes.DEDENT;
+        return returnDedent();
     } else {
         yybegin(YYINITIAL);
         return TokenType.WHITE_SPACE;
@@ -66,8 +84,9 @@ IElementType finishIdentation() {
     }
     if(indent_level > 0) {
         indent_level--;
-        return OMTTypes.DEDENT;
+        return returnDedent();
     }
+    setState(YYINITIAL);
     return null;
 }
 void yypushback(int number, String id) {
@@ -76,19 +95,34 @@ void yypushback(int number, String id) {
 int previousState;
 boolean startOfLine;
 boolean inODTBlock = false;
+boolean wasDeclaringVariable = false;
 boolean declaringVariable = false;
-boolean inCurieStatement = false;
+void setDeclaringVariable(boolean state) {
+    declaringVariable = state;
+    System.out.println("Setting declaring variable to " + state);
+}
 void setState(int state) {
     previousState = state != yystate() ? yystate() : previousState;
-    inODTBlock = state == ODT;
+    if (state == ODT || state == CURIE) {
+        System.out.println("Setting state to " + yystate() + " with declaring variable = " + declaringVariable);
+        inODTBlock = true;
+        wasDeclaringVariable = declaringVariable;
+    } else {
+        if(previousState == ODT || previousState == CURIE) {
+            System.out.println("Setting state to " + yystate() + " with wasDeclaringVariable variable = " + wasDeclaringVariable);
+            inODTBlock = false;
+            setDeclaringVariable(wasDeclaringVariable);
+        }
+    }
     yybegin(state);
 }
 IElementType returnElement(IElementType element) {
     startOfLine = element == OMTTypes.NEW_LINE;
+    System.out.println("Returning " + yytext() + " as " + element.toString());
     return element;
 }
 IElementType returnVariable() {
-    return declaringVariable ? OMTTypes.DECLARED_VARIABLE_NAME : OMTTypes.VARIABLE_NAME;
+    return declaringVariable ? returnElement(OMTTypes.DECLARED_VARIABLE_NAME) : returnElement(OMTTypes.VARIABLE_NAME);
 }
 %}
 
@@ -103,6 +137,7 @@ IElementType returnVariable() {
 // when in initial and newline, start the indent counting
 <YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, INDENT> {NEWLINE}           { current_line_indent = 0; setState(INDENT); return returnElement(OMTTypes.NEW_LINE); }
 <YYINITIAL, YAML_SCALAR, YAML_SEQUENCE> {WHITE_SPACE}               { return TokenType.WHITE_SPACE; } // capture all whitespace
+<YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, ODT> {GLOBAL_VARIABLE}      { setState(ODT); return OMTTypes.GLOBAL_VARIABLE_NAME; } // capture all whitespace
 // INDENTATION
 // Required for YAML like grouping of blocks based on indents
 <INDENT>(\ {4})                                                      { current_line_indent++; }
@@ -123,11 +158,11 @@ IElementType returnVariable() {
 
     {IMPORT_PATH}                                             { setState(YAML_SCALAR); return returnElement(OMTTypes.IMPORT_PATH); }
 
-    "params:" | "variables:"                                  { setState(YAML_SCALAR); declaringVariable = true; return returnElement(OMTTypes.PROPERTY); }
+    "params:" | "variables:"                                  { setDeclaringVariable(true); setState(YAML_SCALAR); return returnElement(OMTTypes.PROPERTY); }
     // the initial state is only used for the key parts and can result in a switch to the scalar or sequence node
     // when a new line is reached in the state of initial (consecutive new lines), scalar or mapping, the state is always returned
     // to initial. This way, the initial state will detect the "-" indicator of the sequence items
-    {NAME}":"                                                 { setState(YAML_SCALAR); declaringVariable = false; return returnElement(OMTTypes.PROPERTY); }
+    {NAME}":"                                                 { setDeclaringVariable(false); setState(YAML_SCALAR); return returnElement(OMTTypes.PROPERTY); }
     "$"{NAME}                                                 { setState(ODT); return returnElement(OMTTypes.VARIABLE_NAME); }
     "-"                                                       { setState(YAML_SEQUENCE); return returnElement(OMTTypes.SEQUENCE_BULLET); }
 }
@@ -164,12 +199,12 @@ IElementType returnVariable() {
 <ODT> {
     // although identation and whitespace is ignored in the ODT blocks, it's used to pushback the right amount of tokens
     // to the stream when the end of the ODT block is recognized
-    {NEWLINE}                                                       {
-          startOfLine = true;
-          current_line_indent = 0; return returnElement(OMTTypes.NEW_LINE); }
-    (\ {4})                                                         {
-          current_line_indent++; }
+    {NEWLINE}                                                       { startOfLine = true;
+                                                                      current_line_indent = 0; return returnElement(OMTTypes.NEW_LINE); }
     {WHITE_SPACE}                                                   { return TokenType.WHITE_SPACE; }
+    (\ {4})                                                         { current_line_indent++; return TokenType.WHITE_SPACE; }
+
+
 
     // exit code block
     // when a code block starts, the recorded indent level is of the key that preceeded the scalar or pipe
@@ -179,8 +214,8 @@ IElementType returnVariable() {
               if(startOfLine && current_line_indent <= indent_level) {
                     // exit code block
                     yypushback(yylength(), "ODT_END");
+                    setDeclaringVariable(false);
                     setState(INDENT);
-                    declaringVariable = false;
                     return returnElement(OMTTypes.ODT_END);
               } else {
                     return returnElement(OMTTypes.NAMESPACE_PREFIX);
@@ -193,12 +228,12 @@ IElementType returnVariable() {
             return returnElement(OMTTypes.ODT_END);
       }
     // statements that identify specific elements within the ODT language
-    "DEFINE"                                                        { declaringVariable = true; return returnElement(OMTTypes.DEFINE_START); }
+    "DEFINE"                                                        { setDeclaringVariable(true); return returnElement(OMTTypes.DEFINE_START); }
     "QUERY"                                                         { return returnElement(OMTTypes.DEFINE_QUERY); }
     "COMMAND"                                                       { return returnElement(OMTTypes.DEFINE_COMMAND); }
-    "VAR"                                                           { declaringVariable = true; return returnElement(OMTTypes.DECLARE_VAR); }
+    "VAR"                                                           { setDeclaringVariable(true); return returnElement(OMTTypes.DECLARE_VAR); }
     "PREFIX"                                                        { return returnElement(OMTTypes.PREFIX_DEFINE_START); }
-    ";"                                                             { declaringVariable = false; return returnElement(OMTTypes.SEMICOLON); }
+    ";"                                                             { setDeclaringVariable(false); return returnElement(OMTTypes.SEMICOLON); }
     "$"{NAME}                                                       { return returnVariable(); }
     "@"{NAME}                                                       { return returnElement(OMTTypes.COMMAND); }
     "!"{NAME}                                                       { return returnElement(OMTTypes.FLAG); }
@@ -214,7 +249,8 @@ IElementType returnVariable() {
 
     // the lambda is used for assigning the actual query/command block to it's constructor
     // and to assign a path to case condition
-    "=>"                                                            { declaringVariable = false; return returnElement(OMTTypes.LAMBDA); }
+    "=>"                                                            { setDeclaringVariable(false); return returnElement(OMTTypes.LAMBDA); }
+    "="                                                             { setDeclaringVariable(false); return returnElement(OMTTypes.EQUALS); }
 
     // ODT operators
     // certain operators are used for assertions and should be recognized. They can be used within querysteps (grammar part)

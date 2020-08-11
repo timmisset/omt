@@ -15,7 +15,7 @@ import java.util.Optional;
  * A member reference takes care of all references from operator/command calls to their declarations
  */
 public class MemberReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
-    private NamedMemberType type;
+    private final NamedMemberType type;
     public MemberReference(@NotNull PsiElement member, TextRange textRange, NamedMemberType type) {
         super(member, textRange);
         this.type = type;
@@ -27,23 +27,24 @@ public class MemberReference extends PsiReferenceBase<PsiElement> implements Psi
         switch (type) {
             case ImportingMember:
             case DefineName: return new ResolveResult[] { new PsiElementResolveResult(myElement) };
-
             case OperatorCall:
-                Optional<PsiElement> declaringMember = MemberUtil.getDeclaringMember((OMTOperatorCall) myElement);
+                return declaringMemberToResolveResult(MemberUtil.getDeclaringMember((OMTOperatorCall) myElement));
+            case CommandCall:
+                return declaringMemberToResolveResult(MemberUtil.getDeclaringMember((OMTCommandCall) myElement));
 
-                // resolve to either the importing member or the defineName in the DEFINE QUERY [defineName](...) =>
-                if(declaringMember.isPresent()) {
-                    PsiElement element = declaringMember.get();
-                    element = element instanceof OMTDefineQueryStatement ?
-                            ((OMTDefineQueryStatement)element).getDefineName() :
-                            element;
-                    return new ResolveResult[] { new PsiElementResolveResult(element) };
-                }
-                return ResolveResult.EMPTY_ARRAY;
-
-            case CommandCall: // not supported yet
             default: return ResolveResult.EMPTY_ARRAY;
         }
+    }
+
+    private ResolveResult[] declaringMemberToResolveResult(Optional<PsiElement> declaringMember) {
+        // resolve to either the importing member or the defineName in the DEFINE QUERY [defineName](...) =>
+        if(declaringMember.isPresent()) {
+            PsiElement element = declaringMember.get();
+            if(element instanceof OMTDefineCommandStatement) { element = ((OMTDefineCommandStatement)element).getDefineName(); }
+            if(element instanceof OMTDefineQueryStatement) { element = ((OMTDefineQueryStatement)element).getDefineName(); }
+            return new ResolveResult[] { new PsiElementResolveResult(element) };
+        }
+        return ResolveResult.EMPTY_ARRAY;
     }
 
     @Nullable
