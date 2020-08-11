@@ -70,6 +70,15 @@ public class OMTElementFactory {
 
     }
 
+    public static PsiElement createCommand(Project project, String name) {
+        OMTFile file = createFile(project, String.format("commands: |\n" +
+                "\n" +
+                "            DEFINE COMMAND %s() => { RETURN ''} ", name));
+        OMTDefineCommandStatement defineCommandStatement = PsiTreeUtil.findChildOfType(file, OMTDefineCommandStatement.class);
+        return defineCommandStatement.getDefineName();
+
+    }
+
     public static PsiElement createMember(Project project, String name) {
         OMTFile file = createFile(project, String.format("import:\n" +
                 "    '@client/medewerker/src/utils/lidmaatschap.queries.omt':\n" +

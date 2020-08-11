@@ -29,13 +29,13 @@ scalar ::=                                  (scalarValue) (ODT_END | trailing)+
 scalarValue ::=                             constant_value | parameterWithType | script | variableAssignment | queryPath
 
 // a sequence must start with a newline followed by items, lead by their bullet (-)
-// indentation is allowed but not required. If INDENT, it must DEDENT
-sequence ::=                                trailing ((INDENT sequenceItem* DEDENT) | sequenceItem*)
+// indentation is allowed but not required. If indentToken, it must dedentToken
+sequence ::=                                trailing ((indentToken sequenceItem* dedentToken) | sequenceItem*)
 sequenceItem ::=                            leading? SEQUENCE_BULLET? sequenceItemValue (ODT_END | trailing)+
 sequenceItemValue ::=                       parameterWithType | variableAssignment | queryPath
 
 // a map is nothing more than another block, it must however be indented
-map ::=                                     trailing INDENT block DEDENT
+map ::=                                     trailing indentToken block dedentToken
 
 // SPECIFIC BLOCKS
 specificBlock ::=                          importBlock | exportBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock | moduleBlock
@@ -43,7 +43,7 @@ specificBlock ::=                          importBlock | exportBlock | prefixBlo
 // still using the generic scalar, sequence or map
 
 // sequences
-exportBlock ::=                             EXPORT_START trailing ((INDENT memberList DEDENT) | memberList)?
+exportBlock ::=                             EXPORT_START trailing ((indentToken memberList dedentToken) | memberList)?
 memberList ::=                              (SEQUENCE_BULLET member trailing)*
 member ::=                                  NAME     {
                                                        mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
@@ -59,11 +59,11 @@ moduleBlock::=                              MODULE_NAME_START moduleName
 moduleName::=                               NAME
 
 // maps
-importBlock ::=                             IMPORT_START trailing (INDENT import* DEDENT)?
-import ::=                                  leading? importSource trailing ((INDENT memberList DEDENT) | memberList)?
+importBlock ::=                             IMPORT_START trailing (indentToken import* dedentToken)?
+import ::=                                  leading? importSource trailing ((indentToken memberList dedentToken) | memberList)?
 importSource ::=                            leading? STRING COLON | IMPORT_PATH EMPTY_ARRAY? trailing
 
-prefixBlock::=                              PREFIX_BLOCK_START trailing (INDENT prefix* DEDENT)?
+prefixBlock::=                              PREFIX_BLOCK_START trailing (indentToken prefix* dedentToken)?
 prefix::=                                   leading? namespacePrefix IRI trailing
 namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)            {
                                                                                          mixin="com.misset.opp.omt.psi.impl.OMTNamespacePrefixNamedElementImpl"
@@ -73,8 +73,8 @@ namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)        
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix]}
 curieConstantElement ::=                    CURIE_CONSTANT_ELEMENT_PREFIX curieElement
 
-modelBlock::=                               MODEL_BLOCK_START trailing (INDENT modelItemBlock+ DEDENT)?
-modelItemBlock::=                           leading? modelItemLabel trailing (INDENT block DEDENT)?
+modelBlock::=                               MODEL_BLOCK_START trailing (indentToken modelItemBlock+ dedentToken)?
+modelItemBlock::=                           leading? modelItemLabel trailing (indentToken block dedentToken)?
 modelItemLabel::=                           propertyLabel modelItemTypeElement
 modelItemTypeElement ::=                    MODEL_ITEM_TYPE
 
@@ -103,20 +103,27 @@ variableAssignment::=                       variable EQUALS variableValue
 variableValue ::=                           constant_value | queryPath | commandCall
 
 // a parameter type is used to typecast input parameters in OMT model items
-variable ::=                                VARIABLE_NAME   | declaredVariable {
+variable ::=                                VARIABLE_NAME | declaredVariable | globalVariable {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTVariableNamedElementImpl"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTVariableNamedElement"
-                                                                                 methods=[getName setName isDeclaredVariable getNameIdentifier]
+                                                                                 methods=[getName setName isDeclaredVariable isGlobalVariable getNameIdentifier]
                                                                                }
 // the lexer should determine if operating in a state of declare and provide a difference response for the discovered variable name
 declaredVariable ::=                        DECLARED_VARIABLE_NAME
+globalVariable ::=                          GLOBAL_VARIABLE_NAME
 parameterWithType ::=                       variable PARENTHESES_OPEN parameterType PARENTHESES_CLOSE
-parameterType ::=                           IRI | (NAMESPACE COLON NAMESPACE_MEMBER)
+parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) {
+    methods = [isDefinedByPrefix]
+}
+
+// INDENTATION
+dedentToken ::=                            DEDENT | DEDENT2
+indentToken ::=                            INDENT | INDENT2
 
 // SCRIPT
 // an ODT (script) block is always started by a Yaml scalar node
 // it can start on the same line and be restricted to that line (not required) or it can be started by the
-// literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and INDENT and DEDENT
+// literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and indentToken and dedentToken
 script ::=                                  PIPE trailing scriptLine*
 commandBlock ::=                            CURLY_OPEN trailing (script | scriptLine+) CURLY_CLOSED
 // a scriptline is contained by the addition of the semicolon at the end
@@ -148,6 +155,11 @@ operatorCall ::=                            (OPERATOR | CONDITIONAL_OPERATOR | N
                                                              methods=[getName setName getNameIdentifier]
                                                            }
 commandCall ::=                             COMMAND flagSignature? signature?
+                                                            {
+                                                             mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
+                                                             implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
+                                                             methods=[getName setName getNameIdentifier]
+                                                           }
 signature ::=                               PARENTHESES_OPEN (variableValue (COMMA variableValue)*)? PARENTHESES_CLOSE
 flagSignature ::=                           FLAG
 
@@ -166,7 +178,7 @@ removeFromCollection ::=                    queryPath trailing? REMOVE trailing?
 // QUERIES
 // A queryPath consists of one or more querySteps. A queryStep can be considered forward or reverse (indicated by ^)
 // to reduce the complexity of parsing, slashes will be captured but are not required
-queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+
+queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+ (PIPE queryPath)?
 queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
                                             operatorCall | IRI | DOT | queryOneOrMany | queryZeroOrMany | CONDITIONAL_OPERATOR |
                                             LAMBDA | queryFilter | NEW_LINE
@@ -182,3 +194,4 @@ queryRecursion ::=                          PARENTHESES_OPEN queryPath PARENTHES
 queryOneOrMany ::=                          queryRecursion PLUS
 // zero or more will return itself and all descendents
 queryZeroOrMany ::=                         queryRecursion ASTERIX
+

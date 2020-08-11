@@ -24,8 +24,8 @@
                 implementation="com.misset.opp.omt.OMTCodeStyleSettingsProvider"/>
         <langCodeStyleSettingsProvider
                 implementation="com.misset.opp.omt.OMTLanguageCodeStyleSettingsProvider"/>
-        <completion.contributor language="OMT"
-                                implementationClass="com.misset.opp.omt.OMTCompletionContributor"/>
+<!--        <completion.contributor language="OMT"-->
+<!--                                implementationClass="com.misset.opp.omt.OMTCompletionContributor"/>-->
         <lang.findUsagesProvider language="OMT"
                                  implementationClass="com.misset.opp.omt.psi.usages.VariablesFindUsageProvider"/>
         <lang.findUsagesProvider language="OMT"

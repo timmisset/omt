@@ -20,20 +20,39 @@ public class MemberUtil {
      * @return
      */
     public static Optional<PsiElement> getDeclaringMember(OMTOperatorCall operatorCall) {
-        OMTDefineQueryStatement definedQueryStatement = getDefinedQueryStatement(operatorCall);
-        if(definedQueryStatement != null) {
+        return getDeclaringMember(getDefinedQueryStatement(operatorCall), operatorCall);
+    }
+
+    /**
+     * Returns the PsiElement which contains the declaration for this CommandCall
+     * This can be a DefineCommandStatement somewhere upstream or an import statement
+     * The declaration of the command must precede it's call to it, not only upstream but also within the same declaration block
+     * @param commandCall
+     * @return
+     */
+    public static Optional<PsiElement> getDeclaringMember(OMTCommandCall commandCall) {
+        return getDeclaringMember(getDefinedCommandStatement(commandCall), commandCall);
+    }
+
+    private static Optional<PsiElement> getDeclaringMember(PsiElement definedStatement, PsiElement call) {
+        if(definedStatement != null) {
             // check if the member is declared before it's used, which is a requirement for an OperatorCall
-            if(!isCallBeforeDefine(operatorCall, definedQueryStatement)) {
-                return Optional.of(definedQueryStatement);
+            if(!isCallBeforeDefine(call, definedStatement)) {
+                return Optional.of(definedStatement);
             }
         }
 
         // not found as a member of a defined block, check for imports:
-        OMTFile containingFile = (OMTFile) operatorCall.getContainingFile();
-        return containingFile.getImportedMembers().stream()
-                .filter(member -> member.textMatches(operatorCall.getFirstChild().getText()))
+        OMTFile containingFile = (OMTFile) call.getContainingFile();
+        List<OMTMember> importedMembers = containingFile.getImportedMembers();
+        return importedMembers.stream()
+                .filter(member -> importMatchesCall(member, call))
                 .map(member -> (PsiElement)member)
                 .findFirst();
+    }
+    private static boolean importMatchesCall(OMTMember member, PsiElement call) {
+        if(call instanceof OMTOperatorCall && member.textMatches(call.getFirstChild().getText())) { return true;}
+        return call instanceof OMTCommandCall && member.textMatches(call.getFirstChild().getText().substring(1));
     }
 
     /**
@@ -75,14 +94,6 @@ public class MemberUtil {
         return containingElement;
     }
 
-    public static Optional<OMTQueriesBlock> getRootQueriesBlock(PsiElement element) {
-        OMTBlock mainBlock = (OMTBlock) element.getContainingFile().getFirstChild();
-        return mainBlock.getSpecificBlockList().stream()
-                .filter(specificBlock -> specificBlock.getQueriesBlock() != null)
-                .map(OMTSpecificBlock::getQueriesBlock)
-                .findFirst();
-    }
-
     /**
      * Returns the defined query statement corresponding to the operator call name
      * It doesn't validate that the defined statement precedes the call
@@ -107,6 +118,36 @@ public class MemberUtil {
             }
             if(element != null) {
                 OMTQueriesBlock childOfType = PsiTreeUtil.findChildOfType(element, OMTQueriesBlock.class);
+                if(childOfType != null && !processedBlocks.contains(childOfType)) { element = childOfType; }
+            }
+
+        }
+        return null;
+    }
+
+    /**
+     * Returns the defined command statement corresponding to the command call name
+     * It doesn't validate that the defined statement precedes the call
+     * @param commandCall
+     * @return
+     */
+    public static OMTDefineCommandStatement getDefinedCommandStatement(OMTCommandCall commandCall) {
+        PsiElement element = commandCall.getParent();
+        List<OMTCommandsBlock> processedBlocks = new ArrayList<>();
+        while(element != null) {
+            if(element instanceof OMTCommandsBlock) {
+                Optional<OMTDefineCommandStatement> commandDefined = ((OMTCommandsBlock) element).getDefineCommandStatementList().stream()
+                        .filter(definedCommandStatement -> definedCommandStatement.getDefineName().textMatches(commandCall.getFirstChild().getText()))
+                        .findFirst();
+                if(commandDefined.isPresent()) { return commandDefined.get(); }
+                processedBlocks.add((OMTCommandsBlock) element);
+            }
+            element = element.getParent();
+            if(element instanceof PsiJavaDirectoryImpl) {
+                return null;
+            }
+            if(element != null) {
+                OMTCommandsBlock childOfType = PsiTreeUtil.findChildOfType(element, OMTCommandsBlock.class);
                 if(childOfType != null && !processedBlocks.contains(childOfType)) { element = childOfType; }
             }
 

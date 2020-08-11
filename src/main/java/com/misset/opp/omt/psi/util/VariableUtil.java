@@ -1,8 +1,12 @@
 package com.misset.opp.omt.psi.util;
 
+import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.psi.util.PsiUtil;
 import com.misset.opp.omt.psi.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -160,12 +164,11 @@ public class VariableUtil {
         OMTScript script = PsiTreeUtil.getTopmostParentOfType(element, OMTScript.class);
         if(script != null) {
             // now check all the variable declarations that are part of this script:
-            final Collection<OMTDeclareVariable> declaredVariables = PsiTreeUtil.findChildrenOfType(script, OMTDeclareVariable.class);
-            variables.addAll(declaredVariables.stream().map(OMTDeclareVariable::getVariableAssignmentList)
-                    .flatMap(Collection::stream)
-                    .filter(variableAssignment ->
-                            ScriptUtil.isBefore(variableAssignment, element))
-                    .map(OMTVariableAssignment::getVariable)
+            final Collection<OMTDeclaredVariable> declaredVariables = PsiTreeUtil.findChildrenOfType(script, OMTDeclaredVariable.class);
+            variables.addAll(
+                    declaredVariables.stream()
+                    .filter(declaredVariable -> ScriptUtil.isBefore(declaredVariable, element))
+                    .map(declaredVariable -> (OMTVariable)declaredVariable.getParent())
                     .collect(Collectors.toList())
             );
         }
@@ -183,7 +186,8 @@ public class VariableUtil {
     public static Optional<OMTVariable> getDeclaredByVariable(OMTVariable variable) {
         if(isVariableDeclare(variable)) { return Optional.of(variable); }
 
-        return getDeclaredVariables(variable).stream()
+        List<OMTVariable> declaredVariables = getDeclaredVariables(variable);
+        return declaredVariables.stream()
                 .filter(declaredVariable -> declaredVariable.getText().equals(variable.getText()))
                 .findFirst();
     }
@@ -213,6 +217,21 @@ public class VariableUtil {
                     .collect(Collectors.toList());
         } else {
             return new ArrayList<>();
+        }
+    }
+
+    public static void annotateVariable(@NotNull final OMTVariable variable, @NotNull AnnotationHolder holder) {
+        if(variable.isGlobalVariable()) {
+            // the magic variables always exist
+            holder.createInfoAnnotation(variable, String.format("%s is a global variable which is always available", variable.getName()));
+            return;
+        }
+        if(variable.isDeclaredVariable()) {
+            // check that atleast 1 variable is using the declaration:
+            AnnotationUtil.annotateUsage(variable, OMTVariable.class, holder);
+        } else {
+            // variable usage must have exactly 1 resolved value:
+            AnnotationUtil.annotateOrigin(variable, holder);
         }
     }
 }
