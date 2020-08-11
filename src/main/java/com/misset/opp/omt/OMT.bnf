@@ -16,7 +16,7 @@
 }
 
 // the end of the file (or the entire file) can be a (set of) comment(s)
-OMTFile ::= block*
+OMTFile ::= (leading? block)*
 
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
 block ::=                                   (specificBlock | blockEntry)+
@@ -55,11 +55,11 @@ member ::=                                  NAME     {
 queriesBlock::=                             QUERY_BLOCK_START (PIPE trailing defineQueryStatement* ODT_END)?
 commandsBlock::=                            COMMAND_BLOCK_START (PIPE trailing defineCommandStatement* ODT_END)?
 
-moduleBlock::=                              MODULE_NAME_START moduleName
-moduleName::=                               NAME
+moduleBlock::=                              leading? MODULE_NAME_START moduleName trailing
+moduleName::=                               NAME | OPERATOR
 
 // maps
-importBlock ::=                             IMPORT_START trailing (indentToken import* dedentToken)?
+importBlock ::=                             leading? IMPORT_START trailing (indentToken import* dedentToken)?
 import ::=                                  leading? importSource trailing ((indentToken memberList dedentToken) | memberList)?
 importSource ::=                            leading? STRING COLON | IMPORT_PATH EMPTY_ARRAY? trailing
 
@@ -180,7 +180,7 @@ removeFromCollection ::=                    queryPath trailing? REMOVE trailing?
 // to reduce the complexity of parsing, slashes will be captured but are not required
 queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+ (PIPE queryPath)?
 queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
-                                            operatorCall | IRI | DOT | queryOneOrMany | queryZeroOrMany | CONDITIONAL_OPERATOR |
+                                            operatorCall | IRI | DOT | queryOneOrMany | queryZeroOrMany | queryWrapper | CONDITIONAL_OPERATOR |
                                             LAMBDA | queryFilter | NEW_LINE
 queryReverseStep ::=                        CARAT queryStep
 
@@ -189,9 +189,9 @@ queryFilter ::=                             BRACKET_OPEN queryPath BRACKET_CLOSE
 
 // a recursion will continuously collect items based on the outcome of the previous recursion and the path described in the recursion
 // this makes it easy to traverse a graph for nested elements of identical/similar design
-queryRecursion ::=                          PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
+queryWrapper ::=                            PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
 // one or more will not return itself
-queryOneOrMany ::=                          queryRecursion PLUS
+queryOneOrMany ::=                          queryWrapper PLUS
 // zero or more will return itself and all descendents
-queryZeroOrMany ::=                         queryRecursion ASTERIX
+queryZeroOrMany ::=                         queryWrapper ASTERIX
 
