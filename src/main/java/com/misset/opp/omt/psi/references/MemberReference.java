@@ -2,10 +2,12 @@ package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTCommandCall;
+import com.misset.opp.omt.psi.OMTDefineCommandStatement;
+import com.misset.opp.omt.psi.OMTDefineQueryStatement;
+import com.misset.opp.omt.psi.OMTOperatorCall;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.util.MemberUtil;
-import com.misset.opp.omt.psi.util.VariableUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,6 +28,7 @@ public class MemberReference extends PsiReferenceBase<PsiElement> implements Psi
     public ResolveResult[] multiResolve(boolean incompleteCode) {
         switch (type) {
             case ImportingMember:
+            case ModelItem:
             case DefineName: return new ResolveResult[] { new PsiElementResolveResult(myElement) };
             case OperatorCall:
                 return declaringMemberToResolveResult(MemberUtil.getDeclaringMember((OMTOperatorCall) myElement));

@@ -80,7 +80,11 @@ curieConstantElement ::=                    CURIE_CONSTANT_ELEMENT_PREFIX curieE
 
 modelBlock::=                               MODEL_BLOCK_START trailing (indentToken modelItemBlock+ dedentToken)?
 modelItemBlock::=                           leading? modelItemLabel trailing (indentToken block dedentToken)?
-modelItemLabel::=                           propertyLabel modelItemTypeElement
+modelItemLabel::=                           propertyLabel modelItemTypeElement  {
+                                                                                 mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
+                                                                                 implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
+                                                                                 methods=[getName setName getNameIdentifier]
+                                                                                 }
 modelItemTypeElement ::=                    MODEL_ITEM_TYPE
 
 // COMMENTS
@@ -89,7 +93,7 @@ comment ::=                                 END_OF_LINE_COMMENT | JAVA_DOCS
 eolComment ::=                              END_OF_LINE_COMMENT
 // trailing is everything at the end of the current line and before NEW_LINE.
 // It can be simply the NEW_LINE or an eolComment followed by a NEW_LINE
-trailing ::=                                eolComment? NEW_LINE+
+trailing ::=                                (eolComment? NEW_LINE+)
 // leading is everything before a block or item. Assuming that comments are written above the code they are
 // commenting on, this should help to relate the comment to the code
 leading ::=                                 (comment NEW_LINE)+
