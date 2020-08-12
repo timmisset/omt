@@ -99,17 +99,15 @@ boolean wasDeclaringVariable = false;
 boolean declaringVariable = false;
 void setDeclaringVariable(boolean state) {
     declaringVariable = state;
-    System.out.println("Setting declaring variable to " + state);
+//    System.out.println("Setting declaring variable to " + state);
 }
 void setState(int state) {
     previousState = state != yystate() ? yystate() : previousState;
     if (state == ODT || state == CURIE) {
-        System.out.println("Setting state to " + yystate() + " with declaring variable = " + declaringVariable);
         inODTBlock = true;
         wasDeclaringVariable = declaringVariable;
     } else {
         if(previousState == ODT || previousState == CURIE) {
-            System.out.println("Setting state to " + yystate() + " with wasDeclaringVariable variable = " + wasDeclaringVariable);
             inODTBlock = false;
             setDeclaringVariable(wasDeclaringVariable);
         }
@@ -118,7 +116,7 @@ void setState(int state) {
 }
 IElementType returnElement(IElementType element) {
     startOfLine = element == OMTTypes.NEW_LINE;
-    System.out.println("Returning " + yytext() + " as " + element.toString());
+//    System.out.println("Returning " + yytext() + " as " + element.toString());
     return element;
 }
 IElementType returnVariable() {

@@ -64,19 +64,40 @@ public class OMTPsiImplUtil {
     public static PsiElement getNameIdentifier(OMTDefineName defineName) { return defineName; }
 
     // Members
-    public static String getName(OMTMember member) { return member.getText(); }
+    public static String getName(OMTMember member) {
+        return member.getText();
+    }
+
     public static PsiElement setName(OMTMember member, String newName) {
         PsiElement replacement = OMTElementFactory.createMember(member.getProject(), newName);
         member.replace(replacement);
         return replacement;
     }
-    public static PsiElement getNameIdentifier(OMTMember member) { return member; }
 
+    public static PsiElement getNameIdentifier(OMTMember member) {
+        return member;
+    }
+
+    // Import source
+    public static String getName(OMTImportSource importSource) {
+        return importSource.getText();
+    }
+
+    public static PsiElement setName(OMTImportSource importSource, String newName) {
+        PsiElement replacement = OMTElementFactory.createImportSource(importSource.getProject(), newName);
+        importSource.replace(replacement);
+        return replacement;
+    }
+
+    public static PsiElement getNameIdentifier(OMTImportSource importSource) {
+        return importSource;
+    }
 
     // Curies
     public static PsiElement getPrefix(OMTCurieElement curieElement) {
         return curieElement.getFirstChild();
     }
+
     public static boolean isDefinedByPrefix(OMTCurieElement curieElement, OMTPrefix prefix) {
         return curieElement.getText().startsWith(prefix.getNamespacePrefix().getText());
     }

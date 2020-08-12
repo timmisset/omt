@@ -86,9 +86,17 @@ public class OMTElementFactory {
         return PsiTreeUtil.findChildOfType(file, OMTMember.class);
     }
 
+    public static PsiElement createImportSource(Project project, String name) {
+        OMTFile file = createFile(project, String.format("import:\n" +
+                "    %s\n" +
+                "        -   member", name));
+        return PsiTreeUtil.findChildOfType(file, OMTImportSource.class);
+    }
+
     public static PsiElement createNewLine(Project project) {
         return createFile(project, "\n").getFirstChild();
     }
+
     public static PsiElement createIdent(Project project) {
         return createFile(project, "\n    a").getChildren()[1];
     }

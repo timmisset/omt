@@ -16,7 +16,7 @@
 }
 
 // the end of the file (or the entire file) can be a (set of) comment(s)
-OMTFile ::= (leading? block)*
+OMTFile ::= block*
 
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
 block ::=                                   (specificBlock | blockEntry)+
@@ -61,7 +61,12 @@ moduleName::=                               NAME | OPERATOR
 // maps
 importBlock ::=                             leading? IMPORT_START trailing (indentToken import* dedentToken)?
 import ::=                                  leading? importSource trailing ((indentToken memberList dedentToken) | memberList)?
-importSource ::=                            leading? STRING COLON | IMPORT_PATH EMPTY_ARRAY? trailing
+importSource ::=                            importLocation EMPTY_ARRAY? {
+                                                                           mixin="com.misset.opp.omt.psi.impl.OMTImportNamedElementImpl"
+                                                                           implements="com.misset.opp.omt.psi.named.OMTImportNamedElement"
+                                                                           methods=[getName setName getNameIdentifier]
+                                                                         }
+importLocation ::=                          (STRING COLON) | IMPORT_PATH
 
 prefixBlock::=                              PREFIX_BLOCK_START trailing (indentToken prefix* dedentToken)?
 prefix::=                                   leading? namespacePrefix IRI trailing
@@ -124,7 +129,7 @@ indentToken ::=                            INDENT | INDENT2
 // an ODT (script) block is always started by a Yaml scalar node
 // it can start on the same line and be restricted to that line (not required) or it can be started by the
 // literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and indentToken and dedentToken
-script ::=                                  PIPE trailing scriptLine*
+script ::=                                  PIPE trailing (scriptLine+ | queryPath)
 commandBlock ::=                            CURLY_OPEN trailing (script | scriptLine+) CURLY_CLOSED
 // a scriptline is contained by the addition of the semicolon at the end
 scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) trailing
