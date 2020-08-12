@@ -78,6 +78,22 @@ public class OMTPsiImplUtil {
         return member;
     }
 
+    // ModelItemLabel
+    public static String getName(OMTModelItemLabel itemLabel) {
+        return itemLabel.getPropertyLabel().getText();
+    }
+
+    public static PsiElement setName(OMTModelItemLabel itemLabel, String newName) {
+        PsiElement replacement = OMTElementFactory.createModelItemLabelPropertyLabel(itemLabel.getProject(), newName);
+        itemLabel.getPropertyLabel().replace(replacement);
+        return replacement;
+    }
+
+    public static PsiElement getNameIdentifier(OMTModelItemLabel itemLabel) {
+        return itemLabel.getPropertyLabel();
+    }
+
+
     // Import source
     public static String getName(OMTImportSource importSource) {
         return importSource.getText();

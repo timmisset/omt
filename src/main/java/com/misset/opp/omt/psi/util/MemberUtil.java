@@ -2,11 +2,18 @@ package com.misset.opp.omt.psi.util;
 
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.impl.file.PsiJavaDirectoryImpl;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.exceptions.UnknownMappingException;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.support.OMTExportMember;
 
+import java.io.FileNotFoundException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,7 +22,10 @@ public class MemberUtil {
     /**
      * Returns the PsiElement which contains the declaration for this OperatorCall
      * This can be a DefineQueryStatement somewhere upstream or an import statement
+     * When the call points to an imported member it will try to resolve to it's original declaration in the external file,
+     * otherwise it will resolve to the import statement.
      * The declaration of the operator must precede it's call to it, not only upstream but also within the same declaration block
+     *
      * @param operatorCall
      * @return
      */
@@ -25,7 +35,9 @@ public class MemberUtil {
 
     /**
      * Returns the PsiElement which contains the declaration for this CommandCall
-     * This can be a DefineCommandStatement somewhere upstream or an import statement
+     * This can be a DefineCommandStatement somewhere upstream or an import statement.
+     * When the call points to an imported member it will try to resolve to it's original declaration in the external file,
+     * otherwise it will resolve to the import statement.
      * The declaration of the command must precede it's call to it, not only upstream but also within the same declaration block
      * @param commandCall
      * @return
@@ -35,29 +47,67 @@ public class MemberUtil {
     }
 
     private static Optional<PsiElement> getDeclaringMember(PsiElement definedStatement, PsiElement call) {
-        if(definedStatement != null) {
+        if (definedStatement != null) {
             // check if the member is declared before it's used, which is a requirement for an OperatorCall
-            if(!isCallBeforeDefine(call, definedStatement)) {
+            if (!isCallBeforeDefine(call, definedStatement)) {
                 return Optional.of(definedStatement);
             }
+        }
+
+        String callName = getCallName(call);
+
+        // check if it's part of this page's exports:
+        OMTFile currentFile = (OMTFile) call.getContainingFile();
+        HashMap<String, OMTExportMember> currentFileMembers = currentFile.getExportedMembers();
+        if (currentFileMembers.containsKey(callName)) {
+            return Optional.of(currentFileMembers.get(callName).getResolvingElement());
         }
 
         // not found as a member of a defined block, check for imports:
         OMTFile containingFile = (OMTFile) call.getContainingFile();
         List<OMTMember> importedMembers = containingFile.getImportedMembers();
-        return importedMembers.stream()
-                .filter(member -> importMatchesCall(member, call))
-                .map(member -> (PsiElement)member)
+        Optional<OMTMember> importedMember = importedMembers.stream()
+                .filter(member -> member.textMatches(callName))
                 .findFirst();
+        if (importedMember.isPresent()) {
+            OMTImport omtImport = ImportUtil.getImport(importedMember.get());
+            if (omtImport == null) {
+                return Optional.of(importedMember.get());
+            } // cast to generic PsiElement optional
+            try {
+                VirtualFile importedFile = ImportUtil.getImportedFile(omtImport);
+                PsiFile psiFile = PsiManager.getInstance(omtImport.getProject()).findFile(importedFile);
+                if (psiFile instanceof OMTFile) {
+                    OMTFile omtFile = (OMTFile) psiFile;
+                    HashMap<String, OMTExportMember> exportedMembers = omtFile.getExportedMembers();
+                    if (exportedMembers.containsKey(callName)) {
+                        OMTExportMember omtExportMember = exportedMembers.get(callName);
+                        return Optional.of(omtExportMember.getResolvingElement());
+                    } else {
+                        throw new UnknownMappingException(omtImport.getImportSource().getImportLocation().getText());
+                    }
+                } else {
+                    throw new UnknownMappingException(omtImport.getImportSource().getImportLocation().getText());
+                }
+            } catch (URISyntaxException | UnknownMappingException | FileNotFoundException e) {
+                return Optional.of(importedMember.get());
+            }
+        } else {
+            return Optional.empty();
+        }
     }
-    private static boolean importMatchesCall(OMTMember member, PsiElement call) {
-        if(call instanceof OMTOperatorCall && member.textMatches(call.getFirstChild().getText())) { return true;}
-        return call instanceof OMTCommandCall && member.textMatches(call.getFirstChild().getText().substring(1));
+
+    private static String getCallName(PsiElement call) {
+        if (call instanceof OMTOperatorCall) {
+            return call.getFirstChild().getText();
+        }
+        return call.getFirstChild().getText().substring(1);
     }
 
     /**
      * Checks if the call is made before the operator is defined
-     * @param call - operatorCall or commandCall
+     *
+     * @param call   - operatorCall or commandCall
      * @param define - definedQueryStatement or definedCommandStatement
      * @return
      */

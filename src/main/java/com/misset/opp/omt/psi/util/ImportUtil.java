@@ -4,6 +4,8 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.misset.opp.omt.exceptions.UnknownMappingException;
 import com.misset.opp.omt.psi.OMTImport;
+import com.misset.opp.omt.psi.OMTMember;
+import com.misset.opp.omt.psi.OMTMemberList;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -18,6 +20,18 @@ public class ImportUtil {
         } catch (URISyntaxException | UnknownMappingException | FileNotFoundException e) {
             holder.createErrorAnnotation(omtImport, e.getMessage());
         }
+    }
+
+    public static OMTImport getImport(OMTMember member) {
+        OMTMemberList memberList = getImportMemberList(member);
+        if (memberList == null) {
+            return null;
+        }
+        return ParsingUtil.castToOrNull(memberList.getParent(), OMTImport.class);
+    }
+
+    public static OMTMemberList getImportMemberList(OMTMember member) {
+        return ParsingUtil.castToOrNull(member.getParent(), OMTMemberList.class);
     }
 
     public static VirtualFile getImportedFile(OMTImport omtImport) throws URISyntaxException, UnknownMappingException, FileNotFoundException {
