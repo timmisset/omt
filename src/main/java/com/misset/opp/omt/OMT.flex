@@ -135,7 +135,11 @@ IElementType returnVariable() {
 // when in initial and newline, start the indent counting
 <YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, INDENT> {NEWLINE}           { current_line_indent = 0; setState(INDENT); return returnElement(OMTTypes.NEW_LINE); }
 <YYINITIAL, YAML_SCALAR, YAML_SEQUENCE> {WHITE_SPACE}               { return TokenType.WHITE_SPACE; } // capture all whitespace
-<YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, ODT> {GLOBAL_VARIABLE}      { setState(ODT); return OMTTypes.GLOBAL_VARIABLE_NAME; } // capture all whitespace
+<YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, ODT> {
+    {GLOBAL_VARIABLE}                                               { setState(ODT); return OMTTypes.GLOBAL_VARIABLE_NAME; } // capture all whitespace
+    {BOOLEAN}                                                       { return returnElement(OMTTypes.BOOLEAN); }
+    {NULL}                                                          { return returnElement(OMTTypes.NULL); }
+}
 // INDENTATION
 // Required for YAML like grouping of blocks based on indents
 <INDENT>(\ {4})                                                      { current_line_indent++; }
@@ -278,8 +282,6 @@ IElementType returnVariable() {
     {INTEGER}                                                       { return returnElement(OMTTypes.INTEGER); }
     {DECIMAL}                                                       { return returnElement(OMTTypes.DECIMAL); }
     {TYPED_VALUE}                                                   { return returnElement(OMTTypes.TYPED_VALUE); }
-    {BOOLEAN}                                                       { return returnElement(OMTTypes.BOOLEAN); }
-    {NULL}                                                          { return returnElement(OMTTypes.NULL); }
 
     // all single characters that are resolved to special characters:
     // todo: some should be made more specifically available based on their lexer state
