@@ -2,12 +2,14 @@ package com.misset.opp.omt.psi;
 
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import com.misset.opp.omt.OMTFileType;
 import com.misset.opp.omt.OMTLanguage;
 import com.misset.opp.omt.psi.impl.OMTExportMemberImpl;
 import com.misset.opp.omt.psi.support.ExportMemberType;
 import com.misset.opp.omt.psi.support.OMTExportMember;
+import com.misset.opp.omt.psi.util.ImportUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -48,6 +50,18 @@ public class OMTFile extends PsiFileBase {
                 omtImportBlock.getImportList().forEach(omtImport -> importedList.addAll(omtImport.getMemberList().getMemberList()))
         );
         return importedList;
+    }
+
+    public HashMap<OMTImport, VirtualFile> getImportedFiles() {
+        Optional<OMTImportBlock> importBlock = getRootBlock("import");
+        if (!importBlock.isPresent()) {
+            return new HashMap<>();
+        }
+
+        HashMap<OMTImport, VirtualFile> importHashmap = new HashMap<>();
+        importBlock.get().getImportList().stream()
+                .forEach(omtImport -> importHashmap.put(omtImport, ImportUtil.getImportedFileWithoutExceptions(omtImport)));
+        return importHashmap;
     }
 
     /**

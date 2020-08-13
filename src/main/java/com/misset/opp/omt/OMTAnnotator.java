@@ -5,11 +5,10 @@ package com.misset.opp.omt;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.OMTImport;
-import com.misset.opp.omt.psi.OMTNamespacePrefix;
-import com.misset.opp.omt.psi.OMTVariable;
+import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.util.CurieUtil;
 import com.misset.opp.omt.psi.util.ImportUtil;
+import com.misset.opp.omt.psi.util.MemberUtil;
 import com.misset.opp.omt.psi.util.VariableUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,6 +31,12 @@ public class OMTAnnotator implements Annotator {
         }
         if (element instanceof OMTImport) {
             ImportUtil.annotateImport((OMTImport) element, holder);
+        }
+        if (element instanceof OMTCommandCall) {
+            MemberUtil.annotateCommandCall((OMTCommandCall) element, holder);
+        }
+        if (element instanceof OMTOperatorCall) {
+            MemberUtil.annotateOperatorCall((OMTOperatorCall) element, holder);
         }
     }
 

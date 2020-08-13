@@ -42,4 +42,5 @@ public class ImportReference extends PsiReferenceBase<PsiElement> implements Psi
     public Object[] getVariants() {
         return new Object[0];
     }
+
 }
