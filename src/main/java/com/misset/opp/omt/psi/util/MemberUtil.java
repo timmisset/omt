@@ -1,5 +1,8 @@
 package com.misset.opp.omt.psi.util;
 
+import com.intellij.codeInsight.intention.IntentionAction;
+import com.intellij.lang.annotation.Annotation;
+import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -9,6 +12,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.exceptions.UnknownMappingException;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTExportMember;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
@@ -16,6 +20,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+
+import static com.misset.opp.omt.psi.intentions.members.MemberIntention.getImportIntentions;
 
 public class MemberUtil {
 
@@ -97,7 +103,7 @@ public class MemberUtil {
         }
     }
 
-    private static String getCallName(PsiElement call) {
+    public static String getCallName(PsiElement call) {
         if (call instanceof OMTOperatorCall) {
             return call.getFirstChild().getText();
         }
@@ -196,13 +202,39 @@ public class MemberUtil {
             if(element instanceof PsiJavaDirectoryImpl) {
                 return null;
             }
-            if(element != null) {
+            if (element != null) {
                 OMTCommandsBlock childOfType = PsiTreeUtil.findChildOfType(element, OMTCommandsBlock.class);
-                if(childOfType != null && !processedBlocks.contains(childOfType)) { element = childOfType; }
+                if (childOfType != null && !processedBlocks.contains(childOfType)) {
+                    element = childOfType;
+                }
             }
 
         }
         return null;
+    }
+
+    public static void annotateCommandCall(@NotNull OMTCommandCall commandCall, @NotNull AnnotationHolder holder) {
+        if (commandCall.getReference().resolve() == null) {
+            // command call not found in file or via import.
+            // TODO: check if it is a build-in or local command
+
+            // unknown, annotate with error:
+            Annotation errorAnnotation = holder.createErrorAnnotation(commandCall.getNameIdentifier(), String.format("%s could not be resolved", commandCall.getName()));
+            List<IntentionAction> intentionActionList = getImportIntentions(commandCall);
+            intentionActionList.forEach(intentionAction -> errorAnnotation.registerFix(intentionAction));
+        }
+    }
+
+    public static void annotateOperatorCall(@NotNull OMTOperatorCall operatorCall, @NotNull AnnotationHolder holder) {
+        if (operatorCall.getReference().resolve() == null) {
+            // command call not found in file or via import.
+            // TODO: check if it is a build-in operator
+
+            // unknown, annotate with error:
+            Annotation errorAnnotation = holder.createErrorAnnotation(operatorCall.getNameIdentifier(), String.format("%s could not be resolved", operatorCall.getName()));
+            List<IntentionAction> intentionActionList = getImportIntentions(operatorCall);
+            intentionActionList.forEach(intentionAction -> errorAnnotation.registerFix(intentionAction));
+        }
     }
 
 }

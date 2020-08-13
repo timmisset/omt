@@ -64,7 +64,8 @@ public class OMTElementFactory {
     public static PsiElement createOperator(Project project, String name) {
         OMTFile file = createFile(project, String.format("queries: |\n" +
                 "\n" +
-                "            DEFINE QUERY %s() => ''; ", name));
+                "            DEFINE QUERY %s() => ''; \n" +
+                "\n", name));
         OMTDefineQueryStatement defineQueryStatement = PsiTreeUtil.findChildOfType(file, OMTDefineQueryStatement.class);
         return defineQueryStatement.getDefineName();
 
@@ -73,17 +74,22 @@ public class OMTElementFactory {
     public static PsiElement createCommand(Project project, String name) {
         OMTFile file = createFile(project, String.format("commands: |\n" +
                 "\n" +
-                "            DEFINE COMMAND %s() => { RETURN ''} ", name));
+                "            DEFINE COMMAND %s() => { RETURN ''} \n" +
+                "\n", name));
         OMTDefineCommandStatement defineCommandStatement = PsiTreeUtil.findChildOfType(file, OMTDefineCommandStatement.class);
         return defineCommandStatement.getDefineName();
 
     }
 
     public static PsiElement createMember(Project project, String name) {
-        OMTFile file = createFile(project, String.format("import:\n" +
+        String format = String.format("import:\n" +
                 "    '@client/medewerker/src/utils/lidmaatschap.queries.omt':\n" +
-                "        -   %s", name));
-        return PsiTreeUtil.findChildOfType(file, OMTMember.class);
+                "        -   %s\n" +
+                "\n", name);
+        OMTFile file = createFile(project, format);
+        PsiElement firstChild = file.getFirstChild();
+        OMTMember member = PsiTreeUtil.findChildOfType(firstChild, OMTMember.class);
+        return member;
     }
 
     public static PsiElement createModelItemLabelPropertyLabel(Project project, String name) {
@@ -94,7 +100,8 @@ public class OMTElementFactory {
     public static PsiElement createImportSource(Project project, String name) {
         OMTFile file = createFile(project, String.format("import:\n" +
                 "    %s\n" +
-                "        -   member", name));
+                "        -   member\n" +
+                "\n", name));
         return PsiTreeUtil.findChildOfType(file, OMTImportSource.class);
     }
 
@@ -107,5 +114,16 @@ public class OMTElementFactory {
     }
 
 
+    public static PsiElement addMemberToImport(Project project, OMTImport omtImport, String member) {
+        boolean isLastImportOfImportBlock = PsiTreeUtil.getNextSiblingOfType(omtImport, OMTImport.class) == null;
+        OMTFile file = createFile(project, String.format("import:\n" +
+                "    %s\n" +
+                "        -   %s\n" +
+                "%s", omtImport.getText().replaceAll("\\s+$", ""), member, isLastImportOfImportBlock ? "\n" : "    "));
+        PsiElement firstChild = file.getFirstChild();
+        omtImport = PsiTreeUtil.findChildOfType(firstChild, OMTImport.class);
+        return omtImport;
+
+    }
 
 }

@@ -34,6 +34,20 @@ public class ImportUtil {
         return ParsingUtil.castToOrNull(member.getParent(), OMTMemberList.class);
     }
 
+    /**
+     * Returns corresponding virtual file or null if an error occurs or it could not be found
+     *
+     * @param omtImport
+     * @return
+     */
+    public static VirtualFile getImportedFileWithoutExceptions(OMTImport omtImport) {
+        try {
+            return getImportedFile(omtImport);
+        } catch (URISyntaxException | UnknownMappingException | FileNotFoundException e) {
+            return null;
+        }
+    }
+
     public static VirtualFile getImportedFile(OMTImport omtImport) throws URISyntaxException, UnknownMappingException, FileNotFoundException {
         VirtualFile currentFile = omtImport.getContainingFile().getVirtualFile();
         String importLocation = omtImport.getImportSource().getImportLocation().getText();
