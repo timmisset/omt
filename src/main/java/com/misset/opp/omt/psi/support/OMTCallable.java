@@ -24,4 +24,8 @@ public interface OMTCallable {
     String getName();
 
     PsiElement getElement();
+
+    String htmlDescription();
+
+    String shortDescription();
 }

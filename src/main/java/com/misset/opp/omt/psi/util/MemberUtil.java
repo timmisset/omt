@@ -3,6 +3,8 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
+import com.intellij.lang.annotation.HighlightSeverity;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -140,16 +142,16 @@ public class MemberUtil {
     public static OMTDefinedStatement getDefinedStatement(OMTCall call) {
 
         PsiElement element = call.getParent();
-        List<OMTBlock> processedBlocks = new ArrayList<>();
+        List<OMTDefinedBlock> processedBlocks = new ArrayList<>();
         while (element != null) {
-            if (element instanceof OMTBlock) {
+            if (element instanceof OMTDefinedBlock) {
                 Optional<OMTDefinedStatement> definedStatement = ((OMTDefinedBlock) element).getStatements().stream()
                         .filter(defineQueryStatement -> defineQueryStatement.getDefineName().textMatches(call.getFirstChild().getText()))
                         .findFirst();
                 if (definedStatement.isPresent()) {
                     return definedStatement.get();
                 }
-                processedBlocks.add((OMTBlock) element);
+                processedBlocks.add((OMTDefinedBlock) element);
             }
             element = element.getParent();
             if (element instanceof PsiJavaDirectoryImpl) {
@@ -182,14 +184,42 @@ public class MemberUtil {
         } else {
             // callable is found as reference. Since the reference can be resolved to a PsiElement
             // the callable element is part of the project code, not a built-in or local command
-            OMTExportMember asExportMember = memberToExportMember(resolved);
-            if (asExportMember != null) {
-
-            } else {
-                holder.createErrorAnnotation(call.getNameIdentifier(), "Could not parse callable to an exporting member");
+            // the call will resolve to the label of the callable
+            try {
+                OMTExportMember asExportMember = memberToExportMember(resolved);
+                if (asExportMember == null) {
+                    throw new Exception("Could not resolve callable element to exported member, this is a bug");
+                }
+                TextRange textRangeInParent = call.getNameIdentifier().getTextRange();
+                String shortDescription = asExportMember.shortDescription();
+                String htmlDescription = asExportMember.htmlDescription();
+                holder.createAnnotation(HighlightSeverity.INFORMATION, textRangeInParent, shortDescription, htmlDescription);
+            } catch (Exception e) {
+                holder.createErrorAnnotation(call.getNameIdentifier(), e.getMessage());
             }
-
         }
+    }
+
+    /**
+     * A call resolves to a label of the callable element, i.e. a call to a procedure will resolve to the name
+     * of the procedure since that is were we want to navigation to go to.
+     * This method helps to obtain the containing element of the name. For a modelItem it will get the ModelItem from the label.
+     * For a query or command statement it will return the statement from the definedNamed
+     *
+     * @param resolvedToElement
+     * @return
+     */
+    public static PsiElement getContainingElement(PsiElement resolvedToElement) {
+        if (resolvedToElement instanceof OMTPropertyLabel) {
+            Optional<OMTModelItemBlock> modelItemBlock = ModelUtil.getModelItemBlock(resolvedToElement);
+            if (modelItemBlock.isPresent()) {
+                return modelItemBlock.get();
+            }
+        }
+        if (resolvedToElement instanceof OMTDefineName) {
+            return resolvedToElement.getParent();
+        }
+        return resolvedToElement;
     }
 
     public static NamedMemberType getNamedMemberType(PsiElement element) {
@@ -202,7 +232,7 @@ public class MemberUtil {
         if (element instanceof OMTCommandCall) {
             return NamedMemberType.CommandCall;
         }
-        if (element instanceof OMTModelItemLabel) {
+        if (element instanceof OMTModelItemLabel || element instanceof OMTPropertyLabel) {
             return NamedMemberType.ModelItem;
         }
         if (element instanceof OMTMember && element.getParent().getParent() instanceof OMTImport) {
@@ -222,21 +252,21 @@ public class MemberUtil {
                 // operator or command, get via parent:
                 PsiElement callableDefine = element.getParent();
                 if (callableDefine instanceof OMTDefineQueryStatement) {
-                    return new OMTExportMemberImpl(element, ExportMemberType.Query);
+                    return new OMTExportMemberImpl(getContainingElement(element), ExportMemberType.Query);
                 } else if (callableDefine instanceof OMTDefineCommandStatement) {
-                    return new OMTExportMemberImpl(element, ExportMemberType.Command);
+                    return new OMTExportMemberImpl(getContainingElement(element), ExportMemberType.Command);
                 }
                 break;
 
             case ModelItem:
-                OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) element.getParent();
+                OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) getContainingElement(element);
                 switch (modelItemBlock.getModelItemLabel().getModelItemTypeElement().getText().toLowerCase()) {
                     case "!activity":
-                        return new OMTExportMemberImpl(element, ExportMemberType.Activity);
+                        return new OMTExportMemberImpl(modelItemBlock, ExportMemberType.Activity);
                     case "!procedure":
-                        return new OMTExportMemberImpl(element, ExportMemberType.Procedure);
+                        return new OMTExportMemberImpl(modelItemBlock, ExportMemberType.Procedure);
                     case "!standalonequery":
-                        return new OMTExportMemberImpl(element, ExportMemberType.StandaloneQuery);
+                        return new OMTExportMemberImpl(modelItemBlock, ExportMemberType.StandaloneQuery);
                     default:
                         return null;
                 }

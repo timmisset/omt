@@ -10,6 +10,7 @@ public class OMTParameterImpl implements OMTParameter {
     private boolean required;
     private boolean rest;
     private String name;
+    private OMTParameterType type;
 
     public OMTParameterImpl(OMTVariable variable) {
         this(variable, true);
@@ -26,18 +27,22 @@ public class OMTParameterImpl implements OMTParameter {
     public OMTParameterImpl(OMTVariable variable, Object defaultValue, boolean required) {
         this.variable = variable;
         this.defaultValue = defaultValue;
+        name = variable.getName();
         this.required = required;
     }
 
     public OMTParameterImpl(OMTParameterWithType parameterWithType) {
         variable = parameterWithType.getVariable();
+        type = parameterWithType.getParameterType();
         defaultValue = null;
+        name = variable.getName();
         required = true;
     }
 
     public OMTParameterImpl(OMTVariableAssignment variableAssignment) {
         variable = variableAssignment.getVariable();
         defaultValue = variableAssignment.getVariableValue();
+        name = variable.getName();
         required = true;
     }
 
@@ -46,6 +51,7 @@ public class OMTParameterImpl implements OMTParameter {
             throw new Error("OMTQueryPath must start with a variable to be parsed to a parameter");
         }
         variable = (OMTVariable) queryPath.getFirstChild().getFirstChild();
+        name = variable.getName();
         required = false;
     }
 
@@ -80,11 +86,21 @@ public class OMTParameterImpl implements OMTParameter {
 
     @Override
     public OMTParameterType getType() {
-        return null;
+        return type;
     }
 
     @Override
     public String getName() {
-        return variable.getText();
+        return name;
+    }
+
+    @Override
+    public String describe() {
+        return String.format("%s%s%s%s%s",
+                isRest() ? "..." : "",
+                getName(),
+                type != null ? String.format(" (%s) ", type.getText()) : "",
+                isRequired() ? " (required) " : "",
+                defaultValue != null ? defaultValue.toString() : "");
     }
 }

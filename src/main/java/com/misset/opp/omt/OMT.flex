@@ -266,6 +266,7 @@ IElementType returnVariable() {
     {IRI}                                                            { return returnElement(OMTTypes.IRI); }
     // start code block:
     "|"                                                             { return returnElement(OMTTypes.PIPE); }
+    "*"                                                             { return returnElement(OMTTypes.ASTERIX); }
 }
 <CURIE> {
     ":"                                                             { return OMTTypes.COLON; }
