@@ -159,11 +159,11 @@ defineName ::=                              NAME | OPERATOR                     
                                                                                      }
 defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA queryPath SEMICOLON trailing {
                                                             implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
-                                                            methods=[isQuery]
+                                                            methods=[isQuery isCommand]
                                             }
 defineCommandStatement ::=                  leading? DEFINE_START DEFINE_COMMAND defineName defineParam? LAMBDA commandBlock trailing {
                                                           implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
-                                                          methods=[isCommand]
+                                                          methods=[isCommand isQuery]
                                           }
 definePrefix ::=                            leading? PREFIX_DEFINE_START prefix trailing
 defineParam ::=                             PARENTHESES_OPEN (variable (COMMA variable)*)? PARENTHESES_CLOSE

@@ -16,9 +16,9 @@ import java.util.Optional;
  */
 public class OMTExportMemberImpl implements OMTExportMember {
 
-    private PsiElement element;
-    private ExportMemberType type;
-    private HashMap<String, OMTParameter> parameters = new HashMap<>();
+    private final PsiElement element;
+    private final ExportMemberType type;
+    private final HashMap<String, OMTParameter> parameters = new HashMap<>();
     private String name;
 
     public OMTExportMemberImpl(PsiElement exportMember, ExportMemberType type) {
@@ -63,7 +63,9 @@ public class OMTExportMemberImpl implements OMTExportMember {
 
     @Override
     public String[] getParameters() {
-        return new String[0];
+        return parameters.values().stream()
+                .map(OMTParameter::describe)
+                .toArray(String[]::new);
     }
 
     @Override
@@ -81,6 +83,17 @@ public class OMTExportMemberImpl implements OMTExportMember {
     @Override
     public PsiElement getElement() {
         return element;
+    }
+
+    @Override
+    public String htmlDescription() {
+        return String.format("<b>%s</b><br>Type: %s<br><br>Params:<br>%s",
+                name, type.name(), String.join("<br>", getParameters()));
+    }
+
+    @Override
+    public String shortDescription() {
+        return String.format("%s: %s", type.name(), name);
     }
 
     @Override
@@ -158,7 +171,7 @@ public class OMTExportMemberImpl implements OMTExportMember {
 
     private void setParametersFromDefined(OMTDefineParam parameters) {
         parameters.getVariableList().stream()
-                .map(omtVariable -> new OMTParameterImpl(omtVariable))
+                .map(OMTParameterImpl::new)
                 .forEach(this::addParameter);
     }
 }
