@@ -11,6 +11,7 @@ public class OMTParameterImpl implements OMTParameter {
     private boolean rest;
     private String name;
     private OMTParameterType type;
+    private String parameterType;
 
     public OMTParameterImpl(OMTVariable variable) {
         this(variable, true);
@@ -55,12 +56,12 @@ public class OMTParameterImpl implements OMTParameter {
         required = false;
     }
 
-    public OMTParameterImpl(JsonPrimitive primitive) {
+    public OMTParameterImpl(JsonPrimitive primitive, String name) {
         if (primitive.getAsString().startsWith("p.")) {
-            name = primitive.getAsString();
-            String typeOfParameter = name.substring(2);
-            required = !typeOfParameter.startsWith("optional");
-            rest = typeOfParameter.startsWith("rest");
+            this.name = name;
+            parameterType = primitive.getAsString().substring(2);
+            required = !parameterType.startsWith("optional");
+            rest = parameterType.startsWith("rest");
         }
     }
 
@@ -94,12 +95,22 @@ public class OMTParameterImpl implements OMTParameter {
         return name;
     }
 
+    private String getParameterTypeDesc() {
+        if (type != null) {
+            return type.getText();
+        }
+        if (parameterType != null) {
+            return parameterType;
+        }
+        return null;
+    }
+
     @Override
     public String describe() {
         return String.format("%s%s%s%s%s",
                 isRest() ? "..." : "",
                 getName(),
-                type != null ? String.format(" (%s) ", type.getText()) : "",
+                getParameterTypeDesc() != null ? String.format(" (%s) ", getParameterTypeDesc()) : "",
                 isRequired() ? " (required) " : "",
                 defaultValue != null ? defaultValue.toString() : "");
     }

@@ -148,9 +148,9 @@ scriptContent ::=                           declareVariable | variableAssignment
                                             addToCollection | removeFromCollection | logicalBlock | returnStatement
 
 // DEFINED MEMBERS
-// ODT Members are Operators and Commands, both can be created by a DEFINE statement
+// ODT Members are Operator and Commands, both can be created by a DEFINE statement
 // there is also a collection of BuiltIn operators and commands which are included
-// and finally, all runnable OMT modelitems are available as Commands (Activity, Procedure) or Operators (StandAloneQuery)
+// and finally, all runnable OMT modelitems are available as Commands (Activity, Procedure) or Operator (StandAloneQuery)
 // only the Defined members are part of set of the grammar parser
 defineName ::=                              NAME | OPERATOR                         {
                                                                                        mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
@@ -181,13 +181,16 @@ commandCall ::=                             COMMAND flagSignature? signature?
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
                                                              methods=[getName setName getNameIdentifier canCallOperator canCallCommand]
                                                            }
-signature ::=                               PARENTHESES_OPEN (variableValue (COMMA variableValue)*)? PARENTHESES_CLOSE
+signature ::=                               PARENTHESES_OPEN ((variableValue | commandBlock) (COMMA (variableValue | commandBlock))*)? PARENTHESES_CLOSE {
+                                                             methods=[numberOfParameters]
+}
 flagSignature ::=                           FLAG
 
 logicalBlock ::=                            ifBlock commandBlock (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
 ifBlock ::=                                 IF_OPERATOR (queryPath | (PARENTHESES_OPEN queryPath PARENTHESES_CLOSE))
 elseBlock ::=                               ELSE_OPERATOR (queryPath | (PARENTHESES_OPEN queryPath PARENTHESES_CLOSE))
 returnStatement ::=                         RETURN_OPERATOR queryPath?
+chooseBlock ::=                             CHOOSE_OPERATOR trailing? (WHEN_OPERATOR queryPath LAMBDA queryPath)+ END_OPERATOR
 
 // an equation statement should contain a left hand value and 1+ condition operators + right hand values:
 // $value == $value == $value etc...
@@ -202,7 +205,7 @@ removeFromCollection ::=                    queryPath trailing? REMOVE trailing?
 queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+ (PIPE queryPath)?
 queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
                                             operatorCall | IRI | DOT | queryOneOrMany | queryZeroOrMany | queryWrapper | CONDITIONAL_OPERATOR |
-                                            LAMBDA | queryFilter | NEW_LINE
+                                            queryFilter | NEW_LINE | chooseBlock
 queryReverseStep ::=                        CARAT queryStep
 
 // a query filter is contained by brackets [] and should resolve to boolean

@@ -2,10 +2,13 @@ package com.misset.opp.omt.psi.util;
 
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReference;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.psi.util.PsiUtil;
+import com.misset.opp.omt.external.util.builtIn.BuiltInMember;
+import com.misset.opp.omt.external.util.builtIn.BuiltInType;
+import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.support.OMTCall;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -221,17 +224,48 @@ public class VariableUtil {
     }
 
     public static void annotateVariable(@NotNull final OMTVariable variable, @NotNull AnnotationHolder holder) {
-        if(variable.isGlobalVariable()) {
+        if (variable.isGlobalVariable()) {
             // the magic variables always exist
             holder.createInfoAnnotation(variable, String.format("%s is a global variable which is always available", variable.getName()));
             return;
         }
-        if(variable.isDeclaredVariable()) {
+        if (variable.isDeclaredVariable()) {
             // check that atleast 1 variable is using the declaration:
             AnnotationUtil.annotateUsage(variable, OMTVariable.class, holder);
         } else {
             // variable usage must have exactly 1 resolved value:
-            AnnotationUtil.annotateOrigin(variable, holder);
+            if (variable.getReference() != null && variable.getReference().resolve() == null) {
+                // check if it is a local variable:
+                HashMap<String, String> localVariables = getLocalVariables(variable);
+                if (localVariables.containsKey(variable.getName())) {
+                    holder.createInfoAnnotation(variable, String.format("%s is locally available in %s", variable.getName(), localVariables.get(variable.getName())));
+                } else {
+                    holder.createErrorAnnotation(variable, String.format("%s is not declared", variable.getText()));
+                }
+            }
         }
+    }
+
+    /**
+     * Returns a list of variables that are locally available for the element
+     *
+     * @param element
+     * @return
+     */
+    public static HashMap<String, String> getLocalVariables(@NotNull PsiElement element) {
+        HashMap<String, String> localVariables = new HashMap<>();
+        while (element.getParent() != null && !(element instanceof PsiFile)) {
+            // from builtIn members
+            if (element instanceof OMTCall) {
+                OMTCall call = (OMTCall) element;
+                BuiltInMember builtInMember = BuiltInUtil.getBuiltInMember(call.getNameIdentifier().getText(),
+                        call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
+                builtInMember.getLocalVariables().forEach(
+                        variable -> localVariables.put(variable, builtInMember.getName())
+                );
+            }
+            element = element.getParent();
+        }
+        return localVariables;
     }
 }

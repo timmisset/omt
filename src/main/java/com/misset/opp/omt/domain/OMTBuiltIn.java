@@ -4,7 +4,7 @@
 //import com.misset.opp.omt.psi.OMTDefineParam;
 //import com.misset.opp.omt.psi.OMTOperatorCall;
 //import com.misset.opp.omt.psi.OMTParameter;
-//import com.misset.opp.omt.psi.exceptions.NumberOfInputParametersMismatchException;
+//import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 //
 //import java.util.ArrayList;
 //import java.util.List;

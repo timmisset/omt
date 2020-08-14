@@ -260,6 +260,9 @@ IElementType returnVariable() {
     "AND" | "OR" | "NOT" | "IN" | ">=" | "<=" | "==" | ">" | "<"    { return returnElement(OMTTypes.CONDITIONAL_OPERATOR); }
     "IF"                                                            { return returnElement(OMTTypes.IF_OPERATOR); }
     "ELSE"                                                          { return returnElement(OMTTypes.ELSE_OPERATOR); }
+    "CHOOSE"                                                        { return returnElement(OMTTypes.CHOOSE_OPERATOR); }
+    "WHEN"                                                          { return returnElement(OMTTypes.WHEN_OPERATOR); }
+    "END"                                                           { return returnElement(OMTTypes.END_OPERATOR); }
     "RETURN"                                                        { return returnElement(OMTTypes.RETURN_OPERATOR); }
     {NAME}                                                          { return returnElement(OMTTypes.OPERATOR); }
 

@@ -27,7 +27,7 @@ public class BuiltInUtilTest {
 
 
         // ACT
-        JsonObject jsonObject = BuiltInUtil.parseBuiltIn(content, BuiltInType.Operators);
+        JsonObject jsonObject = BuiltInUtil.parseBuiltIn(content, BuiltInType.Operator);
 
         // ASSERT
         assertNotNull(jsonObject);
@@ -44,7 +44,7 @@ public class BuiltInUtilTest {
         String content = new String(Files.readAllBytes(file.toPath()));
 
         // ACT
-        JsonObject jsonObject = BuiltInUtil.parseBuiltIn(content, BuiltInType.Commands);
+        JsonObject jsonObject = BuiltInUtil.parseBuiltIn(content, BuiltInType.Command);
 
         // ASSERT
         assertNotNull(jsonObject);

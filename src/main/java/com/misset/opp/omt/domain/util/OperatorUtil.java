@@ -49,7 +49,7 @@
 //        reloadBuiltInOperators(document);
 //    }
 //    private static void reloadBuiltInOperators(Document document) {
-//        builtInOperators = BuiltInUtil.reloadBuiltInFromDocument(document, BuiltInType.Operators);
+//        builtInOperators = BuiltInUtil.reloadBuiltInFromDocument(document, BuiltInType.Operator);
 //    }
 //
 //    public static List<OMTOperator> getBuiltInOperators(Project project) {
@@ -62,7 +62,7 @@
 //    public static List<OMTOperator> getAllAvailableOperators(PsiElement element) {
 //        List<OMTOperator> operators = new ArrayList<>();
 //
-//        // Operators can be build in operators, imported, defined queries in the document or standalone queries
+//        // Operator can be build in operators, imported, defined queries in the document or standalone queries
 //        operators.addAll(getBuiltInOperators(element.getProject()));
 //
 //        HashMap<String, OMTBuiltIn> importedMembers = ImportUtil.getAllImportedMembers((OMTFile) element.getContainingFile());

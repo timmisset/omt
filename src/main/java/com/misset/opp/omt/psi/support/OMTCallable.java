@@ -1,9 +1,10 @@
 package com.misset.opp.omt.psi.support;
 
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.OMTCommandCall;
-import com.misset.opp.omt.psi.OMTOperatorCall;
+import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.psi.impl.CallCallableMismatchException;
+
+import java.util.List;
 
 public interface OMTCallable {
 
@@ -11,13 +12,15 @@ public interface OMTCallable {
 
     int getMaxExpected();
 
-    void validateSignature(OMTCommandCall call) throws CallCallableMismatchException;
+    List<String> getLocalVariables();
 
-    void validateSignature(OMTOperatorCall call) throws CallCallableMismatchException;
+    void validateSignature(OMTCall call) throws CallCallableMismatchException, NumberOfInputParametersMismatchException;
 
     boolean isOperator();
 
     boolean isCommand();
+
+    boolean hasRest();
 
     String[] getParameters();
 

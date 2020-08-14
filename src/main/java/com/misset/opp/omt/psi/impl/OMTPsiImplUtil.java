@@ -189,4 +189,8 @@ public class OMTPsiImplUtil {
     public static boolean isDefinedByPrefix(OMTParameterType parameterType, OMTPrefix prefix) {
         return parameterType.getText().startsWith(prefix.getNamespacePrefix().getText());
     }
+
+    public static int numberOfParameters(OMTSignature signature) {
+        return signature.getCommandBlockList().size() + signature.getVariableValueList().size();
+    }
 }
