@@ -12,9 +12,12 @@ public interface OMTParameter {
 
     boolean isRequired();
 
+    boolean isRest();
+
     Object getDefaultValue();
 
     OMTParameterType getType();
 
     String getName();
+
 }

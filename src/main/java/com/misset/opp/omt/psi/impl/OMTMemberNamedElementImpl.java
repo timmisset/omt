@@ -7,37 +7,39 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.named.NamedMemberType;
-import com.misset.opp.omt.psi.named.OMTVariableNamedElement;
+import com.misset.opp.omt.psi.named.OMTMemberNamedElement;
 import com.misset.opp.omt.psi.references.MemberReference;
+import com.misset.opp.omt.psi.support.OMTExportMember;
+import com.misset.opp.omt.psi.util.MemberUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement implements OMTVariableNamedElement {
+public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement implements OMTMemberNamedElement {
     public OMTMemberNamedElementImpl(@NotNull ASTNode node) {
         super(node);
     }
 
-    private NamedMemberType getNamedMemberType() {
-        if(getPsi() instanceof OMTOperatorCall) { return NamedMemberType.OperatorCall; }
-        if(getPsi() instanceof OMTDefineName) { return NamedMemberType.DefineName; }
-        if (getPsi() instanceof OMTCommandCall) {
-            return NamedMemberType.CommandCall;
-        }
-        if (getPsi() instanceof OMTModelItemLabel) {
-            return NamedMemberType.ModelItem;
-        }
-        if (getPsi() instanceof OMTMember && getPsi().getParent().getParent() instanceof OMTImport) {
-            return NamedMemberType.ImportingMember;
-        }
-        return null;
+
+    private PsiElement getPsi() {
+        return getNode().getPsi();
     }
-    private PsiElement getPsi() { return getNode().getPsi(); }
+
+    private NamedMemberType type;
+
+    private NamedMemberType getType() {
+        if (type == null) {
+            type = MemberUtil.getNamedMemberType(getPsi());
+        }
+        return type;
+    }
 
     @Nullable
     @Override
     public PsiReference getReference() {
-        NamedMemberType namedMemberType = getNamedMemberType();
-        if(namedMemberType == null) { return null; }
+        NamedMemberType namedMemberType = getType();
+        if (namedMemberType == null) {
+            return null;
+        }
         switch (namedMemberType) {
             case DefineName:
                 return toReference((OMTDefineName) getPsi());
@@ -63,25 +65,30 @@ public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement imp
     }
     private PsiReference toReference(OMTDefineName defineName) {
         TextRange property = defineName.getTextRangeInParent();
-        return new MemberReference(defineName, property, getNamedMemberType());
+        return new MemberReference(defineName, property, getType());
     }
     private PsiReference toReference(OMTMember member) {
         TextRange property = new TextRange(0, member.getText().length());
-        return new MemberReference(member, property, getNamedMemberType());
+        return new MemberReference(member, property, getType());
     }
 
     private PsiReference toReference(OMTOperatorCall operatorCall) {
         TextRange property = operatorCall.getFirstChild().getTextRangeInParent();
-        return new MemberReference(operatorCall, property, getNamedMemberType());
+        return new MemberReference(operatorCall, property, getType());
     }
 
     private PsiReference toReference(OMTCommandCall commandCall) {
         TextRange property = new TextRange(1, commandCall.getFirstChild().getText().length());
-        return new MemberReference(commandCall, property, getNamedMemberType());
+        return new MemberReference(commandCall, property, getType());
     }
 
     private PsiReference toReference(OMTModelItemLabel modelItemLabel) {
         TextRange property = modelItemLabel.getPropertyLabel().getTextRangeInParent();
-        return new MemberReference(modelItemLabel, property, getNamedMemberType());
+        return new MemberReference(modelItemLabel, property, getType());
+    }
+
+    @Override
+    public OMTExportMember asExportedMember() {
+        return MemberUtil.memberToExportMember(getPsi());
     }
 }

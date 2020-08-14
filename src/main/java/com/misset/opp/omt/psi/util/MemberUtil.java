@@ -11,7 +11,10 @@ import com.intellij.psi.impl.file.PsiJavaDirectoryImpl;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.exceptions.UnknownMappingException;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.support.OMTExportMember;
+import com.misset.opp.omt.psi.impl.OMTExportMemberImpl;
+import com.misset.opp.omt.psi.intentions.members.MemberIntention;
+import com.misset.opp.omt.psi.named.NamedMemberType;
+import com.misset.opp.omt.psi.support.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
@@ -21,38 +24,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-import static com.misset.opp.omt.psi.intentions.members.MemberIntention.getImportIntentions;
-
 public class MemberUtil {
-
     /**
-     * Returns the PsiElement which contains the declaration for this OperatorCall
-     * This can be a DefineQueryStatement somewhere upstream or an import statement
+     * Returns the PsiElement which contains the declaration for this call
+     * This can be a DefineStatement somewhere upstream or an import statement
      * When the call points to an imported member it will try to resolve to it's original declaration in the external file,
      * otherwise it will resolve to the import statement.
      * The declaration of the operator must precede it's call to it, not only upstream but also within the same declaration block
      *
-     * @param operatorCall
+     * @param call
      * @return
      */
-    public static Optional<PsiElement> getDeclaringMember(OMTOperatorCall operatorCall) {
-        return getDeclaringMember(getDefinedQueryStatement(operatorCall), operatorCall);
-    }
-
-    /**
-     * Returns the PsiElement which contains the declaration for this CommandCall
-     * This can be a DefineCommandStatement somewhere upstream or an import statement.
-     * When the call points to an imported member it will try to resolve to it's original declaration in the external file,
-     * otherwise it will resolve to the import statement.
-     * The declaration of the command must precede it's call to it, not only upstream but also within the same declaration block
-     * @param commandCall
-     * @return
-     */
-    public static Optional<PsiElement> getDeclaringMember(OMTCommandCall commandCall) {
-        return getDeclaringMember(getDefinedCommandStatement(commandCall), commandCall);
-    }
-
-    private static Optional<PsiElement> getDeclaringMember(PsiElement definedStatement, PsiElement call) {
+    public static Optional<PsiElement> getDeclaringMember(OMTCall call) {
+        OMTDefinedStatement definedStatement = getDefinedStatement(call);
         if (definedStatement != null) {
             // check if the member is declared before it's used, which is a requirement for an OperatorCall
             if (!isCallBeforeDefine(call, definedStatement)) {
@@ -117,10 +101,10 @@ public class MemberUtil {
      * @param define - definedQueryStatement or definedCommandStatement
      * @return
      */
-    private static boolean isCallBeforeDefine(PsiElement call, PsiElement define) {
+    private static boolean isCallBeforeDefine(OMTCall call, PsiElement define) {
         PsiElement callContainingElement = getCallContainingElement(call);
 
-        if(callContainingElement.getParent() == define.getParent()) {
+        if (callContainingElement.getParent() == define.getParent()) {
             // call is part of the same block as the parent:
             return callContainingElement.getStartOffsetInParent() <= define.getStartOffsetInParent();
         } else {
@@ -134,10 +118,6 @@ public class MemberUtil {
             // the block entry that's using it.
             return PsiTreeUtil.getDepth(call, call.getContainingFile()) < PsiTreeUtil.getDepth(define.getParent(), define.getContainingFile());
         }
-
-
-
-
     }
 
     private static PsiElement getCallContainingElement(PsiElement call) {
@@ -151,59 +131,32 @@ public class MemberUtil {
     }
 
     /**
-     * Returns the defined query statement corresponding to the operator call name
+     * Returns the defined statement corresponding to the call name
      * It doesn't validate that the defined statement precedes the call
-     * @param operatorCall
+     *
+     * @param call
      * @return
      */
-    public static OMTDefineQueryStatement getDefinedQueryStatement(OMTOperatorCall operatorCall) {
+    public static OMTDefinedStatement getDefinedStatement(OMTCall call) {
 
-        PsiElement element = operatorCall.getParent();
-        List<OMTQueriesBlock> processedBlocks = new ArrayList<>();
-        while(element != null) {
-            if(element instanceof OMTQueriesBlock) {
-                Optional<OMTDefineQueryStatement> queryDefined = ((OMTQueriesBlock) element).getDefineQueryStatementList().stream()
-                        .filter(defineQueryStatement -> defineQueryStatement.getDefineName().textMatches(operatorCall.getFirstChild().getText()))
+        PsiElement element = call.getParent();
+        List<OMTBlock> processedBlocks = new ArrayList<>();
+        while (element != null) {
+            if (element instanceof OMTBlock) {
+                Optional<OMTDefinedStatement> definedStatement = ((OMTDefinedBlock) element).getStatements().stream()
+                        .filter(defineQueryStatement -> defineQueryStatement.getDefineName().textMatches(call.getFirstChild().getText()))
                         .findFirst();
-                if(queryDefined.isPresent()) { return queryDefined.get(); }
-                processedBlocks.add((OMTQueriesBlock) element);
+                if (definedStatement.isPresent()) {
+                    return definedStatement.get();
+                }
+                processedBlocks.add((OMTBlock) element);
             }
             element = element.getParent();
-            if(element instanceof PsiJavaDirectoryImpl) {
-                return null;
-            }
-            if(element != null) {
-                OMTQueriesBlock childOfType = PsiTreeUtil.findChildOfType(element, OMTQueriesBlock.class);
-                if(childOfType != null && !processedBlocks.contains(childOfType)) { element = childOfType; }
-            }
-
-        }
-        return null;
-    }
-
-    /**
-     * Returns the defined command statement corresponding to the command call name
-     * It doesn't validate that the defined statement precedes the call
-     * @param commandCall
-     * @return
-     */
-    public static OMTDefineCommandStatement getDefinedCommandStatement(OMTCommandCall commandCall) {
-        PsiElement element = commandCall.getParent();
-        List<OMTCommandsBlock> processedBlocks = new ArrayList<>();
-        while(element != null) {
-            if(element instanceof OMTCommandsBlock) {
-                Optional<OMTDefineCommandStatement> commandDefined = ((OMTCommandsBlock) element).getDefineCommandStatementList().stream()
-                        .filter(definedCommandStatement -> definedCommandStatement.getDefineName().textMatches(commandCall.getFirstChild().getText()))
-                        .findFirst();
-                if(commandDefined.isPresent()) { return commandDefined.get(); }
-                processedBlocks.add((OMTCommandsBlock) element);
-            }
-            element = element.getParent();
-            if(element instanceof PsiJavaDirectoryImpl) {
+            if (element instanceof PsiJavaDirectoryImpl) {
                 return null;
             }
             if (element != null) {
-                OMTCommandsBlock childOfType = PsiTreeUtil.findChildOfType(element, OMTCommandsBlock.class);
+                OMTQueriesBlock childOfType = PsiTreeUtil.findChildOfType(element, OMTQueriesBlock.class);
                 if (childOfType != null && !processedBlocks.contains(childOfType)) {
                     element = childOfType;
                 }
@@ -213,28 +166,87 @@ public class MemberUtil {
         return null;
     }
 
-    public static void annotateCommandCall(@NotNull OMTCommandCall commandCall, @NotNull AnnotationHolder holder) {
-        if (commandCall.getReference().resolve() == null) {
+    public static void annotateCall(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {
+        PsiElement resolved = call.getReference().resolve();
+        if (resolved == null) {
             // command call not found in file or via import.
             // TODO: check if it is a build-in or local command
 
             // unknown, annotate with error:
-            Annotation errorAnnotation = holder.createErrorAnnotation(commandCall.getNameIdentifier(), String.format("%s could not be resolved", commandCall.getName()));
-            List<IntentionAction> intentionActionList = getImportIntentions(commandCall);
-            intentionActionList.forEach(intentionAction -> errorAnnotation.registerFix(intentionAction));
+            Annotation errorAnnotation = holder.createErrorAnnotation(call.getNameIdentifier(), String.format("%s could not be resolved", call.getName()));
+            List<IntentionAction> intentionActionList = MemberIntention.getImportMemberIntentions(call, omtExportMember ->
+                    (omtExportMember.isCommand() && call.canCallCommand()) ||
+                            (omtExportMember.isOperator() && call.canCallOperator())
+            );
+            intentionActionList.forEach(errorAnnotation::registerFix);
+        } else {
+            // callable is found as reference. Since the reference can be resolved to a PsiElement
+            // the callable element is part of the project code, not a built-in or local command
+            OMTExportMember asExportMember = memberToExportMember(resolved);
+            if (asExportMember != null) {
+
+            } else {
+                holder.createErrorAnnotation(call.getNameIdentifier(), "Could not parse callable to an exporting member");
+            }
+
         }
     }
 
-    public static void annotateOperatorCall(@NotNull OMTOperatorCall operatorCall, @NotNull AnnotationHolder holder) {
-        if (operatorCall.getReference().resolve() == null) {
-            // command call not found in file or via import.
-            // TODO: check if it is a build-in operator
-
-            // unknown, annotate with error:
-            Annotation errorAnnotation = holder.createErrorAnnotation(operatorCall.getNameIdentifier(), String.format("%s could not be resolved", operatorCall.getName()));
-            List<IntentionAction> intentionActionList = getImportIntentions(operatorCall);
-            intentionActionList.forEach(intentionAction -> errorAnnotation.registerFix(intentionAction));
+    public static NamedMemberType getNamedMemberType(PsiElement element) {
+        if (element instanceof OMTOperatorCall) {
+            return NamedMemberType.OperatorCall;
         }
+        if (element instanceof OMTDefineName) {
+            return NamedMemberType.DefineName;
+        }
+        if (element instanceof OMTCommandCall) {
+            return NamedMemberType.CommandCall;
+        }
+        if (element instanceof OMTModelItemLabel) {
+            return NamedMemberType.ModelItem;
+        }
+        if (element instanceof OMTMember && element.getParent().getParent() instanceof OMTImport) {
+            return NamedMemberType.ImportingMember;
+        }
+        return null;
     }
 
+    public static OMTExportMember memberToExportMember(PsiElement element) {
+        NamedMemberType namedMemberType = getNamedMemberType(element);
+        if (namedMemberType == null) {
+            return null;
+        }
+
+        switch (namedMemberType) {
+            case DefineName:
+                // operator or command, get via parent:
+                PsiElement callableDefine = element.getParent();
+                if (callableDefine instanceof OMTDefineQueryStatement) {
+                    return new OMTExportMemberImpl(element, ExportMemberType.Query);
+                } else if (callableDefine instanceof OMTDefineCommandStatement) {
+                    return new OMTExportMemberImpl(element, ExportMemberType.Command);
+                }
+                break;
+
+            case ModelItem:
+                OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) element.getParent();
+                switch (modelItemBlock.getModelItemLabel().getModelItemTypeElement().getText().toLowerCase()) {
+                    case "!activity":
+                        return new OMTExportMemberImpl(element, ExportMemberType.Activity);
+                    case "!procedure":
+                        return new OMTExportMemberImpl(element, ExportMemberType.Procedure);
+                    case "!standalonequery":
+                        return new OMTExportMemberImpl(element, ExportMemberType.StandaloneQuery);
+                    default:
+                        return null;
+                }
+
+            case ImportingMember:
+            case CommandCall:
+            case OperatorCall:
+            default:
+                return null;
+        }
+        return null;
+    }
 }
