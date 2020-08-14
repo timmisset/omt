@@ -4,15 +4,19 @@ import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.impl.file.PsiJavaDirectoryImpl;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.exceptions.UnknownMappingException;
+import com.misset.opp.omt.external.util.builtIn.BuiltInMember;
+import com.misset.opp.omt.external.util.builtIn.BuiltInType;
+import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.impl.CallCallableMismatchException;
 import com.misset.opp.omt.psi.impl.OMTExportMemberImpl;
 import com.misset.opp.omt.psi.intentions.members.MemberIntention;
 import com.misset.opp.omt.psi.named.NamedMemberType;
@@ -172,7 +176,13 @@ public class MemberUtil {
         PsiElement resolved = call.getReference().resolve();
         if (resolved == null) {
             // command call not found in file or via import.
-            // TODO: check if it is a build-in or local command
+            BuiltInMember builtInMember = BuiltInUtil.getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
+            if (builtInMember != null) {
+                // is a builtIn member, annotate:
+                holder.createAnnotation(HighlightSeverity.INFORMATION, call.getNameIdentifier().getTextRange(), builtInMember.shortDescription(), builtInMember.htmlDescription());
+                validateSignature(call, builtInMember, holder);
+                return;
+            }
 
             // unknown, annotate with error:
             Annotation errorAnnotation = holder.createErrorAnnotation(call.getNameIdentifier(), String.format("%s could not be resolved", call.getName()));
@@ -190,13 +200,20 @@ public class MemberUtil {
                 if (asExportMember == null) {
                     throw new Exception("Could not resolve callable element to exported member, this is a bug");
                 }
-                TextRange textRangeInParent = call.getNameIdentifier().getTextRange();
-                String shortDescription = asExportMember.shortDescription();
-                String htmlDescription = asExportMember.htmlDescription();
-                holder.createAnnotation(HighlightSeverity.INFORMATION, textRangeInParent, shortDescription, htmlDescription);
+                holder.createAnnotation(HighlightSeverity.INFORMATION, call.getNameIdentifier().getTextRange(),
+                        asExportMember.shortDescription(), asExportMember.htmlDescription());
+                validateSignature(call, asExportMember, holder);
             } catch (Exception e) {
                 holder.createErrorAnnotation(call.getNameIdentifier(), e.getMessage());
             }
+        }
+    }
+
+    private static void validateSignature(@NotNull OMTCall call, @NotNull OMTCallable callable, @NotNull AnnotationHolder holder) {
+        try {
+            callable.validateSignature(call);
+        } catch (NumberOfInputParametersMismatchException | CallCallableMismatchException e) {
+            holder.createErrorAnnotation(call, e.getMessage());
         }
     }
 
@@ -250,11 +267,11 @@ public class MemberUtil {
         switch (namedMemberType) {
             case DefineName:
                 // operator or command, get via parent:
-                PsiElement callableDefine = element.getParent();
+                PsiElement callableDefine = getContainingElement(element);
                 if (callableDefine instanceof OMTDefineQueryStatement) {
-                    return new OMTExportMemberImpl(getContainingElement(element), ExportMemberType.Query);
+                    return new OMTExportMemberImpl(callableDefine, ExportMemberType.Query);
                 } else if (callableDefine instanceof OMTDefineCommandStatement) {
-                    return new OMTExportMemberImpl(getContainingElement(element), ExportMemberType.Command);
+                    return new OMTExportMemberImpl(callableDefine, ExportMemberType.Command);
                 }
                 break;
 

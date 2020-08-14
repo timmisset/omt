@@ -1,4 +1,4 @@
-package com.misset.opp.omt.psi.exceptions;
+package com.misset.opp.omt.exceptions;
 
 public class NumberOfInputParametersMismatchException extends Exception {
 

@@ -2,7 +2,7 @@
 //
 //import com.intellij.psi.PsiElement;
 //import com.misset.opp.omt.domain.OMTBuiltIn;
-//import com.misset.opp.omt.psi.exceptions.NumberOfInputParametersMismatchException;
+//import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 //import org.junit.jupiter.api.BeforeEach;
 //import org.junit.jupiter.api.Test;
 //import org.mockito.Mock;

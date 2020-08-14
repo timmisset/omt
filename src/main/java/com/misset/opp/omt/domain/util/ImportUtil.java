@@ -151,7 +151,7 @@
 //        return commands;
 //    }
 //    /**
-//     * Returns all imported members of this OMT file as Commands or Operators
+//     * Returns all imported members of this OMT file as Commands or Operator
 //     * @param file
 //     * @return
 //     */

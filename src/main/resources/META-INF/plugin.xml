@@ -30,7 +30,7 @@
                                  implementationClass="com.misset.opp.omt.psi.usages.VariablesFindUsageProvider"/>
         <lang.findUsagesProvider language="OMT"
                                  implementationClass="com.misset.opp.omt.psi.usages.NamespacePrefixFindUsageProvider"/>
-        <!--        <postStartupActivity implementation="com.misset.opp.omt.OMTStartupActivity"/>-->
+                <postStartupActivity implementation="com.misset.opp.omt.OMTStartupActivity"/>
     </extensions>
 
     <actions>
