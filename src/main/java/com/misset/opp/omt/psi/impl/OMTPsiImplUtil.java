@@ -3,6 +3,10 @@ package com.misset.opp.omt.psi.impl;
 
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.support.OMTDefinedStatement;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class OMTPsiImplUtil {
 
@@ -34,34 +38,97 @@ public class OMTPsiImplUtil {
         curieElement.replace(replacement);
         return replacement;
     }
-    public static PsiElement getNameIdentifier(OMTNamespacePrefix namespacePrefix) { return namespacePrefix; }
+
+    public static PsiElement getNameIdentifier(OMTNamespacePrefix namespacePrefix) {
+        return namespacePrefix;
+    }
 
     // OperatorCall
-    public static String getName(OMTOperatorCall operatorCall) { return operatorCall.getFirstChild().getText(); }
+    public static String getName(OMTOperatorCall operatorCall) {
+        return operatorCall.getFirstChild().getText();
+    }
+
     public static PsiElement setName(OMTOperatorCall operatorCall, String newName) {
         PsiElement replacement = OMTElementFactory.createOperator(operatorCall.getProject(), newName);
         operatorCall.replace(replacement);
         return replacement;
     }
-    public static PsiElement getNameIdentifier(OMTOperatorCall operatorCall) { return operatorCall.getFirstChild(); }
+
+    public static PsiElement getNameIdentifier(OMTOperatorCall operatorCall) {
+        return operatorCall.getFirstChild();
+    }
+
+    public static boolean canCallCommand(OMTOperatorCall operatorCall) {
+        return false;
+    }
+
+    public static boolean canCallOperator(OMTOperatorCall operatorCall) {
+        return true;
+    }
 
     // CommandCall
-    public static String getName(OMTCommandCall commandCall) { return commandCall.getFirstChild().getText(); }
+    public static String getName(OMTCommandCall commandCall) {
+        return commandCall.getFirstChild().getText();
+    }
+
     public static PsiElement setName(OMTCommandCall commandCall, String newName) {
         PsiElement replacement = OMTElementFactory.createCommand(commandCall.getProject(), newName);
         commandCall.replace(replacement);
         return replacement;
     }
-    public static PsiElement getNameIdentifier(OMTCommandCall commandCall) { return commandCall.getFirstChild(); }
 
-    // DefineQueryStatement
-    public static String getName(OMTDefineName defineName) { return defineName.getText(); }
+    public static PsiElement getNameIdentifier(OMTCommandCall commandCall) {
+        return commandCall.getFirstChild();
+    }
+
+    public static boolean canCallCommand(OMTCommandCall commandCall) {
+        return true;
+    }
+
+    public static boolean canCallOperator(OMTCommandCall commandCall) {
+        return false;
+    }
+
+    // OMTDefineName
+    public static String getName(OMTDefineName defineName) {
+        return defineName.getText();
+    }
+
     public static PsiElement setName(OMTDefineName defineName, String newName) {
         PsiElement replacement = OMTElementFactory.createOperator(defineName.getProject(), newName);
         defineName.replace(replacement);
         return replacement;
     }
-    public static PsiElement getNameIdentifier(OMTDefineName defineName) { return defineName; }
+
+    public static PsiElement getNameIdentifier(OMTDefineName defineName) {
+        return defineName;
+    }
+
+    // OMTDefineStatement
+    public static boolean isQuery(OMTDefineQueryStatement statement) {
+        return true;
+    }
+
+    public static boolean isQuery(OMTDefineCommandStatement statement) {
+        return false;
+    }
+
+    public static boolean isCommand(OMTDefineQueryStatement statement) {
+        return false;
+    }
+
+    public static boolean isCommand(OMTDefineCommandStatement statement) {
+        return true;
+    }
+
+    // OMTDefinedBlocks
+    public static List<OMTDefinedStatement> getStatements(OMTQueriesBlock omtQueriesBlock) {
+        return omtQueriesBlock.getDefineQueryStatementList().stream().map(statement -> (OMTDefinedStatement) statement).collect(Collectors.toList());
+    }
+
+    public static List<OMTDefinedStatement> getStatements(OMTCommandsBlock omtCommandsBlock) {
+        return omtCommandsBlock.getDefineCommandStatementList().stream().map(statement -> (OMTDefinedStatement) statement).collect(Collectors.toList());
+    }
 
     // Members
     public static String getName(OMTMember member) {

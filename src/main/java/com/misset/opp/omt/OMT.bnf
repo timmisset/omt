@@ -52,8 +52,14 @@ member ::=                                  NAME     {
                                                      }
 
 // scalars
-queriesBlock::=                             QUERY_BLOCK_START (PIPE trailing defineQueryStatement* ODT_END)?
-commandsBlock::=                            COMMAND_BLOCK_START (PIPE trailing defineCommandStatement* ODT_END)?
+queriesBlock::=                             QUERY_BLOCK_START (PIPE trailing defineQueryStatement* ODT_END)? {
+                                                                implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
+                                                                methods=[getStatements]
+                                                                }
+commandsBlock::=                            COMMAND_BLOCK_START (PIPE trailing defineCommandStatement* ODT_END)? {
+                                                                implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
+                                                                methods=[getStatements]
+                                                                }
 
 moduleBlock::=                              leading? MODULE_NAME_START moduleName trailing
 moduleName::=                               NAME | OPERATOR
@@ -151,8 +157,14 @@ defineName ::=                              NAME | OPERATOR                     
                                                                                        implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                                                        methods=[getName setName getNameIdentifier]
                                                                                      }
-defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA queryPath SEMICOLON trailing
-defineCommandStatement ::=                  leading? DEFINE_START DEFINE_COMMAND defineName defineParam? LAMBDA commandBlock trailing
+defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA queryPath SEMICOLON trailing {
+                                                            implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
+                                                            methods=[isQuery]
+                                            }
+defineCommandStatement ::=                  leading? DEFINE_START DEFINE_COMMAND defineName defineParam? LAMBDA commandBlock trailing {
+                                                          implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
+                                                          methods=[isCommand]
+                                          }
 definePrefix ::=                            leading? PREFIX_DEFINE_START prefix trailing
 defineParam ::=                             PARENTHESES_OPEN (variable (COMMA variable)*)? PARENTHESES_CLOSE
 
@@ -160,14 +172,14 @@ defineParam ::=                             PARENTHESES_OPEN (variable (COMMA va
 // A call to either an Operator or a Command. In case of the latter, it's always prefixed with @
 operatorCall ::=                            (OPERATOR | CONDITIONAL_OPERATOR | NAME) signature? {
                                                              mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
-                                                             implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
-                                                             methods=[getName setName getNameIdentifier]
+                                                             implements="com.misset.opp.omt.psi.support.OMTCall"
+                                                             methods=[getName setName getNameIdentifier canCallOperator canCallCommand]
                                                            }
 commandCall ::=                             COMMAND flagSignature? signature?
                                                             {
                                                              mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
-                                                             implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
-                                                             methods=[getName setName getNameIdentifier]
+                                                             implements="com.misset.opp.omt.psi.support.OMTCall"
+                                                             methods=[getName setName getNameIdentifier canCallOperator canCallCommand]
                                                            }
 signature ::=                               PARENTHESES_OPEN (variableValue (COMMA variableValue)*)? PARENTHESES_CLOSE
 flagSignature ::=                           FLAG

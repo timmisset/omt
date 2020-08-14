@@ -1,41 +1,44 @@
 package com.misset.opp.omt.psi.impl;
 
+import com.google.gson.JsonPrimitive;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTParameter;
 
 public class OMTParameterImpl implements OMTParameter {
     private OMTVariable variable;
     private Object defaultValue;
-    private boolean isRequired;
+    private boolean required;
+    private boolean rest;
+    private String name;
 
     public OMTParameterImpl(OMTVariable variable) {
         this(variable, true);
     }
 
-    public OMTParameterImpl(OMTVariable variable, boolean isRequired) {
-        this(variable, null, isRequired);
+    public OMTParameterImpl(OMTVariable variable, boolean required) {
+        this(variable, null, required);
     }
 
     public OMTParameterImpl(OMTVariable variable, Object defaultValue) {
         this(variable, defaultValue, true);
     }
 
-    public OMTParameterImpl(OMTVariable variable, Object defaultValue, boolean isRequired) {
+    public OMTParameterImpl(OMTVariable variable, Object defaultValue, boolean required) {
         this.variable = variable;
         this.defaultValue = defaultValue;
-        this.isRequired = isRequired;
+        this.required = required;
     }
 
     public OMTParameterImpl(OMTParameterWithType parameterWithType) {
         variable = parameterWithType.getVariable();
         defaultValue = null;
-        isRequired = true;
+        required = true;
     }
 
     public OMTParameterImpl(OMTVariableAssignment variableAssignment) {
         variable = variableAssignment.getVariable();
         defaultValue = variableAssignment.getVariableValue();
-        isRequired = true;
+        required = true;
     }
 
     public OMTParameterImpl(OMTQueryPath queryPath) {
@@ -43,7 +46,16 @@ public class OMTParameterImpl implements OMTParameter {
             throw new Error("OMTQueryPath must start with a variable to be parsed to a parameter");
         }
         variable = (OMTVariable) queryPath.getFirstChild().getFirstChild();
-        isRequired = false;
+        required = false;
+    }
+
+    public OMTParameterImpl(JsonPrimitive primitive) {
+        if (primitive.getAsString().startsWith("p.")) {
+            name = primitive.getAsString();
+            String typeOfParameter = name.substring(2);
+            required = !typeOfParameter.startsWith("optional");
+            rest = typeOfParameter.startsWith("rest");
+        }
     }
 
     @Override
@@ -53,7 +65,12 @@ public class OMTParameterImpl implements OMTParameter {
 
     @Override
     public boolean isRequired() {
-        return isRequired;
+        return required;
+    }
+
+    @Override
+    public boolean isRest() {
+        return rest;
     }
 
     @Override

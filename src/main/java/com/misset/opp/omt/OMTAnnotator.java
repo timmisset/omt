@@ -33,10 +33,10 @@ public class OMTAnnotator implements Annotator {
             ImportUtil.annotateImport((OMTImport) element, holder);
         }
         if (element instanceof OMTCommandCall) {
-            MemberUtil.annotateCommandCall((OMTCommandCall) element, holder);
+            MemberUtil.annotateCall((OMTCommandCall) element, holder);
         }
         if (element instanceof OMTOperatorCall) {
-            MemberUtil.annotateOperatorCall((OMTOperatorCall) element, holder);
+            MemberUtil.annotateCall((OMTOperatorCall) element, holder);
         }
     }
 

@@ -38,13 +38,27 @@ public class OMTExportMemberImpl implements OMTExportMember {
     }
 
     @Override
-    public int expectedNumberOfParametersMin() {
+    public int getMinExpected() {
         return 0;
     }
 
     @Override
-    public int expectedNumberOfParametersMax() {
+    public int getMaxExpected() {
         return 0;
+    }
+
+    @Override
+    public void validateSignature(OMTCommandCall call) throws CallCallableMismatchException {
+        if (isOperator()) {
+            throw new CallCallableMismatchException(call, type);
+        }
+    }
+
+    @Override
+    public void validateSignature(OMTOperatorCall call) throws CallCallableMismatchException {
+        if (isCommand()) {
+            throw new CallCallableMismatchException(call, type);
+        }
     }
 
     @Override

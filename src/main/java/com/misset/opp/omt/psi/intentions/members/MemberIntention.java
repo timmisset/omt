@@ -4,11 +4,13 @@ import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.IncorrectOperationException;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTElementFactory;
+import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTImport;
+import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -22,15 +24,7 @@ import java.util.stream.Collectors;
 import static com.misset.opp.omt.psi.util.MemberUtil.getCallName;
 
 public class MemberIntention {
-    public static List<IntentionAction> getImportIntentions(OMTCommandCall commandCall) {
-        return getImportMemberIntentions(commandCall, OMTExportMember::isCommand);
-    }
-
-    public static List<IntentionAction> getImportIntentions(OMTOperatorCall operatorCall) {
-        return getImportMemberIntentions(operatorCall, OMTExportMember::isOperator);
-    }
-
-    private static List<IntentionAction> getImportMemberIntentions(PsiElement call, Predicate<OMTExportMember> isCorrectType) {
+    public static List<IntentionAction> getImportMemberIntentions(OMTCall call, Predicate<OMTExportMember> isCorrectType) {
         OMTFile containingFile = (OMTFile) call.getContainingFile();
         return containingFile.getImportedFiles().entrySet().stream()
                 .map(omtImportVirtualFileEntry -> {
