@@ -1,8 +1,8 @@
 package com.misset.opp.omt.psi.support;
 
 import com.intellij.psi.PsiElement;
+import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
-import com.misset.opp.omt.psi.impl.CallCallableMismatchException;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public interface OMTCallable {
 
     List<String> getLocalVariables();
 
-    void validateSignature(OMTCall call) throws CallCallableMismatchException, NumberOfInputParametersMismatchException;
+    void validateSignature(OMTCall call) throws NumberOfInputParametersMismatchException, CallCallableMismatchException;
 
     boolean isOperator();
 

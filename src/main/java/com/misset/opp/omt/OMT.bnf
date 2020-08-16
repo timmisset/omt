@@ -23,19 +23,27 @@ block ::=                                   (specificBlock | blockEntry)+
 blockEntry ::=                              propertyLabel (map | sequence | scalar)
 propertyLabel ::=                           PROPERTY
 
-// a scalar must follow the property label directly but can be multiple lines
-// it is not affected by indentation
-scalar ::=                                  (scalarValue) (ODT_END | trailing)+
-scalarValue ::=                             constant_value | parameterWithType | script | variableAssignment | queryPath
+// a scalar single statement (multiline optional) following a property label
+scalar ::=                                  scalarValue
+scalarValue ::=                             ((parameterWithType | variableAssignment) trailing) | (queryPath | script)
 
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indentToken, it must dedentToken
 sequence ::=                                trailing ((indentToken sequenceItem* dedentToken) | sequenceItem*)
-sequenceItem ::=                            leading? SEQUENCE_BULLET? sequenceItemValue (ODT_END | trailing)+
-sequenceItemValue ::=                       parameterWithType | variableAssignment | queryPath
+sequenceItem ::=                            leading? SEQUENCE_BULLET? (sequenceItemValue | (dictionary dedentToken))
+sequenceItemValue ::=                       ((parameterWithType | variableAssignment) trailing) | queryPath
 
 // a map is nothing more than another block, it must however be indented
-map ::=                                     trailing indentToken block dedentToken
+map ::=                                     trailing indentToken leading? block dedentToken
+
+// The dictionary is used as a sequenceItemValue
+// parameters:
+//      -   name:
+//          type:
+dictionary ::=                              (dictionaryEntry)+
+dictionaryEntry ::=                         dictionaryKeyPart dictionaryValuePart
+dictionaryKeyPart ::=                       DICTIONARY_KEY
+dictionaryValuePart ::=                     queryPath
 
 // SPECIFIC BLOCKS
 specificBlock ::=                          importBlock | exportBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock | moduleBlock
@@ -45,18 +53,18 @@ specificBlock ::=                          importBlock | exportBlock | prefixBlo
 // sequences
 exportBlock ::=                             EXPORT_START trailing ((indentToken memberList dedentToken) | memberList)?
 memberList ::=                              (SEQUENCE_BULLET member trailing)*
-member ::=                                  NAME     {
+member ::=                                  NAME | OPERATOR {
                                                        mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
                                                        implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                        methods=[getName setName getNameIdentifier]
                                                      }
 
 // scalars
-queriesBlock::=                             QUERY_BLOCK_START (PIPE trailing defineQueryStatement* ODT_END)? {
+queriesBlock::=                             QUERY_BLOCK_START (PIPE trailing indentToken defineQueryStatement* dedentToken)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
                                                                 }
-commandsBlock::=                            COMMAND_BLOCK_START (PIPE trailing defineCommandStatement* ODT_END)? {
+commandsBlock::=                            COMMAND_BLOCK_START (PIPE trailing indentToken defineCommandStatement* dedentToken)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
                                                                 }
@@ -72,7 +80,7 @@ importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                            implements="com.misset.opp.omt.psi.named.OMTImportNamedElement"
                                                                            methods=[getName setName getNameIdentifier]
                                                                          }
-importLocation ::=                          (STRING COLON) | IMPORT_PATH
+importLocation ::=                          PROPERTY | IMPORT_PATH
 
 prefixBlock::=                              PREFIX_BLOCK_START trailing (indentToken prefix* dedentToken)?
 prefix::=                                   leading? namespacePrefix IRI trailing
@@ -99,7 +107,7 @@ comment ::=                                 END_OF_LINE_COMMENT | JAVA_DOCS
 eolComment ::=                              END_OF_LINE_COMMENT
 // trailing is everything at the end of the current line and before NEW_LINE.
 // It can be simply the NEW_LINE or an eolComment followed by a NEW_LINE
-trailing ::=                                (eolComment? NEW_LINE+)
+trailing ::=                                eolComment? NEW_LINE+
 // leading is everything before a block or item. Assuming that comments are written above the code they are
 // commenting on, this should help to relate the comment to the code
 leading ::=                                 (comment NEW_LINE)+
@@ -118,13 +126,12 @@ variableAssignment::=                       variable EQUALS variableValue
 variableValue ::=                           constant_value | queryPath | commandCall
 
 // a parameter type is used to typecast input parameters in OMT model items
-variable ::=                                VARIABLE_NAME | declaredVariable | globalVariable {
+variable ::=                                VARIABLE_NAME | globalVariable {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTVariableNamedElementImpl"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTVariableNamedElement"
                                                                                  methods=[getName setName isDeclaredVariable isGlobalVariable getNameIdentifier]
                                                                                }
 // the lexer should determine if operating in a state of declare and provide a difference response for the discovered variable name
-declaredVariable ::=                        DECLARED_VARIABLE_NAME
 globalVariable ::=                          GLOBAL_VARIABLE_NAME
 parameterWithType ::=                       variable PARENTHESES_OPEN parameterType PARENTHESES_CLOSE
 parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) {
@@ -139,7 +146,7 @@ indentToken ::=                            INDENT | INDENT2
 // an ODT (script) block is always started by a Yaml scalar node
 // it can start on the same line and be restricted to that line (not required) or it can be started by the
 // literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and indentToken and dedentToken
-script ::=                                  PIPE trailing (scriptLine+ | queryPath)
+script ::=                                  PIPE trailing indentToken (scriptLine+ | queryPath) dedentToken
 commandBlock ::=                            CURLY_OPEN trailing (script | scriptLine+) CURLY_CLOSED
 // a scriptline is contained by the addition of the semicolon at the end
 scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) trailing
@@ -152,11 +159,11 @@ scriptContent ::=                           declareVariable | variableAssignment
 // there is also a collection of BuiltIn operators and commands which are included
 // and finally, all runnable OMT modelitems are available as Commands (Activity, Procedure) or Operator (StandAloneQuery)
 // only the Defined members are part of set of the grammar parser
-defineName ::=                              NAME | OPERATOR                         {
-                                                                                       mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
-                                                                                       implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
-                                                                                       methods=[getName setName getNameIdentifier]
-                                                                                     }
+defineName ::=                              NAME | OPERATOR    {
+                                                           mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
+                                                           implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
+                                                           methods=[getName setName getNameIdentifier]
+                                                         }
 defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA queryPath SEMICOLON trailing {
                                                             implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
                                                             methods=[isQuery isCommand]
@@ -190,7 +197,10 @@ logicalBlock ::=                            ifBlock commandBlock (ELSE_OPERATOR 
 ifBlock ::=                                 IF_OPERATOR (queryPath | (PARENTHESES_OPEN queryPath PARENTHESES_CLOSE))
 elseBlock ::=                               ELSE_OPERATOR (queryPath | (PARENTHESES_OPEN queryPath PARENTHESES_CLOSE))
 returnStatement ::=                         RETURN_OPERATOR queryPath?
-chooseBlock ::=                             CHOOSE_OPERATOR trailing? (WHEN_OPERATOR queryPath LAMBDA queryPath)+ END_OPERATOR
+chooseBlock ::=                             CHOOSE_OPERATOR trailing?
+                                                (WHEN_OPERATOR queryPath LAMBDA queryPath)+
+                                                (OTHERWISE_OPERATOR LAMBDA queryPath)?
+                                                END_OPERATOR
 
 // an equation statement should contain a left hand value and 1+ condition operators + right hand values:
 // $value == $value == $value etc...

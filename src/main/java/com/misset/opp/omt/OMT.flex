@@ -4,7 +4,9 @@ package com.misset.opp.omt;
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import com.misset.opp.omt.psi.OMTTokenType;import com.misset.opp.omt.psi.OMTTypes;
-import com.intellij.psi.TokenType;
+import com.intellij.psi.TokenType;import jdk.nashorn.internal.parser.Token;
+import java.util.List;
+import java.util.ArrayList;import java.util.stream.Collectors;
 
 %%
 
@@ -13,6 +15,7 @@ import com.intellij.psi.TokenType;
 %unicode
 %function advance
 %type IElementType
+%column
 
 %eof{  return;
 %eof}
@@ -44,8 +47,12 @@ IMPORT_PATH=                    (\.{1,2}[^:]*:)
 
 %{
 /* globals to track current indentation */
+List<Integer> blockIndentation = new ArrayList<>();
+List<Integer> blockStates = new ArrayList<>();
 int current_line_indent = 0;   /* indentation of the current line */
 int indent_level = 0;          /* indentation level passed to the parser */
+int yycolumn;
+int stateBeforeIndent = -1;
 IElementType lastDedentToken;
 IElementType lastIndentToken;
 IElementType returnDedent() {
@@ -54,7 +61,7 @@ IElementType returnDedent() {
     } else {
         lastDedentToken = OMTTypes.DEDENT2;
     }
-    return lastDedentToken;
+    return returnElement(lastDedentToken);
 }
 IElementType returnIndent() {
     if(lastIndentToken == null || lastIndentToken == OMTTypes.INDENT2) {
@@ -62,28 +69,60 @@ IElementType returnIndent() {
     } else {
         lastIndentToken = OMTTypes.INDENT2;
     }
-    return lastIndentToken;
+    return returnElement(lastIndentToken);
+}
+int getCurrentIndentLevel() { return blockIndentation.isEmpty() ? 0 : blockIndentation.get(blockIndentation.size() - 1); }
+int getStateAtIndent() { return blockStates.isEmpty() ? YYINITIAL : blockStates.get(blockStates.size() - 1); }
+void log(String message) {
+    System.out.println(message);
+}
+void logStates(String prefixMessage) {
+    log(prefixMessage + ": " + blockIndentation + blockStates.stream().map(integer -> getStateName(integer)).collect(Collectors.toList()));
+}
+void removeLastIndentInfo() { removeLastIndentInfo(true); }
+void removeLastIndentInfo(boolean log) {
+    if(!blockStates.isEmpty()) { blockStates.remove(blockStates.size() - 1); }
+    if(!blockIndentation.isEmpty()) { blockIndentation.remove(blockIndentation.size() - 1); }
+    if(log) { logStates("states after removing: "); }
+}
+void addIndentInfo(int indentLevel, int state) { addIndentInfo(indentLevel, state, true); }
+void addIndentInfo(int indentLevel, int state, boolean log) {
+    if(log) { log("Adding indent info on level " + indentLevel + " = " + getStateName(state)); }
+    blockIndentation.add(indentLevel);
+    blockStates.add(state);
+    if(log) { logStates("states after adding: "); }
+}
+void resetLastIndentInfo(int indentLevel, int state) { resetLastIndentInfo(indentLevel, state, true); }
+void resetLastIndentInfo(int indentLevel, int state, boolean log) {
+    log("Resetting current indent level state to: " + getStateName(state));
+    removeLastIndentInfo(false);
+    addIndentInfo(indentLevel, state, false);
+    logStates("states after resetting: ");
+}
+boolean nestedODT() {
+    return getStateAtIndent() == stateBeforeIndent && getStateAtIndent() == ODT;
 }
 IElementType firstAfterIndentation() {
-    yypushback(1);
-    if (current_line_indent > indent_level) {
-        indent_level++;
+    log("First after indent for " + yytext() + ", current = " + current_line_indent + ", previous: " + getCurrentIndentLevel());
+    yypushback(yylength());
+    if (current_line_indent > getCurrentIndentLevel() && !nestedODT()) {
+        // register the block idnent and it's state
+        addIndentInfo(current_line_indent, stateBeforeIndent);
         return returnIndent();
-    } else if (current_line_indent < indent_level) {
+    } else if (current_line_indent < getCurrentIndentLevel()) {
         indent_level--;
+        // step by step, remove the indentation levels
+        removeLastIndentInfo();
         return returnDedent();
     } else {
-        yybegin(YYINITIAL);
+        // revert to the state at the indentation level
+        setState(getStateAtIndent());
         return TokenType.WHITE_SPACE;
     }
 }
 IElementType finishIdentation() {
-    if(inODTBlock) {
-        inODTBlock = false;
-        return OMTTypes.ODT_END;
-    }
-    if(indent_level > 0) {
-        indent_level--;
+    if(!blockIndentation.isEmpty()) {
+        removeLastIndentInfo();
         return returnDedent();
     }
     setState(YYINITIAL);
@@ -92,40 +131,40 @@ IElementType finishIdentation() {
 void yypushback(int number, String id) {
     yypushback(number);
 }
-int previousState;
 boolean startOfLine;
-boolean inODTBlock = false;
-boolean wasDeclaringVariable = false;
-boolean declaringVariable = false;
-void setDeclaringVariable(boolean state) {
-    declaringVariable = state;
-//    System.out.println("Setting declaring variable to " + state);
+String getStateName(int state) {
+    switch(state) {
+        case 0: return "YYINITIAL";
+        case 2: return "YAML_SCALAR";
+        case 4: return "YAML_SEQUENCE";
+        case 6: return "YAML_DICTIONARY";
+        case 8: return "INDENT";
+        case 10: return "ODT";
+        case 12: return "CURIE";
+    }
+    return "UNKNOWN";
 }
 void setState(int state) {
-    previousState = state != yystate() ? yystate() : previousState;
-    if (state == ODT || state == CURIE) {
-        inODTBlock = true;
-        wasDeclaringVariable = declaringVariable;
-    } else {
-        if(previousState == ODT || previousState == CURIE) {
-            inODTBlock = false;
-            setDeclaringVariable(wasDeclaringVariable);
-        }
+    if(state == yystate()) { return; }
+    if(state == INDENT) { stateBeforeIndent = yystate(); }
+    log("Setting state to: " + getStateName(state));
+    if(getCurrentIndentLevel() == yycolumn && getStateAtIndent() != state) {
+        resetLastIndentInfo(yycolumn, state);
     }
     yybegin(state);
 }
 IElementType returnElement(IElementType element) {
-    startOfLine = element == OMTTypes.NEW_LINE;
-//    System.out.println("Returning " + yytext() + " as " + element.toString());
+    startOfLine = (element == OMTTypes.NEW_LINE || (startOfLine && element == TokenType.WHITE_SPACE));
+    if(element != OMTTypes.NEW_LINE) {
+        log("Returning " + yytext() + " as " + element.toString());
+    }
     return element;
-}
-IElementType returnVariable() {
-    return declaringVariable ? returnElement(OMTTypes.DECLARED_VARIABLE_NAME) : returnElement(OMTTypes.VARIABLE_NAME);
 }
 %}
 
 %state YAML_SCALAR
 %state YAML_SEQUENCE
+%state YAML_DICTIONARY
 
 %state INDENT
 %state ODT
@@ -133,22 +172,26 @@ IElementType returnVariable() {
 
 %%
 // when in initial and newline, start the indent counting
-<YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, INDENT> {NEWLINE}           { current_line_indent = 0; setState(INDENT); return returnElement(OMTTypes.NEW_LINE); }
-<YYINITIAL, YAML_SCALAR, YAML_SEQUENCE> {WHITE_SPACE}               { return TokenType.WHITE_SPACE; } // capture all whitespace
+<YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, INDENT, ODT> {NEWLINE}                 { current_line_indent = 0; setState(INDENT); return returnElement(OMTTypes.NEW_LINE); }
+<YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, YAML_DICTIONARY, ODT> {
+    {WHITE_SPACE}                                                   { return TokenType.WHITE_SPACE; } // capture all whitespace
+    {JAVADOCS}                                                      { return returnElement(OMTTypes.JAVA_DOCS); }
+    {END_OF_LINE_COMMENT}                                           { return returnElement(OMTTypes.END_OF_LINE_COMMENT); }
+}
 <YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, ODT> {
-    {GLOBAL_VARIABLE}                                               { setState(ODT); return OMTTypes.GLOBAL_VARIABLE_NAME; } // capture all whitespace
-    {BOOLEAN}                                                       { return returnElement(OMTTypes.BOOLEAN); }
-    {NULL}                                                          { return returnElement(OMTTypes.NULL); }
+    {GLOBAL_VARIABLE}                                                          { setState(ODT); return OMTTypes.GLOBAL_VARIABLE_NAME; } // capture all whitespace
+    {BOOLEAN}                                                                  { return returnElement(OMTTypes.BOOLEAN); }
+    {NULL}                                                                     { return returnElement(OMTTypes.NULL); }
 }
 // INDENTATION
 // Required for YAML like grouping of blocks based on indents
-<INDENT>(\ {4})                                                      { current_line_indent++; }
+<INDENT>{WHITE_SPACE}+                                               { current_line_indent = yylength(); }
 <INDENT>.                                                            { return firstAfterIndentation(); }
 
 <<EOF>>                                                              { return finishIdentation(); }
 // a block starts with a property name, defined as NAME:
 // this block can contain a SCALAR BLOCK, a MAPPING BLOCK or a SEQUENCE BLOCK
-<YYINITIAL> {
+<YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, YAML_DICTIONARY> {
     // specific OMT Blocks, used by the grammar part
     "prefixes:"                                               { setState(YAML_SCALAR); return returnElement(OMTTypes.PREFIX_BLOCK_START); }
     "commands:"                                               { setState(YAML_SCALAR); return returnElement(OMTTypes.COMMAND_BLOCK_START); }
@@ -158,15 +201,14 @@ IElementType returnVariable() {
     "moduleName:"                                             { setState(YAML_SCALAR); return returnElement(OMTTypes.MODULE_NAME_START); }
     "export:"                                                 { setState(YAML_SCALAR); return returnElement(OMTTypes.EXPORT_START); }
 
-    {IMPORT_PATH}                                             { setState(YAML_SCALAR); return returnElement(OMTTypes.IMPORT_PATH); }
 
-    "params:" | "variables:"                                  { setDeclaringVariable(true); setState(YAML_SCALAR); return returnElement(OMTTypes.PROPERTY); }
+    {IMPORT_PATH}                                             { setState(YAML_SCALAR); return returnElement(OMTTypes.IMPORT_PATH); }
     // the initial state is only used for the key parts and can result in a switch to the scalar or sequence node
     // when a new line is reached in the state of initial (consecutive new lines), scalar or mapping, the state is always returned
     // to initial. This way, the initial state will detect the "-" indicator of the sequence items
-    {NAME}":"                                                 { setDeclaringVariable(false); setState(YAML_SCALAR); return returnElement(OMTTypes.PROPERTY); }
-    "$"{NAME}                                                 { setState(ODT); return returnElement(OMTTypes.VARIABLE_NAME); }
-    "-"                                                       { setState(YAML_SEQUENCE); return returnElement(OMTTypes.SEQUENCE_BULLET); }
+}
+<YYINITIAL> {
+    {NAME}":"                                                 { setState(YAML_SCALAR); return returnElement(OMTTypes.PROPERTY); }
 }
 
 // YAML SEQUENCE:
@@ -174,69 +216,39 @@ IElementType returnVariable() {
 // OMT: We can expect variables, imports etc
 <YAML_SEQUENCE> {
     // Variables
-    "$"{NAME}                                                        { setState(ODT); return returnVariable();  }
-    "/"                                                              { yypushback(1, "YAML_SCALAR"); setState(ODT); }
+    {NAME}":"                                                        {
+              // the indentation level doesn't start at the start of line here, add it separately
+              log("yaml seq: " + yycolumn + ", " + getCurrentIndentLevel() + ", " + yytext());
+              if(yycolumn > getCurrentIndentLevel()) {
+                    addIndentInfo(yycolumn, YAML_DICTIONARY);
+                    setState(YAML_DICTIONARY);
+                    yypushback(yylength(), "YAML_SEQUENCE");
+              } else {
+                    // same indentation level, just a new entry
+                    setState(YAML_SCALAR); return returnElement(OMTTypes.PROPERTY);
+              }
+          }
+}
+<YAML_DICTIONARY> {
+    {NAME}":"                                                        { return returnElement(OMTTypes.DICTIONARY_KEY); }
 }
 
 // YAML SCALAR
 <YAML_SCALAR> {
-    {IRI}                                                            { return returnElement(OMTTypes.IRI); }
     "!"{NAME}                                                        { return returnElement(OMTTypes.MODEL_ITEM_TYPE); }
-    "$"{NAME}                                                        { setState(ODT); return returnVariable(); }
-    "@"{NAME}                                                        { setState(ODT); return returnElement(OMTTypes.COMMAND); }
-    {NAME}                                                           { setState(ODT); return returnElement(OMTTypes.OPERATOR); }
-    // a YAML_SCALAR can start with any value, however once any of these prefixes is introduced it should switch to an ODT state
-    // this will support things like:
-    //
-    // queryWatcher:
-    //      query: $someVariable / pol:property
-    // OR   query: /pol:className / ^rdf:type
-    //
-    // in these cases, a multiline entry is also automatically supported and it will stay collecting data until
-    // next key: scalar or key: sequence block appears
-    "/" | "|"                                                       { yypushback(1, "YAML_SCALAR"); setState(ODT); }
+    {NAME}":"                                                        { return returnElement(OMTTypes.PROPERTY); }
+    {STRING}":"                                                      { return returnElement(OMTTypes.PROPERTY); }
 }
-
 // ODT BLOCK
 <ODT> {
-    // although identation and whitespace is ignored in the ODT blocks, it's used to pushback the right amount of tokens
-    // to the stream when the end of the ODT block is recognized
-    {NEWLINE}                                                       { startOfLine = true;
-                                                                      current_line_indent = 0; return returnElement(OMTTypes.NEW_LINE); }
-    {WHITE_SPACE}                                                   { return TokenType.WHITE_SPACE; }
-    (\ {4})                                                         { current_line_indent++; return TokenType.WHITE_SPACE; }
-
-
-
-    // exit code block
-    // when a code block starts, the recorded indent level is of the key that preceeded the scalar or pipe
-    // therefor, whenever something is present which has an indentation level lower or equal to this key
-    // it can be safely assumed that the code block is finished. Or needs to adjust indentation
-    {NAME}":" {
-              if(startOfLine && current_line_indent <= indent_level) {
-                    // exit code block
-                    yypushback(yylength(), "ODT_END");
-                    setDeclaringVariable(false);
-                    setState(INDENT);
-                    return returnElement(OMTTypes.ODT_END);
-              } else {
-                    return returnElement(OMTTypes.NAMESPACE_PREFIX);
-              }
-          }
-
-    "- " {
-            setState(INDENT);
-            yypushback(2);
-            return returnElement(OMTTypes.ODT_END);
-      }
     // statements that identify specific elements within the ODT language
-    "DEFINE"                                                        { setDeclaringVariable(true); return returnElement(OMTTypes.DEFINE_START); }
+    "DEFINE"                                                        { return returnElement(OMTTypes.DEFINE_START); }
     "QUERY"                                                         { return returnElement(OMTTypes.DEFINE_QUERY); }
     "COMMAND"                                                       { return returnElement(OMTTypes.DEFINE_COMMAND); }
-    "VAR"                                                           { setDeclaringVariable(true); return returnElement(OMTTypes.DECLARE_VAR); }
+    "VAR"                                                           { return returnElement(OMTTypes.DECLARE_VAR); }
     "PREFIX"                                                        { return returnElement(OMTTypes.PREFIX_DEFINE_START); }
-    ";"                                                             { setDeclaringVariable(false); return returnElement(OMTTypes.SEMICOLON); }
-    "$"{NAME}                                                       { return returnVariable(); }
+    ";"                                                             { return returnElement(OMTTypes.SEMICOLON); }
+    "$"{NAME}                                                       { return returnElement(OMTTypes.VARIABLE_NAME); }
     "@"{NAME}                                                       { return returnElement(OMTTypes.COMMAND); }
     "!"{NAME}                                                       { return returnElement(OMTTypes.FLAG); }
 
@@ -251,8 +263,8 @@ IElementType returnVariable() {
 
     // the lambda is used for assigning the actual query/command block to it's constructor
     // and to assign a path to case condition
-    "=>"                                                            { setDeclaringVariable(false); return returnElement(OMTTypes.LAMBDA); }
-    "="                                                             { setDeclaringVariable(false); return returnElement(OMTTypes.EQUALS); }
+    "=>"                                                            { return returnElement(OMTTypes.LAMBDA); }
+    "="                                                             { return returnElement(OMTTypes.EQUALS); }
 
     // ODT operators
     // certain operators are used for assertions and should be recognized. They can be used within querysteps (grammar part)
@@ -262,6 +274,7 @@ IElementType returnVariable() {
     "ELSE"                                                          { return returnElement(OMTTypes.ELSE_OPERATOR); }
     "CHOOSE"                                                        { return returnElement(OMTTypes.CHOOSE_OPERATOR); }
     "WHEN"                                                          { return returnElement(OMTTypes.WHEN_OPERATOR); }
+    "OTHERWISE"                                                     { return returnElement(OMTTypes.OTHERWISE_OPERATOR); }
     "END"                                                           { return returnElement(OMTTypes.END_OPERATOR); }
     "RETURN"                                                        { return returnElement(OMTTypes.RETURN_OPERATOR); }
     {NAME}                                                          { return returnElement(OMTTypes.OPERATOR); }
@@ -272,16 +285,14 @@ IElementType returnVariable() {
     "*"                                                             { return returnElement(OMTTypes.ASTERIX); }
 }
 <CURIE> {
-    ":"                                                             { return OMTTypes.COLON; }
+    ":"                                                             { return returnElement(OMTTypes.COLON); }
     {NAME}                                                          {
                                                                           setState(ODT);
-                                                                          return OMTTypes.NAMESPACE_MEMBER;
+                                                                          return returnElement(OMTTypes.NAMESPACE_MEMBER);
       }
 }
 // Common tokens
-<YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, ODT> {
-    {JAVADOCS}                                                      { return returnElement(OMTTypes.JAVA_DOCS); }
-    {END_OF_LINE_COMMENT}                                           { return returnElement(OMTTypes.END_OF_LINE_COMMENT); }
+<YYINITIAL, ODT> {
     {STRING}                                                        { return returnElement(OMTTypes.STRING); }
     {INTEGER}                                                       { return returnElement(OMTTypes.INTEGER); }
     {DECIMAL}                                                       { return returnElement(OMTTypes.DECIMAL); }
@@ -307,5 +318,8 @@ IElementType returnVariable() {
     "+="                                                            { return returnElement(OMTTypes.ADD); }
     "-="                                                            { return returnElement(OMTTypes.REMOVE); }
 }
-<YYINITIAL, YAML_SEQUENCE>{NAME}                                     { return returnElement(OMTTypes.NAME); }
+
+<YAML_SCALAR, YYINITIAL, YAML_SEQUENCE, ODT> "-"                     { setState(YAML_SEQUENCE); return returnElement(OMTTypes.SEQUENCE_BULLET); }
+// defer as much as possible to the ODT state
+<YAML_SCALAR, YAML_SEQUENCE, YYINITIAL, YAML_DICTIONARY>     [^]     { yypushback(yylength(), "YAML_SEQUENCE"); setState(ODT); }
 [^]                                                                  { return returnElement(TokenType.BAD_CHARACTER); }

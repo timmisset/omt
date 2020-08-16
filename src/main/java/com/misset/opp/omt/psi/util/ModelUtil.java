@@ -39,12 +39,29 @@ public class ModelUtil {
 
     public static Optional<OMTBlockEntry> getModelItemBlockEntry(PsiElement element, String propertyLabel) {
         OMTModelItemBlock modelItemBlock = element instanceof OMTModelItemBlock ? (OMTModelItemBlock) element : getModelItemBlock(element).orElse(null);
-        if(modelItemBlock == null) { return Optional.empty(); }
+        if (modelItemBlock == null) {
+            return Optional.empty();
+        }
 
         final String finalPropertyLabel = propertyLabel.endsWith(":") ? propertyLabel : propertyLabel + ":";
         return modelItemBlock.getBlock().getBlockEntryList().stream()
                 .filter(omtBlockEntry ->
                         omtBlockEntry.getPropertyLabel().getText().equals(finalPropertyLabel))
                 .findFirst();
+    }
+
+    /**
+     * Returns the label of the block entry that directly contains this element
+     *
+     * @param element
+     * @return
+     */
+    public static String getBlockEntryLabel(PsiElement element) {
+        OMTBlockEntry firstParent = (OMTBlockEntry) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTBlockEntry);
+        if (firstParent != null) {
+            String label = firstParent.getPropertyLabel().getText();
+            return label.endsWith(":") ? label.substring(0, label.length() - 1) : label;
+        }
+        return null;
     }
 }

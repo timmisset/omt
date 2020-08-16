@@ -1,0 +1,13 @@
+{
+  "name": "GraphSelection",
+  "attributes": {
+    "live": {
+      "node": "sequence",
+      "required": true
+    },
+    "edit": {
+      "node": "sequence",
+      "required": true
+    }
+  }
+}

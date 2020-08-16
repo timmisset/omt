@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Payload",
+    "mapOf": "PayloadPropertyDef"
+  },
+  {
+    "shortcut": {
+      "assignTo": "value"
+    },
+    "name": "PayloadProperty",
+    "attributes": {
+      "value": {
+        "node": "scalar",
+        "required": false
+      },
+      "query": {
+        "node": "scalar",
+        "required": false
+      },
+      "list": {
+        "type": "boolean",
+        "node": "scalar",
+        "default": false
+      },
+      "onChange": {
+        "type": "onChangeDef",
+        "node": "scalar",
+        "required": false
+      }
+    }
+  }
+]

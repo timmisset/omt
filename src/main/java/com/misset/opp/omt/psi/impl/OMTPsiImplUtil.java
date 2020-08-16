@@ -4,6 +4,7 @@ package com.misset.opp.omt.psi.impl;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
+import com.misset.opp.omt.psi.util.VariableUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,12 +25,10 @@ public class OMTPsiImplUtil {
         return variable;
     }
     public static boolean isDeclaredVariable(OMTVariable variable) {
-        return variable.getDeclaredVariable() != null;
+
+        return VariableUtil.isDeclaredVariable(variable);
     }
     public static boolean isGlobalVariable(OMTVariable variable) { return variable.getGlobalVariable() != null; }
-
-
-
 
     // Namespace prefixes
     public static String getName(OMTNamespacePrefix curieElement) { return curieElement.getText(); }

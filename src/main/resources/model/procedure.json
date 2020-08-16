@@ -1,0 +1,35 @@
+{
+  "name": "Procedure",
+  "flags": [
+    "nested",
+    "autonomous"
+  ],
+  "localCommands": [
+    "COMMIT"
+  ],
+  "attributes": {
+    "params": {
+      "type": "ParamDef",
+      "node": "sequence",
+      "default": []
+    },
+    "variables": {
+      "type": "VariableDef",
+      "node": "sequence",
+      "default": []
+    },
+    "graphs": {
+      "type": "GraphSelectionDef",
+      "node": "map",
+      "required": false
+    },
+    "prefixes": {
+      "node": "map",
+      "required": true
+    },
+    "onRun": {
+      "node": "scalar",
+      "required": false
+    }
+  }
+}
