@@ -1,0 +1,87 @@
+[
+  {
+    "name": "Activity",
+    "flags": [
+      "nested",
+      "autonomous",
+      "dialog",
+      "sidebar"
+    ],
+    "localCommands": [
+      "COMMIT",
+      "CANCEL",
+      "DONE",
+      "DRAFT",
+      "ROLLBACK"
+    ],
+    "attributes": {
+      "title": {
+        "type": "interpolatedString",
+        "node": "scalar",
+        "required": false
+      },
+      "params": {
+        "type": "ParamDef",
+        "node": "sequence",
+        "default": []
+      },
+      "variables": {
+        "type": "VariableDef",
+        "node": "sequence",
+        "default": []
+      },
+      "graphs": {
+        "type": "GraphSelectionDef",
+        "node": "map",
+        "required": false
+      },
+      "watchers": {
+        "type": "QueryWatcherDef",
+        "node": "sequence",
+        "required": false
+      },
+      "payload": {
+        "type": "PayloadDef",
+        "node": "map",
+        "required": true
+      },
+      "rules": {
+        "node": "map",
+        "required": true
+      },
+      "prefixes": {
+        "node": "map",
+        "required": true
+      },
+      "queries": {
+        "node": "scalar",
+        "required": false
+      },
+      "commands": {
+        "node": "scalar",
+        "required": false
+      },
+      "onCommit": {
+        "node": "scalar",
+        "required": false
+      },
+      "onCancel": {
+        "node": "scalar",
+        "required": false
+      },
+      "onDone": {
+        "node": "scalar",
+        "required": false
+      },
+      "returns": {
+        "node": "scalar",
+        "required": false
+      },
+      "actions": {
+        "type": "ActionDef",
+        "node": "map",
+        "required": true
+      }
+    }
+  }
+]

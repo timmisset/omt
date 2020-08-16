@@ -15,16 +15,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class VariableUtil {
-
-    public static boolean isVariableDeclare(OMTVariable variable) {
-        return variable.getParent() instanceof OMTSequenceItemValue ||
-                variable.getParent() instanceof OMTDefineParam ||
-                variable.getParent() instanceof OMTVariableAssignment && isVariableDeclare((OMTVariableAssignment)variable.getParent());
-
-    }
-    public static boolean isVariableDeclare(OMTVariableAssignment variableAssignment) {
-        return variableAssignment.getParent() instanceof OMTDeclareVariable;
-    }
     public static boolean isVariableAssignment(OMTVariable variable) {
         return variable.getParent() instanceof OMTVariableAssignment;
     }
@@ -110,45 +100,46 @@ public class VariableUtil {
                 .filter(scriptVariable -> scriptVariable.getText().equals(variable.getText()))
                 .findFirst();
     }
-    public static List<OMTVariable> getVariableUsage(OMTDeclaredVariable declaredVariable) {
+
+    public static List<OMTVariable> getVariableUsage(OMTVariable omtVariable) {
         List<OMTVariable> variables = new ArrayList<>();
 
         // We first need to determine where the variable declare is part of:
         // a query
-        OMTDefineQueryStatement omtDefineQueryStatement = PsiTreeUtil.getTopmostParentOfType(declaredVariable, OMTDefineQueryStatement.class);
-        if(omtDefineQueryStatement != null) {
+        OMTDefineQueryStatement omtDefineQueryStatement = PsiTreeUtil.getTopmostParentOfType(omtVariable, OMTDefineQueryStatement.class);
+        if (omtDefineQueryStatement != null) {
             variables.addAll(
                     PsiTreeUtil.findChildrenOfType(omtDefineQueryStatement.getQueryPath(), OMTVariable.class).stream()
-                    .filter(variable -> variable.getText().equals(declaredVariable.getText()))
-                    .collect(Collectors.toList())
+                            .filter(variable -> variable.getText().equals(omtVariable.getText()))
+                            .collect(Collectors.toList())
             );
         }
 
         // a command
-        OMTDefineCommandStatement omtDefineCommandStatement = PsiTreeUtil.getTopmostParentOfType(declaredVariable, OMTDefineCommandStatement.class);
+        OMTDefineCommandStatement omtDefineCommandStatement = PsiTreeUtil.getTopmostParentOfType(omtVariable, OMTDefineCommandStatement.class);
         if(omtDefineCommandStatement != null) {
             variables.addAll(
-            PsiTreeUtil.findChildrenOfType(omtDefineCommandStatement.getCommandBlock(), OMTVariable.class).stream()
-                    .filter(variable -> variable.getText().equals(declaredVariable.getText()))
+                    PsiTreeUtil.findChildrenOfType(omtDefineCommandStatement.getCommandBlock(), OMTVariable.class).stream()
+                            .filter(variable -> variable.getText().equals(omtVariable.getText()))
                     .collect(Collectors.toList()));
         }
 
         // a script line:
-        Optional<OMTScript> script = ScriptUtil.getScript(declaredVariable);
+        Optional<OMTScript> script = ScriptUtil.getScript(omtVariable);
         script.ifPresent(omtScript -> variables.addAll(
                 PsiTreeUtil.findChildrenOfType(omtScript, OMTVariable.class).stream()
                         .filter(variable ->
                                 !variable.isDeclaredVariable() &&
-                                ScriptUtil.isBefore(variable, declaredVariable) &&
-                                variable.getText().equals(declaredVariable.getText()))
+                                        ScriptUtil.isBefore(variable, omtVariable) &&
+                                        variable.getText().equals(omtVariable.getText()))
                         .collect(Collectors.toList())
         ));
 
         // in the model item
-        Optional<OMTModelItemBlock> modelItem = ModelUtil.getModelItemBlock(declaredVariable);
+        Optional<OMTModelItemBlock> modelItem = ModelUtil.getModelItemBlock(omtVariable);
         modelItem.ifPresent(omtBlock -> variables.addAll(
                 PsiTreeUtil.findChildrenOfType(omtBlock, OMTVariable.class).stream()
-                    .filter(variable -> variable.getText().equals(declaredVariable.getText()) && !variable.isDeclaredVariable())
+                        .filter(variable -> variable.getText().equals(omtVariable.getText()) && !variable.isDeclaredVariable())
                 .collect(Collectors.toList())
         ));
 
@@ -167,12 +158,16 @@ public class VariableUtil {
         OMTScript script = PsiTreeUtil.getTopmostParentOfType(element, OMTScript.class);
         if(script != null) {
             // now check all the variable declarations that are part of this script:
-            final Collection<OMTDeclaredVariable> declaredVariables = PsiTreeUtil.findChildrenOfType(script, OMTDeclaredVariable.class);
+            final Collection<OMTVariable> allVariables = PsiTreeUtil.findChildrenOfType(script, OMTVariable.class);
             variables.addAll(
-                    declaredVariables.stream()
-                    .filter(declaredVariable -> ScriptUtil.isBefore(declaredVariable, element))
-                    .map(declaredVariable -> (OMTVariable)declaredVariable.getParent())
-                    .collect(Collectors.toList())
+                    allVariables.stream()
+                            .filter(declaredVariable -> {
+                                String declaredVariableName = declaredVariable.getName();
+                                PsiElement parent = declaredVariable.getParent();
+                                boolean isDeclared = declaredVariable.isDeclaredVariable();
+                                return isDeclared && ScriptUtil.isBefore(declaredVariable, element);
+                            })
+                            .collect(Collectors.toList())
             );
         }
 
@@ -187,7 +182,9 @@ public class VariableUtil {
         return variables;
     }
     public static Optional<OMTVariable> getDeclaredByVariable(OMTVariable variable) {
-        if(isVariableDeclare(variable)) { return Optional.of(variable); }
+        if (variable.isDeclaredVariable()) {
+            return Optional.of(variable);
+        }
 
         List<OMTVariable> declaredVariables = getDeclaredVariables(variable);
         return declaredVariables.stream()
@@ -213,10 +210,11 @@ public class VariableUtil {
 
     public static List<OMTVariable> getModelItemEntryVariables(PsiElement element, String propertyLabel) {
         Optional<OMTBlockEntry> modelItemBlockEntry = ModelUtil.getModelItemBlockEntry(element, propertyLabel);
+
         if(modelItemBlockEntry.isPresent()) {
-            return modelItemBlockEntry.get().getSequence().getSequenceItemList().stream()
-                    .map(OMTSequenceItem::getSequenceItemValue)
-                    .map(VariableUtil::getVariable)
+            Collection<OMTVariable> modelItemEntryVariables = PsiTreeUtil.findChildrenOfType(modelItemBlockEntry.get(), OMTVariable.class);
+            return modelItemEntryVariables.stream()
+                    .filter(OMTVariable::isDeclaredVariable)
                     .collect(Collectors.toList());
         } else {
             return new ArrayList<>();
@@ -260,12 +258,49 @@ public class VariableUtil {
                 OMTCall call = (OMTCall) element;
                 BuiltInMember builtInMember = BuiltInUtil.getBuiltInMember(call.getNameIdentifier().getText(),
                         call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
-                builtInMember.getLocalVariables().forEach(
-                        variable -> localVariables.put(variable, builtInMember.getName())
-                );
+                if (builtInMember != null) {
+                    builtInMember.getLocalVariables().forEach(
+                            variable -> localVariables.put(variable, builtInMember.getName())
+                    );
+                }
             }
             element = element.getParent();
         }
         return localVariables;
+    }
+
+    public static boolean isDeclaredVariable(OMTVariable variable) {
+        PsiElement lookWith = variable;
+        if (lookWith.getParent() instanceof OMTParameterWithType) {
+            lookWith = variable.getParent();
+        }
+        OMTDictionaryEntry asDicationaryEntry = (OMTDictionaryEntry) PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTDictionaryEntry);
+        if (asDicationaryEntry != null) {
+            if (asDicationaryEntry.getDictionaryKeyPart().getText().equals("name:")) {
+                if (partOfParametersOrVariables(asDicationaryEntry)) {
+                    return true;
+                }
+            }
+        }
+        if (lookWith.getParent() instanceof OMTDeclareVariable) {
+            return true;
+        }
+        if (lookWith.getParent() instanceof OMTVariableAssignment) {
+            if (lookWith.getParent().getParent() instanceof OMTDeclareVariable) {
+                return true;
+            }
+            if (lookWith.getParent().getParent() instanceof OMTSequenceItemValue) {
+                if (partOfParametersOrVariables(lookWith)) {
+                    return true;
+                }
+            }
+        }
+        OMTSequenceItemValue asSequenceItemValue = (OMTSequenceItemValue) PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTSequenceItemValue);
+        return partOfParametersOrVariables(asSequenceItemValue);
+    }
+
+    private static boolean partOfParametersOrVariables(PsiElement element) {
+        String blockEntryLabel = ModelUtil.getBlockEntryLabel(element);
+        return blockEntryLabel != null && (blockEntryLabel.equals("params") || blockEntryLabel.equals("variables"));
     }
 }

@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.impl;
 
+import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.psi.OMTBlockEntry;
 import com.misset.opp.omt.psi.OMTDefineParam;
@@ -10,10 +11,7 @@ import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
 import com.misset.opp.omt.psi.util.ModelUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public abstract class OMTCallableImpl implements OMTCallable {
 
@@ -91,6 +89,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
                 .getSequenceItemList()
                 .stream()
                 .map(OMTSequenceItem::getSequenceItemValue)
+                .filter(Objects::nonNull)
                 .forEach(sequenceItemValue -> {
                     if (sequenceItemValue.getParameterWithType() != null) {
                         addParameter(
@@ -109,6 +108,9 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     @Override
     public void validateSignature(OMTCall call) throws CallCallableMismatchException, NumberOfInputParametersMismatchException {
+        if ((isOperator() && !call.canCallOperator()) || (isCommand() && !call.canCallCommand())) {
+            throw new CallCallableMismatchException(this, call);
+        }
         int intputParameters = call.getSignature() != null ? call.getSignature().numberOfParameters() : 0;
         if (intputParameters < getMinExpected() || (!hasRest() && intputParameters > getMaxExpected())) {
             throw new NumberOfInputParametersMismatchException(name, getMinExpected(), getMaxExpected(), intputParameters);
