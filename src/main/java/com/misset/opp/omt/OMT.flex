@@ -74,7 +74,7 @@ IElementType returnIndent() {
 int getCurrentIndentLevel() { return blockIndentation.isEmpty() ? 0 : blockIndentation.get(blockIndentation.size() - 1); }
 int getStateAtIndent() { return blockStates.isEmpty() ? YYINITIAL : blockStates.get(blockStates.size() - 1); }
 void log(String message) {
-//    System.out.println(message);
+    System.out.println(message);
 }
 void logStates(String prefixMessage) {
     log(prefixMessage + ": " + blockIndentation + blockStates.stream().map(integer -> getStateName(integer)).collect(Collectors.toList()));
@@ -179,9 +179,9 @@ void setBacktick(boolean state) {
 // when in initial and newline, start the indent counting
 <YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, INDENT, ODT> {NEWLINE}                 { current_line_indent = 0; setState(INDENT); return returnElement(OMTTypes.NEW_LINE); }
 <YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, YAML_DICTIONARY, ODT> {
-    {WHITE_SPACE}                                                   { return TokenType.WHITE_SPACE; } // capture all whitespace
-    {JAVADOCS}                                                      { return returnElement(OMTTypes.JAVA_DOCS); }
-    {END_OF_LINE_COMMENT}                                           { return returnElement(OMTTypes.END_OF_LINE_COMMENT); }
+    {WHITE_SPACE}                                                              { return TokenType.WHITE_SPACE; } // capture all whitespace
+    {JAVADOCS}                                                                 { return returnElement(OMTTypes.JAVA_DOCS); }
+    {END_OF_LINE_COMMENT}                                                      { return returnElement(OMTTypes.END_OF_LINE_COMMENT); }
 }
 <YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, ODT> {
     {GLOBAL_VARIABLE}                                                          { setState(ODT); return OMTTypes.GLOBAL_VARIABLE_NAME; } // capture all whitespace

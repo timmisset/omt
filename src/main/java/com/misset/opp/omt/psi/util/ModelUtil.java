@@ -57,9 +57,24 @@ public class ModelUtil {
      * @return
      */
     public static String getBlockEntryLabel(PsiElement element) {
-        OMTBlockEntry firstParent = (OMTBlockEntry) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTBlockEntry);
-        if (firstParent != null) {
-            String label = firstParent.getPropertyLabel().getText();
+        return getOMTBlockEntryLabel(
+                (OMTBlockEntry) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTBlockEntry)
+        );
+    }
+
+    /**
+     * Returns the label of the block entry that is part of the root level attributes of the modelitem
+     *
+     * @param element
+     * @return
+     */
+    public static String getModelItemEntryLabel(PsiElement element) {
+        return getOMTBlockEntryLabel(PsiTreeUtil.getTopmostParentOfType(element, OMTBlockEntry.class));
+    }
+
+    private static String getOMTBlockEntryLabel(OMTBlockEntry omtBlockEntry) {
+        if (omtBlockEntry != null) {
+            String label = omtBlockEntry.getPropertyLabel().getText();
             return label.endsWith(":") ? label.substring(0, label.length() - 1) : label;
         }
         return null;
