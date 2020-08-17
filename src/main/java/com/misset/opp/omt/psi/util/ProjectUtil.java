@@ -9,9 +9,14 @@ import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
+import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTPrefix;
+import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.sun.tools.javac.util.List;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 public class ProjectUtil {
 
@@ -43,5 +48,36 @@ public class ProjectUtil {
 
     }
 
+    private static final HashMap<String, ArrayList<OMTPrefix>> knownPrefixes = new HashMap<>();
+    private static final HashMap<String, ArrayList<OMTExportMember>> exportingMembers = new HashMap<>();
 
+    public static void registerPrefixes(OMTFile file) {
+        file.getPrefixes().forEach((namespacePrefix, omtPrefix) -> {
+            ArrayList<OMTPrefix> prefixes = knownPrefixes.getOrDefault(namespacePrefix, new ArrayList<>());
+            prefixes.add(omtPrefix);
+            knownPrefixes.put(namespacePrefix, prefixes);
+        });
+    }
+
+    public static void registerExports(OMTFile file) {
+        file.getExportedMembers().forEach(
+                (key, omtExportMember) -> {
+                    ArrayList<OMTExportMember> members = exportingMembers.getOrDefault(key, new ArrayList<>());
+                    members.add(omtExportMember);
+                    exportingMembers.put(key, members);
+                }
+        );
+    }
+
+    public static void analyzeFile(OMTFile file) {
+        try {
+            System.out.print("Analyzing file: " + file.getVirtualFile().getPath());
+            registerExports(file);
+            registerPrefixes(file);
+            System.out.println(" succes");
+        } catch (Exception e) {
+            System.out.println("Error when analyzing file: " + e.getMessage());
+        }
+
+    }
 }

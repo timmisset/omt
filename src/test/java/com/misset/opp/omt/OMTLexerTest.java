@@ -15,7 +15,7 @@ class OMTLexerTest {
         // This method will test an entire OMT file for identical contents with the expected outcome
         // the expected content is based on the output after parsing was finally successful. Therefore, this method is to make
         // sure any changes to the lexer won't mess this minimally parsable file
-        String content = Helper.getResourceAsString("test-kopieerPersoon.omt");
+        String content = Helper.getResourceAsString("test-queries.omt");
         String validationContent = Helper.getResourceAsString("validate_test_omt.txt");
 //        assertEquals(Arrays.asList(validationContent.split("\r\n")), getElements(content));
 //        System.out.println(getElements(content));

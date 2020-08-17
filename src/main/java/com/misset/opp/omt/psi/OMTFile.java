@@ -4,6 +4,7 @@ import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTFileType;
 import com.misset.opp.omt.OMTLanguage;
 import com.misset.opp.omt.psi.impl.OMTExportMemberImpl;
@@ -18,8 +19,10 @@ import java.util.List;
 import java.util.Optional;
 
 public class OMTFile extends PsiFileBase {
+    String path;
     public OMTFile(@NotNull FileViewProvider viewProvider) {
         super(viewProvider, OMTLanguage.INSTANCE);
+        path = getVirtualFile().getPath();
     }
 
     @NotNull
@@ -34,7 +37,10 @@ public class OMTFile extends PsiFileBase {
     }
 
     public <T> Optional<T> getRootBlock(String name) {
-        OMTBlock rootBlock = (OMTBlock) getFirstChild();
+        OMTBlock rootBlock = PsiTreeUtil.getChildOfType(this, OMTBlock.class);
+        if (rootBlock == null) {
+            return Optional.empty();
+        }
         return rootBlock.getSpecificBlockList().stream()
                 .filter(specificBlock -> specificBlock.getFirstChild().getFirstChild().getText().startsWith(name))
                 .map(specificBlock -> (T) specificBlock.getFirstChild())
@@ -76,6 +82,14 @@ public class OMTFile extends PsiFileBase {
             updateExportMembers();
         }
         return exportMembers;
+    }
+
+    public HashMap<String, OMTPrefix> getPrefixes() {
+        HashMap<String, OMTPrefix> prefixHashMap = new HashMap<>();
+        Optional<OMTPrefixBlock> prefixes = getRootBlock("prefixes");
+        prefixes.ifPresent(omtPrefixBlock -> omtPrefixBlock.getPrefixList().forEach(omtPrefix ->
+                prefixHashMap.put(omtPrefix.getNamespacePrefix().getText(), omtPrefix)));
+        return prefixHashMap;
     }
 
     public void updateMembers() {

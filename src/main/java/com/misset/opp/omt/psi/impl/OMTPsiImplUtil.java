@@ -190,6 +190,6 @@ public class OMTPsiImplUtil {
     }
 
     public static int numberOfParameters(OMTSignature signature) {
-        return signature.getCommandBlockList().size() + signature.getVariableValueList().size();
+        return signature.getCommandBlockList().size() + signature.getQueryPathList().size();
     }
 }
