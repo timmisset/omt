@@ -16,7 +16,7 @@
 }
 
 // the end of the file (or the entire file) can be a (set of) comment(s)
-OMTFile ::= block*
+OMTFile ::= leading? block* trailing?
 
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
 block ::=                                   (specificBlock | blockEntry)+
@@ -83,12 +83,13 @@ importSource ::=                            importLocation EMPTY_ARRAY? {
 importLocation ::=                          PROPERTY | IMPORT_PATH
 
 prefixBlock::=                              PREFIX_BLOCK_START trailing (indentToken prefix* dedentToken)?
-prefix::=                                   leading? namespacePrefix IRI trailing
+prefix::=                                   leading? namespacePrefix namespaceIri trailing
 namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)            {
                                                                                          mixin="com.misset.opp.omt.psi.impl.OMTNamespacePrefixNamedElementImpl"
                                                                                          implements="com.misset.opp.omt.psi.named.OMTNamespacePrefixNamedElement"
                                                                                          methods=[getName setName getNameIdentifier]
                                                                                    }
+namespaceIri ::=                            IRI
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix]}
 curieConstantElement ::=                    CURIE_CONSTANT_ELEMENT_PREFIX curieElement
 
@@ -177,7 +178,7 @@ defineParam ::=                             PARENTHESES_OPEN (variable (COMMA va
 
 // MEMBER CALLS
 // A call to either an Operator or a Command. In case of the latter, it's always prefixed with @
-operatorCall ::=                            (OPERATOR | CONDITIONAL_OPERATOR | NAME) signature? {
+operatorCall ::=                            (OPERATOR | CONDITIONAL_OPERATOR | NAME) flagSignature? signature? {
                                                              mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
                                                              methods=[getName setName getNameIdentifier canCallOperator canCallCommand]
@@ -188,19 +189,19 @@ commandCall ::=                             COMMAND flagSignature? signature?
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
                                                              methods=[getName setName getNameIdentifier canCallOperator canCallCommand]
                                                            }
-signature ::=                               PARENTHESES_OPEN ((variableValue | commandBlock) (COMMA (variableValue | commandBlock))*)? PARENTHESES_CLOSE {
+signature ::=                               PARENTHESES_OPEN ((queryPath | commandBlock) (COMMA (queryPath | commandBlock))*)? PARENTHESES_CLOSE {
                                                              methods=[numberOfParameters]
 }
 flagSignature ::=                           FLAG
 
 logicalBlock ::=                            ifBlock commandBlock (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
 ifBlock ::=                                 IF_OPERATOR (queryPath | (PARENTHESES_OPEN queryPath PARENTHESES_CLOSE))
-elseBlock ::=                               ELSE_OPERATOR (queryPath | (PARENTHESES_OPEN queryPath PARENTHESES_CLOSE))
+elseBlock ::=                               ELSE_OPERATOR commandBlock
 returnStatement ::=                         RETURN_OPERATOR queryPath?
 chooseBlock ::=                             CHOOSE_OPERATOR trailing?
-                                                (WHEN_OPERATOR queryPath LAMBDA queryPath)+
-                                                (OTHERWISE_OPERATOR LAMBDA queryPath)?
-                                                END_OPERATOR
+                                                leading? (WHEN_OPERATOR queryPath LAMBDA queryPath)+
+                                                leading? (OTHERWISE_OPERATOR LAMBDA queryPath)?
+                                                END_OPERATOR trailing?
 
 // an equation statement should contain a left hand value and 1+ condition operators + right hand values:
 // $value == $value == $value etc...
@@ -214,8 +215,8 @@ removeFromCollection ::=                    queryPath trailing? REMOVE trailing?
 // to reduce the complexity of parsing, slashes will be captured but are not required
 queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+ (PIPE queryPath)?
 queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
-                                            operatorCall | IRI | DOT | queryOneOrMany | queryZeroOrMany | queryWrapper | CONDITIONAL_OPERATOR |
-                                            queryFilter | NEW_LINE | chooseBlock
+                                            operatorCall | IRI | DOT | subQuery | CONDITIONAL_OPERATOR |
+                                            queryFilter | trailing | leading | chooseBlock | interpolatedString | PLUS | ASTERIX
 queryReverseStep ::=                        CARAT queryStep
 
 // a query filter is contained by brackets [] and should resolve to boolean
@@ -223,9 +224,8 @@ queryFilter ::=                             BRACKET_OPEN queryPath BRACKET_CLOSE
 
 // a recursion will continuously collect items based on the outcome of the previous recursion and the path described in the recursion
 // this makes it easy to traverse a graph for nested elements of identical/similar design
-queryWrapper ::=                            PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
-// one or more will not return itself
-queryOneOrMany ::=                          queryWrapper PLUS
-// zero or more will return itself and all descendents
-queryZeroOrMany ::=                         queryWrapper ASTERIX
+subQuery ::=                                PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
 
+// interpolation
+interpolation ::=                           DOLLAR CURLY_OPEN queryPath CURLY_CLOSED
+interpolatedString ::=                      BACKTICK (interpolation | STRING)* BACKTICK

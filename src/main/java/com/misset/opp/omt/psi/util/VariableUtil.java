@@ -178,6 +178,7 @@ public class VariableUtil {
         // and finally, by it's containing model item (!Activity, !Procedure etc)
         variables.addAll(getModelItemEntryVariables(element, "params"));
         variables.addAll(getModelItemEntryVariables(element, "variables"));
+        variables.addAll(getModelItemEntryVariables(element, "base"));
 
         return variables;
     }
@@ -274,33 +275,41 @@ public class VariableUtil {
         if (lookWith.getParent() instanceof OMTParameterWithType) {
             lookWith = variable.getParent();
         }
+        // check if part of a structured definition instead of the shortcut
         OMTDictionaryEntry asDicationaryEntry = (OMTDictionaryEntry) PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTDictionaryEntry);
         if (asDicationaryEntry != null) {
             if (asDicationaryEntry.getDictionaryKeyPart().getText().equals("name:")) {
-                if (partOfParametersOrVariables(asDicationaryEntry)) {
+                if (partOfBlockEntryLevel(asDicationaryEntry, "variables") || partOfBlockEntryLevel(asDicationaryEntry, "params")) {
                     return true;
                 }
             }
         }
+        // check if direct parent is the VAR ... statement.
         if (lookWith.getParent() instanceof OMTDeclareVariable) {
             return true;
         }
+        // if part of an assignment: VAR $myVariable = 'test'; OR $myVariable = test (in the variables: block)
         if (lookWith.getParent() instanceof OMTVariableAssignment) {
             if (lookWith.getParent().getParent() instanceof OMTDeclareVariable) {
                 return true;
             }
             if (lookWith.getParent().getParent() instanceof OMTSequenceItemValue) {
-                if (partOfParametersOrVariables(lookWith)) {
+                if (partOfBlockEntryLevel(lookWith, "variables")) {
                     return true;
                 }
             }
         }
+        // check if part of the base: property of a standalone query
+        if (partOfBlockEntryLevel(lookWith, "base")) {
+            return true;
+        }
+
         OMTSequenceItemValue asSequenceItemValue = (OMTSequenceItemValue) PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTSequenceItemValue);
-        return partOfParametersOrVariables(asSequenceItemValue);
+        return partOfBlockEntryLevel(asSequenceItemValue, "variables") || partOfBlockEntryLevel(asSequenceItemValue, "params");
     }
 
-    private static boolean partOfParametersOrVariables(PsiElement element) {
+    private static boolean partOfBlockEntryLevel(PsiElement element, String entryLevelLabel) {
         String blockEntryLabel = ModelUtil.getBlockEntryLabel(element);
-        return blockEntryLabel != null && (blockEntryLabel.equals("params") || blockEntryLabel.equals("variables"));
+        return blockEntryLabel != null && blockEntryLabel.equals(entryLevelLabel);
     }
 }

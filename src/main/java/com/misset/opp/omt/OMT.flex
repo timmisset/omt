@@ -74,7 +74,7 @@ IElementType returnIndent() {
 int getCurrentIndentLevel() { return blockIndentation.isEmpty() ? 0 : blockIndentation.get(blockIndentation.size() - 1); }
 int getStateAtIndent() { return blockStates.isEmpty() ? YYINITIAL : blockStates.get(blockStates.size() - 1); }
 void log(String message) {
-    System.out.println(message);
+//    System.out.println(message);
 }
 void logStates(String prefixMessage) {
     log(prefixMessage + ": " + blockIndentation + blockStates.stream().map(integer -> getStateName(integer)).collect(Collectors.toList()));
@@ -123,9 +123,8 @@ IElementType firstAfterIndentation() {
 IElementType finishIdentation() {
     if(!blockIndentation.isEmpty()) {
         removeLastIndentInfo();
-        return returnDedent();
+        return blockIndentation.isEmpty() ? null : returnDedent();
     }
-    setState(YYINITIAL);
     return null;
 }
 void yypushback(int number, String id) {
@@ -141,6 +140,7 @@ String getStateName(int state) {
         case 8: return "INDENT";
         case 10: return "ODT";
         case 12: return "CURIE";
+        case 14: return "BACKTICK";
     }
     return "UNKNOWN";
 }
@@ -160,6 +160,10 @@ IElementType returnElement(IElementType element) {
     }
     return element;
 }
+boolean backtick = false;
+void setBacktick(boolean state) {
+    backtick = state;
+}
 %}
 
 %state YAML_SCALAR
@@ -169,6 +173,7 @@ IElementType returnElement(IElementType element) {
 %state INDENT
 %state ODT
 %state CURIE
+%state BACKTICK
 
 %%
 // when in initial and newline, start the indent counting
@@ -286,11 +291,12 @@ IElementType returnElement(IElementType element) {
 }
 <CURIE> {
     ":"                                                             { return returnElement(OMTTypes.COLON); }
-    {NAME}                                                          {
+    {NAME} | {SYMBOL}                                               {
                                                                           setState(ODT);
                                                                           return returnElement(OMTTypes.NAMESPACE_MEMBER);
       }
 }
+
 // Common tokens
 <YYINITIAL, ODT> {
     {STRING}                                                        { return returnElement(OMTTypes.STRING); }
@@ -305,7 +311,9 @@ IElementType returnElement(IElementType element) {
     ","                                                             { return returnElement(OMTTypes.COMMA); }
     ";"                                                             { return returnElement(OMTTypes.SEMICOLON); }
     "{"                                                             { return returnElement(OMTTypes.CURLY_OPEN); }
-    "}"                                                             { return returnElement(OMTTypes.CURLY_CLOSED); }
+    "}"                                                             {
+          if(backtick) { setState(BACKTICK); }
+          return returnElement(OMTTypes.CURLY_CLOSED); }
     "/"                                                             { return returnElement(OMTTypes.FORWARD_SLASH); }
     "^"                                                             { return returnElement(OMTTypes.CARAT); }
     "[]"                                                            { return returnElement(OMTTypes.EMPTY_ARRAY); }
@@ -317,6 +325,16 @@ IElementType returnElement(IElementType element) {
     "\."                                                            { return returnElement(OMTTypes.DOT); }
     "+="                                                            { return returnElement(OMTTypes.ADD); }
     "-="                                                            { return returnElement(OMTTypes.REMOVE); }
+    "`"                                                             { setBacktick(true); setState(BACKTICK); return returnElement(OMTTypes.BACKTICK); }
+    "$"                                                             { return returnElement(OMTTypes.DOLLAR); }
+}
+<BACKTICK> {
+    "$"                                                             { return returnElement(OMTTypes.DOLLAR); }
+    "{"                                                             { setState(ODT); return returnElement(OMTTypes.CURLY_OPEN); }
+    {WHITE_SPACE}+                                                  { return returnElement(TokenType.WHITE_SPACE); }
+    {NEWLINE}+                                                      { return returnElement(OMTTypes.NEW_LINE); }
+    "`"                                                             { setBacktick(false); setState(ODT); return returnElement(OMTTypes.BACKTICK); }
+    [^\$\`\{\}\ ]+                                                  { return returnElement(OMTTypes.STRING); }
 }
 
 <YAML_SCALAR, YYINITIAL, YAML_SEQUENCE, ODT> "-"                     { setState(YAML_SEQUENCE); return returnElement(OMTTypes.SEQUENCE_BULLET); }
