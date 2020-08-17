@@ -19,10 +19,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class OMTFile extends PsiFileBase {
-    String path;
     public OMTFile(@NotNull FileViewProvider viewProvider) {
         super(viewProvider, OMTLanguage.INSTANCE);
-        path = getVirtualFile().getPath();
     }
 
     @NotNull
