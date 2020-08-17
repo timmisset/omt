@@ -1,5 +1,6 @@
 package com.misset.opp.omt;
 
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;
 import com.misset.opp.omt.psi.util.ProjectUtil;
@@ -11,8 +12,9 @@ import org.jetbrains.annotations.NotNull;
 public class OMTStartupActivity implements StartupActivity {
     @Override
     public void runActivity(@NotNull Project project) {
-        ProjectUtil.loadBuiltInMembers(project);
-        System.out.println("activity started");
+        DumbService.getInstance(project).runWhenSmart(() -> {
+            ProjectUtil.loadBuiltInMembers(project);
+        });
 //        PsiManager psiManager = PsiManager.getInstance(project);
 //        List<String> processedPaths = new ArrayList<>();
 //        FilenameIndex.getAllFilesByExt(project, "omt")
