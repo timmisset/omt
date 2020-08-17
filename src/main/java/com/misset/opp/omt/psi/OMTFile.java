@@ -13,10 +13,7 @@ import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.ImportUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class OMTFile extends PsiFileBase {
     public OMTFile(@NotNull FileViewProvider viewProvider) {
@@ -125,7 +122,9 @@ public class OMTFile extends PsiFileBase {
                         default:
                             return null;
                     }
-                }).forEach(omtExportMember -> exported.put(omtExportMember.getName(), omtExportMember))
+                })
+                .filter(Objects::nonNull)
+                .forEach(omtExportMember -> exported.put(omtExportMember.getName(), omtExportMember))
         );
         exportMembers = exported;
     }

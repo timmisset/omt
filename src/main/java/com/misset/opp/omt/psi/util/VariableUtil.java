@@ -161,12 +161,8 @@ public class VariableUtil {
             final Collection<OMTVariable> allVariables = PsiTreeUtil.findChildrenOfType(script, OMTVariable.class);
             variables.addAll(
                     allVariables.stream()
-                            .filter(declaredVariable -> {
-                                String declaredVariableName = declaredVariable.getName();
-                                PsiElement parent = declaredVariable.getParent();
-                                boolean isDeclared = declaredVariable.isDeclaredVariable();
-                                return isDeclared && ScriptUtil.isBefore(declaredVariable, element);
-                            })
+                            .filter(declaredVariable -> declaredVariable.isDeclaredVariable()
+                                    && ScriptUtil.isBefore(declaredVariable, element))
                             .collect(Collectors.toList())
             );
         }
@@ -179,6 +175,7 @@ public class VariableUtil {
         variables.addAll(getModelItemEntryVariables(element, "params"));
         variables.addAll(getModelItemEntryVariables(element, "variables"));
         variables.addAll(getModelItemEntryVariables(element, "base"));
+        variables.addAll(getModelItemEntryVariables(element, "bindings"));
 
         return variables;
     }
@@ -303,6 +300,10 @@ public class VariableUtil {
         if (partOfBlockEntryLevel(lookWith, "base")) {
             return true;
         }
+        // check if part of the bindings: property of a component
+        if (partOfModelItemEntryLevel(lookWith, "bindings")) {
+            return true;
+        }
 
         OMTSequenceItemValue asSequenceItemValue = (OMTSequenceItemValue) PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTSequenceItemValue);
         return partOfBlockEntryLevel(asSequenceItemValue, "variables") || partOfBlockEntryLevel(asSequenceItemValue, "params");
@@ -310,6 +311,11 @@ public class VariableUtil {
 
     private static boolean partOfBlockEntryLevel(PsiElement element, String entryLevelLabel) {
         String blockEntryLabel = ModelUtil.getBlockEntryLabel(element);
+        return blockEntryLabel != null && blockEntryLabel.equals(entryLevelLabel);
+    }
+
+    private static boolean partOfModelItemEntryLevel(PsiElement element, String entryLevelLabel) {
+        String blockEntryLabel = ModelUtil.getModelItemEntryLabel(element);
         return blockEntryLabel != null && blockEntryLabel.equals(entryLevelLabel);
     }
 }

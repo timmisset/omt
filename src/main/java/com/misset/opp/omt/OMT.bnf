@@ -108,7 +108,7 @@ comment ::=                                 END_OF_LINE_COMMENT | JAVA_DOCS
 eolComment ::=                              END_OF_LINE_COMMENT
 // trailing is everything at the end of the current line and before NEW_LINE.
 // It can be simply the NEW_LINE or an eolComment followed by a NEW_LINE
-trailing ::=                                eolComment? NEW_LINE+
+trailing ::=                                (eolComment? NEW_LINE)+
 // leading is everything before a block or item. Assuming that comments are written above the code they are
 // commenting on, this should help to relate the comment to the code
 leading ::=                                 (comment NEW_LINE)+
@@ -134,7 +134,7 @@ variable ::=                                VARIABLE_NAME | globalVariable {
                                                                                }
 // the lexer should determine if operating in a state of declare and provide a difference response for the discovered variable name
 globalVariable ::=                          GLOBAL_VARIABLE_NAME
-parameterWithType ::=                       variable PARENTHESES_OPEN parameterType PARENTHESES_CLOSE
+parameterWithType ::=                       variable PARENTHESES_OPEN (parameterType | OPERATOR) PARENTHESES_CLOSE
 parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) {
     methods = [isDefinedByPrefix]
 }
@@ -216,7 +216,8 @@ removeFromCollection ::=                    queryPath trailing? REMOVE trailing?
 queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+ (PIPE queryPath)?
 queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
                                             operatorCall | IRI | DOT | subQuery | CONDITIONAL_OPERATOR |
-                                            queryFilter | trailing | leading | chooseBlock | interpolatedString | PLUS | ASTERIX
+                                            queryFilter | trailing | leading | chooseBlock | interpolatedString | PLUS | ASTERIX |
+                                            (indentToken queryPath dedentToken)
 queryReverseStep ::=                        CARAT queryStep
 
 // a query filter is contained by brackets [] and should resolve to boolean
