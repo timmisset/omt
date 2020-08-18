@@ -4,7 +4,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTBlockEntry;
 import com.misset.opp.omt.psi.OMTModelItemBlock;
+import com.misset.opp.omt.psi.OMTSpecificBlock;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 //
@@ -48,6 +51,32 @@ public class ModelUtil {
                 .filter(omtBlockEntry ->
                         omtBlockEntry.getPropertyLabel().getText().equals(finalPropertyLabel))
                 .findFirst();
+    }
+
+    public static List<OMTBlockEntry> getConnectedEntries(PsiElement element, List<String> labels) {
+        List<OMTBlockEntry> blockEntries = new ArrayList<>();
+        List<PsiElement> blockEntriesOrSpecificBlockParents = getBlockEntriesOrSpecificBlockParents(element);
+        for (PsiElement entryBlock : blockEntriesOrSpecificBlockParents) {
+            getSiblingEntryBlocks(entryBlock).stream().filter(entry ->
+                    labels.contains(entry.getPropertyLabel().getPropertyLabelName()))
+                    .forEach(blockEntries::add);
+        }
+        return blockEntries;
+    }
+
+    private static List<OMTBlockEntry> getSiblingEntryBlocks(PsiElement element) {
+        return PsiTreeUtil.getChildrenOfTypeAsList(element.getParent(), OMTBlockEntry.class);
+    }
+
+    private static List<PsiElement> getBlockEntriesOrSpecificBlockParents(PsiElement element) {
+        List<PsiElement> parents = new ArrayList<>();
+        while (element != null && (!(element instanceof OMTModelItemBlock))) {
+            if (element instanceof OMTBlockEntry || element instanceof OMTSpecificBlock) {
+                parents.add(element);
+            }
+            element = element.getParent();
+        }
+        return parents;
     }
 
     /**

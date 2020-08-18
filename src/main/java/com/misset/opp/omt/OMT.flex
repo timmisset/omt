@@ -30,7 +30,7 @@ INTEGER=                        \-?([1-9][0-9]+|[0-9])
 DECIMAL=                        {INTEGER}\.[0-9]+
 BOOLEAN=                        "true"|"false"
 NULL=                           "null"
-GLOBAL_VARIABLE=                "$username" | "$medewerkerGraph" | "$offline" | "$mockValue[0-9]*"
+GLOBAL_VARIABLE=                \$username|\$medewerkerGraph|\$offline|\$mockvalue[0-9]+
 
 LATIN_EXT_A=                    [\u0100-\u017F] // Zie: http://en.wikipedia.org/wiki/Latin_script_in_Unicode
 SYMBOL=                         ({ALPHA}|{DIGIT}|{LATIN_EXT_A}|[_@\-])+
@@ -74,7 +74,7 @@ IElementType returnIndent() {
 int getCurrentIndentLevel() { return blockIndentation.isEmpty() ? 0 : blockIndentation.get(blockIndentation.size() - 1); }
 int getStateAtIndent() { return blockStates.isEmpty() ? YYINITIAL : blockStates.get(blockStates.size() - 1); }
 void log(String message) {
-    System.out.println(message);
+    if(logging) { System.out.println(message); }
 }
 void logStates(String prefixMessage) {
     log(prefixMessage + ": " + blockIndentation + blockStates.stream().map(integer -> getStateName(integer)).collect(Collectors.toList()));
@@ -107,7 +107,10 @@ IElementType firstAfterIndentation() {
     yypushback(yylength());
     if (current_line_indent > getCurrentIndentLevel() && !nestedODT()) {
         // register the block idnent and it's state
-        addIndentInfo(current_line_indent, stateBeforeIndent);
+        // reset the token:
+        setState(YYINITIAL);
+        // add indentation info
+        addIndentInfo(current_line_indent, yystate());
         return returnIndent();
     } else if (current_line_indent < getCurrentIndentLevel()) {
         indent_level--;
@@ -126,6 +129,11 @@ IElementType finishIdentation() {
         return blockIndentation.isEmpty() ? null : returnDedent();
     }
     return null;
+}
+boolean logging = false;
+OMTLexer(java.io.Reader in, boolean enableLogging) {
+    this.zzReader = in;
+    this.logging = enableLogging;
 }
 void yypushback(int number, String id) {
     yypushback(number);
@@ -182,11 +190,18 @@ void setBacktick(boolean state) {
     {WHITE_SPACE}                                                              { return TokenType.WHITE_SPACE; } // capture all whitespace
     {JAVADOCS}                                                                 { return returnElement(OMTTypes.JAVA_DOCS); }
     {END_OF_LINE_COMMENT}                                                      { return returnElement(OMTTypes.END_OF_LINE_COMMENT); }
-}
-<YYINITIAL, YAML_SCALAR, YAML_SEQUENCE, ODT> {
     {GLOBAL_VARIABLE}                                                          { setState(ODT); return OMTTypes.GLOBAL_VARIABLE_NAME; } // capture all whitespace
     {BOOLEAN}                                                                  { return returnElement(OMTTypes.BOOLEAN); }
     {NULL}                                                                     { return returnElement(OMTTypes.NULL); }
+     "/"{CURIE}                                                      {
+              yypushback(yylength() - 1);
+              return returnElement(OMTTypes.CURIE_CONSTANT_ELEMENT_PREFIX);
+          }
+    {CURIE}                                                         {
+                                                                              setState(CURIE);
+                                                                              yypushback(yylength() - yytext().toString().indexOf(":"));
+                                                                              return returnElement(OMTTypes.NAMESPACE);
+                                                                    }
 }
 // INDENTATION
 // Required for YAML like grouping of blocks based on indents
@@ -208,9 +223,7 @@ void setBacktick(boolean state) {
 
 
     {IMPORT_PATH}                                             { setState(YAML_SCALAR); return returnElement(OMTTypes.IMPORT_PATH); }
-    // the initial state is only used for the key parts and can result in a switch to the scalar or sequence node
-    // when a new line is reached in the state of initial (consecutive new lines), scalar or mapping, the state is always returned
-    // to initial. This way, the initial state will detect the "-" indicator of the sequence items
+    {STRING}":"                                               { return returnElement(OMTTypes.PROPERTY); }
 }
 <YYINITIAL> {
     {NAME}":"                                                 { setState(YAML_SCALAR); return returnElement(OMTTypes.PROPERTY); }
@@ -242,10 +255,10 @@ void setBacktick(boolean state) {
 <YAML_SCALAR> {
     "!"{NAME}                                                        { return returnElement(OMTTypes.MODEL_ITEM_TYPE); }
     {NAME}":"                                                        { return returnElement(OMTTypes.PROPERTY); }
-    {STRING}":"                                                      { return returnElement(OMTTypes.PROPERTY); }
 }
 // ODT BLOCK
 <ODT> {
+    "TRUE" | "FALSE"                                                { return returnElement(OMTTypes.BOOLEAN); }
     // statements that identify specific elements within the ODT language
     "DEFINE"                                                        { return returnElement(OMTTypes.DEFINE_START); }
     "QUERY"                                                         { return returnElement(OMTTypes.DEFINE_QUERY); }
@@ -256,15 +269,6 @@ void setBacktick(boolean state) {
     "$"{NAME}                                                       { return returnElement(OMTTypes.VARIABLE_NAME); }
     "@"{NAME}                                                       { return returnElement(OMTTypes.COMMAND); }
     "!"{NAME}                                                       { return returnElement(OMTTypes.FLAG); }
-
-    "/"{CURIE}                                                      {
-          yypushback(yylength() - 1);
-          return returnElement(OMTTypes.CURIE_CONSTANT_ELEMENT_PREFIX);
-      }
-    {CURIE}                                                         {
-          setState(CURIE);
-          yypushback(yylength() - yytext().toString().indexOf(":"));
-          return returnElement(OMTTypes.NAMESPACE); }
 
     // the lambda is used for assigning the actual query/command block to it's constructor
     // and to assign a path to case condition

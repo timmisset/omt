@@ -15,7 +15,8 @@
       },
       "query": {
         "node": "scalar",
-        "required": false
+        "required": false,
+        "namedReference": true
       },
       "list": {
         "type": "boolean",
