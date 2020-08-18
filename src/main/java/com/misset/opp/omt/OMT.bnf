@@ -16,12 +16,12 @@
 }
 
 // the end of the file (or the entire file) can be a (set of) comment(s)
-OMTFile ::= leading? block* trailing?
+OMTFile ::= block* trailing?
 
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
-block ::=                                   (specificBlock | blockEntry)+
+block ::=                                   (leading? (specificBlock | blockEntry))+
 blockEntry ::=                              propertyLabel (map | sequence | scalar)
-propertyLabel ::=                           PROPERTY
+propertyLabel ::=                           PROPERTY { methods=[getPropertyLabelName]}
 
 // a scalar single statement (multiline optional) following a property label
 scalar ::=                                  scalarValue
@@ -43,7 +43,7 @@ map ::=                                     trailing indentToken leading? block 
 dictionary ::=                              (dictionaryEntry)+
 dictionaryEntry ::=                         dictionaryKeyPart dictionaryValuePart
 dictionaryKeyPart ::=                       DICTIONARY_KEY
-dictionaryValuePart ::=                     queryPath
+dictionaryValuePart ::=                     map | queryPath
 
 // SPECIFIC BLOCKS
 specificBlock ::=                          importBlock | exportBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock | moduleBlock
@@ -73,7 +73,7 @@ moduleBlock::=                              leading? MODULE_NAME_START moduleNam
 moduleName::=                               NAME | OPERATOR
 
 // maps
-importBlock ::=                             leading? IMPORT_START trailing (indentToken import* dedentToken)?
+importBlock ::=                             leading? IMPORT_START trailing ((indentToken import* dedentToken) | import*)?
 import ::=                                  leading? importSource trailing ((indentToken memberList dedentToken) | memberList)?
 importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                            mixin="com.misset.opp.omt.psi.impl.OMTImportNamedElementImpl"
@@ -150,7 +150,7 @@ indentToken ::=                            INDENT | INDENT2
 script ::=                                  PIPE trailing indentToken (scriptLine+ | queryPath) dedentToken
 commandBlock ::=                            CURLY_OPEN trailing (script | scriptLine+) CURLY_CLOSED
 // a scriptline is contained by the addition of the semicolon at the end
-scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) trailing
+scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) trailing?
 // the contents of a script, contained by a scriptLine or Scalar
 scriptContent ::=                           declareVariable | variableAssignment | definePrefix | commandCall | assignmentStatement |
                                             addToCollection | removeFromCollection | logicalBlock | returnStatement
@@ -189,12 +189,12 @@ commandCall ::=                             COMMAND flagSignature? signature?
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
                                                              methods=[getName setName getNameIdentifier canCallOperator canCallCommand]
                                                            }
-signature ::=                               PARENTHESES_OPEN ((queryPath | commandBlock) (COMMA (queryPath | commandBlock))*)? PARENTHESES_CLOSE {
+signature ::=                               PARENTHESES_OPEN ((queryPath | commandBlock | commandCall | operatorCall) (COMMA (queryPath | commandBlock | commandCall | operatorCall))*)? PARENTHESES_CLOSE {
                                                              methods=[numberOfParameters]
 }
 flagSignature ::=                           FLAG
 
-logicalBlock ::=                            ifBlock commandBlock (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
+logicalBlock ::=                            ifBlock commandBlock trailing? (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
 ifBlock ::=                                 IF_OPERATOR (queryPath | (PARENTHESES_OPEN queryPath PARENTHESES_CLOSE))
 elseBlock ::=                               ELSE_OPERATOR commandBlock
 returnStatement ::=                         RETURN_OPERATOR queryPath?

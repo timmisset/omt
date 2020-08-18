@@ -192,4 +192,12 @@ public class OMTPsiImplUtil {
     public static int numberOfParameters(OMTSignature signature) {
         return signature.getCommandBlockList().size() + signature.getQueryPathList().size();
     }
+
+    public static String getPropertyLabelName(OMTPropertyLabel propertyLabel) {
+        String propertyLabelText = propertyLabel.getText();
+        return propertyLabelText.endsWith(":") ?
+                propertyLabelText.substring(0, propertyLabelText.length() - 1) :
+                propertyLabelText;
+    }
+
 }

@@ -155,14 +155,16 @@ public class VariableUtil {
         List<OMTVariable> variables = new ArrayList<>();
         // a variable can be declared within a script block using the VAR
         // this must happen before it's usage of course:
-        OMTScript script = PsiTreeUtil.getTopmostParentOfType(element, OMTScript.class);
-        if(script != null) {
-            // now check all the variable declarations that are part of this script:
-            final Collection<OMTVariable> allVariables = PsiTreeUtil.findChildrenOfType(script, OMTVariable.class);
+        PsiElement topContainer = PsiTreeUtil.getTopmostParentOfType(element, OMTScript.class);
+        if (topContainer == null) {
+            topContainer = PsiTreeUtil.getTopmostParentOfType(element, OMTCommandBlock.class);
+        }
+        if (topContainer != null) {
+            // now check all the variable declarations that are part of this script or command block
             variables.addAll(
-                    allVariables.stream()
-                            .filter(declaredVariable -> declaredVariable.isDeclaredVariable()
-                                    && ScriptUtil.isBefore(declaredVariable, element))
+                    ScriptUtil.getAccessibleElements(element, OMTVariable.class).stream()
+                            .map(omtVariable -> (OMTVariable) omtVariable)
+                            .filter(OMTVariable::isDeclaredVariable)
                             .collect(Collectors.toList())
             );
         }
@@ -172,10 +174,7 @@ public class VariableUtil {
         definedParameters.ifPresent(omtDefineParam -> variables.addAll(omtDefineParam.getVariableList()));
 
         // and finally, by it's containing model item (!Activity, !Procedure etc)
-        variables.addAll(getModelItemEntryVariables(element, "params"));
-        variables.addAll(getModelItemEntryVariables(element, "variables"));
-        variables.addAll(getModelItemEntryVariables(element, "base"));
-        variables.addAll(getModelItemEntryVariables(element, "bindings"));
+        variables.addAll(getBlockEntryDeclaredVariables(element));
 
         return variables;
     }
@@ -199,17 +198,34 @@ public class VariableUtil {
 
         // or a command
         OMTDefineCommandStatement omtDefineCommandStatement = PsiTreeUtil.getTopmostParentOfType(element, OMTDefineCommandStatement.class);
-        if(omtDefineCommandStatement != null && omtDefineCommandStatement.getDefineParam() != null) {
+        if (omtDefineCommandStatement != null && omtDefineCommandStatement.getDefineParam() != null) {
             return Optional.of(omtDefineCommandStatement.getDefineParam());
         }
 
         return Optional.empty();
     }
 
+    /**
+     * Returns the variables as they are declared by the accessible entries at: params, variables, bindings and base
+     *
+     * @param element
+     * @return
+     */
+    public static List<OMTVariable> getBlockEntryDeclaredVariables(PsiElement element) {
+        List<OMTBlockEntry> connectedEntries = ModelUtil.getConnectedEntries(element, Arrays.asList("params", "variables", "bindings", "base"));
+        List<OMTVariable> variables = new ArrayList<>();
+        connectedEntries.forEach(omtBlockEntry -> variables.addAll(
+                PsiTreeUtil.findChildrenOfType(omtBlockEntry, OMTVariable.class).stream()
+                        .filter(OMTVariable::isDeclaredVariable)
+                        .collect(Collectors.toList())
+        ));
+        return variables;
+    }
+
     public static List<OMTVariable> getModelItemEntryVariables(PsiElement element, String propertyLabel) {
         Optional<OMTBlockEntry> modelItemBlockEntry = ModelUtil.getModelItemBlockEntry(element, propertyLabel);
 
-        if(modelItemBlockEntry.isPresent()) {
+        if (modelItemBlockEntry.isPresent()) {
             Collection<OMTVariable> modelItemEntryVariables = PsiTreeUtil.findChildrenOfType(modelItemBlockEntry.get(), OMTVariable.class);
             return modelItemEntryVariables.stream()
                     .filter(OMTVariable::isDeclaredVariable)

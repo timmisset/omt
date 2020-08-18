@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ScriptUtil {
 
@@ -26,35 +27,39 @@ public class ScriptUtil {
     }
 
     /**
-     * Returns all script lines which are directly accessible by the scriptline of this element
-     * meaning, they are not part of nested blocks
+     * Returns all items in the script which are accessible to the element, meaning they are not contained
+     * within other { } blocks and are listed above the provided element
      *
      * @param element
      * @return
      */
-    public static List<OMTScriptLine> getAccessibleLines(PsiElement element) {
-        List<OMTScriptLine> scriptLines = new ArrayList<>();
+    public static List<PsiElement> getAccessibleElements(PsiElement element, Class<? extends PsiElement> type) {
+        List<PsiElement> items = new ArrayList<>();
+        String text = element.getText();
         OMTScriptLine currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTScriptLine);
-        if (currentScriptLine == null) {
-            return null;
+        while (currentScriptLine != null) {
+            getPrecedingScriptLines(currentScriptLine).forEach(scriptLine -> items.addAll(getChildrenOfTypeNotEnclosed(scriptLine, type)));
+            currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(currentScriptLine.getParent(), parent -> parent instanceof OMTScriptLine);
         }
-        return null;
+        return items;
     }
 
-    private static List<OMTScriptLine> getSiblingScriptLines(OMTScriptLine scriptLine) {
-        return PsiTreeUtil.getChildrenOfTypeAsList(scriptLine.getParent(), OMTScriptLine.class);
+    private static List<OMTScriptLine> getPrecedingScriptLines(OMTScriptLine scriptLine) {
+        return PsiTreeUtil.getChildrenOfTypeAsList(scriptLine.getParent(), OMTScriptLine.class)
+                .stream().filter(sibling -> sibling.getStartOffsetInParent() < scriptLine.getStartOffsetInParent())
+                .collect(Collectors.toList());
     }
 
-    private static <T> List<T> getChildrenOfTypeNotEnclosed(PsiElement element, Class<? extends PsiElement> type) {
-        List<T> allChildren = new ArrayList<>();
+    private static List<PsiElement> getChildrenOfTypeNotEnclosed(PsiElement element, Class<? extends PsiElement> type) {
+        List<PsiElement> allChildren = new ArrayList<>();
         if (type.isAssignableFrom(element.getClass())) {
-            allChildren.add((T) element);
+            allChildren.add(element);
         }
         @NotNull PsiElement[] children = element.getChildren();
         if (children.length > 0) {
             for (PsiElement child : children) {
                 if (!(child instanceof OMTCommandBlock)) {
-                    allChildren.addAll(getChildrenOfTypeNotEnclosed(element, type));
+                    allChildren.addAll(getChildrenOfTypeNotEnclosed(child, type));
                 }
             }
         }
