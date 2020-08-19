@@ -1,0 +1,14 @@
+{
+  "name": "QueryWatcher",
+  "attributes": {
+    "query": {
+      "node": "scalar",
+      "required": true
+    },
+    "onChange": {
+      "type": "onChangeDef",
+      "node": "scalar",
+      "required": true
+    }
+  }
+}

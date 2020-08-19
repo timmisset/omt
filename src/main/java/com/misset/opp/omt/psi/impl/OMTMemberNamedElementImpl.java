@@ -9,7 +9,6 @@ import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.named.OMTMemberNamedElement;
 import com.misset.opp.omt.psi.references.MemberReference;
-import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.MemberUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -85,10 +84,5 @@ public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement imp
     private PsiReference toReference(OMTModelItemLabel modelItemLabel) {
         TextRange property = modelItemLabel.getPropertyLabel().getTextRangeInParent();
         return new MemberReference(modelItemLabel, property, getType());
-    }
-
-    @Override
-    public OMTExportMember asExportedMember() {
-        return MemberUtil.memberToExportMember(getPsi());
     }
 }

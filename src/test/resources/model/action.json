@@ -1,0 +1,100 @@
+[
+  {
+    "name": "Action",
+    "attributes": {
+      "title": {
+        "type": "interpolatedString",
+        "node": "scalar",
+        "required": false
+      },
+      "description": {
+        "type": "interpolatedString",
+        "node": "scalar",
+        "required": false
+      },
+      "promoteSubMenuItemToMainMenu": {
+        "type": "boolean",
+        "node": "scalar",
+        "default": false
+      },
+      "icon": {
+        "type": "string",
+        "node": "scalar",
+        "required": false
+      },
+      "params": {
+        "node": "sequence",
+        "required": true
+      },
+      "precondition": {
+        "node": "scalar",
+        "required": false
+      },
+      "disabled": {
+        "node": "scalar",
+        "required": false
+      },
+      "busy": {
+        "node": "boolean",
+        "default": false
+      },
+      "busyDisabled": {
+        "node": "boolean",
+        "default": false
+      },
+      "dynamicActionQuery": {
+        "node": "scalar",
+        "required": false
+      }
+    }
+  },
+  {
+    "name": "DossierAction",
+    "attributes": {
+      "title": {
+        "type": "interpolatedString",
+        "node": "scalar",
+        "required": false
+      },
+      "icon": {
+        "type": "string",
+        "node": "scalar",
+        "required": false
+      },
+      "params": {
+        "node": "sequence",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "GlobalActions",
+    "attributes": {
+      "notifications": {
+        "type": "ActionDef",
+        "node": "sequence",
+        "required": true
+      },
+      "bottomNavigation": {
+        "type": "ActionDef",
+        "node": "sequence",
+        "required": true
+      },
+      "dashboardActions": {
+        "type": "ActionDef",
+        "node": "sequence",
+        "required": true
+      },
+      "dossier": {
+        "type": "DossierActionDef",
+        "node": "sequence",
+        "required": true
+      },
+      "fixed": {
+        "type": "ActionDef",
+        "node": "sequence",
+        "required": true
+      }
+    }
+  }
+]

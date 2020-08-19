@@ -184,6 +184,13 @@ public class MemberUtil {
                 return;
             }
 
+            // check if local command:
+            List<String> localCommands = ModelUtil.getLocalCommands(call);
+            if (localCommands.contains(call.getName())) {
+                holder.createInfoAnnotation(call, String.format("%s is available as local command", call.getName()));
+                return;
+            }
+
             // unknown, annotate with error:
             Annotation errorAnnotation = holder.createErrorAnnotation(call.getNameIdentifier(), String.format("%s could not be resolved", call.getName()));
             List<IntentionAction> intentionActionList = MemberIntention.getImportMemberIntentions(call, omtExportMember ->
