@@ -1,8 +1,8 @@
 package com.misset.opp.omt;
 
 import com.intellij.psi.tree.IElementType;
-import com.misset.opp.omt.domain.util.Helper;
 import org.junit.jupiter.api.Test;
+import util.Helper;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,7 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 class OMTLexerTest {
 
-    boolean printLexerLog = false;
+    boolean printLexerLog = true;
+    boolean validate = false;
 
     @Test
     public void testKopieerPersoon() throws IOException {
@@ -40,16 +41,26 @@ class OMTLexerTest {
         testOMTFile("testQueries");
     }
 
+    @Test
+    public void testVoorgeleiding() throws IOException {
+        testOMTFile("testVoorgeleiding");
+    }
+
     private void testOMTFile(String name) throws IOException {
         // This method will test an entire OMT file for identical contents with the expected outcome
         // the expected content is based on the output after parsing was finally successful. Therefore, this method is to make
         // sure any changes to the lexer won't mess this minimally parsable file
         String content = Helper.getResourceAsString(String.format("lexer/%s.omt", name));
-        String[] validationContent = Arrays.stream(Helper.getResourceAsString(
-                String.format("lexer/valid/%s.txt", name))
-                .split(",")).map(String::trim).toArray(String[]::new);
         String[] result = getElements(content).toArray(new String[0]);
-        assertArrayEquals(validationContent, result);
+
+        if (validate) {
+            String[] validationContent = Arrays.stream(Helper.getResourceAsString(
+                    String.format("lexer/valid/%s.txt", name))
+                    .split(",")).map(String::trim).toArray(String[]::new);
+
+            assertArrayEquals(validationContent, result);
+        }
+
     }
 
     private List<String> getElements(String content) throws IOException {
@@ -57,10 +68,13 @@ class OMTLexerTest {
         lexer.reset(content, 0, content.length(), 0);
         List<String> elements = new ArrayList<>();
         boolean cont = true;
-        while(cont) {
+        while (cont) {
             IElementType element = lexer.advance();
-            if(element != null) { elements.add(element.toString()); }
-            else { cont = false; }
+            if (element != null) {
+                elements.add(element.toString());
+            } else {
+                cont = false;
+            }
         }
         return elements;
     }

@@ -67,7 +67,8 @@ public class OMTPsiImplUtil {
 
     // CommandCall
     public static String getName(OMTCommandCall commandCall) {
-        return commandCall.getFirstChild().getText();
+        String name = commandCall.getFirstChild().getText();
+        return name.startsWith("@") ? name.substring(1) : name;
     }
 
     public static PsiElement setName(OMTCommandCall commandCall, String newName) {
@@ -199,5 +200,4 @@ public class OMTPsiImplUtil {
                 propertyLabelText.substring(0, propertyLabelText.length() - 1) :
                 propertyLabelText;
     }
-
 }

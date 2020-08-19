@@ -6,6 +6,8 @@ import com.intellij.openapi.startup.StartupActivity;
 import com.misset.opp.omt.psi.util.ProjectUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+
 /**
  * Run the initial analysis on the project files after the Project has started
  */
@@ -14,6 +16,11 @@ public class OMTStartupActivity implements StartupActivity {
     public void runActivity(@NotNull Project project) {
         DumbService.getInstance(project).runWhenSmart(() -> {
             ProjectUtil.loadBuiltInMembers(project);
+            try {
+                ProjectUtil.loadModelAttributes();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
 //        PsiManager psiManager = PsiManager.getInstance(project);
 //        List<String> processedPaths = new ArrayList<>();

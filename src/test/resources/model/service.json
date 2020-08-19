@@ -1,14 +1,15 @@
 {
-  "name": "StandaloneQuery",
+  "name": "Service",
+  "flags": [],
+  "localCommands": [
+    "SET_HEADER",
+    "STATUS",
+    "COMMIT"
+  ],
   "attributes": {
-    "base": {
-      "node": "string",
-      "required": false
-    },
     "params": {
-      "type": "ParamDef",
       "node": "sequence",
-      "default": []
+      "required": true
     },
     "graphs": {
       "type": "GraphSelectionDef",
@@ -18,6 +19,10 @@
     "prefixes": {
       "node": "map",
       "required": true
+    },
+    "onRequest": {
+      "node": "scalar",
+      "required": false
     }
   }
 }

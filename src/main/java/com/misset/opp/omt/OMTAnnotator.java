@@ -6,10 +6,7 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.util.CurieUtil;
-import com.misset.opp.omt.psi.util.ImportUtil;
-import com.misset.opp.omt.psi.util.MemberUtil;
-import com.misset.opp.omt.psi.util.VariableUtil;
+import com.misset.opp.omt.psi.util.*;
 import org.jetbrains.annotations.NotNull;
 
 //import java.util.HashMap;
@@ -37,6 +34,9 @@ public class OMTAnnotator implements Annotator {
         }
         if (element instanceof OMTOperatorCall) {
             MemberUtil.annotateCall((OMTOperatorCall) element, holder);
+        }
+        if (element instanceof OMTModelItemTypeElement) {
+            ModelUtil.annotateModelItem((OMTModelItemTypeElement) element, holder);
         }
     }
 

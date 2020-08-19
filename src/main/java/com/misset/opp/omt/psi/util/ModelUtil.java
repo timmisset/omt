@@ -1,32 +1,15 @@
 package com.misset.opp.omt.psi.util;//package com.misset.opp.omt.domain.util;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.OMTBlockEntry;
-import com.misset.opp.omt.psi.OMTModelItemBlock;
-import com.misset.opp.omt.psi.OMTSpecificBlock;
+import com.misset.opp.omt.psi.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-//
-//import com.intellij.openapi.project.Project;
-//import com.intellij.psi.PsiElement;
-//import com.intellij.psi.util.PsiTreeUtil;
-//import com.misset.opp.omt.domain.OMTModelItem;
-//import com.misset.opp.omt.domain.OMTModelItemAttribute;
-//import com.misset.opp.omt.psi.*;
-//import com.misset.opp.omt.domain.OMTParameter;
-//
-//import java.io.File;
-//import java.io.IOException;
-//import java.nio.file.Files;
-//import java.util.*;
-//import java.util.regex.Matcher;
-//import java.util.regex.Pattern;
-//import java.util.stream.Collectors;
-//
 public class ModelUtil {
 
     /**
@@ -107,5 +90,55 @@ public class ModelUtil {
             return label.endsWith(":") ? label.substring(0, label.length() - 1) : label;
         }
         return null;
+    }
+
+    public static JsonObject getAttributes(String memberName) {
+        boolean hasMember = ProjectUtil.getParsedModel().has(memberName);
+        return hasMember ? (JsonObject) ProjectUtil.getParsedModel().get(memberName) : new JsonObject();
+    }
+
+    public static void annotateModelItem(OMTModelItemTypeElement type, AnnotationHolder holder) {
+        OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) type.getParent().getParent();
+        OMTBlock block = modelItemBlock.getBlock();
+
+        JsonObject jsonObject = getAttributes(type.getText().substring(1));
+        if (jsonObject.keySet().isEmpty()) {
+            holder.createErrorAnnotation(type, "Unknown model type: " + type.getText());
+        }
+    }
+
+    public static List<String> getLocalCommands(PsiElement element) {
+        List<OMTBlockEntry> blockEntries = PsiTreeUtil.collectParents(element, OMTBlockEntry.class, false, parent -> parent == null || parent instanceof OMTFile);
+        OMTModelItemBlock modelItemBlock = PsiTreeUtil.getTopmostParentOfType(element, OMTModelItemBlock.class);
+        String modelItemLabel = modelItemBlock.getModelItemLabel().getModelItemTypeElement().getText().substring(1);
+        JsonObject member = getAttributes(modelItemLabel);
+
+        List<String> commands = new ArrayList<>();
+        while (member != null) {
+            if (member.has("localCommands")) {
+                JsonArray localCommands = member.getAsJsonArray("localCommands");
+                localCommands.forEach(jsonElement -> commands.add(jsonElement.getAsString()));
+            }
+            if (member.has("attributes") && blockEntries.size() > 0) {
+                OMTBlockEntry omtBlockEntry = blockEntries.remove(blockEntries.size() - 1);
+                JsonObject attributes = (JsonObject) member.get("attributes");
+                String label = omtBlockEntry.getPropertyLabel().getText();
+                label = label.substring(0, label.length() - 1);
+                if (attributes.has(label)) {
+                    member = (JsonObject) attributes.get(label);
+                    if (member.has("type")) {
+                        String memberType = member.get("type").getAsString();
+                        if (memberType.endsWith("Def")) {
+                            member = getAttributes(memberType.substring(0, memberType.length() - 3));
+                        }
+                    }
+                } else {
+                    member = null;
+                }
+            } else {
+                member = null;
+            }
+        }
+        return commands;
     }
 }

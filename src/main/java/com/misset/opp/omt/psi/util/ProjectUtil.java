@@ -1,5 +1,9 @@
 package com.misset.opp.omt.psi.util;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
@@ -12,13 +16,18 @@ import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.support.OMTExportMember;
-import com.sun.tools.javac.util.List;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
+import java.io.IOException;
+import java.util.*;
+
+import static util.Helper.getResources;
 
 public class ProjectUtil {
+
+
+    private static final HashMap<String, ArrayList<OMTPrefix>> knownPrefixes = new HashMap<>();
+    private static final HashMap<String, ArrayList<OMTExportMember>> exportingMembers = new HashMap<>();
+    private static final JsonObject parsedModel = new JsonObject();
 
     /**
      * Tries to load all built-in commands and operators that can be retrieved from the BuiltInUtil
@@ -29,7 +38,7 @@ public class ProjectUtil {
         Collection<VirtualFile> builtInCommandsCollection = FilenameIndex.getVirtualFilesByName(project, "builtinCommands.ts", GlobalSearchScope.allScope(project));
         if (builtInCommandsCollection.size() == 1) {
             WindowManager.getInstance().getStatusBar(project).setInfo("Discover builtinCommands.ts file, loading data");
-            VirtualFile virtualFile = List.from(builtInCommandsCollection).get(0);
+            VirtualFile virtualFile = builtInCommandsCollection.iterator().next();
             Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
             if (document != null) {
                 BuiltInUtil.reloadBuiltInFromDocument(document, BuiltInType.Command);
@@ -39,7 +48,7 @@ public class ProjectUtil {
         Collection<VirtualFile> builtInOperatorsCollection = FilenameIndex.getVirtualFilesByName(project, "builtinOperators.ts", GlobalSearchScope.allScope(project));
         if (builtInOperatorsCollection.size() == 1) {
             WindowManager.getInstance().getStatusBar(project).setInfo("Discover builtinOperators.ts file, loading data");
-            VirtualFile virtualFile = List.from(builtInOperatorsCollection).get(0);
+            VirtualFile virtualFile = builtInOperatorsCollection.iterator().next();
             Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
             if (document != null) {
                 BuiltInUtil.reloadBuiltInFromDocument(document, BuiltInType.Operator);
@@ -47,10 +56,6 @@ public class ProjectUtil {
         }
 
     }
-
-    private static final HashMap<String, ArrayList<OMTPrefix>> knownPrefixes = new HashMap<>();
-    private static final HashMap<String, ArrayList<OMTExportMember>> exportingMembers = new HashMap<>();
-
     public static void registerPrefixes(OMTFile file) {
         file.getPrefixes().forEach((namespacePrefix, omtPrefix) -> {
             ArrayList<OMTPrefix> prefixes = knownPrefixes.getOrDefault(namespacePrefix, new ArrayList<>());
@@ -79,5 +84,40 @@ public class ProjectUtil {
             System.out.println("Error when analyzing file: " + e.getMessage());
         }
 
+    }
+
+    /**
+     * Load the model (attributes) from the json files
+     */
+    public static void loadModelAttributes() throws IOException {
+
+        java.util.List<String> allModelFiles = Arrays.asList(
+                "action.json", "activity.json", "binding.json", "component.json", "graphSelection.json", "model.json",
+                "onChange.json", "ontology.json", "param.json", "payload.json", "procedure.json",
+                "queryWatcher.json", "service.json", "standaloneQuery.json", "variable.json"
+        );
+        List<String> files = getResources(allModelFiles, "model");
+
+        for (String content : files) {
+            JsonElement jsonElement = new JsonParser().parse(content);
+            if (jsonElement.isJsonArray()) {
+                ((JsonArray) jsonElement).forEach(ProjectUtil::addToJsonModel);
+            } else {
+                addToJsonModel(jsonElement);
+            }
+        }
+    }
+
+    private static void addToJsonModel(JsonElement jsonElement) {
+        JsonObject asObject = (JsonObject) jsonElement;
+        if (asObject.has("name")) {
+            parsedModel.add(asObject.get("name").getAsString(), asObject);
+        } else if (asObject.has("key")) {
+            parsedModel.add(asObject.get("key").getAsString(), asObject);
+        }
+    }
+
+    public static JsonObject getParsedModel() {
+        return parsedModel;
     }
 }

@@ -302,7 +302,7 @@ void setBacktick(boolean state) {
 }
 
 // Common tokens
-<YYINITIAL, ODT> {
+<ODT> {
     {STRING}                                                        { return returnElement(OMTTypes.STRING); }
     {INTEGER}                                                       { return returnElement(OMTTypes.INTEGER); }
     {DECIMAL}                                                       { return returnElement(OMTTypes.DECIMAL); }

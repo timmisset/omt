@@ -1,0 +1,80 @@
+{
+  "name": "Component",
+  "flags": [],
+  "localCommands": [
+    "COMMIT",
+    "ROLLBACK"
+  ],
+  "localCommandConditions": {
+    "COMMIT": {
+      "autonomous": true
+    },
+    "ROLLBACK": {
+      "autonomous": true
+    }
+  },
+  "attributes": {
+    "title": {
+      "type": "interpolatedString",
+      "node": "scalar",
+      "required": false
+    },
+    "autonomous": {
+      "type": "boolean",
+      "node": "sequence",
+      "default": false,
+      "required": true
+    },
+    "bindings": {
+      "type": "BindingDef",
+      "node": "sequence",
+      "required": true
+    },
+    "variables": {
+      "type": "VariableDef",
+      "node": "sequence",
+      "required": true
+    },
+    "graphs": {
+      "type": "GraphSelectionDef",
+      "node": "map",
+      "required": false
+    },
+    "watchers": {
+      "type": "QueryWatcherDef",
+      "node": "sequence",
+      "required": false
+    },
+    "payload": {
+      "type": "PayloadDef",
+      "node": "map",
+      "required": true
+    },
+    "rules": {
+      "type": "RulesMap",
+      "node": "map",
+      "required": true
+    },
+    "prefixes": {
+      "node": "map",
+      "required": true
+    },
+    "queries": {
+      "node": "scalar",
+      "required": false
+    },
+    "commands": {
+      "node": "scalar",
+      "required": false
+    },
+    "onInit": {
+      "node": "scalar",
+      "required": false
+    },
+    "actions": {
+      "type": "ActionDef",
+      "node": "map",
+      "required": true
+    }
+  }
+}

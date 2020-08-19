@@ -1,5 +1,5 @@
 {
-  "name": "StandaloneQuery",
+  "name": "StandAloneQuery",
   "attributes": {
     "base": {
       "node": "string",

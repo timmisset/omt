@@ -1,0 +1,28 @@
+{
+  "name": "Variable",
+  "shortcut": {
+    "regEx": {
+      "pattern": "^\\s*(\\$\\w+)\\s*(?:=\\s*(.+))?$",
+      "assignTo": [
+        "name",
+        "value"
+      ]
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "node": "scalar",
+      "required": true
+    },
+    "value": {
+      "type": "string",
+      "required": false
+    },
+    "onChange": {
+      "type": "onChangeDef",
+      "node": "scalar",
+      "required": false
+    }
+  }
+}
