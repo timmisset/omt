@@ -167,25 +167,25 @@ defineName ::=                              NAME | OPERATOR    {
                                                          }
 defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA queryPath SEMICOLON trailing {
                                                             implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
-                                                            methods=[isQuery isCommand]
+                                                            extends="com.misset.opp.omt.psi.impl.OMTDefinedStatementImpl"
                                             }
 defineCommandStatement ::=                  leading? DEFINE_START DEFINE_COMMAND defineName defineParam? LAMBDA commandBlock trailing {
                                                           implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
-                                                          methods=[isCommand isQuery]
-                                          }
+                                                          extends="com.misset.opp.omt.psi.impl.OMTDefinedStatementImpl"
+                                            }
 definePrefix ::=                            leading? PREFIX_DEFINE_START prefix trailing
 defineParam ::=                             PARENTHESES_OPEN (variable (COMMA variable)*)? PARENTHESES_CLOSE
 
 // MEMBER CALLS
 // A call to either an Operator or a Command. In case of the latter, it's always prefixed with @
 operatorCall ::=                            (OPERATOR | CONDITIONAL_OPERATOR | NAME) flagSignature? signature? {
-                                                             mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
+                                                             mixin="com.misset.opp.omt.psi.impl.OMTCallImpl"
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
                                                              methods=[getName setName getNameIdentifier canCallOperator canCallCommand]
                                                            }
 commandCall ::=                             COMMAND flagSignature? signature?
                                                             {
-                                                             mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
+                                                             mixin="com.misset.opp.omt.psi.impl.OMTCallImpl"
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
                                                              methods=[getName setName getNameIdentifier canCallOperator canCallCommand]
                                                            }
