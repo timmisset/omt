@@ -42,53 +42,6 @@ public class OMTPsiImplUtil {
         return namespacePrefix;
     }
 
-    // OperatorCall
-    public static String getName(OMTOperatorCall operatorCall) {
-        return operatorCall.getFirstChild().getText();
-    }
-
-    public static PsiElement setName(OMTOperatorCall operatorCall, String newName) {
-        PsiElement replacement = OMTElementFactory.createOperator(operatorCall.getProject(), newName);
-        operatorCall.replace(replacement);
-        return replacement;
-    }
-
-    public static PsiElement getNameIdentifier(OMTOperatorCall operatorCall) {
-        return operatorCall.getFirstChild();
-    }
-
-    public static boolean canCallCommand(OMTOperatorCall operatorCall) {
-        return false;
-    }
-
-    public static boolean canCallOperator(OMTOperatorCall operatorCall) {
-        return true;
-    }
-
-    // CommandCall
-    public static String getName(OMTCommandCall commandCall) {
-        String name = commandCall.getFirstChild().getText();
-        return name.startsWith("@") ? name.substring(1) : name;
-    }
-
-    public static PsiElement setName(OMTCommandCall commandCall, String newName) {
-        PsiElement replacement = OMTElementFactory.createCommand(commandCall.getProject(), newName);
-        commandCall.replace(replacement);
-        return replacement;
-    }
-
-    public static PsiElement getNameIdentifier(OMTCommandCall commandCall) {
-        return commandCall.getFirstChild();
-    }
-
-    public static boolean canCallCommand(OMTCommandCall commandCall) {
-        return true;
-    }
-
-    public static boolean canCallOperator(OMTCommandCall commandCall) {
-        return false;
-    }
-
     // OMTDefineName
     public static String getName(OMTDefineName defineName) {
         return defineName.getText();
@@ -102,23 +55,6 @@ public class OMTPsiImplUtil {
 
     public static PsiElement getNameIdentifier(OMTDefineName defineName) {
         return defineName;
-    }
-
-    // OMTDefineStatement
-    public static boolean isQuery(OMTDefineQueryStatement statement) {
-        return true;
-    }
-
-    public static boolean isQuery(OMTDefineCommandStatement statement) {
-        return false;
-    }
-
-    public static boolean isCommand(OMTDefineQueryStatement statement) {
-        return false;
-    }
-
-    public static boolean isCommand(OMTDefineCommandStatement statement) {
-        return true;
     }
 
     // OMTDefinedBlocks
