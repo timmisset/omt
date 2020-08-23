@@ -88,7 +88,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
                 .getSequence()
                 .getSequenceItemList()
                 .stream()
-                .map(OMTSequenceItem::getSequenceItemValue)
+                .map(OMTSequenceItem::getScalarValue)
                 .filter(Objects::nonNull)
                 .forEach(sequenceItemValue -> {
                     if (sequenceItemValue.getParameterWithType() != null) {

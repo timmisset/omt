@@ -18,16 +18,30 @@ public class VariableUtil {
     public static boolean isVariableAssignment(OMTVariable variable) {
         return variable.getParent() instanceof OMTVariableAssignment;
     }
-    public static OMTVariable getVariable(OMTSequenceItemValue sequenceItemValue) {
-        PsiElement element = sequenceItemValue.getQueryPath() != null ? sequenceItemValue.getQueryPath().getFirstChild() : sequenceItemValue.getFirstChild();
-        if(element == null) { return null; }
-        if(element instanceof OMTVariableAssignment) { return getVariable((OMTVariableAssignment) element); }
-        if(element instanceof OMTQueryStep) { return ((OMTQueryStep) element).getVariable(); }
-        if(element instanceof OMTQueryReverseStep) { return ((OMTQueryReverseStep) element).getQueryStep().getVariable(); }
-        if(element instanceof OMTVariable) { return (OMTVariable) element; }
-        if(element instanceof OMTParameterWithType) { return ((OMTParameterWithType) element).getVariable(); }
+
+    public static OMTVariable getVariable(OMTScalarValue omtScalarValue) {
+        PsiElement element = omtScalarValue.getQueryPath() != null ? omtScalarValue.getQueryPath().getFirstChild() : omtScalarValue.getFirstChild();
+        if (element == null) {
+            return null;
+        }
+        if (element instanceof OMTVariableAssignment) {
+            return getVariable((OMTVariableAssignment) element);
+        }
+        if (element instanceof OMTQueryStep) {
+            return ((OMTQueryStep) element).getVariable();
+        }
+        if (element instanceof OMTQueryReverseStep) {
+            return ((OMTQueryReverseStep) element).getQueryStep().getVariable();
+        }
+        if (element instanceof OMTVariable) {
+            return (OMTVariable) element;
+        }
+        if (element instanceof OMTParameterWithType) {
+            return ((OMTParameterWithType) element).getVariable();
+        }
         return null;
     }
+
     public static OMTVariable getVariable(OMTVariableAssignment variableAssignment) {
         return variableAssignment.getVariable();
     }
@@ -289,14 +303,14 @@ public class VariableUtil {
             lookWith = variable.getParent();
         }
         // check if part of a structured definition instead of the shortcut
-        OMTDictionaryEntry asDicationaryEntry = (OMTDictionaryEntry) PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTDictionaryEntry);
-        if (asDicationaryEntry != null) {
-            if (asDicationaryEntry.getDictionaryKeyPart().getText().equals("name:")) {
-                if (partOfBlockEntryLevel(asDicationaryEntry, "variables") || partOfBlockEntryLevel(asDicationaryEntry, "params")) {
-                    return true;
-                }
-            }
-        }
+//        OMTDictionaryEntry asDicationaryEntry = (OMTDictionaryEntry) PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTDictionaryEntry);
+//        if (asDicationaryEntry != null) {
+//            if (asDicationaryEntry.getDictionaryKeyPart().getText().equals("name:")) {
+//                if (partOfBlockEntryLevel(asDicationaryEntry, "variables") || partOfBlockEntryLevel(asDicationaryEntry, "params")) {
+//                    return true;
+//                }
+//            }
+//        }
         // check if direct parent is the VAR ... statement.
         if (lookWith.getParent() instanceof OMTDeclareVariable) {
             return true;
@@ -306,7 +320,7 @@ public class VariableUtil {
             if (lookWith.getParent().getParent() instanceof OMTDeclareVariable) {
                 return true;
             }
-            if (lookWith.getParent().getParent() instanceof OMTSequenceItemValue) {
+            if (lookWith.getParent().getParent() instanceof OMTScalarValue) {
                 if (partOfBlockEntryLevel(lookWith, "variables")) {
                     return true;
                 }
@@ -321,8 +335,8 @@ public class VariableUtil {
             return true;
         }
 
-        OMTSequenceItemValue asSequenceItemValue = (OMTSequenceItemValue) PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTSequenceItemValue);
-        return partOfBlockEntryLevel(asSequenceItemValue, "variables") || partOfBlockEntryLevel(asSequenceItemValue, "params");
+        OMTScalarValue asScalarValue = (OMTScalarValue) PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTScalarValue);
+        return partOfBlockEntryLevel(asScalarValue, "variables") || partOfBlockEntryLevel(asScalarValue, "params");
     }
 
     private static boolean partOfBlockEntryLevel(PsiElement element, String entryLevelLabel) {

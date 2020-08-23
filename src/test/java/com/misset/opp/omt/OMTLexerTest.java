@@ -79,12 +79,4 @@ class OMTLexerTest {
         return elements;
     }
 
-    private String getLexerStateName(int state) {
-        if(state == 0) { return "INITIAL"; }
-        if(state == 2) { return "YAML_SCALAR"; }
-        if(state == 4) { return "YAML_SEQUENCE"; }
-        if(state == 6) { return "INDENT"; }
-        if(state == 8) { return "ODT"; }
-        return "UNKNOWN";
-    }
 }

@@ -110,6 +110,9 @@ public class ModelUtil {
     public static List<String> getLocalCommands(PsiElement element) {
         List<OMTBlockEntry> blockEntries = PsiTreeUtil.collectParents(element, OMTBlockEntry.class, false, parent -> parent == null || parent instanceof OMTFile);
         OMTModelItemBlock modelItemBlock = PsiTreeUtil.getTopmostParentOfType(element, OMTModelItemBlock.class);
+        if (modelItemBlock == null) {
+            return new ArrayList<>();
+        }
         String modelItemLabel = modelItemBlock.getModelItemLabel().getModelItemTypeElement().getText().substring(1);
         JsonObject member = getAttributes(modelItemLabel);
 
@@ -119,7 +122,7 @@ public class ModelUtil {
                 JsonArray localCommands = member.getAsJsonArray("localCommands");
                 localCommands.forEach(jsonElement -> commands.add(jsonElement.getAsString()));
             }
-            if (member.has("attributes") && blockEntries.size() > 0) {
+            if (member.has("attributes") && !blockEntries.isEmpty()) {
                 OMTBlockEntry omtBlockEntry = blockEntries.remove(blockEntries.size() - 1);
                 JsonObject attributes = (JsonObject) member.get("attributes");
                 String label = omtBlockEntry.getPropertyLabel().getText();
