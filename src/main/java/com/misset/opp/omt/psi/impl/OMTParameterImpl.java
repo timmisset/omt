@@ -41,7 +41,7 @@ public class OMTParameterImpl implements OMTParameter {
     }
 
     public OMTParameterImpl(OMTVariableAssignment variableAssignment) {
-        variable = variableAssignment.getVariable();
+        variable = variableAssignment.getVariableList().get(0);
         defaultValue = variableAssignment.getVariableValue();
         name = variable.getName();
         required = true;
