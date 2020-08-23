@@ -43,7 +43,7 @@ public class VariableUtil {
     }
 
     public static OMTVariable getVariable(OMTVariableAssignment variableAssignment) {
-        return variableAssignment.getVariable();
+        return variableAssignment.getVariableList().get(0);
     }
     public static List<OMTVariable> getAllVariableInstances(OMTVariable variableToFind, PsiElement container) {
         return PsiTreeUtil.findChildrenOfType(container, OMTVariable.class).stream()
@@ -255,6 +255,11 @@ public class VariableUtil {
             holder.createInfoAnnotation(variable, String.format("%s is a global variable which is always available", variable.getName()));
             return;
         }
+        if (variable.isIgnoredVariable()) {
+            // the magic variables always exist
+            holder.createInfoAnnotation(variable, String.format("%s is used to indicate the variable ignored", variable.getName()));
+            return;
+        }
         if (variable.isDeclaredVariable()) {
             // check that atleast 1 variable is using the declaration:
             AnnotationUtil.annotateUsage(variable, OMTVariable.class, holder);
@@ -299,6 +304,9 @@ public class VariableUtil {
 
     public static boolean isDeclaredVariable(OMTVariable variable) {
         PsiElement lookWith = variable;
+        if (PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTVariableValue) != null) {
+            return false;
+        }
         if (lookWith.getParent() instanceof OMTParameterWithType) {
             lookWith = variable.getParent();
         }

@@ -23,7 +23,7 @@ end ::=                                     END_TOKEN
 indentToken ::=                             INDENT | INDENT2
 dedentToken ::=                             DEDENT | DEDENT2
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
-block ::=                                   leading? ((specificBlock | blockEntry)+ | (indentToken (specificBlock | blockEntry)+ dedentToken))
+block ::=                                   leading? ((specificBlock | blockEntry)+ | (indentToken (specificBlock | blockEntry)+ dedentToken)) trailing?
 blockEntry ::=                              propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken))
 propertyLabel ::=                           PROPERTY { methods=[getPropertyLabelName]}
 
@@ -34,7 +34,7 @@ scalarValue ::=                             start (parameterWithType | variableA
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indentToken, it must 
 sequence ::=                                trailing? sequenceItem+
-sequenceItem ::=                            leading? SEQUENCE_BULLET scalarValue
+sequenceItem ::=                            leading? SEQUENCE_BULLET (scalarValue | block)
 
 // SPECIFIC BLOCKS
 specificBlock ::=                          importBlock | exportBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock | moduleBlock
@@ -111,18 +111,19 @@ constant_value ::=                          STRING | INTEGER | DECIMAL | NULL | 
 // or can be VAR $a = 1, $b = 2 etc. todo: check if this is actually true
 declareVariable ::=                         DECLARE_VAR (variableAssignment | variable) (COMMA (variableAssignment | variable))*
 // a variable assignment is $var = 1234
-variableAssignment::=                       variable EQUALS variableValue
+variableAssignment::=                       variable (COMMA variable)* EQUALS variableValue
 // a variable can be assigned with anything
 variableValue ::=                           constant_value | queryPath | commandCall
 
 // a parameter type is used to typecast input parameters in OMT model items
-variable ::=                                VARIABLE_NAME | globalVariable {
+variable ::=                                VARIABLE_NAME | ignoredVariable | globalVariable {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTVariableNamedElementImpl"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTVariableNamedElement"
-                                                                                 methods=[getName setName isDeclaredVariable isGlobalVariable getNameIdentifier]
+                                                                                 methods=[getName setName isDeclaredVariable isIgnoredVariable isGlobalVariable getNameIdentifier]
                                                                                }
 // the lexer should determine if operating in a state of declare and provide a difference response for the discovered variable name
 globalVariable ::=                          GLOBAL_VARIABLE_NAME
+ignoredVariable ::=                         IGNORE_VARIABLE_NAME
 parameterWithType ::=                       variable PARENTHESES_OPEN (parameterType | OPERATOR) PARENTHESES_CLOSE
 parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) {
     methods = [isDefinedByPrefix]
@@ -163,7 +164,7 @@ defineParam ::=                             PARENTHESES_OPEN (variable (COMMA va
 
 // MEMBER CALLS
 // A call to either an Operator or a Command. In case of the latter, it's always prefixed with @
-operatorCall ::=                            (OPERATOR | CONDITIONAL_OPERATOR | NAME) flagSignature? signature? {
+operatorCall ::=                            OPERATOR flagSignature? signature? {
                                                              mixin="com.misset.opp.omt.psi.impl.OMTCallImpl"
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
                                                              methods=[getName setName getNameIdentifier canCallOperator canCallCommand]

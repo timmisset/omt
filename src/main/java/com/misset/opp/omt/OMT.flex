@@ -279,6 +279,7 @@ void setBacktick(boolean state) {
     "PREFIX"                                                        { return returnElement(OMTTypes.PREFIX_DEFINE_START); }
     ";"                                                             { return returnElement(OMTTypes.SEMICOLON); }
     "$"{NAME}                                                       { return returnElement(OMTTypes.VARIABLE_NAME); }
+    "$_"                                                            { return returnElement(OMTTypes.IGNORE_VARIABLE_NAME); }
     "@"{NAME}                                                       { return returnElement(OMTTypes.COMMAND); }
     "!"{NAME}                                                       { return returnElement(OMTTypes.FLAG); }
 

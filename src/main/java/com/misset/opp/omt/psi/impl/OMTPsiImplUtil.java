@@ -28,7 +28,13 @@ public class OMTPsiImplUtil {
 
         return VariableUtil.isDeclaredVariable(variable);
     }
-    public static boolean isGlobalVariable(OMTVariable variable) { return variable.getGlobalVariable() != null; }
+    public static boolean isGlobalVariable(OMTVariable variable) {
+        return variable.getGlobalVariable() != null;
+    }
+
+    public static boolean isIgnoredVariable(OMTVariable variable) {
+        return variable.getIgnoredVariable() != null;
+    }
 
     // Namespace prefixes
     public static String getName(OMTNamespacePrefix curieElement) { return curieElement.getText(); }
