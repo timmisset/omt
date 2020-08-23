@@ -63,7 +63,7 @@ public class MemberUtil {
         OMTFile containingFile = (OMTFile) call.getContainingFile();
         List<OMTMember> importedMembers = containingFile.getImportedMembers();
         Optional<OMTMember> importedMember = importedMembers.stream()
-                .filter(member -> member.textMatches(callName))
+                .filter(member -> member.getText().trim().equals(callName))
                 .findFirst();
         if (importedMember.isPresent()) {
             OMTImport omtImport = ImportUtil.getImport(importedMember.get());

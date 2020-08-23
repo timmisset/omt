@@ -16,65 +16,54 @@
 }
 
 // the end of the file (or the entire file) can be a (set of) comment(s)
-OMTFile ::= block* trailing?
+OMTFile ::= leading? block* trailing?
 
+start ::=                                   START_TOKEN
+end ::=                                     END_TOKEN
+indentToken ::=                             INDENT | INDENT2
+dedentToken ::=                             DEDENT | DEDENT2
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
-block ::=                                   (leading? (specificBlock | blockEntry))+
-blockEntry ::=                              propertyLabel (map | sequence | scalar)
+block ::=                                   leading? ((specificBlock | blockEntry)+ | (indentToken (specificBlock | blockEntry)+ dedentToken))
+blockEntry ::=                              propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken))
 propertyLabel ::=                           PROPERTY { methods=[getPropertyLabelName]}
 
 // a scalar single statement (multiline optional) following a property label
 scalar ::=                                  scalarValue
-scalarValue ::=                             ((parameterWithType | variableAssignment) trailing) | (queryPath | script)
+scalarValue ::=                             start (parameterWithType | variableAssignment | block | queryPath | script) end
 
 // a sequence must start with a newline followed by items, lead by their bullet (-)
-// indentation is allowed but not required. If indentToken, it must dedentToken
-sequence ::=                                trailing ((indentToken sequenceItem* dedentToken) | sequenceItem*)
-sequenceItem ::=                            leading? SEQUENCE_BULLET? (sequenceItemValue | (dictionary dedentToken))
-sequenceItemValue ::=                       ((parameterWithType | variableAssignment) trailing) | queryPath
-
-// a map is nothing more than another block, it must however be indented
-map ::=                                     trailing indentToken leading? block dedentToken
-
-// The dictionary is used as a sequenceItemValue
-// parameters:
-//      -   name:
-//          type:
-dictionary ::=                              (dictionaryEntry)+
-dictionaryEntry ::=                         dictionaryKeyPart dictionaryValuePart
-dictionaryKeyPart ::=                       DICTIONARY_KEY
-dictionaryValuePart ::=                     map | queryPath
+// indentation is allowed but not required. If indentToken, it must 
+sequence ::=                                trailing? sequenceItem+
+sequenceItem ::=                            leading? SEQUENCE_BULLET scalarValue
 
 // SPECIFIC BLOCKS
 specificBlock ::=                          importBlock | exportBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock | moduleBlock
-// todo: check if this can be placed by a generic parser that will throw exceptions based on the content but
-// still using the generic scalar, sequence or map
 
 // sequences
-exportBlock ::=                             EXPORT_START trailing ((indentToken memberList dedentToken) | memberList)?
-memberList ::=                              (SEQUENCE_BULLET member trailing)*
-member ::=                                  NAME | OPERATOR {
+exportBlock ::=                             EXPORT_START trailing? memberList?
+memberList ::=                              (SEQUENCE_BULLET member trailing?)+ | (indentToken (SEQUENCE_BULLET member trailing?)+ dedentToken)
+member ::=                                  START_TOKEN OPERATOR END_TOKEN {
                                                        mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
                                                        implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                        methods=[getName setName getNameIdentifier]
                                                      }
 
 // scalars
-queriesBlock::=                             QUERY_BLOCK_START (PIPE trailing indentToken defineQueryStatement* dedentToken)? {
+queriesBlock::=                             QUERY_BLOCK_START (start PIPE trailing? defineQueryStatement* end)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
                                                                 }
-commandsBlock::=                            COMMAND_BLOCK_START (PIPE trailing indentToken defineCommandStatement* dedentToken)? {
+commandsBlock::=                            COMMAND_BLOCK_START (start PIPE trailing? defineCommandStatement* end)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
                                                                 }
 
-moduleBlock::=                              leading? MODULE_NAME_START moduleName trailing
+moduleBlock::=                              leading? MODULE_NAME_START moduleName trailing?
 moduleName::=                               NAME | OPERATOR
 
 // maps
-importBlock ::=                             leading? IMPORT_START trailing ((indentToken import* dedentToken) | import*)?
-import ::=                                  leading? importSource trailing ((indentToken memberList dedentToken) | memberList)?
+importBlock ::=                             leading? IMPORT_START trailing? indentToken import* dedentToken
+import ::=                                  leading? importSource trailing? memberList?
 importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                            mixin="com.misset.opp.omt.psi.impl.OMTImportNamedElementImpl"
                                                                            implements="com.misset.opp.omt.psi.named.OMTImportNamedElement"
@@ -82,19 +71,19 @@ importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                          }
 importLocation ::=                          PROPERTY | IMPORT_PATH
 
-prefixBlock::=                              PREFIX_BLOCK_START trailing (indentToken prefix* dedentToken)?
-prefix::=                                   leading? namespacePrefix namespaceIri trailing
+prefixBlock::=                              PREFIX_BLOCK_START trailing? (prefix+ | (indentToken prefix+ dedentToken))?
+prefix::=                                   leading? namespacePrefix namespaceIri trailing?
 namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)            {
                                                                                          mixin="com.misset.opp.omt.psi.impl.OMTNamespacePrefixNamedElementImpl"
                                                                                          implements="com.misset.opp.omt.psi.named.OMTNamespacePrefixNamedElement"
                                                                                          methods=[getName setName getNameIdentifier]
                                                                                    }
-namespaceIri ::=                            IRI
+namespaceIri ::=                            START_TOKEN IRI END_TOKEN
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix]}
 curieConstantElement ::=                    CURIE_CONSTANT_ELEMENT_PREFIX curieElement
 
-modelBlock::=                               MODEL_BLOCK_START trailing (indentToken modelItemBlock+ dedentToken)?
-modelItemBlock::=                           leading? modelItemLabel trailing (indentToken block dedentToken)?
+modelBlock::=                               MODEL_BLOCK_START trailing? indentToken modelItemBlock* dedentToken
+modelItemBlock::=                           leading? modelItemLabel trailing? block?
 modelItemLabel::=                           propertyLabel modelItemTypeElement  {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
@@ -108,10 +97,10 @@ comment ::=                                 END_OF_LINE_COMMENT | JAVA_DOCS
 eolComment ::=                              END_OF_LINE_COMMENT
 // trailing is everything at the end of the current line and before NEW_LINE.
 // It can be simply the NEW_LINE or an eolComment followed by a NEW_LINE
-trailing ::=                                (eolComment? NEW_LINE)+
-// leading is everything before a block or item. Assuming that comments are written above the code they are
+trailing ::=                                eolComment+
+// leading? is everything before a block or item. Assuming that comments are written above the code they are
 // commenting on, this should help to relate the comment to the code
-leading ::=                                 (comment NEW_LINE)+
+leading ::=                                 comment+
 
 // ////////////////////////////////////////////////////
 // ODT
@@ -139,16 +128,12 @@ parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEM
     methods = [isDefinedByPrefix]
 }
 
-// INDENTATION
-dedentToken ::=                            DEDENT | DEDENT2
-indentToken ::=                            INDENT | INDENT2
-
 // SCRIPT
 // an ODT (script) block is always started by a Yaml scalar node
 // it can start on the same line and be restricted to that line (not required) or it can be started by the
-// literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and indentToken and dedentToken
-script ::=                                  PIPE trailing indentToken (scriptLine+ | queryPath) dedentToken
-commandBlock ::=                            CURLY_OPEN trailing (script | scriptLine+) CURLY_CLOSED
+// literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and and 
+script ::=                                  PIPE trailing? (scriptLine+ | queryPath) 
+commandBlock ::=                            CURLY_OPEN trailing? (script | scriptLine+) CURLY_CLOSED
 // a scriptline is contained by the addition of the semicolon at the end
 scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) trailing?
 // the contents of a script, contained by a scriptLine or Scalar
@@ -165,15 +150,15 @@ defineName ::=                              NAME | OPERATOR    {
                                                            implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                            methods=[getName setName getNameIdentifier]
                                                          }
-defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA queryPath SEMICOLON trailing {
+defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA queryPath SEMICOLON trailing? {
                                                             implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
                                                             extends="com.misset.opp.omt.psi.impl.OMTDefinedStatementImpl"
                                             }
-defineCommandStatement ::=                  leading? DEFINE_START DEFINE_COMMAND defineName defineParam? LAMBDA commandBlock trailing {
+defineCommandStatement ::=                  leading? DEFINE_START DEFINE_COMMAND defineName defineParam? LAMBDA commandBlock trailing? {
                                                           implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
                                                           extends="com.misset.opp.omt.psi.impl.OMTDefinedStatementImpl"
                                             }
-definePrefix ::=                            leading? PREFIX_DEFINE_START prefix trailing
+definePrefix ::=                            leading? PREFIX_DEFINE_START prefix trailing?
 defineParam ::=                             PARENTHESES_OPEN (variable (COMMA variable)*)? PARENTHESES_CLOSE
 
 // MEMBER CALLS
@@ -216,8 +201,7 @@ removeFromCollection ::=                    queryPath trailing? REMOVE trailing?
 queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+ (PIPE queryPath)?
 queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
                                             operatorCall | IRI | DOT | subQuery | CONDITIONAL_OPERATOR |
-                                            queryFilter | trailing | leading | chooseBlock | interpolatedString | PLUS | ASTERIX |
-                                            (indentToken queryPath dedentToken)
+                                            queryFilter | trailing | leading | chooseBlock | interpolatedString | PLUS | ASTERIX
 queryReverseStep ::=                        CARAT queryStep
 
 // a query filter is contained by brackets [] and should resolve to boolean
