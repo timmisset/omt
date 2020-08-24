@@ -1,6 +1,10 @@
 [
   {
     "name": "Action",
+    "mapOf": "ActionPropertyDef"
+  },
+  {
+    "name": "ActionProperty",
     "attributes": {
       "title": {
         "type": "interpolatedString",

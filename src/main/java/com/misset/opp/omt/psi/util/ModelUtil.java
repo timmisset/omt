@@ -151,8 +151,23 @@ public class ModelUtil {
                                 }
                             }
                         } else if (omtBlockEntry.getBlock() != null) {
-                            // process the block:
-                            annotateModelTree(type, typeAttributes, omtBlockEntry.getBlock().getBlockEntryList(), holder);
+                            if (typeAttributes.has("attributes")) {
+                                // process the block:
+                                annotateModelTree(type, typeAttributes.getAsJsonObject("attributes"), omtBlockEntry.getBlock().getBlockEntryList(), holder);
+                            }
+                            if (typeAttributes.has("mapOf")) {
+                                // process all entry using the mapOf
+                                String mappingType = typeAttributes.get("mapOf").getAsString();
+                                if (mappingType.endsWith("Def")) {
+                                    mappingType = mappingType.substring(0, mappingType.length() - 3);
+                                }
+                                typeAttributes = getAttributes(mappingType);
+                                for (OMTBlockEntry entryListItem : omtBlockEntry.getBlock().getBlockEntryList()) {
+                                    if (entryListItem.getBlock() != null) {
+                                        annotateModelTree(type, typeAttributes.getAsJsonObject("attributes"), entryListItem.getBlock().getBlockEntryList(), holder);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
