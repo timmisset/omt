@@ -196,8 +196,8 @@ public class MemberUtil {
             // check attribute type:
             JsonObject json = ModelUtil.getJson(call);
             if (json.has("type") &&
-                    json.get("type").getAsString().equals("interpolatedString") &&
-                    json.get("type").getAsString().equals("string")) {
+                    (json.get("type").getAsString().equals("interpolatedString") ||
+                            json.get("type").getAsString().equals("string"))) {
                 return;
             }
 
@@ -232,8 +232,9 @@ public class MemberUtil {
         } catch (NumberOfInputParametersMismatchException | CallCallableMismatchException e) {
             JsonObject attributes = ModelUtil.getJson(call);
             if (attributes.has("namedReference") && attributes.get("namedReference").getAsBoolean()) {
-                holder.createErrorAnnotation(call, e.getMessage());
+                return;
             }
+            holder.createErrorAnnotation(call, e.getMessage());
         }
     }
 
