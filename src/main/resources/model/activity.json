@@ -61,6 +61,10 @@
         "node": "scalar",
         "required": false
       },
+      "onStart": {
+        "node": "scalar",
+        "required": false
+      },
       "onCommit": {
         "node": "scalar",
         "required": false

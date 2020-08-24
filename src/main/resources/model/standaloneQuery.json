@@ -2,7 +2,7 @@
   "name": "StandaloneQuery",
   "attributes": {
     "base": {
-      "node": "string",
+      "type": "string",
       "required": false
     },
     "params": {

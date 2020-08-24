@@ -348,7 +348,7 @@ public class VariableUtil {
     }
 
     private static boolean partOfBlockEntryLevel(PsiElement element, String entryLevelLabel) {
-        String blockEntryLabel = ModelUtil.getBlockEntryLabel(element);
+        String blockEntryLabel = ModelUtil.getEntryBlockLabel(element);
         return blockEntryLabel != null && blockEntryLabel.equals(entryLevelLabel);
     }
 
