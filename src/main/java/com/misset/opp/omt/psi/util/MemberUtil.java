@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
+import com.google.gson.JsonObject;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
@@ -174,6 +175,7 @@ public class MemberUtil {
 
     public static void annotateCall(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {
         PsiElement resolved = call.getReference().resolve();
+
         if (resolved == null) {
             // command call not found in file or via import.
             BuiltInMember builtInMember = BuiltInUtil.getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
@@ -188,6 +190,14 @@ public class MemberUtil {
             List<String> localCommands = ModelUtil.getLocalCommands(call);
             if (localCommands.contains(call.getName())) {
                 holder.createInfoAnnotation(call, String.format("%s is available as local command", call.getName()));
+                return;
+            }
+
+            // check attribute type:
+            JsonObject json = ModelUtil.getJson(call);
+            if (json.has("type") &&
+                    json.get("type").getAsString().equals("interpolatedString") &&
+                    json.get("type").getAsString().equals("string")) {
                 return;
             }
 
@@ -220,7 +230,10 @@ public class MemberUtil {
         try {
             callable.validateSignature(call);
         } catch (NumberOfInputParametersMismatchException | CallCallableMismatchException e) {
-            holder.createErrorAnnotation(call, e.getMessage());
+            JsonObject attributes = ModelUtil.getJson(call);
+            if (attributes.has("namedReference") && attributes.get("namedReference").getAsBoolean()) {
+                holder.createErrorAnnotation(call, e.getMessage());
+            }
         }
     }
 
