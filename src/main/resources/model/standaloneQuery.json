@@ -18,6 +18,10 @@
     "prefixes": {
       "node": "map",
       "required": true
+    },
+    "query": {
+      "type": "scalar",
+      "required": true
     }
   }
 }

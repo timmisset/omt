@@ -2,6 +2,7 @@ package com.misset.opp.omt.external.util.builtIn;
 
 import com.google.gson.*;
 import com.intellij.openapi.editor.Document;
+import com.misset.opp.omt.psi.impl.OMTCallableImpl;
 import com.misset.opp.omt.psi.impl.OMTParameterImpl;
 import com.misset.opp.omt.psi.support.OMTParameter;
 
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class BuiltInUtil {
 
@@ -28,6 +30,20 @@ public class BuiltInUtil {
 
     public static BuiltInMember getBuiltInMember(String name, BuiltInType type) {
         return builtInMembers.get(getIndexedName(name, type));
+    }
+
+    public static List<String> getBuiltInOperatorsAsSuggestions() {
+        return builtInMembers.values().stream()
+                .filter(OMTCallableImpl::isOperator)
+                .map(OMTCallableImpl::asSuggestion)
+                .collect(Collectors.toList());
+    }
+
+    public static List<String> getBuiltInCommandsAsSuggestions() {
+        return builtInMembers.values().stream()
+                .filter(OMTCallableImpl::isCommand)
+                .map(OMTCallableImpl::asSuggestion)
+                .collect(Collectors.toList());
     }
 
     private static String getIndexedName(String name, BuiltInType type) {

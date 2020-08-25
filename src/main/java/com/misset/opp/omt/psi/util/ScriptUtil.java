@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
+import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTCommandBlock;
@@ -13,11 +14,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ScriptUtil {
-
-    public static boolean isPartOfScript(PsiElement element) {
-        return getScript(element).isPresent();
-    }
-
     public static Optional<OMTScript> getScript(PsiElement element) {
         return Optional.ofNullable(PsiTreeUtil.getTopmostParentOfType(element, OMTScript.class));
     }
@@ -97,15 +93,26 @@ public class ScriptUtil {
         }
         return lines;
     }
+
     public static boolean isBefore(PsiElement isElement, PsiElement beforeElement) {
-        Optional<OMTScriptLine> isElementScriptline = getScriptLine(isElement);
-        Optional<OMTScriptLine> beforeElementScriptline = getScriptLine(beforeElement);
         List<OMTScriptLine> scriptLinesAtSameDepth = getScriptLinesAtSameDepth(isElement, beforeElement);
-        if(scriptLinesAtSameDepth.isEmpty()) {
+        if (scriptLinesAtSameDepth.isEmpty()) {
             throw new Error("Cannot resolve scriptlines for elements");
         }
         return scriptLinesAtSameDepth.get(0).getStartOffsetInParent() <
                 scriptLinesAtSameDepth.get(1).getStartOffsetInParent();
 
     }
+
+    public static void annotateFinalStatement(PsiElement returnStatement, AnnotationHolder holder) {
+        OMTScriptLine scriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(returnStatement, parent -> parent instanceof OMTScriptLine);
+        if (scriptLine != null) {
+            OMTScriptLine nextLine = PsiTreeUtil.getNextSiblingOfType(scriptLine, OMTScriptLine.class);
+            while (nextLine != null) {
+                holder.createErrorAnnotation(nextLine, "Unreachable code");
+                nextLine = PsiTreeUtil.getNextSiblingOfType(nextLine, OMTScriptLine.class);
+            }
+        }
+    }
+
 }

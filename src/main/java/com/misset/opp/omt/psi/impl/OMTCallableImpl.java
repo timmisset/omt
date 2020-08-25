@@ -56,6 +56,11 @@ public abstract class OMTCallableImpl implements OMTCallable {
     }
 
     @Override
+    public boolean hasParameters() {
+        return !parameterList.isEmpty();
+    }
+
+    @Override
     public int getMinExpected() {
         return (int) parameters.values().stream().filter(OMTParameter::isRequired).count();
     }
@@ -69,6 +74,13 @@ public abstract class OMTCallableImpl implements OMTCallable {
     public String[] getParameters() {
         return parameterList.stream()
                 .map(OMTParameter::describe)
+                .toArray(String[]::new);
+    }
+
+    @Override
+    public String[] getParameterNames() {
+        return parameterList.stream()
+                .map(OMTParameter::getName)
                 .toArray(String[]::new);
     }
 
@@ -136,6 +148,17 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     public String getName() {
         return this.name;
+    }
+
+    public String asSuggestion() {
+        String name = getName();
+        if (isCommand) {
+            name = "@" + name;
+        }
+        String params = hasParameters() ? String.format(
+                "(%s)", String.join(", ", getParameterNames())
+        ) : "";
+        return name + params;
     }
 
     public void setName(String name) {
