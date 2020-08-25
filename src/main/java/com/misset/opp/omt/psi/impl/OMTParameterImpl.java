@@ -60,8 +60,8 @@ public class OMTParameterImpl implements OMTParameter {
         if (primitive.getAsString().startsWith("p.")) {
             this.name = name;
             parameterType = primitive.getAsString().substring(2);
-            required = !parameterType.startsWith("optional");
             rest = parameterType.startsWith("rest");
+            required = !rest && !parameterType.startsWith("optional");
         }
     }
 

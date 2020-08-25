@@ -8,9 +8,13 @@ import java.util.List;
 
 public interface OMTCallable {
 
+    boolean hasParameters();
+
     int getMinExpected();
 
     int getMaxExpected();
+
+    String[] getParameterNames();
 
     List<String> getLocalVariables();
 

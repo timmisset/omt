@@ -96,6 +96,20 @@ public class ModelUtil {
                 omtBlockEntry.getPropertyLabel();
     }
 
+    public static PsiElement getEntryBlockLabelElement(OMTModelItemBlock omtModelItemBlock) {
+        return omtModelItemBlock.getModelItemLabel();
+    }
+
+    public static PsiElement getEntryBlockLabelElement(PsiElement element) {
+        if (element instanceof OMTModelItemBlock) {
+            return getEntryBlockLabelElement((OMTModelItemBlock) element);
+        }
+        if (element instanceof OMTBlockEntry) {
+            return getEntryBlockLabelElement((OMTBlockEntry) element);
+        }
+        return null;
+    }
+
     public static JsonObject getAttributes(String memberName) {
         boolean hasMember = ProjectUtil.getParsedModel().has(memberName);
         return hasMember ? (JsonObject) ProjectUtil.getParsedModel().get(memberName) : new JsonObject();
@@ -110,15 +124,17 @@ public class ModelUtil {
             holder.createErrorAnnotation(type, "Unknown model type: " + type.getText());
         } else {
             JsonObject attributes = jsonObject.getAsJsonObject("attributes");
-            annotateModelTree(type.getText(), attributes, block.getBlockEntryList(), holder);
+            annotateModelTree(type.getText(), attributes, block, block.getBlockEntryList(), holder);
         }
     }
 
-    private static void annotateModelTree(String parent, JsonObject attributes, List<OMTBlockEntry> entryList, AnnotationHolder holder) {
+    private static void annotateModelTree(String parent, JsonObject attributes, OMTBlock block, List<OMTBlockEntry> entryList, AnnotationHolder holder) {
 
         Set<String> keys = attributes.keySet();
+        List<String> entryLabels = new ArrayList<>();
         entryList.forEach(omtBlockEntry -> {
             String label = getEntryBlockLabel(omtBlockEntry);
+            entryLabels.add(label);
             if (!keys.contains(label)) {
                 holder.createErrorAnnotation(getEntryBlockLabelElement(omtBlockEntry),
                         String.format("%s is not a known attribute for %s", label, parent));
@@ -140,7 +156,7 @@ public class ModelUtil {
                             for (OMTSequenceItem sequenceItem : omtBlockEntry.getSequence().getSequenceItemList()) {
                                 if (sequenceItem.getBlock() != null) {
                                     // sequence item consisting of a block (map) structure
-                                    annotateModelTree(type, typeAttributes, sequenceItem.getBlock().getBlockEntryList(), holder);
+                                    annotateModelTree(type, typeAttributes, sequenceItem.getBlock(), sequenceItem.getBlock().getBlockEntryList(), holder);
                                 } else {
                                     // usage of a shortcut, lowest level of the tree, process here
                                     JsonObject shortcut = typeAttributes.get("shortcut").getAsJsonObject();
@@ -153,7 +169,7 @@ public class ModelUtil {
                         } else if (omtBlockEntry.getBlock() != null) {
                             if (typeAttributes.has("attributes")) {
                                 // process the block:
-                                annotateModelTree(type, typeAttributes.getAsJsonObject("attributes"), omtBlockEntry.getBlock().getBlockEntryList(), holder);
+                                annotateModelTree(type, typeAttributes.getAsJsonObject("attributes"), omtBlockEntry.getBlock(), omtBlockEntry.getBlock().getBlockEntryList(), holder);
                             }
                             if (typeAttributes.has("mapOf")) {
                                 // process all entry using the mapOf
@@ -164,7 +180,7 @@ public class ModelUtil {
                                 typeAttributes = getAttributes(mappingType);
                                 for (OMTBlockEntry entryListItem : omtBlockEntry.getBlock().getBlockEntryList()) {
                                     if (entryListItem.getBlock() != null) {
-                                        annotateModelTree(type, typeAttributes.getAsJsonObject("attributes"), entryListItem.getBlock().getBlockEntryList(), holder);
+                                        annotateModelTree(type, typeAttributes.getAsJsonObject("attributes"), omtBlockEntry.getBlock(), entryListItem.getBlock().getBlockEntryList(), holder);
                                     }
                                 }
                             }
@@ -173,6 +189,22 @@ public class ModelUtil {
                 }
             }
         });
+
+        List<String> missingAttributes = new ArrayList<>();
+        attributes.entrySet().forEach(stringJsonElementEntry -> {
+            JsonObject value = stringJsonElementEntry.getValue().getAsJsonObject();
+            if (value.has("required") &&
+                    value.get("required").getAsBoolean() &&
+                    !entryLabels.contains(stringJsonElementEntry.getKey())
+            ) {
+                missingAttributes.add(stringJsonElementEntry.getKey());
+            }
+        });
+        if (!missingAttributes.isEmpty()) {
+            // missing required attribute
+            holder.createErrorAnnotation(getEntryBlockLabelElement(block.getParent()),
+                    String.format("%s is missing attribute(s) %s", parent, String.join(", ", missingAttributes)));
+        }
     }
 
     public static List<String> getLocalCommands(PsiElement element) {
@@ -223,21 +255,23 @@ public class ModelUtil {
                 OMTBlockEntry blockEntry = blockEntries.remove(blockEntries.size() - 1);
                 String entryBlockLabel = getEntryBlockLabel(blockEntry);
                 attributes = attributes.getAsJsonObject("attributes").getAsJsonObject(entryBlockLabel);
+                if (attributes != null) {
+                    if (attributes.has("type")) {
+                        String type = attributes.get("type").getAsString();
+                        if (type.endsWith("Def")) {
+                            attributes = getAttributes(type.substring(0, type.length() - 3));
+                        }
+                    }
+                    if (attributes.has("mapOf")) {
+                        String type = attributes.get("mapOf").getAsString();
+                        if (type.endsWith("Def")) {
+                            attributes = getAttributes(type.substring(0, type.length() - 3));
+                        }
+                        blockEntries.remove(blockEntries.size() - 1);
+                    }
+                    attributes.addProperty("entryLabel", entryBlockLabel);
+                }
 
-                if (attributes.has("type")) {
-                    String type = attributes.get("type").getAsString();
-                    if (type.endsWith("Def")) {
-                        attributes = getAttributes(type.substring(0, type.length() - 3));
-                    }
-                }
-                if (attributes.has("mapOf")) {
-                    String type = attributes.get("mapOf").getAsString();
-                    if (type.endsWith("Def")) {
-                        attributes = getAttributes(type.substring(0, type.length() - 3));
-                    }
-                    blockEntries.remove(blockEntries.size() - 1);
-                }
-                attributes.addProperty("entryLabel", entryBlockLabel);
             }
             return attributes;
         }

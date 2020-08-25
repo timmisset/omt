@@ -183,6 +183,7 @@ public class MemberUtil {
                 // is a builtIn member, annotate:
                 holder.createAnnotation(HighlightSeverity.INFORMATION, call.getNameIdentifier().getTextRange(), builtInMember.shortDescription(), builtInMember.htmlDescription());
                 validateSignature(call, builtInMember, holder);
+
                 return;
             }
 
@@ -190,6 +191,11 @@ public class MemberUtil {
             List<String> localCommands = ModelUtil.getLocalCommands(call);
             if (localCommands.contains(call.getName())) {
                 holder.createInfoAnnotation(call, String.format("%s is available as local command", call.getName()));
+
+                // check if final statement:
+                if (call.isCommandCall() && getCallName(call).equals("DONE") || getCallName(call).equals("CANCEL")) {
+                    ScriptUtil.annotateFinalStatement(call, holder);
+                }
                 return;
             }
 
@@ -224,6 +230,7 @@ public class MemberUtil {
                 holder.createErrorAnnotation(call.getNameIdentifier(), e.getMessage());
             }
         }
+
     }
 
     private static void validateSignature(@NotNull OMTCall call, @NotNull OMTCallable callable, @NotNull AnnotationHolder holder) {
