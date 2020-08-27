@@ -8,47 +8,40 @@
     "attributes": {
       "title": {
         "type": "interpolatedString",
-        "node": "scalar",
-        "required": false
+        "node": "scalar"
       },
       "description": {
         "type": "interpolatedString",
-        "node": "scalar",
-        "required": false
+        "node": "scalar"
       },
       "promoteSubMenuItemToMainMenu": {
         "type": "boolean",
-        "node": "scalar",
-        "default": false
+        "node": "scalar"
       },
       "icon": {
         "type": "string",
-        "node": "scalar",
-        "required": false
+        "node": "scalar"
       },
       "params": {
-        "node": "sequence",
-        "required": true
+        "node": "sequence"
       },
       "precondition": {
-        "node": "scalar",
-        "required": false
+        "node": "scalar"
       },
       "disabled": {
-        "node": "scalar",
-        "required": false
+        "node": "scalar"
       },
       "busy": {
-        "node": "boolean",
-        "default": false
+        "node": "boolean"
       },
       "busyDisabled": {
-        "node": "boolean",
-        "default": false
+        "node": "boolean"
       },
       "dynamicActionQuery": {
-        "node": "scalar",
-        "required": false
+        "node": "scalar"
+      },
+      "onSelect": {
+        "node": "scalar"
       }
     }
   },
@@ -57,13 +50,11 @@
     "attributes": {
       "title": {
         "type": "interpolatedString",
-        "node": "scalar",
-        "required": false
+        "node": "scalar"
       },
       "icon": {
         "type": "string",
-        "node": "scalar",
-        "required": false
+        "node": "scalar"
       },
       "params": {
         "node": "sequence",
@@ -76,28 +67,23 @@
     "attributes": {
       "notifications": {
         "type": "ActionDef",
-        "node": "sequence",
-        "required": true
+        "node": "sequence"
       },
       "bottomNavigation": {
         "type": "ActionDef",
-        "node": "sequence",
-        "required": true
+        "node": "sequence"
       },
       "dashboardActions": {
         "type": "ActionDef",
-        "node": "sequence",
-        "required": true
+        "node": "sequence"
       },
       "dossier": {
         "type": "DossierActionDef",
-        "node": "sequence",
-        "required": true
+        "node": "sequence"
       },
       "fixed": {
         "type": "ActionDef",
-        "node": "sequence",
-        "required": true
+        "node": "sequence"
       }
     }
   }

@@ -2,12 +2,10 @@
   "name": "GraphSelection",
   "attributes": {
     "live": {
-      "node": "sequence",
-      "required": true
+      "node": "sequence"
     },
     "edit": {
-      "node": "sequence",
-      "required": true
+      "node": "sequence"
     }
   }
 }

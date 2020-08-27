@@ -1,8 +1,10 @@
 package com.misset.opp.omt.psi;
 
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFileFactory;
+import com.intellij.psi.PsiParserFacade;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTFileType;
 import com.misset.opp.omt.psi.util.CurieUtil;
@@ -126,4 +128,30 @@ public class OMTElementFactory {
 
     }
 
+    public static OMTBlock addEntryToBlock(Project project, OMTBlock block, String propertyLabel, Document document) {
+        return addEntryToBlock(project, block, propertyLabel, "DUMMYVALUE");
+    }
+
+    public static OMTBlock addEntryToBlock(Project project, OMTBlock block, String propertyLabel, String propertyValue) {
+        String blockText = String.format("%s: %s", propertyLabel, propertyValue);
+        OMTFile file = createFile(project, blockText);
+        PsiElement blockEntry = PsiTreeUtil.findChildOfType(file, OMTBlockEntry.class);
+        if (blockEntry == null) {
+            return block;
+        }
+        blockEntry.add(getWhiteSpace(project, 1, "\n"));
+
+        if (block.getDedentToken() != null) {
+            block.addBefore(blockEntry, block.getDedentToken());
+        } else {
+            block.add(blockEntry);
+        }
+
+        return block;
+    }
+
+    private static PsiElement getWhiteSpace(Project project, int length, String character) {
+        String spaces = new String(new char[length]).replace("\0", character);
+        return PsiParserFacade.SERVICE.getInstance(project).createWhiteSpaceFromText(spaces);
+    }
 }
