@@ -1,5 +1,6 @@
 package com.misset.opp.omt;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
@@ -31,12 +32,10 @@ public class OMTCompletionContributor extends CompletionContributor {
                     protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                         PsiElement atPosition = parameters.getPosition();
                         result.getPrefixMatcher();
-                        if (isPropertyLabelSuggestion(atPosition)) {
+                        if (isPropertyLabelSuggestion(atPosition) || isSequenceItem(atPosition)) {
                             addCompletionsForModelTreeAttributes(atPosition, result);
                         }
-                        if (isInCommandBlock(atPosition)) {
-                            addCompletionsForScript(atPosition, result);
-                        }
+                        addCompletionsForScript(atPosition, result);
                     }
                 });
     }
@@ -47,15 +46,19 @@ public class OMTCompletionContributor extends CompletionContributor {
         // find the PsiElement containing the carrot:
 
         if (elementAt instanceof OMTBlock) {
-            context.setDummyIdentifier(DUMMY_PROPERTY_VALUE);
+            context.setDummyIdentifier(DUMMY_PROPERTY_VALUE + " " + DUMMY_SCALAR_VALUE);
             return;
         }
         if (elementAt instanceof OMTBlockEntry) {
-            context.setDummyIdentifier(DUMMY_PROPERTY_VALUE);
+            context.setDummyIdentifier(DUMMY_PROPERTY_VALUE + " " + DUMMY_SCALAR_VALUE);
             return;
         }
         if (elementAt instanceof OMTCommandBlock) {
             context.setDummyIdentifier(DUMMY_STATEMENT);
+            return;
+        }
+        if (elementAt instanceof OMTFile) {
+            context.setDummyIdentifier(DUMMY_PROPERTY_VALUE + " " + DUMMY_SCALAR_VALUE);
             return;
         }
 
@@ -67,7 +70,7 @@ public class OMTCompletionContributor extends CompletionContributor {
 
         if (isInQueryPath(elementAtPosition)) {
             BuiltInUtil.getBuiltInOperatorsAsSuggestions().forEach(suggestion -> resultSet.addElement(LookupElementBuilder.create(suggestion)));
-        } else {
+        } else if (isInCommandBlock(elementAtPosition)) {
             List<String> localCommands = ModelUtil.getLocalCommands(elementAtPosition);
             localCommands.forEach(localCommand -> resultSet.addElement(LookupElementBuilder.create("@" + localCommand + "()")));
 
@@ -78,14 +81,23 @@ public class OMTCompletionContributor extends CompletionContributor {
 
     private void addCompletionsForModelTreeAttributes(PsiElement elementAtPosition, CompletionResultSet resultSet) {
         OMTBlockEntry blockEntry = (OMTBlockEntry) PsiTreeUtil.findFirstParent(elementAtPosition, parent -> parent instanceof OMTBlockEntry);
-        boolean isDummyProperty = blockEntry.getPropertyLabel().getText().equals(DUMMY_PROPERTY_VALUE);
+        boolean isDummyProperty =
+                blockEntry != null && blockEntry.getPropertyLabel() != null &&
+                        blockEntry.getPropertyLabel().getText().equals(DUMMY_PROPERTY_VALUE);
 
         JsonObject json = ModelUtil.getJson(isDummyProperty ? blockEntry.getParent() : elementAtPosition);
 
-        if (json != null && json.has("attributes")) {
-            JsonObject attributes = json.getAsJsonObject("attributes");
-            attributes.keySet().forEach(attribute ->
-                    resultSet.addElement(LookupElementBuilder.create(attribute + ":")));
+        if (json != null) {
+            if (json.has("attributes")) {
+                JsonObject attributes = json.getAsJsonObject("attributes");
+                attributes.keySet().forEach(attribute ->
+                        resultSet.addElement(LookupElementBuilder.create(attribute + ":")));
+            }
+            if (json.has("variables")) {
+                JsonArray variables = json.getAsJsonArray("variables");
+                variables.forEach(variable ->
+                        resultSet.addElement(LookupElementBuilder.create(variable.getAsString())));
+            }
         }
     }
 
@@ -100,6 +112,10 @@ public class OMTCompletionContributor extends CompletionContributor {
         return element.getParent() instanceof OMTBlockEntry ||
                 element.getParent() instanceof OMTPropertyLabel ||
                 element.getParent() instanceof OMTBlock;
+    }
+
+    private boolean isSequenceItem(PsiElement element) {
+        return PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTSequenceItem) != null;
     }
 
     private boolean isInCommandBlock(PsiElement element) {

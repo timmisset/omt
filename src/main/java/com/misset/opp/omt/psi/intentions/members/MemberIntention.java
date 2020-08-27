@@ -50,7 +50,7 @@ public class MemberIntention {
 
             @Override
             public @NotNull @Nls(capitalization = Nls.Capitalization.Sentence) String getFamilyName() {
-                return "import";
+                return "Import";
             }
 
             @Override

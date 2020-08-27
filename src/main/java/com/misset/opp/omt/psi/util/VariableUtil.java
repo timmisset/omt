@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
+import com.google.gson.JsonObject;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -295,6 +296,14 @@ public class VariableUtil {
                     builtInMember.getLocalVariables().forEach(
                             variable -> localVariables.put(variable, builtInMember.getName())
                     );
+                }
+            }
+            JsonObject attributes = ModelUtil.getJson(element);
+            if (attributes != null && !attributes.keySet().isEmpty()) {
+                if (attributes.has("variables")) {
+                    attributes.get("variables").getAsJsonArray().forEach(variable -> {
+                        localVariables.put(variable.getAsString(), attributes.get("name").getAsString());
+                    });
                 }
             }
             element = element.getParent();
