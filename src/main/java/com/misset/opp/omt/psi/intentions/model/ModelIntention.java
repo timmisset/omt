@@ -40,8 +40,8 @@ public class ModelIntention {
             @Override
             public void invoke(@NotNull Project project, Editor editor, PsiFile file) {
                 OMTBlock omtBlock = propertyValue == null ?
-                        OMTElementFactory.addEntryToBlock(project, block, propertyLabel, editor.getDocument()) :
-                        OMTElementFactory.addEntryToBlock(project, block, propertyLabel, propertyValue, editor.getDocument());
+                        OMTElementFactory.addEntryToBlock(project, block, propertyLabel) :
+                        OMTElementFactory.addEntryToBlock(project, block, propertyLabel, propertyValue);
                 block.replace(omtBlock);
             }
 

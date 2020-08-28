@@ -31,6 +31,7 @@
         <lang.findUsagesProvider language="OMT"
                                  implementationClass="com.misset.opp.omt.psi.usages.NamespacePrefixFindUsageProvider"/>
         <postStartupActivity implementation="com.misset.opp.omt.OMTStartupActivity"/>
+        <lang.commenter language="OMT" implementationClass="com.misset.opp.omt.OMTCommenter"/>
     </extensions>
 
     <actions>

@@ -1,6 +1,5 @@
 package com.misset.opp.omt.psi;
 
-import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFileFactory;
@@ -128,7 +127,7 @@ public class OMTElementFactory {
 
     }
 
-    public static OMTBlock addEntryToBlock(Project project, OMTBlock block, String propertyLabel, Document document) {
+    public static OMTBlock addEntryToBlock(Project project, OMTBlock block, String propertyLabel) {
         return addEntryToBlock(project, block, propertyLabel, "DUMMYVALUE");
     }
 
