@@ -37,7 +37,9 @@ sequence ::=                                trailing? sequenceItem+
 sequenceItem ::=                            leading? SEQUENCE_BULLET (scalarValue | block)
 
 // SPECIFIC BLOCKS
-specificBlock ::=                          importBlock | exportBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock | moduleBlock
+specificBlock ::=                          importBlock | exportBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock | moduleBlock {
+                                                    methods=[getName]
+                                                }
 
 // sequences
 exportBlock ::=                             EXPORT_START trailing? memberList?
