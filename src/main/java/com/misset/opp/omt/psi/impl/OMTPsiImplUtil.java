@@ -142,4 +142,26 @@ public class OMTPsiImplUtil {
                 propertyLabelText.substring(0, propertyLabelText.length() - 1) :
                 propertyLabelText;
     }
+
+    public static String getName(OMTSpecificBlock specificBlock) {
+        if (specificBlock.getCommandsBlock() != null) {
+            return "commands";
+        }
+        if (specificBlock.getExportBlock() != null) {
+            return "export";
+        }
+        if (specificBlock.getImportBlock() != null) {
+            return "import";
+        }
+        if (specificBlock.getModelBlock() != null) {
+            return "model";
+        }
+        if (specificBlock.getPrefixBlock() != null) {
+            return "prefixes";
+        }
+        if (specificBlock.getQueriesBlock() != null) {
+            return "queries";
+        }
+        return "unknown";
+    }
 }
