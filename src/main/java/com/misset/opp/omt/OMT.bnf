@@ -185,7 +185,7 @@ flagSignature ::=                           FLAG
 logicalBlock ::=                            ifBlock commandBlock trailing? (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
 ifBlock ::=                                 IF_OPERATOR (queryPath | (PARENTHESES_OPEN queryPath PARENTHESES_CLOSE))
 elseBlock ::=                               ELSE_OPERATOR commandBlock
-returnStatement ::=                         RETURN_OPERATOR queryPath?
+returnStatement ::=                         RETURN_OPERATOR (queryPath | commandCall)?
 chooseBlock ::=                             CHOOSE_OPERATOR trailing?
                                                 leading? (WHEN_OPERATOR queryPath LAMBDA queryPath)+
                                                 leading? (OTHERWISE_OPERATOR LAMBDA queryPath)?
