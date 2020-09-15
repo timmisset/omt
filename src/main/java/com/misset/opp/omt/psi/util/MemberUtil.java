@@ -149,26 +149,44 @@ public class MemberUtil {
         PsiElement element = call.getParent();
         List<OMTDefinedBlock> processedBlocks = new ArrayList<>();
         while (element != null) {
-            if (element instanceof OMTDefinedBlock) {
-                Optional<OMTDefinedStatement> definedStatement = ((OMTDefinedBlock) element).getStatements().stream()
-                        .filter(defineQueryStatement -> defineQueryStatement.getDefineName().textMatches(call.getFirstChild().getText()))
-                        .findFirst();
-                if (definedStatement.isPresent()) {
-                    return definedStatement.get();
-                }
-                processedBlocks.add((OMTDefinedBlock) element);
-            }
             element = element.getParent();
             if (element instanceof PsiJavaDirectoryImpl) {
                 return null;
             }
             if (element != null) {
-                OMTQueriesBlock childOfType = PsiTreeUtil.findChildOfType(element, OMTQueriesBlock.class);
-                if (childOfType != null && !processedBlocks.contains(childOfType)) {
-                    element = childOfType;
+                if (call.isOperatorCall()) {
+                    OMTQueriesBlock omtQueriesBlock = PsiTreeUtil.findChildOfType(element, OMTQueriesBlock.class);
+                    if (omtQueriesBlock != null && !processedBlocks.contains(omtQueriesBlock)) {
+                        OMTDefinedStatement omtDefinedStatement = processBlock(omtQueriesBlock, call, processedBlocks);
+                        if (omtDefinedStatement != null) {
+                            return omtDefinedStatement;
+                        }
+                    }
                 }
-            }
+                if (call.isCommandCall()) {
+                    OMTCommandsBlock omtCommandsBlock = PsiTreeUtil.findChildOfType(element, OMTCommandsBlock.class);
+                    if (omtCommandsBlock != null && !processedBlocks.contains(omtCommandsBlock)) {
+                        OMTDefinedStatement omtDefinedStatement = processBlock(omtCommandsBlock, call, processedBlocks);
+                        if (omtDefinedStatement != null) {
+                            return omtDefinedStatement;
+                        }
+                    }
+                }
 
+            }
+        }
+        return null;
+    }
+
+    private static OMTDefinedStatement processBlock(PsiElement block, OMTCall call, List<OMTDefinedBlock> processedBlocks) {
+        if (block instanceof OMTDefinedBlock) {
+            Optional<OMTDefinedStatement> definedStatement = ((OMTDefinedBlock) block).getStatements().stream()
+                    .filter(defineStatement -> defineStatement.getDefineName().textMatches(getCallName(call)))
+                    .findFirst();
+            if (definedStatement.isPresent()) {
+                return definedStatement.get();
+            }
+            processedBlocks.add((OMTDefinedBlock) block);
         }
         return null;
     }
