@@ -24,11 +24,11 @@ indentToken ::=                             INDENT | INDENT2
 dedentToken ::=                             DEDENT | DEDENT2
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
 block ::=                                   leading? (blockEntry+ | (indentToken blockEntry+ dedentToken)) trailing?
-blockEntry ::=                              specificBlock | (propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken)))
+blockEntry ::=                              leading? specificBlock | (leading? propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken)))
 propertyLabel ::=                           PROPERTY { methods=[getPropertyLabelName]}
 
 // a scalar single statement (multiline optional) following a property label
-scalar ::=                                  scalarValue
+scalar ::=                                  comment? scalarValue
 scalarValue ::=                             start (parameterWithType | variableAssignment | block | queryPath | script) end
 
 // a sequence must start with a newline followed by items, lead by their bullet (-)

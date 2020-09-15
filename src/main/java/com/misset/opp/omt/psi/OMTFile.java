@@ -38,7 +38,8 @@ public class OMTFile extends PsiFileBase {
         if (rootBlock == null) {
             return Optional.empty();
         }
-        return rootBlock.getBlockEntryList().stream()
+        List<OMTBlockEntry> blockEntryList = rootBlock.getBlockEntryList();
+        return blockEntryList.stream()
                 .filter(blockEntry -> ModelUtil.getEntryBlockLabel(blockEntry).startsWith(name))
                 .findFirst();
     }

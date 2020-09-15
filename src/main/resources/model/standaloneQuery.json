@@ -16,8 +16,7 @@
       "required": false
     },
     "prefixes": {
-      "node": "map",
-      "required": true
+      "node": "map"
     },
     "query": {
       "type": "scalar",

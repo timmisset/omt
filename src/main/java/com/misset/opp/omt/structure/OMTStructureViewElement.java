@@ -67,7 +67,10 @@ public class OMTStructureViewElement implements StructureViewTreeElement, Sortab
                 OMTSpecificBlock specificBlock = blockEntry.getSpecificBlock();
                 presentationData.setPresentableText(specificBlock.getName());
             } else {
-                presentationData.setPresentableText(blockEntry.getPropertyLabel().getPropertyLabelName());
+                OMTPropertyLabel propertyLabel = blockEntry.getPropertyLabel();
+                if (propertyLabel != null) {
+                    presentationData.setPresentableText(propertyLabel.getPropertyLabelName());
+                }
             }
         }
         if (myElement instanceof OMTModelItemBlock) {
