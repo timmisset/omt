@@ -230,6 +230,15 @@ public class ModelUtil {
         JsonObject member = getAttributes(modelItemLabel);
 
         List<String> commands = new ArrayList<>();
+        List<OMTModelItemBlock> modelItemBlocks = PsiTreeUtil.getChildrenOfTypeAsList(modelItemBlock.getParent(), OMTModelItemBlock.class);
+        modelItemBlocks.forEach(omtModelItemBlock ->
+        {
+            String type = omtModelItemBlock.getModelItemLabel().getModelItemTypeElement().getText();
+            if (type.equalsIgnoreCase("!ontology")) {
+                commands.add("LOAD_ONTOLOGY");
+            }
+        });
+
         while (member != null) {
             if (member.has("localCommands")) {
                 JsonArray localCommands = member.getAsJsonArray("localCommands");
@@ -289,5 +298,10 @@ public class ModelUtil {
             return attributes;
         }
         return new JsonObject();
+    }
+
+    public static boolean isOntology(PsiElement element) {
+        return element instanceof OMTModelItemBlock &&
+                ((OMTModelItemBlock) element).getModelItemLabel().getModelItemTypeElement().getText().equalsIgnoreCase("!ontology");
     }
 }

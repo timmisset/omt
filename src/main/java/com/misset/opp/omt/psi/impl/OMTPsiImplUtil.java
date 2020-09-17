@@ -133,7 +133,7 @@ public class OMTPsiImplUtil {
     }
 
     public static int numberOfParameters(OMTSignature signature) {
-        return signature.getCommandBlockList().size() + signature.getQueryPathList().size();
+        return signature.getCommandBlockList().size() + signature.getQueryPathList().size() + signature.getCommandCallList().size() + signature.getOperatorCallList().size();
     }
 
     public static String getPropertyLabelName(OMTPropertyLabel propertyLabel) {

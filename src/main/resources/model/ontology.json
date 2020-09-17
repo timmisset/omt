@@ -20,9 +20,12 @@
   {
     "name": "OntologyClass",
     "attributes": {
+      "id": {
+        "type": "string",
+        "required": true
+      },
       "properties": {
-        "type": "OntologyPropertyDef",
-        "node": "map",
+        "mapOf": "OntologyPropertyDef",
         "required": true
       }
     }
