@@ -2,7 +2,7 @@ package com.misset.opp.omt.psi.util;
 
 import com.google.gson.JsonObject;
 import com.intellij.codeInsight.intention.IntentionAction;
-import com.intellij.lang.annotation.Annotation;
+import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -58,6 +58,12 @@ public class MemberUtil {
         HashMap<String, OMTExportMember> currentFileMembers = currentFile.getExportedMembers();
         if (currentFileMembers.containsKey(callName)) {
             return Optional.of(currentFileMembers.get(callName).getResolvingElement());
+        }
+
+        // or of locally available ontology declarations:
+        HashMap<String, OMTModelItemBlock> declaredOntologies = currentFile.getDeclaredOntologies();
+        if (declaredOntologies.containsKey(callName)) {
+            return Optional.of(declaredOntologies.get(callName));
         }
 
         // not found as a member of a defined block, check for imports:
@@ -192,6 +198,9 @@ public class MemberUtil {
     }
 
     public static void annotateCall(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {
+        if (call.getNameIdentifier() == null || call.getReference() == null) {
+            return;
+        }
         PsiElement resolved = call.getReference().resolve();
 
         if (resolved == null) {
@@ -199,16 +208,18 @@ public class MemberUtil {
             BuiltInMember builtInMember = BuiltInUtil.getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
             if (builtInMember != null) {
                 // is a builtIn member, annotate:
-                holder.createAnnotation(HighlightSeverity.INFORMATION, call.getNameIdentifier().getTextRange(), builtInMember.shortDescription(), builtInMember.htmlDescription());
+                holder.newAnnotation(HighlightSeverity.INFORMATION, builtInMember.shortDescription())
+                        .range(call.getNameIdentifier().getTextRange())
+                        .tooltip(builtInMember.htmlDescription())
+                        .create();
                 validateSignature(call, builtInMember, holder);
-
                 return;
             }
 
             // check if local command:
             List<String> localCommands = ModelUtil.getLocalCommands(call);
             if (localCommands.contains(call.getName())) {
-                holder.createInfoAnnotation(call, String.format("%s is available as local command", call.getName()));
+                holder.newAnnotation(HighlightSeverity.INFORMATION, String.format("%s is available as local command", call.getName())).range(call).create();
 
                 // check if final statement:
                 if (call.isCommandCall() && getCallName(call).equals("DONE") || getCallName(call).equals("CANCEL")) {
@@ -219,19 +230,26 @@ public class MemberUtil {
 
             // check attribute type:
             JsonObject json = ModelUtil.getJson(call);
-            if (json.has("type") &&
+            if (json != null && json.has("type") &&
                     (json.get("type").getAsString().equals("interpolatedString") ||
                             json.get("type").getAsString().equals("string"))) {
                 return;
             }
+            // check shortcut:
+            if (json != null && json.has("shortcut")) {
+                return;
+            }
 
             // unknown, annotate with error:
-            Annotation errorAnnotation = holder.createErrorAnnotation(call.getNameIdentifier(), String.format("%s could not be resolved", call.getName()));
+            AnnotationBuilder annotationBuilder = holder.newAnnotation(HighlightSeverity.ERROR, String.format("%s could not be resolved", call.getName()))
+                    .range(call.getNameIdentifier());
+
             List<IntentionAction> intentionActionList = MemberIntention.getImportMemberIntentions(call, omtExportMember ->
                     (omtExportMember.isCommand() && call.canCallCommand()) ||
                             (omtExportMember.isOperator() && call.canCallOperator())
             );
-            intentionActionList.forEach(errorAnnotation::registerFix);
+            intentionActionList.forEach(annotationBuilder::newFix);
+            annotationBuilder.create();
         } else {
             // callable is found as reference. Since the reference can be resolved to a PsiElement
             // the callable element is part of the project code, not a built-in or local command
@@ -239,13 +257,18 @@ public class MemberUtil {
             try {
                 OMTExportMember asExportMember = memberToExportMember(resolved);
                 if (asExportMember == null) {
+                    if (ModelUtil.isOntology(resolved)) {
+                        return;
+                    }
                     throw new Exception("Could not resolve callable element to exported member, this is a bug");
                 }
-                holder.createAnnotation(HighlightSeverity.INFORMATION, call.getNameIdentifier().getTextRange(),
-                        asExportMember.shortDescription(), asExportMember.htmlDescription());
+                holder.newAnnotation(HighlightSeverity.INFORMATION, asExportMember.shortDescription())
+                        .range(call.getNameIdentifier().getTextRange())
+                        .tooltip(asExportMember.htmlDescription())
+                        .create();
                 validateSignature(call, asExportMember, holder);
             } catch (Exception e) {
-                holder.createErrorAnnotation(call.getNameIdentifier(), e.getMessage());
+                holder.newAnnotation(HighlightSeverity.ERROR, e.getMessage()).range(call.getNameIdentifier()).create();
             }
         }
 
@@ -259,7 +282,7 @@ public class MemberUtil {
             if (attributes.has("namedReference") && attributes.get("namedReference").getAsBoolean()) {
                 return;
             }
-            holder.createErrorAnnotation(call, e.getMessage());
+            holder.newAnnotation(HighlightSeverity.ERROR, e.getMessage()).range(call).create();
         }
     }
 

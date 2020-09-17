@@ -107,6 +107,22 @@ public class OMTFile extends PsiFileBase {
         updateExportMembers();
     }
 
+    public HashMap<String, OMTModelItemBlock> getDeclaredOntologies() {
+        Optional<OMTModelBlock> model = getSpecificBlock("model", OMTModelBlock.class);
+        HashMap<String, OMTModelItemBlock> ontologies = new HashMap<>();
+        model.ifPresent(omtModelBlock -> omtModelBlock.getModelItemBlockList()
+                .forEach(omtModelItemBlock -> {
+                    String modelItemType = omtModelItemBlock.getModelItemLabel().getModelItemTypeElement().getText();
+                    if (modelItemType.equalsIgnoreCase("!ontology")) {
+                        String name = omtModelItemBlock.getModelItemLabel().getName();
+                        name = name.endsWith(":") ? name.substring(0, name.length() - 1) : name;
+                        ontologies.put(name, omtModelItemBlock);
+                    }
+                })
+        );
+        return ontologies;
+    }
+
     private void updateExportMembers() {
         HashMap<String, OMTExportMember> exported = new HashMap<>();
         // commands
