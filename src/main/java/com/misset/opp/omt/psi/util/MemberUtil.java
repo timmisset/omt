@@ -214,6 +214,11 @@ public class MemberUtil {
                         .create();
                 validateSignature(call, builtInMember, holder);
                 return;
+            } else {
+                // check if the builtIn members are loaded:
+                if (!BuiltInUtil.hasLoaded()) {
+                    ProjectUtil.loadBuiltInMembers(call.getProject());
+                }
             }
 
             // check if local command:

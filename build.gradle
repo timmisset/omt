@@ -37,6 +37,6 @@ patchPluginXml {
 }
 tasks{
     runIde {
-        jvmArgs("-Xmx4000m")
+        jvmArgs("-Xmx2000m")
     }
 }

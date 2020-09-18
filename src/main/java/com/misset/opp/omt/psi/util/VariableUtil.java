@@ -285,6 +285,7 @@ public class VariableUtil {
      * @return
      */
     public static HashMap<String, String> getLocalVariables(@NotNull PsiElement element) {
+        PsiElement originalElement = element;
         HashMap<String, String> localVariables = new HashMap<>();
         while (element.getParent() != null && !(element instanceof PsiFile)) {
             // from builtIn members
@@ -319,15 +320,6 @@ public class VariableUtil {
         if (lookWith.getParent() instanceof OMTParameterWithType) {
             lookWith = variable.getParent();
         }
-        // check if part of a structured definition instead of the shortcut
-//        OMTDictionaryEntry asDicationaryEntry = (OMTDictionaryEntry) PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTDictionaryEntry);
-//        if (asDicationaryEntry != null) {
-//            if (asDicationaryEntry.getDictionaryKeyPart().getText().equals("name:")) {
-//                if (partOfBlockEntryLevel(asDicationaryEntry, "variables") || partOfBlockEntryLevel(asDicationaryEntry, "params")) {
-//                    return true;
-//                }
-//            }
-//        }
         // check if direct parent is the VAR ... statement.
         if (lookWith.getParent() instanceof OMTDeclareVariable) {
             return true;

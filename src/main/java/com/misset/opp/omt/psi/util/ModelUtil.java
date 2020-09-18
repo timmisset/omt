@@ -43,10 +43,18 @@ public class ModelUtil {
         }
 
         final String finalPropertyLabel = propertyLabel.endsWith(":") ? propertyLabel : propertyLabel + ":";
-        return modelItemBlock.getBlock().getBlockEntryList().stream()
+        OMTBlock block = modelItemBlock.getBlock();
+        return block == null ? Optional.empty() : block.getBlockEntryList().stream()
                 .filter(omtBlockEntry ->
-                        omtBlockEntry.getPropertyLabel().getText().equals(finalPropertyLabel))
+                        getPropertyLabelText(omtBlockEntry).equals(finalPropertyLabel))
                 .findFirst();
+    }
+
+    public static String getPropertyLabelText(OMTBlockEntry omtBlockEntry) {
+        if (omtBlockEntry == null || omtBlockEntry.getPropertyLabel() == null) {
+            return null;
+        }
+        return omtBlockEntry.getPropertyLabel().getText();
     }
 
     public static List<OMTBlockEntry> getConnectedEntries(PsiElement element, List<String> labels) {
@@ -84,12 +92,15 @@ public class ModelUtil {
      * @return
      */
     public static String getModelItemEntryLabel(PsiElement element) {
-        return getEntryBlockLabel(PsiTreeUtil.getTopmostParentOfType(element, OMTBlockEntry.class));
+        List<OMTBlockEntry> blockEntries = PsiTreeUtil.collectParents(element, OMTBlockEntry.class, false, parent -> parent instanceof OMTModelBlock);
+        OMTBlockEntry omtBlockEntry = blockEntries.get(blockEntries.size() - 1);
+
+        return omtBlockEntry.getPropertyLabel() != null ? omtBlockEntry.getPropertyLabel().getPropertyLabelName() : "";
     }
 
     public static String getEntryBlockLabel(OMTBlockEntry omtBlockEntry) {
         if (omtBlockEntry == null) {
-            return null;
+            return "";
         }
         String label = getEntryBlockLabelElement(omtBlockEntry).getText();
         return label.endsWith(":") ? label.substring(0, label.length() - 1) : label;
@@ -126,6 +137,9 @@ public class ModelUtil {
     public static void annotateModelItem(OMTModelItemTypeElement type, AnnotationHolder holder) {
         OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) type.getParent().getParent();
         OMTBlock block = modelItemBlock.getBlock();
+        if (block == null) {
+            return;
+        }
 
         JsonObject jsonObject = getAttributes(type.getText().substring(1));
         if (jsonObject.keySet().isEmpty()) {
