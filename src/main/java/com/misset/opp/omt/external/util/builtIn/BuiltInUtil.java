@@ -81,6 +81,10 @@ public class BuiltInUtil {
         builtInMembers.clear();
     }
 
+    public static boolean hasLoaded() {
+        return !builtInMembers.isEmpty();
+    }
+
     public static void reloadBuiltInFromDocument(Document document, BuiltInType type) {
         JsonObject items = BuiltInUtil.parseBuiltIn(document.getText(), type);
         items.keySet().forEach(name -> {
