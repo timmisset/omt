@@ -14,8 +14,8 @@ class ProjectUtilTest {
     void loadModelAttributes() throws IOException {
 
 
-        ProjectUtil.loadModelAttributes();
-        JsonObject parsedModel = ProjectUtil.getParsedModel();
+        ProjectUtil.SINGLETON.loadModelAttributes();
+        JsonObject parsedModel = ProjectUtil.SINGLETON.getParsedModel();
         Set<String> keySet = parsedModel.keySet();
 
         assertTrue(keySet.contains("Action"));

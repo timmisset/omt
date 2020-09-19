@@ -22,6 +22,8 @@ public abstract class OMTCallableImpl implements OMTCallable {
     private boolean isCommand;
     private List<String> localVariables = new ArrayList<>();
 
+    final ModelUtil modelUtil = ModelUtil.SINGLETON;
+
     public OMTCallableImpl(String type, boolean isCommand) {
         this.type = type;
         this.isCommand = isCommand;
@@ -95,7 +97,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
     }
 
     void setParametersFromModelItem(OMTModelItemBlock block) {
-        Optional<OMTBlockEntry> params = ModelUtil.getModelItemBlockEntry(block, "params");
+        Optional<OMTBlockEntry> params = modelUtil.getModelItemBlockEntry(block, "params");
         params.ifPresent(omtBlockEntry -> omtBlockEntry
                 .getSequence()
                 .getSequenceItemList()

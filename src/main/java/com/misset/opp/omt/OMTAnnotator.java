@@ -18,6 +18,9 @@ import org.jetbrains.annotations.NotNull;
 
 
 public class OMTAnnotator implements Annotator {
+
+    final ModelUtil modelUtil = ModelUtil.SINGLETON;
+
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
         if (element instanceof OMTVariable) {
@@ -36,7 +39,7 @@ public class OMTAnnotator implements Annotator {
             MemberUtil.annotateCall((OMTOperatorCall) element, holder);
         }
         if (element instanceof OMTModelItemTypeElement) {
-            ModelUtil.annotateModelItem((OMTModelItemTypeElement) element, holder);
+            modelUtil.annotateModelItem((OMTModelItemTypeElement) element, holder);
         }
         if (element instanceof OMTReturnStatement) {
             ScriptUtil.annotateFinalStatement(element, holder);

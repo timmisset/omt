@@ -10,26 +10,21 @@
   "attributes": {
     "params": {
       "type": "ParamDef",
-      "node": "sequence",
-      "default": []
+      "node": "sequence"
     },
     "variables": {
       "type": "VariableDef",
-      "node": "sequence",
-      "default": []
+      "node": "sequence"
     },
     "graphs": {
       "type": "GraphSelectionDef",
-      "node": "map",
-      "required": false
+      "node": "map"
     },
     "prefixes": {
-      "node": "map",
-      "required": true
+      "node": "map"
     },
     "onRun": {
-      "node": "scalar",
-      "required": false
+      "node": "scalar"
     }
   }
 }

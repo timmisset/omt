@@ -22,6 +22,8 @@ public class OMTFile extends PsiFileBase {
         super(viewProvider, OMTLanguage.INSTANCE);
     }
 
+    final ModelUtil modelUtil = ModelUtil.SINGLETON;
+
     @NotNull
     @Override
     public FileType getFileType() {
@@ -40,7 +42,7 @@ public class OMTFile extends PsiFileBase {
         }
         List<OMTBlockEntry> blockEntryList = rootBlock.getBlockEntryList();
         return blockEntryList.stream()
-                .filter(blockEntry -> ModelUtil.getEntryBlockLabel(blockEntry).startsWith(name))
+                .filter(blockEntry -> modelUtil.getEntryBlockLabel(blockEntry).startsWith(name))
                 .findFirst();
     }
 

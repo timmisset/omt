@@ -1,8 +1,8 @@
 {
-  "name": "StandAloneQuery",
+  "name": "StandaloneQuery",
   "attributes": {
     "base": {
-      "node": "string",
+      "type": "string",
       "required": false
     },
     "params": {
@@ -16,7 +16,10 @@
       "required": false
     },
     "prefixes": {
-      "node": "map",
+      "node": "map"
+    },
+    "query": {
+      "type": "scalar",
       "required": true
     }
   }

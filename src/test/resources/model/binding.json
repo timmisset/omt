@@ -4,9 +4,7 @@
     "regEx": {
       "pattern": "^\\s*(\\$\\w+)\\s*(?:\\(\\s*(sync|input|output)\\s*\\))?$",
       "assignTo": [
-        {
-          "bindTo": "$value"
-        },
+        "bindTo",
         {
           "output": true,
           "condition": "output"

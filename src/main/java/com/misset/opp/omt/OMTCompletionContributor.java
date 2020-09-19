@@ -22,6 +22,8 @@ public class OMTCompletionContributor extends CompletionContributor {
     private static String DUMMY_PROPERTY_VALUE = "DUMMYPROPERTYVALUE:";
     private static String DUMMY_STATEMENT = "@DUMMYSTATEMENT();";
 
+    final ModelUtil modelUtil = ModelUtil.SINGLETON;
+
     public OMTCompletionContributor() {
         /**
          * Generic completion that resolves the suggestion based on the cursor position
@@ -71,7 +73,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         if (isInQueryPath(elementAtPosition)) {
             BuiltInUtil.getBuiltInOperatorsAsSuggestions().forEach(suggestion -> resultSet.addElement(LookupElementBuilder.create(suggestion)));
         } else if (isInCommandBlock(elementAtPosition)) {
-            List<String> localCommands = ModelUtil.getLocalCommands(elementAtPosition);
+            List<String> localCommands = modelUtil.getLocalCommands(elementAtPosition);
             localCommands.forEach(localCommand -> resultSet.addElement(LookupElementBuilder.create("@" + localCommand + "()")));
 
             BuiltInUtil.getBuiltInCommandsAsSuggestions().forEach(suggestion -> resultSet.addElement(LookupElementBuilder.create(suggestion)));
@@ -85,7 +87,7 @@ public class OMTCompletionContributor extends CompletionContributor {
                 blockEntry != null && blockEntry.getPropertyLabel() != null &&
                         blockEntry.getPropertyLabel().getText().equals(DUMMY_PROPERTY_VALUE);
 
-        JsonObject json = ModelUtil.getJson(isDummyProperty ? blockEntry.getParent() : elementAtPosition);
+        JsonObject json = modelUtil.getJson(isDummyProperty ? blockEntry.getParent() : elementAtPosition);
 
         if (json != null) {
             if (json.has("attributes")) {

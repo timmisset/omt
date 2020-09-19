@@ -17,7 +17,6 @@ import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 
-import java.io.IOException;
 import java.util.*;
 
 import static util.Helper.getResources;
@@ -29,10 +28,12 @@ public class ProjectUtil {
     private static final HashMap<String, ArrayList<OMTExportMember>> exportingMembers = new HashMap<>();
     private static final JsonObject parsedModel = new JsonObject();
 
+    public static final ProjectUtil SINGLETON = new ProjectUtil();
+
     /**
      * Tries to load all built-in commands and operators that can be retrieved from the BuiltInUtil
      */
-    public static void loadBuiltInMembers(Project project) {
+    public void loadBuiltInMembers(Project project) {
         BuiltInUtil.reset();
         WindowManager.getInstance().getStatusBar(project).setInfo("Loading BuiltIn Members of OMT");
         Collection<VirtualFile> builtInCommandsCollection = FilenameIndex.getVirtualFilesByName(project, "builtinCommands.ts", GlobalSearchScope.projectScope(project));
@@ -61,7 +62,8 @@ public class ProjectUtil {
             WindowManager.getInstance().getStatusBar(project).setInfo("Could not find file builtinOperators.ts in project, number found is = " + builtInOperatorsCollection.size());
         }
     }
-    public static void registerPrefixes(OMTFile file) {
+
+    public void registerPrefixes(OMTFile file) {
         file.getPrefixes().forEach((namespacePrefix, omtPrefix) -> {
             ArrayList<OMTPrefix> prefixes = knownPrefixes.getOrDefault(namespacePrefix, new ArrayList<>());
             prefixes.add(omtPrefix);
@@ -69,7 +71,7 @@ public class ProjectUtil {
         });
     }
 
-    public static void registerExports(OMTFile file) {
+    public void registerExports(OMTFile file) {
         file.getExportedMembers().forEach(
                 (key, omtExportMember) -> {
                     ArrayList<OMTExportMember> members = exportingMembers.getOrDefault(key, new ArrayList<>());
@@ -79,7 +81,7 @@ public class ProjectUtil {
         );
     }
 
-    public static void analyzeFile(OMTFile file) {
+    public void analyzeFile(OMTFile file) {
         try {
             System.out.print("Analyzing file: " + file.getVirtualFile().getPath());
             registerExports(file);
@@ -94,7 +96,7 @@ public class ProjectUtil {
     /**
      * Load the model (attributes) from the json files
      */
-    public static void loadModelAttributes() throws IOException {
+    public void loadModelAttributes() {
 
         java.util.List<String> allModelFiles = Arrays.asList(
                 "action.json", "activity.json", "binding.json", "component.json", "graphSelection.json", "model.json",
@@ -104,16 +106,17 @@ public class ProjectUtil {
         List<String> files = getResources(allModelFiles, "model");
 
         for (String content : files) {
-            JsonElement jsonElement = new JsonParser().parse(content);
+
+            JsonElement jsonElement = JsonParser.parseString(content);
             if (jsonElement.isJsonArray()) {
-                ((JsonArray) jsonElement).forEach(ProjectUtil::addToJsonModel);
+                ((JsonArray) jsonElement).forEach(this::addToJsonModel);
             } else {
                 addToJsonModel(jsonElement);
             }
         }
     }
 
-    private static void addToJsonModel(JsonElement jsonElement) {
+    private void addToJsonModel(JsonElement jsonElement) {
         JsonObject asObject = (JsonObject) jsonElement;
         if (asObject.has("name")) {
             parsedModel.add(asObject.get("name").getAsString(), asObject);
@@ -122,7 +125,7 @@ public class ProjectUtil {
         }
     }
 
-    public static JsonObject getParsedModel() {
+    public JsonObject getParsedModel() {
         return parsedModel;
     }
 }
