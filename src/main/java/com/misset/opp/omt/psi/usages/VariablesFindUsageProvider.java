@@ -1,13 +1,16 @@
 package com.misset.opp.omt.psi.usages;
 
-import com.intellij.lang.cacheBuilder.*;
+import com.intellij.lang.cacheBuilder.DefaultWordsScanner;
+import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.tree.TokenSet;
 import com.misset.opp.omt.OMTLexerAdapter;
 import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.OMTVariable;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class VariablesFindUsageProvider implements FindUsagesProvider {
     @Nullable
@@ -44,7 +47,7 @@ public class VariablesFindUsageProvider implements FindUsagesProvider {
     @Override
     public String getDescriptiveName(@NotNull PsiElement element) {
         if (element instanceof OMTVariable) {
-            return ((OMTVariable) element).getText();
+            return element.getText();
         } else {
             return "";
         }

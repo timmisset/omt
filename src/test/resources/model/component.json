@@ -16,65 +16,51 @@
   "attributes": {
     "title": {
       "type": "interpolatedString",
-      "node": "scalar",
-      "required": false
+      "node": "scalar"
     },
     "autonomous": {
       "type": "boolean",
       "node": "sequence",
-      "default": false,
-      "required": true
+      "default": false
     },
     "bindings": {
-      "type": "BindingDef",
-      "node": "sequence",
-      "required": true
+      "mapOf": "BindingDef"
     },
     "variables": {
       "type": "VariableDef",
-      "node": "sequence",
-      "required": true
+      "node": "sequence"
     },
     "graphs": {
       "type": "GraphSelectionDef",
-      "node": "map",
-      "required": false
+      "node": "map"
     },
     "watchers": {
       "type": "QueryWatcherDef",
-      "node": "sequence",
-      "required": false
+      "node": "sequence"
     },
     "payload": {
       "type": "PayloadDef",
-      "node": "map",
-      "required": true
+      "node": "map"
     },
     "rules": {
       "type": "RulesMap",
-      "node": "map",
-      "required": true
+      "node": "map"
     },
     "prefixes": {
-      "node": "map",
-      "required": true
+      "node": "map"
     },
     "queries": {
-      "node": "scalar",
-      "required": false
+      "node": "scalar"
     },
     "commands": {
-      "node": "scalar",
-      "required": false
+      "node": "scalar"
     },
     "onInit": {
-      "node": "scalar",
-      "required": false
+      "node": "scalar"
     },
     "actions": {
       "type": "ActionDef",
-      "node": "map",
-      "required": true
+      "node": "map"
     }
   }
 }

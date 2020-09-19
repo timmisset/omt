@@ -16,6 +16,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class VariableUtil {
+
+    static final ModelUtil modelUtil = ModelUtil.SINGLETON;
+
     public static boolean isVariableAssignment(OMTVariable variable) {
         return variable.getParent() instanceof OMTVariableAssignment;
     }
@@ -60,7 +63,7 @@ public class VariableUtil {
     public static boolean isPartOfModel(OMTVariable variableInstance) {
         return PsiTreeUtil.getTopmostParentOfType(variableInstance, OMTScript.class) == null &&
                 PsiTreeUtil.getTopmostParentOfType(variableInstance, OMTQueryPath.class) != null &&
-                ModelUtil.getModelItemBlock(variableInstance).isPresent();
+                modelUtil.getModelItemBlock(variableInstance).isPresent();
     }
     public static boolean isVariableAssignmentValueUsed(OMTVariableValue variableAssignmentValue) {
         // first check if the assignmentvalue is part of script or listitem
@@ -85,7 +88,7 @@ public class VariableUtil {
     public static boolean isVariableAssignmentValueUsedInModel(OMTVariableValue variableAssignmentValue) {
         OMTVariable variable = getVariable((OMTVariableAssignment) variableAssignmentValue.getParent());
         // variable can be used somewhere else in the model:
-        Optional<OMTModelItemBlock> optionalOMTBlock = ModelUtil.getModelItemBlock(variableAssignmentValue);
+        Optional<OMTModelItemBlock> optionalOMTBlock = modelUtil.getModelItemBlock(variableAssignmentValue);
         if(optionalOMTBlock.isPresent()) {
             OMTModelItemBlock modelItemBlock = optionalOMTBlock.get();
             // get the variable usages
@@ -151,7 +154,7 @@ public class VariableUtil {
         ));
 
         // in the model item
-        Optional<OMTModelItemBlock> modelItem = ModelUtil.getModelItemBlock(omtVariable);
+        Optional<OMTModelItemBlock> modelItem = modelUtil.getModelItemBlock(omtVariable);
         modelItem.ifPresent(omtBlock -> variables.addAll(
                 PsiTreeUtil.findChildrenOfType(omtBlock, OMTVariable.class).stream()
                         .filter(variable -> variable.getText().equals(omtVariable.getText()) && !variable.isDeclaredVariable())
@@ -227,7 +230,7 @@ public class VariableUtil {
      * @return
      */
     public static List<OMTVariable> getBlockEntryDeclaredVariables(PsiElement element) {
-        List<OMTBlockEntry> connectedEntries = ModelUtil.getConnectedEntries(element, Arrays.asList("params", "variables", "bindings", "base"));
+        List<OMTBlockEntry> connectedEntries = modelUtil.getConnectedEntries(element, Arrays.asList("params", "variables", "bindings", "base"));
         List<OMTVariable> variables = new ArrayList<>();
         connectedEntries.forEach(omtBlockEntry -> variables.addAll(
                 PsiTreeUtil.findChildrenOfType(omtBlockEntry, OMTVariable.class).stream()
@@ -238,7 +241,7 @@ public class VariableUtil {
     }
 
     public static List<OMTVariable> getModelItemEntryVariables(PsiElement element, String propertyLabel) {
-        Optional<OMTBlockEntry> modelItemBlockEntry = ModelUtil.getModelItemBlockEntry(element, propertyLabel);
+        Optional<OMTBlockEntry> modelItemBlockEntry = modelUtil.getModelItemBlockEntry(element, propertyLabel);
 
         if (modelItemBlockEntry.isPresent()) {
             Collection<OMTVariable> modelItemEntryVariables = PsiTreeUtil.findChildrenOfType(modelItemBlockEntry.get(), OMTVariable.class);
@@ -299,7 +302,7 @@ public class VariableUtil {
                     );
                 }
             }
-            JsonObject attributes = ModelUtil.getJson(element);
+            JsonObject attributes = modelUtil.getJson(element);
             if (attributes != null && !attributes.keySet().isEmpty()) {
                 if (attributes.has("variables")) {
                     attributes.get("variables").getAsJsonArray().forEach(variable -> {
@@ -349,12 +352,12 @@ public class VariableUtil {
     }
 
     private static boolean partOfBlockEntryLevel(PsiElement element, String entryLevelLabel) {
-        String blockEntryLabel = ModelUtil.getEntryBlockLabel(element);
+        String blockEntryLabel = modelUtil.getEntryBlockLabel(element);
         return blockEntryLabel != null && blockEntryLabel.equals(entryLevelLabel);
     }
 
     private static boolean partOfModelItemEntryLevel(PsiElement element, String entryLevelLabel) {
-        String blockEntryLabel = ModelUtil.getModelItemEntryLabel(element);
+        String blockEntryLabel = modelUtil.getModelItemEntryLabel(element);
         return blockEntryLabel != null && blockEntryLabel.equals(entryLevelLabel);
     }
 }

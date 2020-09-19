@@ -3,7 +3,6 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.OMTVariable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;

@@ -2,9 +2,11 @@ package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTCurieElement;
+import com.misset.opp.omt.psi.OMTNamespacePrefix;
+import com.misset.opp.omt.psi.OMTParameterType;
+import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.util.CurieUtil;
-import com.misset.opp.omt.psi.util.VariableUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

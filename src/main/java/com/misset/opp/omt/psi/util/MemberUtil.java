@@ -32,6 +32,10 @@ import java.util.List;
 import java.util.Optional;
 
 public class MemberUtil {
+
+    static final ModelUtil modelUtil = ModelUtil.SINGLETON;
+    static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+
     /**
      * Returns the PsiElement which contains the declaration for this call
      * This can be a DefineStatement somewhere upstream or an import statement
@@ -217,12 +221,12 @@ public class MemberUtil {
             } else {
                 // check if the builtIn members are loaded:
                 if (!BuiltInUtil.hasLoaded()) {
-                    ProjectUtil.loadBuiltInMembers(call.getProject());
+                    projectUtil.loadBuiltInMembers(call.getProject());
                 }
             }
 
             // check if local command:
-            List<String> localCommands = ModelUtil.getLocalCommands(call);
+            List<String> localCommands = modelUtil.getLocalCommands(call);
             if (localCommands.contains(call.getName())) {
                 holder.newAnnotation(HighlightSeverity.INFORMATION, String.format("%s is available as local command", call.getName())).range(call).create();
 
@@ -234,7 +238,7 @@ public class MemberUtil {
             }
 
             // check attribute type:
-            JsonObject json = ModelUtil.getJson(call);
+            JsonObject json = modelUtil.getJson(call);
             if (json != null && json.has("type") &&
                     (json.get("type").getAsString().equals("interpolatedString") ||
                             json.get("type").getAsString().equals("string"))) {
@@ -262,7 +266,7 @@ public class MemberUtil {
             try {
                 OMTExportMember asExportMember = memberToExportMember(resolved);
                 if (asExportMember == null) {
-                    if (ModelUtil.isOntology(resolved)) {
+                    if (modelUtil.isOntology(resolved)) {
                         return;
                     }
                     throw new Exception("Could not resolve callable element to exported member, this is a bug");
@@ -283,7 +287,7 @@ public class MemberUtil {
         try {
             callable.validateSignature(call);
         } catch (NumberOfInputParametersMismatchException | CallCallableMismatchException e) {
-            JsonObject attributes = ModelUtil.getJson(call);
+            JsonObject attributes = modelUtil.getJson(call);
             if (attributes.has("namedReference") && attributes.get("namedReference").getAsBoolean()) {
                 return;
             }
@@ -302,7 +306,7 @@ public class MemberUtil {
      */
     public static PsiElement getContainingElement(PsiElement resolvedToElement) {
         if (resolvedToElement instanceof OMTPropertyLabel) {
-            Optional<OMTModelItemBlock> modelItemBlock = ModelUtil.getModelItemBlock(resolvedToElement);
+            Optional<OMTModelItemBlock> modelItemBlock = modelUtil.getModelItemBlock(resolvedToElement);
             if (modelItemBlock.isPresent()) {
                 return modelItemBlock.get();
             }
