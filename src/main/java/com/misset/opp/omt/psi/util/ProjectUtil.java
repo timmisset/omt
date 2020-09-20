@@ -126,6 +126,9 @@ public class ProjectUtil {
     }
 
     public JsonObject getParsedModel() {
+        if (parsedModel.size() == 0) {
+            loadModelAttributes();
+        }
         return parsedModel;
     }
 }
