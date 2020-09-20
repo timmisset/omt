@@ -2,7 +2,7 @@ package com.misset.opp.omt.psi.util;//package com.misset.opp.omt.domain.util;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.intellij.lang.annotation.Annotation;
+import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
@@ -11,10 +11,8 @@ import com.misset.opp.omt.psi.intentions.model.ModelIntention;
 import com.misset.opp.omt.wrappers.PsiTreeUtil;
 import com.sun.istack.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class ModelUtil {
@@ -107,22 +105,8 @@ public class ModelUtil {
      * @return myPayloadParameter
      */
     public String getEntryBlockLabel(PsiElement element) {
-        return getEntryBlockLabel(
-                (OMTBlockEntry) psiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTBlockEntry)
-        );
-    }
-
-    /**
-     * Returns the label of the block entry
-     *
-     * @param omtBlockEntry
-     * @return
-     */
-    public String getEntryBlockLabel(OMTBlockEntry omtBlockEntry) {
-        if (omtBlockEntry == null) {
-            return "";
-        }
-        String label = getEntryBlockLabelElement(omtBlockEntry).getText();
+        PsiElement labelElement = getEntryBlockLabelElement(element);
+        String label = labelElement.getText();
         return label.endsWith(":") ? label.substring(0, label.length() - 1) : label;
     }
 
@@ -132,19 +116,27 @@ public class ModelUtil {
                 omtBlockEntry.getPropertyLabel();
     }
 
-    private PsiElement getEntryBlockLabelElement(OMTModelItemBlock omtModelItemBlock) {
+    private OMTModelItemLabel getEntryBlockLabelElement(OMTModelItemBlock omtModelItemBlock) {
         return omtModelItemBlock.getModelItemLabel();
     }
 
     private PsiElement getEntryBlockLabelElement(PsiElement element) {
         if (element instanceof OMTModelItemBlock) {
-            return getEntryBlockLabelElement((OMTModelItemBlock) element);
+            return getEntryBlockLabelElement((OMTModelItemBlock) element).getPropertyLabel();
         }
         if (element instanceof OMTBlockEntry) {
             return getEntryBlockLabelElement((OMTBlockEntry) element);
         }
         if (element instanceof OMTSequenceItem) {
             return element;
+        }
+        if (element instanceof OMTBlock) {
+            return getEntryBlockLabelElement(psiTreeUtil.findFirstParent(element,
+                    parent -> parent instanceof OMTBlockEntry
+                            ||
+                            parent instanceof OMTModelItemBlock
+            ));
+
         }
         return null;
     }
@@ -167,112 +159,132 @@ public class ModelUtil {
     }
 
     private JsonObject getAttributes(String memberName) {
-        boolean hasMember = projectUtil.getParsedModel().has(memberName);
-        return hasMember ? (JsonObject) projectUtil.getParsedModel().get(memberName) : new JsonObject();
+        JsonObject parsedModel = projectUtil.getParsedModel();
+        boolean hasMember = parsedModel.has(memberName);
+        return hasMember ? (JsonObject) parsedModel.get(memberName) : new JsonObject();
     }
 
-    public void annotateModelItem(OMTModelItemTypeElement type, AnnotationHolder holder) {
-        OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) type.getParent().getParent();
+    public void annotateModelItem(OMTModelItemBlock modelItemBlock, AnnotationHolder holder) {
         OMTBlock block = modelItemBlock.getBlock();
         if (block == null) {
             return;
         }
-
+        OMTModelItemTypeElement type = modelItemBlock.getModelItemLabel().getModelItemTypeElement();
         String modelItemType = getModelItemType(type);
         JsonObject jsonObject = getAttributes(modelItemType);
         if (jsonObject.keySet().isEmpty()) {
-            holder.newAnnotation(HighlightSeverity.ERROR,
-                    String.format("Unknown model type: %s", type.getText()))
-                    .range(type)
-                    .create();
+            AnnotationBuilder annotationBuilder = holder.newAnnotation(HighlightSeverity.ERROR,
+                    String.format("Unknown model type: %s", type.getText()));
+            annotationBuilder.range(type);
+            annotationBuilder.create();
         } else {
             JsonObject attributes = jsonObject.getAsJsonObject(ATTRIBUTESKEY);
-            annotateModelTree(type.getText(), attributes, block, block.getBlockEntryList(), holder);
+            annotateModelTree(attributes, block, block.getBlockEntryList(), holder);
         }
     }
 
-    private void annotateModelTree(String parent, JsonObject attributes, OMTBlock block, List<OMTBlockEntry> entryList, AnnotationHolder holder) {
+    private void annotateMissingEntries(JsonObject attributes, OMTBlock block, AnnotationHolder holder) {
+        List<String> entryLabels = block.getBlockEntryList().stream().map(this::getEntryBlockLabel).collect(Collectors.toList());
+        List<String> missingElements = attributes.entrySet().stream()
+                .filter(entry ->
+                        entry.getValue().getAsJsonObject().has("required") &&
+                                entry.getValue().getAsJsonObject().get("required").getAsBoolean() &&
+                                !entryLabels.contains(entry.getKey()))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
 
-        attributes = attributes.has(ATTRIBUTESKEY) ? attributes.getAsJsonObject(ATTRIBUTESKEY) : attributes;
+        if (!missingElements.isEmpty()) {
+            holder.newAnnotation(HighlightSeverity.ERROR,
+                    String.format("%s is missing attribute(s): \n%s",
+                            getEntryBlockLabel(block),
+                            String.join(", ", missingElements)))
+                    .range(getEntryBlockLabelElement(block))
+                    .create();
+        }
+    }
 
-        Set<String> keys = attributes.keySet();
-        List<String> entryLabels = new ArrayList<>();
-        for (OMTBlockEntry omtBlockEntry : entryList) {
-            String label = getEntryBlockLabel(omtBlockEntry);
-            entryLabels.add(label);
-            if (!keys.contains(label)) {
-                Annotation errorAnnotation = holder.createErrorAnnotation(getEntryBlockLabelElement(omtBlockEntry),
-                        String.format("%s is not a known attribute for %s", label, parent));
-                errorAnnotation.registerFix(ModelIntention.getRemoveBlockEntryIntention(omtBlockEntry, "Remove"));
+    private void annotateSequenceItem(OMTBlockEntry omtBlockEntry, JsonObject attributes, AnnotationHolder holder) {
+        // process as sequence:
+        for (OMTSequenceItem sequenceItem : omtBlockEntry.getSequence().getSequenceItemList()) {
+            if (sequenceItem.getBlock() != null) {
+                // sequence item consisting of a block (map) structure
+                annotateModelTree(attributes, sequenceItem.getBlock(), sequenceItem.getBlock().getBlockEntryList(), holder);
             } else {
-                JsonObject attributeDetails = attributes.getAsJsonObject(label);
-                if (attributeDetails.has("type")) {
-                    String type = attributeDetails.get("type").getAsString();
-                    if (type.endsWith("Def")) {
-                        type = type.substring(0, type.length() - 3);
-                    }
-
-                    JsonObject typeAttributes = getAttributes(type);
-                    if (typeAttributes != null &&
-                            !typeAttributes.keySet().isEmpty()) {
-                        if (omtBlockEntry.getSequence() != null) {
-                            // process as sequence:
-                            for (OMTSequenceItem sequenceItem : omtBlockEntry.getSequence().getSequenceItemList()) {
-                                if (sequenceItem.getBlock() != null) {
-                                    // sequence item consisting of a block (map) structure
-                                    annotateModelTree(type, typeAttributes, sequenceItem.getBlock(), sequenceItem.getBlock().getBlockEntryList(), holder);
-                                } else {
-                                    if (typeAttributes.has("shortcut")) {
-                                        // usage of a shortcut, lowest level of the tree, process here
-                                        JsonObject shortcut = typeAttributes.get("shortcut").getAsJsonObject();
-                                        if (shortcut != null) {
-                                            String asString = shortcut.getAsJsonObject("regEx").get("pattern").getAsString();
-                                        }
-                                    }
-                                }
-                            }
-                        } else if (omtBlockEntry.getBlock() != null) {
-                            if (typeAttributes.has(ATTRIBUTESKEY)) {
-                                // process the block:
-                                annotateModelTree(type, typeAttributes.getAsJsonObject(ATTRIBUTESKEY), omtBlockEntry.getBlock(), omtBlockEntry.getBlock().getBlockEntryList(), holder);
-                            }
-                            if (typeAttributes.has(MAPOFKEY)) {
-                                // process all entry using the mapOf
-                                String mappingType = typeAttributes.get(MAPOFKEY).getAsString();
-                                if (mappingType.endsWith("Def")) {
-                                    mappingType = mappingType.substring(0, mappingType.length() - 3);
-                                }
-                                typeAttributes = getAttributes(mappingType);
-                                for (OMTBlockEntry entryListItem : omtBlockEntry.getBlock().getBlockEntryList()) {
-                                    if (entryListItem.getBlock() != null) {
-                                        annotateModelTree(type, typeAttributes.getAsJsonObject(ATTRIBUTESKEY), omtBlockEntry.getBlock(), entryListItem.getBlock().getBlockEntryList(), holder);
-                                    }
-                                }
-                            }
-                        }
+                if (attributes.has("shortcut")) {
+                    // usage of a shortcut, lowest level of the tree, process here
+                    JsonObject shortcut = attributes.get("shortcut").getAsJsonObject();
+                    if (shortcut != null) {
+                        String asString = shortcut.getAsJsonObject("regEx").get("pattern").getAsString();
                     }
                 }
             }
         }
+    }
 
-        List<String> missingAttributes = new ArrayList<>();
-        attributes.entrySet().forEach(stringJsonElementEntry -> {
-            JsonObject value = stringJsonElementEntry.getValue().getAsJsonObject();
-            if (value.has("required") &&
-                    value.get("required").getAsBoolean() &&
-                    !entryLabels.contains(stringJsonElementEntry.getKey())
-            ) {
-                missingAttributes.add(stringJsonElementEntry.getKey());
+    private void annotateBlockItem(OMTBlockEntry omtBlockEntry, JsonObject attributes, AnnotationHolder holder) {
+        if (attributes.has(ATTRIBUTESKEY)) {
+            // process the block:
+            annotateModelTree(attributes.getAsJsonObject(ATTRIBUTESKEY), omtBlockEntry.getBlock(), omtBlockEntry.getBlock().getBlockEntryList(), holder);
+        }
+        if (attributes.has(MAPOFKEY)) {
+            // process all entry using the mapOf
+            String mappingType = attributes.get(MAPOFKEY).getAsString();
+            if (mappingType.endsWith("Def")) {
+                mappingType = mappingType.substring(0, mappingType.length() - 3);
             }
-        });
-        if (!missingAttributes.isEmpty()) {
-            // missing required attribute
-            Annotation errorAnnotation = holder.createErrorAnnotation(getEntryBlockLabelElement(block.getParent()),
-                    String.format("%s is missing attribute(s) %s", parent, String.join(", ", missingAttributes)));
-            for (String attribute : missingAttributes) {
-                errorAnnotation.registerFix(ModelIntention.addBlockEntryIntention(block, attribute, "Add " + attribute));
+            attributes = getAttributes(mappingType);
+            for (OMTBlockEntry entryListItem : omtBlockEntry.getBlock().getBlockEntryList()) {
+                if (entryListItem.getBlock() != null) {
+                    annotateModelTree(attributes.getAsJsonObject(ATTRIBUTESKEY), omtBlockEntry.getBlock(), entryListItem.getBlock().getBlockEntryList(), holder);
+                }
             }
         }
+    }
+
+    private String getEntryType(JsonObject entry) {
+        // get the type definition for the block entry
+        String type = entry.get("type").getAsString();
+        if (type.endsWith("Def")) {
+            type = type.substring(0, type.length() - 3);
+        }
+        return type;
+    }
+
+    private void annotateEntry(JsonObject entry, OMTBlockEntry omtBlockEntry, AnnotationHolder holder) {
+        JsonObject typeAttributes = getAttributes(getEntryType(entry));
+        if (typeAttributes != null &&
+                !typeAttributes.keySet().isEmpty()) {
+            if (omtBlockEntry.getSequence() != null) {
+                annotateSequenceItem(omtBlockEntry, typeAttributes, holder);
+            } else if (omtBlockEntry.getBlock() != null) {
+                annotateBlockItem(omtBlockEntry, typeAttributes, holder);
+            }
+        }
+    }
+
+    private void annotateModelTree(JsonObject object, OMTBlock block, List<OMTBlockEntry> entryList, AnnotationHolder holder) {
+        JsonObject attributes = object.has(ATTRIBUTESKEY) ? object.getAsJsonObject(ATTRIBUTESKEY) : object;
+        Set<String> keys = attributes.keySet();
+        for (OMTBlockEntry omtBlockEntry : entryList) {
+            String label = getEntryBlockLabel(omtBlockEntry);
+            String entryBlockLabelText = getEntryBlockLabel(block);
+            PsiElement targetLabel = getEntryBlockLabelElement(omtBlockEntry);
+
+            if (!keys.contains(label)) {
+                String errorMessage = String.format("%s is not a known attribute for %s",
+                        label, entryBlockLabelText);
+                holder.newAnnotation(HighlightSeverity.ERROR, errorMessage)
+                        .range(targetLabel)
+                        .withFix(ModelIntention.getRemoveBlockEntryIntention(omtBlockEntry, "Remove"))
+                        .create();
+            } else {
+                JsonObject entry = attributes.getAsJsonObject(label);
+                if (entry.has("type")) {
+                    annotateEntry(entry, omtBlockEntry, holder);
+                }
+            }
+        }
+        annotateMissingEntries(attributes, block, holder);
     }
 
     public List<String> getLocalCommands(PsiElement element) {

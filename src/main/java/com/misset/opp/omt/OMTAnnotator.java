@@ -38,8 +38,8 @@ public class OMTAnnotator implements Annotator {
         if (element instanceof OMTOperatorCall) {
             MemberUtil.annotateCall((OMTOperatorCall) element, holder);
         }
-        if (element instanceof OMTModelItemTypeElement) {
-            modelUtil.annotateModelItem((OMTModelItemTypeElement) element, holder);
+        if (element instanceof OMTModelItemBlock) {
+            modelUtil.annotateModelItem((OMTModelItemBlock) element, holder);
         }
         if (element instanceof OMTReturnStatement) {
             ScriptUtil.annotateFinalStatement(element, holder);

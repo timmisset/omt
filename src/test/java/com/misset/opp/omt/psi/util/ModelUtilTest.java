@@ -1,6 +1,8 @@
 package com.misset.opp.omt.psi.util;
 
+import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.wrappers.PsiTreeUtil;
@@ -44,6 +46,8 @@ class ModelUtilTest {
     OMTPropertyLabel omtPropertyLabel_params;
     @Mock
     AnnotationHolder annotationHolder;
+    @Mock
+    AnnotationBuilder annotationBuilder;
 
     List<OMTBlockEntry> blockEntryList = new ArrayList<>();
 
@@ -65,6 +69,7 @@ class ModelUtilTest {
         doReturn(modelItemLabel).when(modelItemTypeElement).getParent();
 
         doReturn(MODELITEMTYPE).when(modelItemTypeElement).getText();
+        doReturn(modelItemBlock).when(psiTreeUtil).getTopmostParentOfType(eq(modelItemTypeElement), eq(OMTModelItemBlock.class));
         doReturn(modelItemBlock).when(psiTreeUtil).getTopmostParentOfType(eq(modelItemLabel), eq(OMTModelItemBlock.class));
         doReturn(modelItemBlock).when(psiTreeUtil).getTopmostParentOfType(eq(element), eq(OMTModelItemBlock.class));
 
@@ -203,8 +208,25 @@ class ModelUtilTest {
 
     @Test
     void annotateModelItem_ErrorWhenModelItemTypeIsUnknown() {
+        doReturn("!NotKnown").when(modelItemTypeElement).getText();
+        doReturn(annotationBuilder).when(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
+        doReturn(annotationBuilder).when(annotationBuilder).range(eq(modelItemLabel));
+        doNothing().when(annotationBuilder).create();
+
         modelUtil.annotateModelItem(modelItemTypeElement, annotationHolder);
-        verify(modelItemBlock, times(1)).getBlock();
+        verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("Unknown model type: !NotKnown"));
+        verify(annotationBuilder, times(1)).create();
+    }
+
+    @Test
+    void annotateModelItem_AnnotateActivity() {
+        doReturn(annotationBuilder).when(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
+        doReturn(annotationBuilder).when(annotationBuilder).range(eq(modelItemLabel));
+        doNothing().when(annotationBuilder).create();
+
+        modelUtil.annotateModelItem(modelItemTypeElement, annotationHolder);
+        verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("Unknown model type: !NotKnown"));
+        verify(annotationBuilder, times(1)).create();
     }
 
     @Test
