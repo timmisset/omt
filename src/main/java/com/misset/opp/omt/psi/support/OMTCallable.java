@@ -18,6 +18,8 @@ public interface OMTCallable {
 
     List<String> getLocalVariables();
 
+    void setHTMLDescription(String description);
+
     void validateSignature(OMTCall call) throws NumberOfInputParametersMismatchException, CallCallableMismatchException;
 
     boolean isOperator();
