@@ -1,46 +1,23 @@
 package com.misset.opp.omt;
 
-import com.intellij.lang.ASTNode;
-import com.intellij.lang.ParserDefinition;
-import com.intellij.lang.PsiBuilder;
-import com.intellij.lang.PsiBuilderFactory;
 import com.intellij.lexer.Lexer;
 import com.intellij.lexer.LexerPosition;
-import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiManager;
 import com.intellij.psi.tree.IElementType;
-import com.intellij.testFramework.LightJavaCodeInsightTestCase;
-import org.intellij.sdk.language.parser.OMTParser;
+import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 
 import java.io.IOException;
 
-public class OMTParserTest {
+public class OMTParserTest extends LightJavaCodeInsightFixtureTestCase {
 
-    @Test
-    public void test() {
-        String content = "import:\n" +
-                "    '@client/medewerker/src/utils/lidmaatschap.queries.omt':\n" +
-                "        -   currentLidmaatschap\n" +
-                "    '../utils/koppel-dossier-resource.command.omt':\n" +
-                "        -   koppelDossierResource\n";
+    private static String demoFile = "import:\n" +
+            "    ../utils/persoon.toon.queries.omt:\n" +
+            "    -   kernregisterPrioriteit\n" +
+            "\n";
 
-        Lexer lexer = getLexer();
-        ParserDefinition definition = new OMTParserDefinition();
-
-        PsiBuilder builder = PsiBuilderFactory.getInstance().createBuilder(definition, lexer, content);
-        ASTNode treeBuilt = builder.getTreeBuilt();
-
-
-        System.out.println(treeBuilt);
-    }
-
-
-    private Lexer getLexer() {
+    private static Lexer getLexer() {
         return new Lexer() {
             private OMTLexer lexer = new OMTLexer(null);
             private CharSequence buffer;
@@ -104,7 +81,8 @@ public class OMTParserTest {
             }
 
             @Override
-            public @NotNull CharSequence getBufferSequence() {
+            public @NotNull
+            CharSequence getBufferSequence() {
                 return buffer;
             }
 
@@ -113,5 +91,11 @@ public class OMTParserTest {
                 return buffer.length();
             }
         };
+    }
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setName("Test");
+        super.setUp();
     }
 }

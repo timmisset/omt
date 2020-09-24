@@ -10,18 +10,25 @@ import com.misset.opp.omt.psi.util.CurieUtil;
 //import com.misset.opp.omt.domain.util.CurieUtil;
 
 public class OMTElementFactory {
+    private static final CurieUtil curieUtil = CurieUtil.SINGLETON;
+
     private final static String defaultBlock = "prefixes:\n" +
             "\n";
+
     public static OMTPrefix createPrefix(String leftHand, String rightHand, Project project) {
-        if(!leftHand.endsWith(":")) { leftHand += ":"; }
-        if(rightHand != null) { rightHand = "<http://enter.your/iri/>"; }
+        if (!leftHand.endsWith(":")) {
+            leftHand += ":";
+        }
+        if (rightHand != null) {
+            rightHand = "<http://enter.your/iri/>";
+        }
 
         OMTFile file = createFile(project, String.format("prefixes:\n" +
                 "    %s %s\n" +
                 "\n" +
                 "queries:", leftHand, rightHand));
 
-        OMTPrefixBlock prefixBlock = CurieUtil.getPrefixBlock(file);
+        OMTPrefixBlock prefixBlock = curieUtil.getPrefixBlock(file);
         return prefixBlock.getPrefixList().get(0);
     }
 
@@ -50,7 +57,7 @@ public class OMTElementFactory {
     public static OMTPrefixBlock createPrefixBlock(Project project) {
         OMTFile file = createFile(project, defaultBlock);
 
-        return CurieUtil.getPrefixBlock(file);
+        return curieUtil.getPrefixBlock(file);
     }
 
     private static OMTFile createFile(Project project, String text) {

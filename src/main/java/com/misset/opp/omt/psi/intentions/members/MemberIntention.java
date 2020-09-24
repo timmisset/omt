@@ -12,6 +12,7 @@ import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTImport;
 import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTExportMember;
+import com.misset.opp.omt.psi.util.MemberUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,9 +22,10 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.psi.util.MemberUtil.getCallName;
-
 public class MemberIntention {
+
+    private static MemberUtil memberUtil = MemberUtil.SINGLETON;
+
     public static List<IntentionAction> getImportMemberIntentions(OMTCall call, Predicate<OMTExportMember> isCorrectType) {
         OMTFile containingFile = (OMTFile) call.getContainingFile();
         return containingFile.getImportedFiles().entrySet().stream()
@@ -31,7 +33,7 @@ public class MemberIntention {
                     OMTFile importedFile = (OMTFile) PsiManager.getInstance(call.getProject())
                             .findFile(omtImportVirtualFileEntry.getValue());
                     HashMap<String, OMTExportMember> exportedMembers = importedFile.getExportedMembers();
-                    OMTExportMember omtExportMember = exportedMembers.get(getCallName(call));
+                    OMTExportMember omtExportMember = exportedMembers.get(memberUtil.getCallName(call));
                     if (omtExportMember != null && isCorrectType.test(omtExportMember)) {
                         return getImportIntentionFromExistingImportedFile(omtExportMember, omtImportVirtualFileEntry.getValue(), omtImportVirtualFileEntry.getKey());
                     }

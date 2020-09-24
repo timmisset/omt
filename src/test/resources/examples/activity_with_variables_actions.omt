@@ -1,0 +1,15 @@
+model:
+    MijnActiviteit: !Activity
+        title: Mijn Activiteit
+
+        variables:
+        -   $variableA
+        -   $variableB
+
+        actions:
+            mijnActie:
+                onSelect: |
+                    @LOG($variableA);
+
+
+

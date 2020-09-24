@@ -18,6 +18,7 @@ public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement imp
         super(node);
     }
 
+    protected static MemberUtil memberUtil = MemberUtil.SINGLETON;
 
     private PsiElement getPsi() {
         return getNode().getPsi();
@@ -27,7 +28,7 @@ public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement imp
 
     private NamedMemberType getType() {
         if (type == null) {
-            type = MemberUtil.getNamedMemberType(getPsi());
+            type = memberUtil.getNamedMemberType(getPsi());
         }
         return type;
     }

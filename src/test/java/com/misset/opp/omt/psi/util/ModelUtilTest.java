@@ -1,243 +1,279 @@
 package com.misset.opp.omt.psi.util;
 
+import com.google.gson.JsonObject;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
+import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.wrappers.PsiTreeUtil;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-class ModelUtilTest {
+class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
-    final String MODELITEMTYPE = "!Activity";
-
-    @Mock
-    PsiTreeUtil psiTreeUtil;
-
-    @Mock
-    PsiElement element;
-    @Mock
-    OMTModelItemBlock modelItemBlock;
-    @Mock
-    OMTBlock block;
-    @Mock
-    OMTModelItemLabel modelItemLabel;
-    @Mock
-    OMTModelItemTypeElement modelItemTypeElement;
-    @Mock
-    OMTBlockEntry omtBlockEntry_variables;
-    @Mock
-    OMTPropertyLabel omtPropertyLabel_variables;
-    @Mock
-    OMTBlockEntry omtBlockEntry_params;
-    @Mock
-    OMTPropertyLabel omtPropertyLabel_params;
     @Mock
     AnnotationHolder annotationHolder;
     @Mock
     AnnotationBuilder annotationBuilder;
 
-    List<OMTBlockEntry> blockEntryList = new ArrayList<>();
+    OMTModelItemBlock activity;
+    OMTImportBlock importBlock;
+    OMTVariable variable;
 
     @InjectMocks
     ModelUtil modelUtil;
 
+    PsiElement rootBlock;
+
+    private ExampleFiles exampleFiles;
+
     @BeforeEach
-    void setUp() {
+    void setUpSuite() throws Exception {
+        super.setName("ModelUtilTest");
+        super.setUp();
+        exampleFiles = new ExampleFiles(this);
         MockitoAnnotations.initMocks(this);
 
-        // model item block with label
-        doReturn(modelItemLabel).when(modelItemBlock).getModelItemLabel();
-        doReturn(modelItemBlock).when(modelItemLabel).getParent();
-        doReturn(block).when(modelItemBlock).getBlock();
-        doReturn(modelItemBlock).when(block).getParent();
-
-        // model item label with type element
-        doReturn(modelItemTypeElement).when(modelItemLabel).getModelItemTypeElement();
-        doReturn(modelItemLabel).when(modelItemTypeElement).getParent();
-
-        doReturn(MODELITEMTYPE).when(modelItemTypeElement).getText();
-        doReturn(modelItemBlock).when(psiTreeUtil).getTopmostParentOfType(eq(modelItemTypeElement), eq(OMTModelItemBlock.class));
-        doReturn(modelItemBlock).when(psiTreeUtil).getTopmostParentOfType(eq(modelItemLabel), eq(OMTModelItemBlock.class));
-        doReturn(modelItemBlock).when(psiTreeUtil).getTopmostParentOfType(eq(element), eq(OMTModelItemBlock.class));
-
-        // model item block entries (the root elements, params and variables)
-        doReturn(omtPropertyLabel_variables).when(omtBlockEntry_variables).getPropertyLabel();
-        doReturn(omtPropertyLabel_params).when(omtBlockEntry_params).getPropertyLabel();
-        doReturn("variables:").when(omtPropertyLabel_variables).getText();
-        doReturn("params:").when(omtPropertyLabel_params).getText();
-        blockEntryList.add(omtBlockEntry_variables);
-        blockEntryList.add(omtBlockEntry_params);
-        doReturn(blockEntryList).when(block).getBlockEntryList();
-
+        ApplicationManager.getApplication().runReadAction(() -> {
+            rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
+            activity = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, rootBlock);
+            importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock);
+            variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock);
+        });
+        doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());
     }
+
+    @AfterEach
+    void tearDownSuite() throws Exception {
+        super.tearDown();
+    }
+
 
     @Test
     void getModelItemBlock_ReturnsSelfIfOMTModelItemBlock() {
-        Optional<OMTModelItemBlock> optionalOMTModelItemBlock = modelUtil.getModelItemBlock(modelItemBlock);
-        assertTrue(optionalOMTModelItemBlock.isPresent());
-        assertEquals(modelItemBlock, optionalOMTModelItemBlock.get());
+        ApplicationManager.getApplication().runReadAction(() -> {
+            Optional<OMTModelItemBlock> optionalOMTModelItemBlock = modelUtil.getModelItemBlock(activity);
+            assertTrue(optionalOMTModelItemBlock.isPresent());
+            assertEquals(activity, optionalOMTModelItemBlock.get());
+        });
     }
 
     @Test
     void getModelItemBlock_ReturnsEmpty() {
-        doReturn(null).when(psiTreeUtil).getTopmostParentOfType(any(PsiElement.class), eq(OMTModelItemBlock.class));
-        Optional<OMTModelItemBlock> optionalOMTModelItemBlock = modelUtil.getModelItemBlock(element);
-        assertFalse(optionalOMTModelItemBlock.isPresent());
+        ApplicationManager.getApplication().runReadAction(() -> {
+            // import block is not contained by a modelitem block
+            Optional<OMTModelItemBlock> optionalOMTModelItemBlock = modelUtil.getModelItemBlock(importBlock);
+            assertFalse(optionalOMTModelItemBlock.isPresent());
+        });
     }
 
     @Test
-    void getModelItemBlock_ReturnsItem() {
-        Optional<OMTModelItemBlock> optionalOMTModelItemBlock = modelUtil.getModelItemBlock(element);
-        assertTrue(optionalOMTModelItemBlock.isPresent());
-        assertEquals(modelItemBlock, optionalOMTModelItemBlock.get());
+    void getModelItemBlock_ReturnsModelItemBlock() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            Optional<OMTModelItemBlock> optionalOMTModelItemBlock = modelUtil.getModelItemBlock(variable);
+            assertTrue(optionalOMTModelItemBlock.isPresent());
+            assertEquals(activity, optionalOMTModelItemBlock.get());
+        });
     }
 
     @Test
     void getModelItemType_ReturnsNullWhenNoModelItemBlock() {
-        doReturn(null).when(psiTreeUtil).getTopmostParentOfType(any(PsiElement.class), eq(OMTModelItemBlock.class));
-        assertNull(modelUtil.getModelItemType(element));
+        ApplicationManager.getApplication().runReadAction(() -> {
+            assertNull(modelUtil.getModelItemType(importBlock));
+        });
     }
 
     @Test
     void getModelItemType_ReturnsTextWhenModelItemBlock() {
-        assertEquals("Activity", modelUtil.getModelItemType(modelItemLabel));
+        ApplicationManager.getApplication().runReadAction(() -> {
+            assertEquals("Activity", modelUtil.getModelItemType(variable));
+        });
     }
 
     @Test
     void getModelItemBlockEntry_ReturnsEmptyWhenNoModelItemBlock() {
-        doReturn(null).when(psiTreeUtil).getTopmostParentOfType(any(PsiElement.class), eq(OMTModelItemBlock.class));
-        assertEquals(Optional.empty(), modelUtil.getModelItemBlockEntry(element, "variables"));
+        ApplicationManager.getApplication().runReadAction(() -> {
+            assertEquals(Optional.empty(), modelUtil.getModelItemBlockEntry(importBlock, "SUPERVARIABLES"));
+        });
     }
 
     @Test
-    void getModelItemBlockEntry_ReturnsEmptyWhenNoModelItemBlockOMTBlock() {
-        doReturn(null).when(modelItemBlock).getBlock();
-        assertEquals(Optional.empty(), modelUtil.getModelItemBlockEntry(element, "variables"));
-    }
-
-    @Test
-    void getModelItemBlockEntry_ReturnsEmptyWhenNoPropertyLabelMatching() {
-        doReturn(null).when(omtBlockEntry_variables).getPropertyLabel();
-        doReturn(null).when(omtBlockEntry_params).getPropertyLabel();
-
-        assertEquals(Optional.empty(), modelUtil.getModelItemBlockEntry(element, "variables"));
+    void getModelItemBlockEntry_ReturnsEmptyWhenNoMatching() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            assertEquals(Optional.empty(), modelUtil.getModelItemBlockEntry(variable, "SUPERVARIABLES"));
+        });
     }
 
     @Test
     void getModelItemBlockEntry_ReturnsMatching() {
-        Optional<OMTBlockEntry> variables = modelUtil.getModelItemBlockEntry(element, "variables");
-        assertTrue(variables.isPresent());
-        assertEquals(omtBlockEntry_variables, variables.get());
+        ApplicationManager.getApplication().runReadAction(() -> {
+            Optional<OMTBlockEntry> variables = modelUtil.getModelItemBlockEntry(variable, "variables");
+            assertTrue(variables.isPresent());
+            assertEquals("variables", Objects.requireNonNull(variables.get().getPropertyLabel()).getPropertyLabelName());
+        });
     }
 
     @Test
     void getConnectedEntries_Returns2Items() {
-        OMTBlockEntry parentBlockEntry = mock(OMTBlockEntry.class);
-        PsiElement blockEntryParentParent = mock(PsiElement.class);
-
-        doReturn(blockEntryParentParent).when(parentBlockEntry).getParent();
-        doReturn(Collections.singletonList(parentBlockEntry))
-                .when(psiTreeUtil)
-                .collectParents(eq(element), eq(OMTBlockEntry.class), eq(false), any());
-
-        doReturn(blockEntryList).when(psiTreeUtil).getChildrenOfTypeAsList(eq(blockEntryParentParent), eq(OMTBlockEntry.class));
-
-        List<OMTBlockEntry> connectedEntries = modelUtil.getConnectedEntries(element, Arrays.asList("variables", "params"));
-        assertTrue(connectedEntries.contains(omtBlockEntry_params));
-        assertTrue(connectedEntries.contains(omtBlockEntry_variables));
-        assertEquals(2, connectedEntries.size());
+        ApplicationManager.getApplication().runReadAction(() -> {
+            List<OMTBlockEntry> connectedEntries = modelUtil.getConnectedEntries(variable, Arrays.asList("variables", "params"));
+            List<String> labels = connectedEntries.stream().map(omtBlockEntry ->
+                    Objects.requireNonNull(omtBlockEntry.getPropertyLabel()).getPropertyLabelName())
+                    .collect(Collectors.toList());
+            assertEquals(2, labels.size());
+            assertTrue(labels.contains("variables"));
+            assertTrue(labels.contains("params"));
+        });
     }
 
-    @Test
-    void getConnectedEntries_Returns1Item() {
-        OMTBlockEntry parentBlockEntry = mock(OMTBlockEntry.class);
-        PsiElement blockEntryParentParent = mock(PsiElement.class);
-
-        doReturn(blockEntryParentParent).when(parentBlockEntry).getParent();
-        doReturn(Collections.singletonList(parentBlockEntry))
-                .when(psiTreeUtil)
-                .collectParents(eq(element), eq(OMTBlockEntry.class), eq(false), any());
-
-        doReturn(blockEntryList).when(psiTreeUtil).getChildrenOfTypeAsList(eq(blockEntryParentParent), eq(OMTBlockEntry.class));
-
-        List<OMTBlockEntry> connectedEntries = modelUtil.getConnectedEntries(element, Arrays.asList("variables"));
-        assertFalse(connectedEntries.contains(omtBlockEntry_params));
-        assertTrue(connectedEntries.contains(omtBlockEntry_variables));
-        assertEquals(1, connectedEntries.size());
-    }
 
     @Test
     void getEntryBlockLabel_ReturnsEmptyStringWhenNull() {
-        doReturn(null).when(psiTreeUtil).findFirstParent(eq(element), any());
-        assertEquals("", modelUtil.getEntryBlockLabel(element));
+        ApplicationManager.getApplication().runReadAction(() -> {
+            // rootblock has no entryblock label and should return "" for label
+            assertEquals("", modelUtil.getEntryBlockLabel(rootBlock));
+        });
     }
 
     @Test
     void getEntryBlockLabel_ReturnsLabelWithoutColon() {
-        doReturn(omtBlockEntry_params).when(psiTreeUtil).findFirstParent(eq(element), any());
-        assertEquals("params", modelUtil.getEntryBlockLabel(element));
+        ApplicationManager.getApplication().runReadAction(() -> {
+            assertEquals("import", modelUtil.getEntryBlockLabel(importBlock));
+        });
     }
 
     @Test
     void getModelItemEntryLabel() {
-        // pretend that params is nested in variables
-        doReturn(Arrays.asList(omtBlockEntry_params, omtBlockEntry_variables)).when(psiTreeUtil)
-                .collectParents(eq(element), eq(OMTBlockEntry.class), eq(false), any());
-        assertEquals("variables", modelUtil.getModelItemEntryLabel(element));
+        ApplicationManager.getApplication().runReadAction(() -> {
+            assertEquals("params", modelUtil.getModelItemEntryLabel(variable));
+        });
     }
 
     @Test
     void annotateModelItem_StopsWhenBlockPartIsFound() {
-        doReturn(null).when(modelItemBlock).getBlock();
-        modelUtil.annotateModelItem(modelItemTypeElement, annotationHolder);
-        verify(modelItemBlock, times(1)).getBlock();
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTModelItemBlock mockBlock = mock(OMTModelItemBlock.class);
+            doReturn(null).when(mockBlock).getBlock();
+            modelUtil.annotateModelItem(mockBlock, annotationHolder);
+            verify(mockBlock, times(1)).getBlock();
+        });
     }
 
     @Test
-    void annotateModelItem_ErrorWhenModelItemTypeIsUnknown() {
-        doReturn("!NotKnown").when(modelItemTypeElement).getText();
-        doReturn(annotationBuilder).when(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        doReturn(annotationBuilder).when(annotationBuilder).range(eq(modelItemLabel));
-        doNothing().when(annotationBuilder).create();
-
-        modelUtil.annotateModelItem(modelItemTypeElement, annotationHolder);
-        verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("Unknown model type: !NotKnown"));
-        verify(annotationBuilder, times(1)).create();
+    void annotateModelItem_ThrowsUnknownModelType() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement modelWithWrongModelItemType = exampleFiles.getModelWithWrongModelItemType();
+            OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, modelWithWrongModelItemType);
+            modelUtil.annotateModelItem(modelItemBlock, annotationHolder);
+            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("Unknown model type: !WrongModelItemType"));
+            verify(annotationBuilder, times(1)).create();
+        });
     }
 
     @Test
-    void annotateModelItem_AnnotateActivity() {
-        doReturn(annotationBuilder).when(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        doReturn(annotationBuilder).when(annotationBuilder).range(eq(modelItemLabel));
-        doNothing().when(annotationBuilder).create();
-
-        modelUtil.annotateModelItem(modelItemTypeElement, annotationHolder);
-        verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("Unknown model type: !NotKnown"));
-        verify(annotationBuilder, times(1)).create();
+    void annotateModelItem_ThrowsMissingAttributes() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement modelWithWrongModelItemType = exampleFiles.getStandaloneQueryWithMissingAttribute();
+            OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, modelWithWrongModelItemType);
+            modelUtil.annotateModelItem(modelItemBlock, annotationHolder);
+            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), startsWith("myStandAloneQuery is missing attribute(s)"));
+            verify(annotationBuilder, times(1)).create();
+        });
     }
 
     @Test
-    void getLocalCommands() {
+    void annotateModelItem() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            modelUtil.annotateModelItem(activity, annotationHolder);
+        });
     }
 
     @Test
-    void getJson() {
+    void getLocalCommands_ContainsActivityCommands() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            List<String> localCommands = modelUtil.getLocalCommands(variable);
+            assertTrue(localCommands.contains("COMMIT"));
+            assertTrue(localCommands.contains("CANCEL"));
+            assertTrue(localCommands.contains("DONE"));
+            assertTrue(localCommands.contains("DRAFT"));
+            assertTrue(localCommands.contains("ROLLBACK"));
+        });
+    }
+
+    @Test
+    void getLocalCommands_ContainsOntologyCommand() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement modelWithLoadOntology = exampleFiles.getLoadOntology();
+            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, modelWithLoadOntology);
+
+            List<String> localCommands = modelUtil.getLocalCommands(call);
+            assertTrue(localCommands.contains("LOAD_ONTOLOGY"));
+
+            assertTrue(localCommands.contains("COMMIT"));
+            assertTrue(localCommands.contains("CANCEL"));
+            assertTrue(localCommands.contains("DONE"));
+            assertTrue(localCommands.contains("DRAFT"));
+            assertTrue(localCommands.contains("ROLLBACK"));
+        });
+    }
+
+    @Test
+    void getJson_returnsJsonForSequenceItem() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            JsonObject json = modelUtil.getJson(variable);
+            assertEquals("Param", json.get("name").getAsString());
+        });
+    }
+
+    @Test
+    void getJson_returnsJsonForMapItem() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            List<OMTVariable> variables = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, rootBlock);
+            // second to last variable is the the $variableA usage in the payload
+            OMTVariable payloadVariable = variables.get(variables.size() - 2);
+            JsonObject json = modelUtil.getJson(payloadVariable);
+            assertEquals("PayloadProperty", json.get("name").getAsString());
+        });
+    }
+
+    @Test
+    void getJson_returnsJsonForMapOfItem() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement activityWithVariablesActions = exampleFiles.getActivityWithVariablesActions();
+            List<OMTVariable> variables = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, activityWithVariablesActions);
+            // last variable is in the action
+            OMTVariable payloadVariable = variables.get(variables.size() - 1);
+            JsonObject json = modelUtil.getJson(payloadVariable);
+            assertEquals("ActionProperty", json.get("name").getAsString());
+        });
     }
 
     @Test
     void isOntology() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement loadOntology = exampleFiles.getLoadOntology();
+            List<OMTModelItemBlock> modelBlocks = exampleFiles.getPsiElementsFromRootDocument(OMTModelItemBlock.class, loadOntology);
+            assertEquals(2, modelBlocks.size());
+            assertFalse(modelUtil.isOntology(modelBlocks.get(0)));
+            assertTrue(modelUtil.isOntology(modelBlocks.get(1)));
+        });
     }
+    
+
+    
 }

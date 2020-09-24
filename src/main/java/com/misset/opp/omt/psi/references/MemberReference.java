@@ -14,7 +14,11 @@ import java.util.Optional;
  * A member reference takes care of all references from operator/command calls to their declarations
  */
 public class MemberReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
+
+    private static final MemberUtil memberUtil = MemberUtil.SINGLETON;
+
     private final NamedMemberType type;
+
     public MemberReference(@NotNull PsiElement member, TextRange textRange, NamedMemberType type) {
         super(member, textRange);
         this.type = type;
@@ -28,9 +32,9 @@ public class MemberReference extends PsiReferenceBase<PsiElement> implements Psi
             case ModelItem:
             case DefineName: return new ResolveResult[] { new PsiElementResolveResult(myElement) };
             case OperatorCall:
-                return declaringMemberToResolveResult(MemberUtil.getDeclaringMember((OMTOperatorCall) myElement));
+                return declaringMemberToResolveResult(memberUtil.getDeclaringMember((OMTOperatorCall) myElement));
             case CommandCall:
-                return declaringMemberToResolveResult(MemberUtil.getDeclaringMember((OMTCommandCall) myElement));
+                return declaringMemberToResolveResult(memberUtil.getDeclaringMember((OMTCommandCall) myElement));
 
             default: return ResolveResult.EMPTY_ARRAY;
         }
@@ -63,7 +67,7 @@ public class MemberReference extends PsiReferenceBase<PsiElement> implements Psi
     @Override
     public boolean isReferenceTo(@NotNull PsiElement element) {
         if ((type == NamedMemberType.CommandCall || type == NamedMemberType.OperatorCall) && element instanceof OMTMember) {
-            return ((OMTMember) element).getName().equals(MemberUtil.getCallName(myElement));
+            return ((OMTMember) element).getName().equals(memberUtil.getCallName(myElement));
         }
         return super.isReferenceTo(element);
     }
