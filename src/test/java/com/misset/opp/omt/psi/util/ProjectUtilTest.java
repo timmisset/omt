@@ -1,21 +1,38 @@
 package com.misset.opp.omt.psi.util;
 
 import com.google.gson.JsonObject;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+class ProjectUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
-class ProjectUtilTest {
+    ProjectUtil projectUtil;
+
+    @BeforeEach
+    void setUpSuite() throws Exception {
+        super.setName("ProjectUtilTest");
+        super.setUp();
+        projectUtil = ProjectUtil.SINGLETON;
+    }
+
+    @AfterEach
+    void tearDownSuite() throws Exception {
+        super.tearDown();
+    }
 
     @Test
-    void loadModelAttributes() throws IOException {
+    void loadBuiltInMembers() {
+        ApplicationManager.getApplication().runReadAction(() -> projectUtil.loadBuiltInMembers(getProject()));
+    }
 
-
-        ProjectUtil.SINGLETON.loadModelAttributes();
-        JsonObject parsedModel = ProjectUtil.SINGLETON.getParsedModel();
+    @Test
+    void getParsedModel() {
+        JsonObject parsedModel = projectUtil.getParsedModel();
         Set<String> keySet = parsedModel.keySet();
 
         assertTrue(keySet.contains("Action"));
@@ -34,7 +51,8 @@ class ProjectUtilTest {
         assertTrue(keySet.contains("Procedure"));
         assertTrue(keySet.contains("QueryWatcher"));
         assertTrue(keySet.contains("Service"));
-        assertTrue(keySet.contains("StandAloneQuery"));
+        assertTrue(keySet.contains("StandaloneQuery"));
         assertTrue(keySet.contains("Variable"));
     }
+
 }

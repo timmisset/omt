@@ -1,0 +1,19 @@
+import:
+    '../../test.omt':
+        -   myImportedMethod
+
+model:
+    MijnActiviteit: !Activity
+        title: Mijn Activiteit
+
+        queries: |
+            DEFINE QUERY myFirstQuery() => 'Hello world';
+            DEFINE QUERY mySecondQuery($param1) => CONCAT('Hello ', $param1);
+            DEFINE QUERY myThirdQuery() => myFourthQuery();
+            DEFINE QUERY myFourthQuery() => myThirdQuery();
+
+        commands: |
+            DEFINE COMMAND myFirstCommand => { @LOG('Hello world'); }
+            DEFINE COMMAND mySecondCommand($param1) => { @LOG('Hello', $param); }
+            DEFINE COMMAND myThirdCommand() => { @myFourthCommand(); }
+            DEFINE COMMAND myFourthCommand() => { @myThirdCommand(); }

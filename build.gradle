@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'org.jetbrains.intellij' version '0.4.1'
+    id 'jacoco'
 }
 
 group 'com.misset'
@@ -23,6 +24,10 @@ test {
     useJUnitPlatform()
     // used for ITs
     systemProperty "idea.home.path", "C:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2020.2"
+    finalizedBy jacocoTestReport // report is always generated after tests run
+}
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/

@@ -22,15 +22,23 @@ public class NamespacePrefixReference extends PsiReferenceBase<PsiElement> imple
         super(namespacePrefix, textRange);
     }
 
+    private final static CurieUtil curieUtil = CurieUtil.SINGLETON;
+
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
         OMTNamespacePrefix namespacePrefix = (OMTNamespacePrefix) myElement;
 
         Optional<OMTPrefix> definedByPrefix = Optional.empty();
-        if(namespacePrefix.getParent() instanceof OMTPrefix) { definedByPrefix = Optional.of((OMTPrefix)myElement.getParent()); }
-        if(namespacePrefix.getParent() instanceof OMTCurieElement) { definedByPrefix = CurieUtil.getDefinedByPrefix((OMTCurieElement)myElement.getParent()); }
-        if(namespacePrefix.getParent() instanceof OMTParameterType) { definedByPrefix = CurieUtil.getDefinedByPrefix((OMTParameterType)myElement.getParent()); }
+        if (namespacePrefix.getParent() instanceof OMTPrefix) {
+            definedByPrefix = Optional.of((OMTPrefix) myElement.getParent());
+        }
+        if (namespacePrefix.getParent() instanceof OMTCurieElement) {
+            definedByPrefix = curieUtil.getDefinedByPrefix((OMTCurieElement) myElement.getParent());
+        }
+        if (namespacePrefix.getParent() instanceof OMTParameterType) {
+            definedByPrefix = curieUtil.getDefinedByPrefix((OMTParameterType) myElement.getParent());
+        }
 
         return definedByPrefix
                 .map(prefix -> new ResolveResult[]{new PsiElementResolveResult(prefix.getNamespacePrefix())})

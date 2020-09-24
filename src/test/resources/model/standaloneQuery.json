@@ -2,8 +2,7 @@
   "name": "StandaloneQuery",
   "attributes": {
     "base": {
-      "type": "string",
-      "required": false
+      "type": "string"
     },
     "params": {
       "type": "ParamDef",
@@ -12,8 +11,7 @@
     },
     "graphs": {
       "type": "GraphSelectionDef",
-      "node": "map",
-      "required": false
+      "node": "map"
     },
     "prefixes": {
       "node": "map"

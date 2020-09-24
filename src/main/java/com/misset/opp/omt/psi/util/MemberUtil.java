@@ -9,7 +9,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
-import com.intellij.psi.impl.file.PsiJavaDirectoryImpl;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
@@ -36,6 +35,8 @@ public class MemberUtil {
     static final ModelUtil modelUtil = ModelUtil.SINGLETON;
     static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
 
+    public static final MemberUtil SINGLETON = new MemberUtil();
+
     /**
      * Returns the PsiElement which contains the declaration for this call
      * This can be a DefineStatement somewhere upstream or an import statement
@@ -46,13 +47,11 @@ public class MemberUtil {
      * @param call
      * @return
      */
-    public static Optional<PsiElement> getDeclaringMember(OMTCall call) {
+    public Optional<PsiElement> getDeclaringMember(OMTCall call) {
         OMTDefinedStatement definedStatement = getDefinedStatement(call);
         if (definedStatement != null) {
             // check if the member is declared before it's used, which is a requirement for an OperatorCall
-            if (!isCallBeforeDefine(call, definedStatement)) {
-                return Optional.of(definedStatement);
-            }
+            return isCallBeforeDefine(call, definedStatement) ? Optional.empty() : Optional.of(definedStatement);
         }
 
         String callName = getCallName(call);
@@ -71,16 +70,24 @@ public class MemberUtil {
         }
 
         // not found as a member of a defined block, check for imports:
+        return getDeclaringMemberFromImport(call);
+    }
+
+    private Optional<PsiElement> getDeclaringMemberFromImport(OMTCall call) {
+
+        String callName = getCallName(call);
         OMTFile containingFile = (OMTFile) call.getContainingFile();
         List<OMTMember> importedMembers = containingFile.getImportedMembers();
         Optional<OMTMember> importedMember = importedMembers.stream()
                 .filter(member -> member.getText().trim().equals(callName))
                 .findFirst();
         if (importedMember.isPresent()) {
+            // resolve the import member to an import
             OMTImport omtImport = ImportUtil.getImport(importedMember.get());
             if (omtImport == null) {
                 return Optional.of(importedMember.get());
-            } // cast to generic PsiElement optional
+            }
+
             try {
                 VirtualFile importedFile = ImportUtil.getImportedFile(omtImport);
                 PsiFile psiFile = PsiManager.getInstance(omtImport.getProject()).findFile(importedFile);
@@ -90,12 +97,9 @@ public class MemberUtil {
                     if (exportedMembers.containsKey(callName)) {
                         OMTExportMember omtExportMember = exportedMembers.get(callName);
                         return Optional.of(omtExportMember.getResolvingElement());
-                    } else {
-                        throw new UnknownMappingException(omtImport.getImportSource().getImportLocation().getText());
                     }
-                } else {
-                    throw new UnknownMappingException(omtImport.getImportSource().getImportLocation().getText());
                 }
+                throw new UnknownMappingException(omtImport.getImportSource().getImportLocation().getText());
             } catch (URISyntaxException | UnknownMappingException | FileNotFoundException e) {
                 return Optional.of(importedMember.get());
             }
@@ -104,7 +108,7 @@ public class MemberUtil {
         }
     }
 
-    public static String getCallName(PsiElement call) {
+    public String getCallName(PsiElement call) {
         if (call instanceof OMTOperatorCall) {
             return call.getFirstChild().getText();
         }
@@ -118,7 +122,7 @@ public class MemberUtil {
      * @param define - definedQueryStatement or definedCommandStatement
      * @return
      */
-    private static boolean isCallBeforeDefine(OMTCall call, PsiElement define) {
+    private boolean isCallBeforeDefine(OMTCall call, PsiElement define) {
         PsiElement callContainingElement = getCallContainingElement(call);
 
         if (callContainingElement.getParent() == define.getParent()) {
@@ -137,12 +141,18 @@ public class MemberUtil {
         }
     }
 
-    private static PsiElement getCallContainingElement(PsiElement call) {
+    private PsiElement getCallContainingElement(PsiElement call) {
         // the call depth depends on the origin:
         PsiElement containingElement = PsiTreeUtil.getTopmostParentOfType(call, OMTDefineQueryStatement.class);
-        if(containingElement == null) { containingElement = PsiTreeUtil.getTopmostParentOfType(call, OMTDefineCommandStatement.class); }
-        if(containingElement == null) { containingElement = PsiTreeUtil.getTopmostParentOfType(call, OMTScriptLine.class); }
-        if(containingElement == null) { containingElement = PsiTreeUtil.getTopmostParentOfType(call, OMTBlockEntry.class); }
+        if (containingElement == null) {
+            containingElement = PsiTreeUtil.getTopmostParentOfType(call, OMTDefineCommandStatement.class);
+        }
+        if (containingElement == null) {
+            containingElement = PsiTreeUtil.getTopmostParentOfType(call, OMTScriptLine.class);
+        }
+        if (containingElement == null) {
+            containingElement = PsiTreeUtil.getTopmostParentOfType(call, OMTBlockEntry.class);
+        }
 
         return containingElement;
     }
@@ -154,98 +164,31 @@ public class MemberUtil {
      * @param call
      * @return
      */
-    public static OMTDefinedStatement getDefinedStatement(OMTCall call) {
+    private OMTDefinedStatement getDefinedStatement(OMTCall call) {
 
-        PsiElement element = call.getParent();
-        List<OMTDefinedBlock> processedBlocks = new ArrayList<>();
-        while (element != null) {
-            element = element.getParent();
-            if (element instanceof PsiJavaDirectoryImpl) {
-                return null;
-            }
-            if (element != null) {
-                if (call.isOperatorCall()) {
-                    OMTQueriesBlock omtQueriesBlock = PsiTreeUtil.findChildOfType(element, OMTQueriesBlock.class);
-                    if (omtQueriesBlock != null && !processedBlocks.contains(omtQueriesBlock)) {
-                        OMTDefinedStatement omtDefinedStatement = processBlock(omtQueriesBlock, call, processedBlocks);
-                        if (omtDefinedStatement != null) {
-                            return omtDefinedStatement;
-                        }
-                    }
-                }
-                if (call.isCommandCall()) {
-                    OMTCommandsBlock omtCommandsBlock = PsiTreeUtil.findChildOfType(element, OMTCommandsBlock.class);
-                    if (omtCommandsBlock != null && !processedBlocks.contains(omtCommandsBlock)) {
-                        OMTDefinedStatement omtDefinedStatement = processBlock(omtCommandsBlock, call, processedBlocks);
-                        if (omtDefinedStatement != null) {
-                            return omtDefinedStatement;
-                        }
-                    }
-                }
-
-            }
-        }
-        return null;
+        PsiFile containingFile = call.getContainingFile();
+        ArrayList<OMTDefinedStatement> omtDefinedStatements = new ArrayList<>(PsiTreeUtil.findChildrenOfType(containingFile, OMTDefinedStatement.class));
+        return omtDefinedStatements.stream()
+                .filter(omtDefinedStatement ->
+                        omtDefinedStatement.getDefineName().getName() != null &&
+                                omtDefinedStatement.getDefineName().getName().equals(getCallName(call))
+                ).findFirst().orElse(null);
     }
 
-    private static OMTDefinedStatement processBlock(PsiElement block, OMTCall call, List<OMTDefinedBlock> processedBlocks) {
-        if (block instanceof OMTDefinedBlock) {
-            Optional<OMTDefinedStatement> definedStatement = ((OMTDefinedBlock) block).getStatements().stream()
-                    .filter(defineStatement -> defineStatement.getDefineName().textMatches(getCallName(call)))
-                    .findFirst();
-            if (definedStatement.isPresent()) {
-                return definedStatement.get();
-            }
-            processedBlocks.add((OMTDefinedBlock) block);
-        }
-        return null;
-    }
-
-    public static void annotateCall(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {
+    public void annotateCall(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {
         if (call.getNameIdentifier() == null || call.getReference() == null) {
             return;
         }
         PsiElement resolved = call.getReference().resolve();
 
         if (resolved == null) {
-            // command call not found in file or via import.
-            BuiltInMember builtInMember = BuiltInUtil.getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
-            if (builtInMember != null) {
-                // is a builtIn member, annotate:
-                holder.newAnnotation(HighlightSeverity.INFORMATION, builtInMember.shortDescription())
-                        .range(call.getNameIdentifier().getTextRange())
-                        .tooltip(builtInMember.htmlDescription())
-                        .create();
-                validateSignature(call, builtInMember, holder);
-                return;
-            } else {
-                // check if the builtIn members are loaded:
-                if (!BuiltInUtil.hasLoaded()) {
-                    projectUtil.loadBuiltInMembers(call.getProject());
-                }
-            }
-
-            // check if local command:
-            List<String> localCommands = modelUtil.getLocalCommands(call);
-            if (localCommands.contains(call.getName())) {
-                holder.newAnnotation(HighlightSeverity.INFORMATION, String.format("%s is available as local command", call.getName())).range(call).create();
-
-                // check if final statement:
-                if (call.isCommandCall() && getCallName(call).equals("DONE") || getCallName(call).equals("CANCEL")) {
-                    ScriptUtil.annotateFinalStatement(call, holder);
-                }
+            if (annotateAsBuiltInMember(call, holder)) {
                 return;
             }
-
-            // check attribute type:
-            JsonObject json = modelUtil.getJson(call);
-            if (json != null && json.has("type") &&
-                    (json.get("type").getAsString().equals("interpolatedString") ||
-                            json.get("type").getAsString().equals("string"))) {
+            if (annotateAsLocalCommand(call, holder)) {
                 return;
             }
-            // check shortcut:
-            if (json != null && json.has("shortcut")) {
+            if (annotateByAttribute(call)) {
                 return;
             }
 
@@ -260,30 +203,86 @@ public class MemberUtil {
             intentionActionList.forEach(annotationBuilder::newFix);
             annotationBuilder.create();
         } else {
-            // callable is found as reference. Since the reference can be resolved to a PsiElement
-            // the callable element is part of the project code, not a built-in or local command
-            // the call will resolve to the label of the callable
-            try {
-                OMTExportMember asExportMember = memberToExportMember(resolved);
-                if (asExportMember == null) {
-                    if (modelUtil.isOntology(resolved)) {
-                        return;
-                    }
-                    throw new Exception("Could not resolve callable element to exported member, this is a bug");
-                }
-                holder.newAnnotation(HighlightSeverity.INFORMATION, asExportMember.shortDescription())
-                        .range(call.getNameIdentifier().getTextRange())
-                        .tooltip(asExportMember.htmlDescription())
-                        .create();
-                validateSignature(call, asExportMember, holder);
-            } catch (Exception e) {
-                holder.newAnnotation(HighlightSeverity.ERROR, e.getMessage()).range(call.getNameIdentifier()).create();
-            }
+            annotateReference(resolved, call, holder);
         }
 
     }
 
-    private static void validateSignature(@NotNull OMTCall call, @NotNull OMTCallable callable, @NotNull AnnotationHolder holder) {
+    private boolean annotateByAttribute(@NotNull OMTCall call) {
+        // this method will check if based on the attribute the unresolved reference has to be annotated with an Error
+        // when this method returns true, there is no need for the error annotation due to something in the attributes.
+
+        // check attribute type:
+        JsonObject json = modelUtil.getJson(call);
+        if (json != null && json.has("type") &&
+                (json.get("type").getAsString().equals("interpolatedString") ||
+                        json.get("type").getAsString().equals("string"))) {
+            return true;
+        }
+        // check shortcut:
+        return json != null && json.has("shortcut");
+    }
+
+    private boolean annotateAsLocalCommand(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {
+        List<String> localCommands = modelUtil.getLocalCommands(call);
+        if (localCommands.contains(call.getName())) {
+            holder.newAnnotation(HighlightSeverity.INFORMATION, String.format("%s is available as local command", call.getName())).range(call).create();
+
+            // check if final statement:
+            if (call.isCommandCall() && getCallName(call).equals("DONE") || getCallName(call).equals("CANCEL")) {
+                ScriptUtil.annotateFinalStatement(call, holder);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean annotateAsBuiltInMember(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {
+        if (call.getNameIdentifier() == null) {
+            return false;
+        }
+        BuiltInMember builtInMember = BuiltInUtil.getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
+        if (builtInMember != null) {
+            // is a builtIn member, annotate:
+            holder.newAnnotation(HighlightSeverity.INFORMATION, builtInMember.shortDescription())
+                    .range(call.getNameIdentifier().getTextRange())
+                    .tooltip(builtInMember.htmlDescription())
+                    .create();
+            validateSignature(call, builtInMember, holder);
+            return true;
+        } else {
+            // check if the builtIn members are loaded:
+            if (!BuiltInUtil.hasLoaded()) {
+                projectUtil.loadBuiltInMembers(call.getProject());
+                return annotateAsBuiltInMember(call, holder);
+            }
+        }
+        return false;
+    }
+
+    private void annotateReference(@NotNull PsiElement resolved, @NotNull OMTCall call, @NotNull AnnotationHolder holder) {
+        if (call.getNameIdentifier() == null) {
+            return;
+        }
+        try {
+            OMTExportMember asExportMember = memberToExportMember(resolved);
+            if (asExportMember == null) {
+                if (modelUtil.isOntology(resolved)) {
+                    return;
+                }
+                throw new Exception("Could not resolve callable element to exported member, this is a bug");
+            }
+            holder.newAnnotation(HighlightSeverity.INFORMATION, asExportMember.shortDescription())
+                    .range(call.getNameIdentifier().getTextRange())
+                    .tooltip(asExportMember.htmlDescription())
+                    .create();
+            validateSignature(call, asExportMember, holder);
+        } catch (Exception e) {
+            holder.newAnnotation(HighlightSeverity.ERROR, e.getMessage()).range(call.getNameIdentifier()).create();
+        }
+    }
+
+    private void validateSignature(@NotNull OMTCall call, @NotNull OMTCallable callable, @NotNull AnnotationHolder holder) {
         try {
             callable.validateSignature(call);
         } catch (NumberOfInputParametersMismatchException | CallCallableMismatchException e) {
@@ -304,7 +303,7 @@ public class MemberUtil {
      * @param resolvedToElement
      * @return
      */
-    public static PsiElement getContainingElement(PsiElement resolvedToElement) {
+    private PsiElement getContainingElement(PsiElement resolvedToElement) {
         if (resolvedToElement instanceof OMTPropertyLabel) {
             Optional<OMTModelItemBlock> modelItemBlock = modelUtil.getModelItemBlock(resolvedToElement);
             if (modelItemBlock.isPresent()) {
@@ -317,7 +316,7 @@ public class MemberUtil {
         return resolvedToElement;
     }
 
-    public static NamedMemberType getNamedMemberType(PsiElement element) {
+    public NamedMemberType getNamedMemberType(PsiElement element) {
         if (element instanceof OMTOperatorCall) {
             return NamedMemberType.OperatorCall;
         }
@@ -336,7 +335,7 @@ public class MemberUtil {
         return null;
     }
 
-    public static OMTExportMember memberToExportMember(PsiElement element) {
+    private OMTExportMember memberToExportMember(PsiElement element) {
         NamedMemberType namedMemberType = getNamedMemberType(element);
         if (namedMemberType == null) {
             return null;
@@ -355,12 +354,12 @@ public class MemberUtil {
 
             case ModelItem:
                 OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) getContainingElement(element);
-                switch (modelItemBlock.getModelItemLabel().getModelItemTypeElement().getText().toLowerCase()) {
-                    case "!activity":
+                switch (modelUtil.getModelItemType(modelItemBlock)) {
+                    case "Activity":
                         return new OMTExportMemberImpl(modelItemBlock, ExportMemberType.Activity);
-                    case "!procedure":
+                    case "Procedure":
                         return new OMTExportMemberImpl(modelItemBlock, ExportMemberType.Procedure);
-                    case "!standalonequery":
+                    case "StandaloneQuery":
                         return new OMTExportMemberImpl(modelItemBlock, ExportMemberType.StandaloneQuery);
                     default:
                         return null;

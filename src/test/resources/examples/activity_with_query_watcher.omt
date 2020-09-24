@@ -1,0 +1,13 @@
+model:
+    MijnActiviteit: !Activity
+        title: Mijn Activiteit
+
+        variables:
+        -   $variableA
+        -   $variableB
+
+        watchers:
+            -   query: $variable / GRAPH
+                onChange: |
+                    @LOG($newValue);
+

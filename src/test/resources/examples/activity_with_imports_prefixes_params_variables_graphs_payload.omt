@@ -1,0 +1,41 @@
+import:
+    '@client/some/src/thing':
+    -   aCommand
+    -   anOperator
+    '../something/else':
+    -   anotherCommand
+    -   anotherMethod
+
+prefixes:
+    abc:    <http://ontologie.alfabet.nl/alfabet#>
+    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#>
+
+model:
+    MijnActiviteit: !Activity
+        title: Mijn Activiteit
+
+        params:
+        -   $paramA (abc:Something)
+        -   $paramB (foaf:SomethingElse)
+
+        variables:
+        -   $variableA
+        -   $variableB
+
+        graphs:
+            edit:
+            -   $variableA / GRAPH
+            live:
+            -   $variableB / GRAPH
+
+        onStart: |
+            $variableA = 'waardeA';
+            $variableB = 'waardeB';
+            VAR $declaredVariable = @CONCAT($variableA, $variableB);
+            @LOG(declaredVariable);
+            @LOG(/abc:Test);
+
+        payload:
+            payloadA: $variableA
+            payloadB: $variableB
+

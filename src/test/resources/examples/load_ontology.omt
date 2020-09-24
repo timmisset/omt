@@ -1,0 +1,8 @@
+model:
+    MijnActiviteit: !Activity
+        title: Mijn Activiteit
+
+        onRun: |
+            @LOAD_ONTOLOGY(MijnOntology);
+
+    MijnOntology: !Ontology
