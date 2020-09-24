@@ -18,9 +18,10 @@ public abstract class OMTCallableImpl implements OMTCallable {
     private final HashMap<String, OMTParameter> parameters = new HashMap<>();
     private final List<OMTParameter> parameterList = new ArrayList<>();
     private String name;
-    private String type;
-    private boolean isCommand;
+    private final String type;
+    private final boolean isCommand;
     private List<String> localVariables = new ArrayList<>();
+    private String description;
 
     final ModelUtil modelUtil = ModelUtil.SINGLETON;
 
@@ -40,7 +41,6 @@ public abstract class OMTCallableImpl implements OMTCallable {
         parameterList.forEach(this::addParameter);
         this.localVariables = localVariables;
     }
-
 
     @Override
     public boolean isOperator() {
@@ -96,6 +96,11 @@ public abstract class OMTCallableImpl implements OMTCallable {
         return localVariables;
     }
 
+    @Override
+    public void setHTMLDescription(String description) {
+        this.description = description;
+    }
+
     void setParametersFromModelItem(OMTModelItemBlock block) {
         Optional<OMTBlockEntry> params = modelUtil.getModelItemBlockEntry(block, "params");
         params.ifPresent(omtBlockEntry -> omtBlockEntry
@@ -139,6 +144,9 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     @Override
     public String htmlDescription() {
+        if (description != null && description.length() > 0) {
+            return description;
+        }
         return String.format("<b>%s</b><br>Type: %s<br><br>Params:<br>%s",
                 name, type, String.join("<br>", getParameters()));
     }

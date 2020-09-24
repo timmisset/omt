@@ -288,7 +288,7 @@ public class ModelUtil {
             attributes = getAttributes(mappingType);
             for (OMTBlockEntry entryListItem : block.getBlockEntryList()) {
                 if (entryListItem.getBlock() != null) {
-                    annotateModelTree(attributes.getAsJsonObject(ATTRIBUTESKEY), block, holder);
+                    annotateModelTree(attributes, entryListItem.getBlock(), holder);
                 }
                 entryListItem.setAnnotated(true);
             }

@@ -18,6 +18,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.1.0'
+    compile group: 'com.atlassian.commonmark', name: 'commonmark', version: '0.2.0'
 
 }
 test {

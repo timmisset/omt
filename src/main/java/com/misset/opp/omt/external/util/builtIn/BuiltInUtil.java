@@ -2,9 +2,17 @@ package com.misset.opp.omt.external.util.builtIn;
 
 import com.google.gson.*;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.misset.opp.omt.psi.impl.OMTCallableImpl;
 import com.misset.opp.omt.psi.impl.OMTParameterImpl;
 import com.misset.opp.omt.psi.support.OMTParameter;
+import org.commonmark.html.HtmlRenderer;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,7 +77,6 @@ public class BuiltInUtil {
                     replacementPattern = replacementPattern.substring(0, replacementPattern.length() - 1) + "',";
                     blockToParse = blockToParse.replace(matchingPattern, replacementPattern);
                 }
-//                blockToParse = blockToParse.replaceAll("link.*", ""); // remove the link property
             }
             blockToParse = blockToParse.replaceAll("([,\\s]+})", "}"); // remove trailing commas
             return (JsonObject) parser.parse(blockToParse);
@@ -85,8 +92,11 @@ public class BuiltInUtil {
         return !builtInMembers.isEmpty();
     }
 
-    public static void reloadBuiltInFromDocument(Document document, BuiltInType type) {
+    public static void reloadBuiltInFromDocument(Document document, BuiltInType type, Project project) {
         JsonObject items = BuiltInUtil.parseBuiltIn(document.getText(), type);
+        Parser parser = Parser.builder().build();
+        HtmlRenderer renderer = HtmlRenderer.builder().build();
+
         items.keySet().forEach(name -> {
             JsonObject operator = (JsonObject) items.get(name);
             JsonElement params = operator.get("params");
@@ -101,6 +111,7 @@ public class BuiltInUtil {
             }
 
             JsonElement link = operator.get("link");
+            JsonElement doc = operator.get("doc");
             List<String> localVariables = new ArrayList<>();
             if (link != null) {
                 String linkVariables = link.getAsString();
@@ -112,7 +123,22 @@ public class BuiltInUtil {
                     localVariables.add(variableName);
                 }
             }
-            builtInMembers.put(getIndexedName(name, type), new BuiltInMember(name, inputParameters, type, localVariables));
+            BuiltInMember builtInMember = new BuiltInMember(name, inputParameters, type, localVariables);
+
+            if (!doc.isJsonNull()) {
+                String docAsString = doc.getAsString();
+                docAsString = docAsString.replace("com.", "").replace("ops.", "").replace(".doc", ".md");
+                PsiFile[] filesByName = FilenameIndex.getFilesByName(project, docAsString, GlobalSearchScope.allScope(project));
+                if (filesByName.length == 1) {
+                    Document builtInMemberDoc = FileDocumentManager.getInstance().getDocument(filesByName[0].getVirtualFile());
+                    String text = builtInMemberDoc.getText();
+
+                    Node parse = parser.parse(text);
+                    builtInMember.setHTMLDescription(renderer.render(parse));
+                }
+            }
+
+            builtInMembers.put(getIndexedName(name, type), builtInMember);
         });
     }
 
