@@ -14,11 +14,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ScriptUtil {
-    public static Optional<OMTScript> getScript(PsiElement element) {
+
+    public static final ScriptUtil SINGLETON = new ScriptUtil();
+
+    public Optional<OMTScript> getScript(PsiElement element) {
         return Optional.ofNullable(PsiTreeUtil.getTopmostParentOfType(element, OMTScript.class));
     }
 
-    public static Optional<OMTScriptLine> getScriptLine(PsiElement element) {
+    public Optional<OMTScriptLine> getScriptLine(PsiElement element) {
         return Optional.ofNullable(PsiTreeUtil.getParentOfType(element, OMTScriptLine.class));
     }
 
@@ -29,7 +32,7 @@ public class ScriptUtil {
      * @param element
      * @return
      */
-    public static List<PsiElement> getAccessibleElements(PsiElement element, Class<? extends PsiElement> type) {
+    public List<PsiElement> getAccessibleElements(PsiElement element, Class<? extends PsiElement> type) {
         List<PsiElement> items = new ArrayList<>();
         String text = element.getText();
         OMTScriptLine currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTScriptLine);
@@ -40,13 +43,13 @@ public class ScriptUtil {
         return items;
     }
 
-    private static List<OMTScriptLine> getPrecedingScriptLines(OMTScriptLine scriptLine) {
+    private List<OMTScriptLine> getPrecedingScriptLines(OMTScriptLine scriptLine) {
         return PsiTreeUtil.getChildrenOfTypeAsList(scriptLine.getParent(), OMTScriptLine.class)
                 .stream().filter(sibling -> sibling.getStartOffsetInParent() < scriptLine.getStartOffsetInParent())
                 .collect(Collectors.toList());
     }
 
-    private static List<PsiElement> getChildrenOfTypeNotEnclosed(PsiElement element, Class<? extends PsiElement> type) {
+    private List<PsiElement> getChildrenOfTypeNotEnclosed(PsiElement element, Class<? extends PsiElement> type) {
         List<PsiElement> allChildren = new ArrayList<>();
         if (type.isAssignableFrom(element.getClass())) {
             allChildren.add(element);
@@ -62,7 +65,7 @@ public class ScriptUtil {
         return allChildren;
     }
 
-    public static List<OMTScriptLine> getScriptLinesAtSameDepth(PsiElement elementA, PsiElement elementB) {
+    public List<OMTScriptLine> getScriptLinesAtSameDepth(PsiElement elementA, PsiElement elementB) {
         Optional<OMTScriptLine> optA = getScriptLine(elementA);
         Optional<OMTScriptLine> optB = getScriptLine(elementB);
         List<OMTScriptLine> lines = new ArrayList<>();
@@ -94,7 +97,7 @@ public class ScriptUtil {
         return lines;
     }
 
-    public static boolean isBefore(PsiElement isElement, PsiElement beforeElement) {
+    public boolean isBefore(PsiElement isElement, PsiElement beforeElement) {
         List<OMTScriptLine> scriptLinesAtSameDepth = getScriptLinesAtSameDepth(isElement, beforeElement);
         if (scriptLinesAtSameDepth.isEmpty()) {
             throw new Error("Cannot resolve scriptlines for elements");
@@ -104,7 +107,7 @@ public class ScriptUtil {
 
     }
 
-    public static void annotateFinalStatement(PsiElement returnStatement, AnnotationHolder holder) {
+    public void annotateFinalStatement(PsiElement returnStatement, AnnotationHolder holder) {
         OMTScriptLine scriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(returnStatement, parent -> parent instanceof OMTScriptLine);
         if (scriptLine != null) {
             OMTScriptLine nextLine = PsiTreeUtil.getNextSiblingOfType(scriptLine, OMTScriptLine.class);

@@ -24,6 +24,8 @@ public class OMTCompletionContributor extends CompletionContributor {
 
     final ModelUtil modelUtil = ModelUtil.SINGLETON;
 
+    private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
+
     public OMTCompletionContributor() {
         /**
          * Generic completion that resolves the suggestion based on the cursor position
@@ -104,10 +106,8 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void addCompletionsForVariables(PsiElement elementAtPosition, CompletionResultSet resultSet) {
-        List<OMTVariable> declaredVariables = VariableUtil.getDeclaredVariables(elementAtPosition);
+        List<OMTVariable> declaredVariables = variableUtil.getDeclaredVariables(elementAtPosition);
         declaredVariables.forEach(variable -> resultSet.addElement(LookupElementBuilder.create(variable.getText())));
-
-
     }
 
     private boolean isPropertyLabelSuggestion(PsiElement element) {

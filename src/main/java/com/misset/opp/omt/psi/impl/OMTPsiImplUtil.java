@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 public class OMTPsiImplUtil {
 
+    private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
+
     // Variable
     public static String getName(OMTVariable variable) {
         return variable.getText();
@@ -26,7 +28,7 @@ public class OMTPsiImplUtil {
     }
     public static boolean isDeclaredVariable(OMTVariable variable) {
 
-        return VariableUtil.isDeclaredVariable(variable);
+        return variableUtil.isDeclaredVariable(variable);
     }
     public static boolean isGlobalVariable(OMTVariable variable) {
         return variable.getGlobalVariable() != null;

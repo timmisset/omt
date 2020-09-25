@@ -5,14 +5,11 @@ import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
-import com.misset.opp.omt.exceptions.UnknownMappingException;
 import com.misset.opp.omt.external.util.builtIn.BuiltInMember;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
@@ -23,8 +20,6 @@ import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.support.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.FileNotFoundException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,8 +27,10 @@ import java.util.Optional;
 
 public class MemberUtil {
 
-    static final ModelUtil modelUtil = ModelUtil.SINGLETON;
-    static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+    private static final ModelUtil modelUtil = ModelUtil.SINGLETON;
+    private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+    private static final ImportUtil importUtil = ImportUtil.SINGLETON;
+    private static final ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
 
     public static final MemberUtil SINGLETON = new MemberUtil();
 
@@ -82,27 +79,7 @@ public class MemberUtil {
                 .filter(member -> member.getText().trim().equals(callName))
                 .findFirst();
         if (importedMember.isPresent()) {
-            // resolve the import member to an import
-            OMTImport omtImport = ImportUtil.getImport(importedMember.get());
-            if (omtImport == null) {
-                return Optional.of(importedMember.get());
-            }
-
-            try {
-                VirtualFile importedFile = ImportUtil.getImportedFile(omtImport);
-                PsiFile psiFile = PsiManager.getInstance(omtImport.getProject()).findFile(importedFile);
-                if (psiFile instanceof OMTFile) {
-                    OMTFile omtFile = (OMTFile) psiFile;
-                    HashMap<String, OMTExportMember> exportedMembers = omtFile.getExportedMembers();
-                    if (exportedMembers.containsKey(callName)) {
-                        OMTExportMember omtExportMember = exportedMembers.get(callName);
-                        return Optional.of(omtExportMember.getResolvingElement());
-                    }
-                }
-                throw new UnknownMappingException(omtImport.getImportSource().getImportLocation().getText());
-            } catch (URISyntaxException | UnknownMappingException | FileNotFoundException e) {
-                return Optional.of(importedMember.get());
-            }
+            return importUtil.resolveImportMember(importedMember.get());
         } else {
             return Optional.empty();
         }
@@ -230,7 +207,7 @@ public class MemberUtil {
 
             // check if final statement:
             if (call.isCommandCall() && getCallName(call).equals("DONE") || getCallName(call).equals("CANCEL")) {
-                ScriptUtil.annotateFinalStatement(call, holder);
+                scriptUtil.annotateFinalStatement(call, holder);
             }
             return true;
         }

@@ -16,10 +16,14 @@ import java.util.Optional;
  * The actual declaration should is resolved to itself, it then magically shows the usage instead of navigating to itself
  */
 public class VariableReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
+
+    private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
+
     private OMTVariable variable;
 
     /**
      * The reference created for this variable usage
+     *
      * @param variable
      * @param textRange
      */
@@ -31,7 +35,7 @@ public class VariableReference extends PsiReferenceBase<PsiElement> implements P
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
-        Optional<OMTVariable> declaredByVariable = VariableUtil.getDeclaredByVariable(variable);
+        Optional<OMTVariable> declaredByVariable = variableUtil.getDeclaredByVariable(variable);
         return declaredByVariable
                 .map(omtVariable -> new ResolveResult[]{new PsiElementResolveResult(omtVariable)})
                 .orElseGet(() -> new ResolveResult[0]);
