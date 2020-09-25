@@ -1,6 +1,7 @@
 package com.misset.opp.omt.psi.util;//package com.misset.opp.omt.domain.util;
 
 import com.google.gson.JsonObject;
+import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
@@ -180,7 +181,7 @@ public class ModelUtil {
         }
     }
 
-    private void annotateModelTree(JsonObject object, OMTBlock block, AnnotationHolder holder) {
+    public void annotateModelTree(JsonObject object, OMTBlock block, AnnotationHolder holder) {
         JsonObject attributes = object.has(ATTRIBUTESKEY) ? object.getAsJsonObject(ATTRIBUTESKEY) : object;
         annotateEntries(attributes, block, holder);
         annotateMissingEntries(attributes, block, holder);
@@ -200,9 +201,10 @@ public class ModelUtil {
             if (!omtBlockEntry.isAnnotated() && !keys.contains(label)) {
                 String errorMessage = String.format("%s is not a known attribute for %s",
                         label, entryBlockLabelText);
+                IntentionAction remove = ModelIntention.getRemoveBlockEntryIntention(omtBlockEntry, "Remove");
                 holder.newAnnotation(HighlightSeverity.ERROR, errorMessage)
                         .range(targetLabel)
-                        .withFix(ModelIntention.getRemoveBlockEntryIntention(omtBlockEntry, "Remove"))
+                        .withFix(remove)
                         .create();
             } else {
                 JsonObject entry = attributes.getAsJsonObject(label);
@@ -336,10 +338,14 @@ public class ModelUtil {
 
         branch.add(member);
 
-        while (member != null && member.has(ATTRIBUTESKEY) && !blockEntries.isEmpty()) {
+        while (!blockEntries.isEmpty()) {
             OMTBlockEntry omtBlockEntry = blockEntries.remove(blockEntries.size() - 1);
-            member = getTypeAttributes(member.get(ATTRIBUTESKEY).getAsJsonObject(), getEntryBlockLabel(omtBlockEntry), blockEntries);
-            branch.add(member);
+            String entryBlockLabel = getEntryBlockLabel(omtBlockEntry);
+            JsonObject subMember = getTypeAttributes(member.get(ATTRIBUTESKEY).getAsJsonObject(), entryBlockLabel, blockEntries);
+            if (!subMember.keySet().isEmpty()) {
+                member = subMember;
+                branch.add(member);
+            }
         }
         return branch;
     }
@@ -350,17 +356,16 @@ public class ModelUtil {
             if (member.has(TYPE)) {
                 String memberType = member.get(TYPE).getAsString();
                 if (memberType.endsWith(DEF)) {
-                    attributes = getAttributes(memberType.substring(0, memberType.length() - 3));
+                    member = getAttributes(memberType.substring(0, memberType.length() - 3));
                 }
             }
-            if (attributes.has(MAPOFKEY)) {
-                String type = attributes.get(MAPOFKEY).getAsString();
+            if (member.has(MAPOFKEY)) {
+                String type = member.get(MAPOFKEY).getAsString();
                 if (type.endsWith(DEF)) {
-                    blockEntries.remove(blockEntries.size() - 1);
-                    attributes = getAttributes(type.substring(0, type.length() - 3));
+                    member = getAttributes(type.substring(0, type.length() - 3));
                 }
             }
-            return attributes;
+            return member;
         }
         return new JsonObject();
     }
@@ -378,6 +383,9 @@ public class ModelUtil {
     /**
      * Retraces the steps of the element back to the top level model and then returns the corresponding
      * JSON attributes collection based on the property keys used in the block entries
+     * <p>
+     * When the input element is a (scalar) value, it returns the properties / type of that value
+     * to get the entry block attributes instead, use getJsonAttributes
      *
      * @param element
      * @return
@@ -388,7 +396,28 @@ public class ModelUtil {
             return new JsonObject();
         }
 
-        return attributesBranch.get(attributesBranch.size() - 1).has("name") ? attributesBranch.get(attributesBranch.size() - 1) : attributesBranch.get(attributesBranch.size() - 2);
+        return attributesBranch.get(attributesBranch.size() - 1);
+    }
+
+    /**
+     * Retraces the steps of the element back to the top level model and then returns the corresponding
+     * JSON attributes collection based on the property keys used in the block entries
+     * <p>
+     * When the input element is a (scalar) value, it returns the attributes of the entry block
+     *
+     * @param element
+     * @return
+     */
+    public JsonObject getJsonAttributes(PsiElement element) {
+        List<JsonObject> attributesBranch = getAttributesBranch(element);
+        if (attributesBranch.isEmpty()) {
+            return new JsonObject();
+        }
+
+        List<JsonObject> jsonObjectsWithName = attributesBranch.stream().filter(
+                jsonObject -> jsonObject.has("name")
+        ).collect(Collectors.toList());
+        return jsonObjectsWithName.isEmpty() ? new JsonObject() : jsonObjectsWithName.get(jsonObjectsWithName.size() - 1);
     }
 
     public boolean isOntology(PsiElement element) {

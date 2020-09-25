@@ -52,6 +52,10 @@ public class ExampleFiles {
         return process("examples/activity_with_members.omt");
     }
 
+    public PsiElement getActivityWithWrongNestedAttribute() {
+        return process("examples/activity_with_wrong_nested_attribute.omt");
+    }
+
     private PsiElement process(String resourcePath) {
         File file = new File(getClass().getClassLoader().getResource(resourcePath).getFile());
         String data = null;

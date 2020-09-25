@@ -4,6 +4,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.named.NamedMemberType;
+import com.misset.opp.omt.psi.util.ImportUtil;
 import com.misset.opp.omt.psi.util.MemberUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,6 +17,7 @@ import java.util.Optional;
 public class MemberReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
 
     private static final MemberUtil memberUtil = MemberUtil.SINGLETON;
+    private static final ImportUtil importUtil = ImportUtil.SINGLETON;
 
     private final NamedMemberType type;
 
@@ -29,14 +31,19 @@ public class MemberReference extends PsiReferenceBase<PsiElement> implements Psi
     public ResolveResult[] multiResolve(boolean incompleteCode) {
         switch (type) {
             case ImportingMember:
+                Optional<PsiElement> resolved = importUtil.resolveImportMember((OMTMember) myElement);
+                return new ResolveResult[]{
+                        resolved.map(PsiElementResolveResult::new).orElseGet(() -> new PsiElementResolveResult(myElement))};
             case ModelItem:
-            case DefineName: return new ResolveResult[] { new PsiElementResolveResult(myElement) };
+            case DefineName:
+                return new ResolveResult[]{new PsiElementResolveResult(myElement)};
             case OperatorCall:
                 return declaringMemberToResolveResult(memberUtil.getDeclaringMember((OMTOperatorCall) myElement));
             case CommandCall:
                 return declaringMemberToResolveResult(memberUtil.getDeclaringMember((OMTCommandCall) myElement));
 
-            default: return ResolveResult.EMPTY_ARRAY;
+            default:
+                return ResolveResult.EMPTY_ARRAY;
         }
     }
 

@@ -14,6 +14,8 @@ import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
 
 public class ImportReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
+    private static final ImportUtil importUtil = ImportUtil.SINGLETON;
+
     public ImportReference(@NotNull OMTImportSource importSource, TextRange textRange) {
         super(importSource, textRange);
     }
@@ -22,7 +24,7 @@ public class ImportReference extends PsiReferenceBase<PsiElement> implements Psi
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
         try {
-            VirtualFile importedFile = ImportUtil.getImportedFile((OMTImport) myElement.getParent());
+            VirtualFile importedFile = importUtil.getImportedFile((OMTImport) myElement.getParent());
             PsiFile file = PsiManager.getInstance(myElement.getProject()).findFile(importedFile);
             return new ResolveResult[]{new PsiElementResolveResult(file)};
         } catch (URISyntaxException | UnknownMappingException | FileNotFoundException e) {

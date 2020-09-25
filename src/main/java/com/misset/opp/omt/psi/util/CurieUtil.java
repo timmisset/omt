@@ -14,6 +14,8 @@ public class CurieUtil {
 
     public static CurieUtil SINGLETON = new CurieUtil();
 
+    private static final AnnotationUtil annotationUtil = AnnotationUtil.SINGLETON;
+
     public Optional<OMTPrefix> getDefinedByPrefix(OMTParameterType parameterType) {
         // Otherwise the main prefixes block:
         return getDefinedByPrefix(getPrefixBlock(parameterType), parameterType);
@@ -75,9 +77,9 @@ public class CurieUtil {
 
     public void annotateNamespacePrefix(@NotNull OMTNamespacePrefix namespacePrefix, @NotNull AnnotationHolder holder) {
         if (namespacePrefix.getParent() instanceof OMTPrefix) {
-            AnnotationUtil.annotateUsage(namespacePrefix, OMTNamespacePrefix.class, holder);
+            annotationUtil.annotateUsage(namespacePrefix, OMTNamespacePrefix.class, holder);
         } else {
-            AnnotationUtil.annotateOrigin(namespacePrefix, holder);
+            annotationUtil.annotateOrigin(namespacePrefix, holder);
         }
     }
 }

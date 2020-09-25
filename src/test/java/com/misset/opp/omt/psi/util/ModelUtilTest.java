@@ -1,6 +1,7 @@
 package com.misset.opp.omt.psi.util;
 
 import com.google.gson.JsonObject;
+import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
@@ -56,6 +57,8 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
             variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock);
         });
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());
+        doReturn(annotationBuilder).when(annotationBuilder).range(any(PsiElement.class));
+        doReturn(annotationBuilder).when(annotationBuilder).withFix(any(IntentionAction.class));
     }
 
     @AfterEach
@@ -197,6 +200,17 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void annotateModelItem_ThrowsWrongAttributeErrorOnNestedAttribute() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement modelWithWrongNestedAttribute = exampleFiles.getActivityWithWrongNestedAttribute();
+            OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, modelWithWrongNestedAttribute);
+            modelUtil.annotateModelItem(modelItemBlock, annotationHolder);
+            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), startsWith("queryX is not a known attribute for payloadC"));
+            verify(annotationBuilder, times(1)).create();
+        });
+    }
+
+    @Test
     void annotateModelItem() {
         ApplicationManager.getApplication().runReadAction(() -> {
             modelUtil.annotateModelItem(activity, annotationHolder);
@@ -252,13 +266,36 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
-    void getJson_returnsJsonForMapOfItem() {
+    void getJson_returnsJsonForMapOfItemScalarValue() {
         ApplicationManager.getApplication().runReadAction(() -> {
             PsiElement activityWithVariablesActions = exampleFiles.getActivityWithVariablesActions();
             List<OMTVariable> variables = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, activityWithVariablesActions);
             // last variable is in the action
             OMTVariable payloadVariable = variables.get(variables.size() - 1);
             JsonObject json = modelUtil.getJson(payloadVariable);
+            assertEquals("scalar", json.get("node").getAsString());
+        });
+    }
+
+    @Test
+    void getJson_returnsNamedReferenceProperty() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            List<OMTOperatorCall> operatorCalls = exampleFiles.getPsiElementsFromRootDocument(OMTOperatorCall.class, rootBlock);
+            // last variable is in the action
+            OMTOperatorCall operatorCall = operatorCalls.get(operatorCalls.size() - 1);
+            JsonObject json = modelUtil.getJson(operatorCall);
+            assertTrue(json.get("namedReference").getAsBoolean());
+        });
+    }
+
+    @Test
+    void getJsonAttributes_returnsJsonAttributesForMapOfItemScalarValue() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement activityWithVariablesActions = exampleFiles.getActivityWithVariablesActions();
+            List<OMTVariable> variables = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, activityWithVariablesActions);
+            // last variable is in the action
+            OMTVariable payloadVariable = variables.get(variables.size() - 1);
+            JsonObject json = modelUtil.getJsonAttributes(payloadVariable);
             assertEquals("ActionProperty", json.get("name").getAsString());
         });
     }

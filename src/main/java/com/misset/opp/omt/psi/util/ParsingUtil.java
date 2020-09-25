@@ -4,7 +4,9 @@ import com.intellij.psi.PsiElement;
 
 public class ParsingUtil {
 
-    public static <T> T castToOrNull(PsiElement element, Class<T> castToClass) {
+    public static final ParsingUtil SINGLETON = new ParsingUtil();
+
+    public <T> T castToOrNull(PsiElement element, Class<T> castToClass) {
         return castToClass.isAssignableFrom(element.getClass()) ? castToClass.cast(element) : null;
     }
 

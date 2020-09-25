@@ -22,7 +22,8 @@ public class OMTFile extends PsiFileBase {
         super(viewProvider, OMTLanguage.INSTANCE);
     }
 
-    final ModelUtil modelUtil = ModelUtil.SINGLETON;
+    private static final ModelUtil modelUtil = ModelUtil.SINGLETON;
+    private static final ImportUtil importUtil = ImportUtil.SINGLETON;
 
     @NotNull
     @Override
@@ -78,8 +79,8 @@ public class OMTFile extends PsiFileBase {
         }
 
         HashMap<OMTImport, VirtualFile> importHashmap = new HashMap<>();
-        importBlock.get().getImportList().stream()
-                .forEach(omtImport -> importHashmap.put(omtImport, ImportUtil.getImportedFileWithoutExceptions(omtImport)));
+        importBlock.get().getImportList()
+                .forEach(omtImport -> importHashmap.put(omtImport, importUtil.getImportedFileWithoutExceptions(omtImport)));
         return importHashmap;
     }
 
@@ -91,10 +92,14 @@ public class OMTFile extends PsiFileBase {
      * @return
      */
     public HashMap<String, OMTExportMember> getExportedMembers() {
-        if (exportMembers.isEmpty()) {
-            updateExportMembers();
-        }
+        initExportMembers();
         return exportMembers;
+    }
+
+    public Optional<OMTExportMember> getExportedMember(String name) {
+        name = name.trim();
+        initExportMembers();
+        return exportMembers.containsKey(name) ? Optional.of(exportMembers.get(name)) : Optional.empty();
     }
 
     public HashMap<String, OMTPrefix> getPrefixes() {
@@ -123,6 +128,12 @@ public class OMTFile extends PsiFileBase {
                 })
         );
         return ontologies;
+    }
+
+    private void initExportMembers() {
+        if (exportMembers.isEmpty()) {
+            updateExportMembers();
+        }
     }
 
     private void updateExportMembers() {
