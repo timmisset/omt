@@ -17,7 +17,7 @@ public class OMTStartupActivity implements StartupActivity {
     public void runActivity(@NotNull Project project) {
         DumbService.getInstance(project).runWhenSmart(() -> {
             projectUtil.loadBuiltInMembers(project);
-            projectUtil.loadModelAttributes();
+            projectUtil.getParsedModel();
         });
 //        PsiManager psiManager = PsiManager.getInstance(project);
 //        List<String> processedPaths = new ArrayList<>();

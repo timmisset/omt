@@ -1,8 +1,10 @@
 package com.misset.opp.omt.psi.util;
 
 import com.intellij.lang.annotation.AnnotationHolder;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -27,7 +29,10 @@ public class AnnotationUtil {
                 return;
             }
         }
-        holder.createErrorAnnotation(element, String.format("%s is never used", element.getText()));
+        holder.newAnnotation(HighlightSeverity.ERROR, String.format("%s is never used", element.getText()))
+                .range(element)
+                .withFix(RemoveIntention.SINGLETON.getRemoveIntention(element))
+                .create();
     }
 
     /**
@@ -39,7 +44,10 @@ public class AnnotationUtil {
      */
     public void annotateOrigin(PsiElement element, @NotNull AnnotationHolder holder) {
         if (element.getReference() != null && element.getReference().resolve() == null) {
-            holder.createErrorAnnotation(element, String.format("%s is not declared", element.getText()));
+            holder.newAnnotation(HighlightSeverity.ERROR, String.format("%s is not declared", element.getText()))
+                    .range(element)
+                    .withFix(RemoveIntention.SINGLETON.getRemoveIntention(element))
+                    .create();
         }
     }
 }

@@ -8,7 +8,7 @@ import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.intentions.model.ModelIntention;
+import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
 import com.sun.istack.Nullable;
 
 import java.util.*;
@@ -23,6 +23,7 @@ public class ModelUtil {
     private static String TYPE = "type";
 
     public static final ModelUtil SINGLETON = new ModelUtil();
+    private static final RemoveIntention removeIntention = RemoveIntention.SINGLETON;
     private static String DEF = "Def";
 
     /**
@@ -201,7 +202,7 @@ public class ModelUtil {
             if (!omtBlockEntry.isAnnotated() && !keys.contains(label)) {
                 String errorMessage = String.format("%s is not a known attribute for %s",
                         label, entryBlockLabelText);
-                IntentionAction remove = ModelIntention.getRemoveBlockEntryIntention(omtBlockEntry, "Remove");
+                IntentionAction remove = removeIntention.getRemoveIntention(omtBlockEntry);
                 holder.newAnnotation(HighlightSeverity.ERROR, errorMessage)
                         .range(targetLabel)
                         .withFix(remove)

@@ -1,0 +1,17 @@
+prefixes:
+    abc:    <http://www.abc.nl#>
+    def:    <http://www.def.nl#>
+
+model:
+    MijnActiviteit: !Activity
+        title: Mijn Activiteit
+
+        variables:
+        -   $unusedVariable
+        -   $usedVariable
+
+        onStart: |
+            @LOG($undeclaredVariable);
+            @LOG($usedVariable);
+            @LOG(abc:test);
+            @LOG(ghi:test);

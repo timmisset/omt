@@ -8,6 +8,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -17,7 +18,10 @@ import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 import static util.Helper.getResources;
 
@@ -30,48 +34,80 @@ public class ProjectUtil {
 
     public static final ProjectUtil SINGLETON = new ProjectUtil();
 
+    private WindowManager windowManager = WindowManager.getInstance();
+    private FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
+    private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
+
+    public WindowManager getWindowManager() {
+        return windowManager;
+    }
+
+    public StatusBar getStatusBar(Project project) {
+        return windowManager.getStatusBar(project);
+    }
+
+    public FileDocumentManager getFileDocumentManager() {
+        return fileDocumentManager;
+    }
+
+
+    public List<VirtualFile> getVirtualFilesByName(Project project, String filename) {
+        return
+                new ArrayList<>(FilenameIndex.getVirtualFilesByName(project, filename, GlobalSearchScope.projectScope(project)));
+    }
+
     /**
      * Tries to load all built-in commands and operators that can be retrieved from the BuiltInUtil
      */
     public void loadBuiltInMembers(Project project) {
-        BuiltInUtil.reset();
+        builtInUtil.reset();
         WindowManager.getInstance().getStatusBar(project).setInfo("Loading BuiltIn Members of OMT");
 
         loadBuiltInMembers(project, "builtinCommands.ts", BuiltInType.Command);
         loadBuiltInMembers(project, "builtinOperators.ts", BuiltInType.Operator);
     }
-
     private void loadBuiltInMembers(Project project, String filename, BuiltInType type) {
-        Collection<VirtualFile> virtualFiles = FilenameIndex.getVirtualFilesByName(project, filename, GlobalSearchScope.projectScope(project));
+        List<VirtualFile> virtualFiles = getVirtualFilesByName(project, filename);
         if (virtualFiles.size() == 1) {
-            WindowManager.getInstance().getStatusBar(project).setInfo(
+            windowManager.getStatusBar(project).setInfo(
                     String.format("Discovered %s file, loading data", filename));
-            VirtualFile virtualFile = virtualFiles.iterator().next();
-            Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
+            VirtualFile virtualFile = virtualFiles.get(0);
+            Document document = fileDocumentManager.getDocument(virtualFile);
             if (document != null) {
-                BuiltInUtil.reloadBuiltInFromDocument(document, type, project);
+                builtInUtil.reloadBuiltInFromDocument(document, type, project);
+                getStatusBar(project).setInfo(
+                        String.format("Finished loading %s", filename)
+                );
+            } else {
+                getStatusBar(project).setInfo(
+                        String.format("Error loading %s", filename)
+                );
             }
-            WindowManager.getInstance().getStatusBar(project).setInfo(
-                    String.format("Finished loading %s", filename)
-            );
+
         } else {
-            WindowManager.getInstance().getStatusBar(project).setInfo(
-                    String.format("Number of virtual files found for  %s in project != 1, number found is = %s",
+            getStatusBar(project).setInfo(
+                    String.format("Number of virtual files found for %s in project != 1, number found is = %s",
                             filename,
                             virtualFiles.size())
             );
         }
     }
 
-    public void registerPrefixes(OMTFile file) {
+    private void registerPrefixes(OMTFile file) {
         file.getPrefixes().forEach((namespacePrefix, omtPrefix) -> {
+            namespacePrefix = namespacePrefix.endsWith(":") ? namespacePrefix.substring(0, namespacePrefix.length() - 1) : namespacePrefix;
             ArrayList<OMTPrefix> prefixes = knownPrefixes.getOrDefault(namespacePrefix, new ArrayList<>());
             prefixes.add(omtPrefix);
+
             knownPrefixes.put(namespacePrefix, prefixes);
         });
     }
 
-    public void registerExports(OMTFile file) {
+    public List<OMTPrefix> getKnownPrefixes(String prefix) {
+        return knownPrefixes.get(prefix);
+    }
+
+    private void registerExports(OMTFile file) {
         file.getExportedMembers().forEach(
                 (key, omtExportMember) -> {
                     ArrayList<OMTExportMember> members = exportingMembers.getOrDefault(key, new ArrayList<>());
@@ -81,22 +117,19 @@ public class ProjectUtil {
         );
     }
 
-    public void analyzeFile(OMTFile file) {
-        try {
-            System.out.print("Analyzing file: " + file.getVirtualFile().getPath());
-            registerExports(file);
-            registerPrefixes(file);
-            System.out.println(" succes");
-        } catch (Exception e) {
-            System.out.println("Error when analyzing file: " + e.getMessage());
-        }
+    public List<OMTExportMember> getExportMember(String name) {
+        return exportingMembers.get(name);
+    }
 
+    public void analyzeFile(OMTFile file) {
+        registerExports(file);
+        registerPrefixes(file);
     }
 
     /**
      * Load the model (attributes) from the json files
      */
-    public void loadModelAttributes() {
+    private void loadModelAttributes() {
 
         java.util.List<String> allModelFiles = Arrays.asList(
                 "action.json", "activity.json", "binding.json", "component.json", "graphSelection.json", "model.json",

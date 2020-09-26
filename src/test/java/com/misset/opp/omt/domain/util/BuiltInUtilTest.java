@@ -16,6 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BuiltInUtilTest {
 
+    BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
+
     @Test
     void parseBuiltInOperators() throws IOException {
         // ARRANGE
@@ -27,7 +29,7 @@ public class BuiltInUtilTest {
 
 
         // ACT
-        JsonObject jsonObject = BuiltInUtil.parseBuiltIn(content, BuiltInType.Operator);
+        JsonObject jsonObject = builtInUtil.parseBuiltIn(content, BuiltInType.Operator);
 
         // ASSERT
         assertNotNull(jsonObject);
@@ -44,7 +46,7 @@ public class BuiltInUtilTest {
         String content = new String(Files.readAllBytes(file.toPath()));
 
         // ACT
-        JsonObject jsonObject = BuiltInUtil.parseBuiltIn(content, BuiltInType.Command);
+        JsonObject jsonObject = builtInUtil.parseBuiltIn(content, BuiltInType.Command);
 
         // ASSERT
         assertNotNull(jsonObject);
