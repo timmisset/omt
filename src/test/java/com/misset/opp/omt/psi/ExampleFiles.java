@@ -27,19 +27,15 @@ public class ExampleFiles {
     public PsiElement getActivityWithImportsPrefixesParamsVariablesGraphsPayload() {
         return process("examples/activity_with_imports_prefixes_params_variables_graphs_payload.omt");
     }
-
     public PsiElement getModelWithWrongModelItemType() {
         return process("examples/model_with_wrong_model_item_type.omt");
     }
-
     public PsiElement getStandaloneQueryWithMissingAttribute() {
         return process("examples/StandaloneQuery_with_missing_attribute.omt");
     }
-
     public PsiElement getActivityWithQueryWatcher() {
         return process("examples/activity_with_query_watcher.omt");
     }
-
     public PsiElement getActivityWithVariablesActions() {
         return process("examples/activity_with_variables_actions.omt");
     }
@@ -54,6 +50,10 @@ public class ExampleFiles {
 
     public PsiElement getActivityWithWrongNestedAttribute() {
         return process("examples/activity_with_wrong_nested_attribute.omt");
+    }
+
+    public PsiElement getActivityWithUndeclaredElements() {
+        return process("examples/activity_with_undeclared_elements.omt");
     }
 
     private PsiElement process(String resourcePath) {

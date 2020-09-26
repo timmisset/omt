@@ -25,6 +25,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     final ModelUtil modelUtil = ModelUtil.SINGLETON;
 
     private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
+    private static final BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
 
     public OMTCompletionContributor() {
         /**
@@ -73,12 +74,12 @@ public class OMTCompletionContributor extends CompletionContributor {
         addCompletionsForVariables(elementAtPosition, resultSet);
 
         if (isInQueryPath(elementAtPosition)) {
-            BuiltInUtil.getBuiltInOperatorsAsSuggestions().forEach(suggestion -> resultSet.addElement(LookupElementBuilder.create(suggestion)));
+            builtInUtil.getBuiltInOperatorsAsSuggestions().forEach(suggestion -> resultSet.addElement(LookupElementBuilder.create(suggestion)));
         } else if (isInCommandBlock(elementAtPosition)) {
             List<String> localCommands = modelUtil.getLocalCommands(elementAtPosition);
             localCommands.forEach(localCommand -> resultSet.addElement(LookupElementBuilder.create("@" + localCommand + "()")));
 
-            BuiltInUtil.getBuiltInCommandsAsSuggestions().forEach(suggestion -> resultSet.addElement(LookupElementBuilder.create(suggestion)));
+            builtInUtil.getBuiltInCommandsAsSuggestions().forEach(suggestion -> resultSet.addElement(LookupElementBuilder.create(suggestion)));
         }
 
     }

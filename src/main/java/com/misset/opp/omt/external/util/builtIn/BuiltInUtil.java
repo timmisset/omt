@@ -26,40 +26,42 @@ public class BuiltInUtil {
     private final static String COMMAND_NAME_PREFIX = "COMMAND";
     private final static String OPERATOR_NAME_PREFIX = "OPERATOR";
 
-    private static HashMap<String, BuiltInMember> builtInMembers = new HashMap<>();
+    public static BuiltInUtil SINGLETON = new BuiltInUtil();
 
-    public static boolean isBuiltInOperator(String name) {
+    private HashMap<String, BuiltInMember> builtInMembers = new HashMap<>();
+
+    public boolean isBuiltInOperator(String name) {
         return builtInMembers.containsKey(getIndexedName(name, BuiltInType.Operator));
     }
 
-    public static boolean isBuiltInCommand(String name) {
+    public boolean isBuiltInCommand(String name) {
         return builtInMembers.containsKey(getIndexedName(name, BuiltInType.Command));
     }
 
-    public static BuiltInMember getBuiltInMember(String name, BuiltInType type) {
+    public BuiltInMember getBuiltInMember(String name, BuiltInType type) {
         return builtInMembers.get(getIndexedName(name, type));
     }
 
-    public static List<String> getBuiltInOperatorsAsSuggestions() {
+    public List<String> getBuiltInOperatorsAsSuggestions() {
         return builtInMembers.values().stream()
                 .filter(OMTCallableImpl::isOperator)
                 .map(OMTCallableImpl::asSuggestion)
                 .collect(Collectors.toList());
     }
 
-    public static List<String> getBuiltInCommandsAsSuggestions() {
+    public List<String> getBuiltInCommandsAsSuggestions() {
         return builtInMembers.values().stream()
                 .filter(OMTCallableImpl::isCommand)
                 .map(OMTCallableImpl::asSuggestion)
                 .collect(Collectors.toList());
     }
 
-    private static String getIndexedName(String name, BuiltInType type) {
+    private String getIndexedName(String name, BuiltInType type) {
         name = name.startsWith("@") && type == BuiltInType.Command ? name.substring(1) : name;
         return (type == BuiltInType.Command ? COMMAND_NAME_PREFIX : OPERATOR_NAME_PREFIX) + name;
     }
 
-    public static JsonObject parseBuiltIn(String block, BuiltInType type) {
+    public JsonObject parseBuiltIn(String block, BuiltInType type) {
         Pattern regEx = Pattern.compile(String.format("(?<=export const builtin%s)([^=]*)=([^;]*)", type.name()));
         Matcher m = regEx.matcher(block);
         boolean found = m.find();
@@ -84,16 +86,16 @@ public class BuiltInUtil {
         return null;
     }
 
-    public static void reset() {
+    public void reset() {
         builtInMembers.clear();
     }
 
-    public static boolean hasLoaded() {
+    public boolean isLoaded() {
         return !builtInMembers.isEmpty();
     }
 
-    public static void reloadBuiltInFromDocument(Document document, BuiltInType type, Project project) {
-        JsonObject items = BuiltInUtil.parseBuiltIn(document.getText(), type);
+    public void reloadBuiltInFromDocument(Document document, BuiltInType type, Project project) {
+        JsonObject items = parseBuiltIn(document.getText(), type);
         Parser parser = Parser.builder().build();
         HtmlRenderer renderer = HtmlRenderer.builder().build();
 

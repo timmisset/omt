@@ -21,7 +21,6 @@ import java.util.Optional;
 public class ImportUtil {
 
     public static final ImportUtil SINGLETON = new ImportUtil();
-    private static final ParsingUtil parsingUtil = new ParsingUtil();
 
     public void annotateImport(OMTImport omtImport, AnnotationHolder holder) {
         try {
@@ -56,11 +55,11 @@ public class ImportUtil {
         if (memberList == null) {
             return null;
         }
-        return parsingUtil.castToOrNull(memberList.getParent(), OMTImport.class);
+        return memberList.getParent() instanceof OMTImport ? (OMTImport) memberList.getParent() : null;
     }
 
     public OMTMemberList getImportMemberList(OMTMember member) {
-        return parsingUtil.castToOrNull(member.getParent(), OMTMemberList.class);
+        return member.getParent() instanceof OMTMemberList ? (OMTMemberList) member.getParent() : null;
     }
 
     /**

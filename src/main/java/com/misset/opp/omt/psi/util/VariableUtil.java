@@ -21,6 +21,7 @@ public class VariableUtil {
     private static final ModelUtil modelUtil = ModelUtil.SINGLETON;
     private static final ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
     private static final AnnotationUtil annotationUtil = AnnotationUtil.SINGLETON;
+    private static final BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
 
     public boolean isVariableAssignment(OMTVariable variable) {
         return variable.getParent() instanceof OMTVariableAssignment;
@@ -303,7 +304,7 @@ public class VariableUtil {
             // from builtIn members
             if (element instanceof OMTCall) {
                 OMTCall call = (OMTCall) element;
-                BuiltInMember builtInMember = BuiltInUtil.getBuiltInMember(call.getNameIdentifier().getText(),
+                BuiltInMember builtInMember = builtInUtil.getBuiltInMember(call.getNameIdentifier().getText(),
                         call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
                 if (builtInMember != null) {
                     builtInMember.getLocalVariables().forEach(

@@ -31,6 +31,7 @@ public class MemberUtil {
     private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private static final ImportUtil importUtil = ImportUtil.SINGLETON;
     private static final ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
+    private static final BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
 
     public static final MemberUtil SINGLETON = new MemberUtil();
 
@@ -218,7 +219,7 @@ public class MemberUtil {
         if (call.getNameIdentifier() == null) {
             return false;
         }
-        BuiltInMember builtInMember = BuiltInUtil.getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
+        BuiltInMember builtInMember = builtInUtil.getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
         if (builtInMember != null) {
             // is a builtIn member, annotate:
             holder.newAnnotation(HighlightSeverity.INFORMATION, builtInMember.shortDescription())
@@ -229,7 +230,7 @@ public class MemberUtil {
             return true;
         } else {
             // check if the builtIn members are loaded:
-            if (!BuiltInUtil.hasLoaded()) {
+            if (!builtInUtil.isLoaded()) {
                 projectUtil.loadBuiltInMembers(call.getProject());
                 return annotateAsBuiltInMember(call, holder);
             }
