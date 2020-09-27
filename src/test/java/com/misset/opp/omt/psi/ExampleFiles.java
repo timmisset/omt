@@ -61,6 +61,10 @@ public class ExampleFiles {
         return process("examples/procedure_with_script.omt");
     }
 
+    public PsiElement getActivityWithImports() {
+        return process("examples/activity_with_imports.omt");
+    }
+
     private PsiElement process(String resourcePath) {
         File file = new File(getClass().getClassLoader().getResource(resourcePath).getFile());
         String data = null;

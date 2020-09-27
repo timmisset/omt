@@ -1,0 +1,10 @@
+import:
+    '@client/procedure_with_exporting_members.omt':
+    -   MijnProcedure
+
+model:
+    MijnActiviteit: !Activity
+        title: Mijn Activiteit
+
+        onStart: |
+            @MijnProcedure();
