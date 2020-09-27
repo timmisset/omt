@@ -3,15 +3,11 @@ package com.misset.opp.omt.psi.references;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
-import com.misset.opp.omt.exceptions.UnknownMappingException;
 import com.misset.opp.omt.psi.OMTImport;
 import com.misset.opp.omt.psi.OMTImportSource;
 import com.misset.opp.omt.psi.util.ImportUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.FileNotFoundException;
-import java.net.URISyntaxException;
 
 public class ImportReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
     private static final ImportUtil importUtil = ImportUtil.SINGLETON;
@@ -23,13 +19,9 @@ public class ImportReference extends PsiReferenceBase<PsiElement> implements Psi
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
-        try {
-            VirtualFile importedFile = importUtil.getImportedFile((OMTImport) myElement.getParent());
-            PsiFile file = PsiManager.getInstance(myElement.getProject()).findFile(importedFile);
-            return new ResolveResult[]{new PsiElementResolveResult(file)};
-        } catch (URISyntaxException | UnknownMappingException | FileNotFoundException e) {
-            return new ResolveResult[0];
-        }
+        VirtualFile importedFile = importUtil.getImportedFile((OMTImport) myElement.getParent());
+        PsiFile file = PsiManager.getInstance(myElement.getProject()).findFile(importedFile);
+        return new ResolveResult[]{new PsiElementResolveResult(file)};
     }
 
     @Nullable

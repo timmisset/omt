@@ -45,7 +45,6 @@ public class ProjectUtil {
     public StatusBar getStatusBar(Project project) {
         return windowManager.getStatusBar(project);
     }
-
     public FileDocumentManager getFileDocumentManager() {
         return fileDocumentManager;
     }

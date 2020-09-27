@@ -80,7 +80,7 @@ public class OMTFile extends PsiFileBase {
 
         HashMap<OMTImport, VirtualFile> importHashmap = new HashMap<>();
         importBlock.get().getImportList()
-                .forEach(omtImport -> importHashmap.put(omtImport, importUtil.getImportedFileWithoutExceptions(omtImport)));
+                .forEach(omtImport -> importHashmap.put(omtImport, importUtil.getImportedFile(omtImport)));
         return importHashmap;
     }
 
