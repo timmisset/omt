@@ -27,11 +27,11 @@ import java.util.Optional;
 
 public class MemberUtil {
 
-    private static final ModelUtil modelUtil = ModelUtil.SINGLETON;
-    private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private static final ImportUtil importUtil = ImportUtil.SINGLETON;
-    private static final ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
-    private static final BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
+    private ModelUtil modelUtil = ModelUtil.SINGLETON;
+    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+    private ImportUtil importUtil = ImportUtil.SINGLETON;
+    private ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
+    private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
 
     public static final MemberUtil SINGLETON = new MemberUtil();
 

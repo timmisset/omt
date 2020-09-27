@@ -10,20 +10,38 @@ import com.misset.opp.omt.psi.support.OMTExportMember;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 
 class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
-    private final ExampleFiles exampleFiles = new ExampleFiles(this);
-    private final MemberUtil memberUtil = MemberUtil.SINGLETON;
+    @Mock
+    ImportUtil importUtil;
+    @Mock
+    PsiElement psiElement;
+    @InjectMocks
+    MemberUtil memberUtil;
+    private ExampleFiles exampleFiles;
+
     PsiElement rootBlock;
 
     @BeforeEach
     void setUpSuite() throws Exception {
-        super.setName("CurieUtilTest");
+        super.setName("MemberUtilTest");
         super.setUp();
+
+        MockitoAnnotations.initMocks(this);
+
+        exampleFiles = new ExampleFiles(this);
 
         ApplicationManager.getApplication().runReadAction(() -> {
             rootBlock = exampleFiles.getActivityWithMembers();
@@ -36,8 +54,63 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
-    void getDeclaringMember() {
+    void getDeclaringMember_ReturnsOperatorForOperatorCall() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTOperatorCall operatorCall = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
+                    call -> Objects.equals(call.getName(), "myThirdQuery")
+            );
+            Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(operatorCall);
+            assertTrue(declaringMember.isPresent());
+            assertEquals("myThirdQuery", ((OMTDefineQueryStatement) declaringMember.get()).getDefineName().getName());
+        });
+    }
 
+    @Test
+    void getDeclaringMember_ReturnsEmptyWhenCallBeforeDefinedForOperatorCall() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTOperatorCall operatorCall = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
+                    call -> Objects.equals(call.getName(), "myFourthQuery")
+            );
+            Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(operatorCall);
+            assertFalse(declaringMember.isPresent());
+        });
+    }
+
+    @Test
+    void getDeclaringMember_ReturnsExportingMember() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTCommandCall commandCall = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+                    call -> Objects.equals(call.getName(), "MijnProcedure")
+            );
+            Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(commandCall);
+            assertTrue(declaringMember.isPresent());
+            assertEquals("MijnProcedure", ((OMTPropertyLabel) declaringMember.get()).getPropertyLabelName());
+        });
+    }
+
+    @Test
+    void getDeclaringMember_ReturnsImportedMember() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTCommandCall commandCall = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+                    call -> Objects.equals(call.getName(), "myImportedMethod")
+            );
+            doReturn(Optional.of(psiElement)).when(importUtil).resolveImportMember(any(OMTMember.class));
+            Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(commandCall);
+
+            assertTrue(declaringMember.isPresent());
+            assertEquals(psiElement, declaringMember.get());
+        });
+    }
+
+    @Test
+    void getDeclaringMember_ReturnsOntology() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTOperatorCall operatorCall = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
+                    call -> Objects.equals(call.getName(), "MijnOntology")
+            );
+            Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(operatorCall);
+            assertTrue(declaringMember.isPresent());
+        });
     }
 
     @Test

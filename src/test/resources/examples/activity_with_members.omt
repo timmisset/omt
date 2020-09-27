@@ -17,3 +17,14 @@ model:
             DEFINE COMMAND mySecondCommand($param1) => { @LOG('Hello', $param); }
             DEFINE COMMAND myThirdCommand() => { @myFourthCommand(); }
             DEFINE COMMAND myFourthCommand() => { @myThirdCommand(); }
+
+        onStart: |
+            @MijnProcedure();
+            @myImportedMethod();
+            @LOAD_ONTOLOGY(MijnOntology);
+
+    MijnProcedure: !Procedure
+        onRun: |
+            @LOG('test');
+
+    MijnOntology: !Ontology
