@@ -1,0 +1,15 @@
+model:
+    MijnProcedure: !Procedure
+        onRun: |
+            VAR $variableA = 'waardeA';
+            @LOG($variableA, $variableB);
+            VAR $variableB = 'waardeB';
+
+            IF ($variableA == 'waardeA') {
+                VAR $variableC = 'test';
+            } ELSE {
+                VAR $variableD = 'test2';
+            }
+
+            RETURN 'test';
+            @LOG('unreachable code');

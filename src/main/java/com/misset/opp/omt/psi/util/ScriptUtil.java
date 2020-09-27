@@ -1,6 +1,7 @@
 package com.misset.opp.omt.psi.util;
 
 import com.intellij.lang.annotation.AnnotationHolder;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTCommandBlock;
@@ -34,7 +35,6 @@ public class ScriptUtil {
      */
     public List<PsiElement> getAccessibleElements(PsiElement element, Class<? extends PsiElement> type) {
         List<PsiElement> items = new ArrayList<>();
-        String text = element.getText();
         OMTScriptLine currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTScriptLine);
         while (currentScriptLine != null) {
             getPrecedingScriptLines(currentScriptLine).forEach(scriptLine -> items.addAll(getChildrenOfTypeNotEnclosed(scriptLine, type)));
@@ -65,7 +65,7 @@ public class ScriptUtil {
         return allChildren;
     }
 
-    public List<OMTScriptLine> getScriptLinesAtSameDepth(PsiElement elementA, PsiElement elementB) {
+    private List<OMTScriptLine> getScriptLinesAtSameDepth(PsiElement elementA, PsiElement elementB) {
         Optional<OMTScriptLine> optA = getScriptLine(elementA);
         Optional<OMTScriptLine> optB = getScriptLine(elementB);
         List<OMTScriptLine> lines = new ArrayList<>();
@@ -112,7 +112,7 @@ public class ScriptUtil {
         if (scriptLine != null) {
             OMTScriptLine nextLine = PsiTreeUtil.getNextSiblingOfType(scriptLine, OMTScriptLine.class);
             while (nextLine != null) {
-                holder.createErrorAnnotation(nextLine, "Unreachable code");
+                holder.newAnnotation(HighlightSeverity.ERROR, "Unreachable code").range(nextLine).create();
                 nextLine = PsiTreeUtil.getNextSiblingOfType(nextLine, OMTScriptLine.class);
             }
         }

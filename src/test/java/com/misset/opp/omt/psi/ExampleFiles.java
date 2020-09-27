@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -56,6 +57,10 @@ public class ExampleFiles {
         return process("examples/activity_with_undeclared_elements.omt");
     }
 
+    public PsiElement getProcedureWithScript() {
+        return process("examples/procedure_with_script.omt");
+    }
+
     private PsiElement process(String resourcePath) {
         File file = new File(getClass().getClassLoader().getResource(resourcePath).getFile());
         String data = null;
@@ -69,11 +74,16 @@ public class ExampleFiles {
     }
 
     public <T> T getPsiElementFromRootDocument(Class<? extends PsiElement> elementClass, PsiElement rootBlock) {
-        Collection<? extends PsiElement> childrenOfType = PsiTreeUtil.findChildrenOfType(rootBlock, elementClass);
-        assertTrue(childrenOfType.size() > 0);
+        return getPsiElementFromRootDocument(elementClass, rootBlock, item -> true);
+    }
 
-        Optional<? extends PsiElement> first = childrenOfType.stream().findFirst();
-        return (T) first.orElse(null);
+    public <T> T getPsiElementFromRootDocument(Class<? extends PsiElement> elementClass, PsiElement rootBlock, Predicate<T> condition) {
+        Optional<T> matchingElement = getPsiElementsFromRootDocument(elementClass, rootBlock)
+                .stream()
+                .map(item -> (T) item)
+                .filter(condition::test)
+                .findFirst();
+        return matchingElement.orElse(null);
     }
 
     public <T> List<T> getPsiElementsFromRootDocument(Class<? extends PsiElement> elementClass, PsiElement rootBlock) {
