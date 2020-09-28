@@ -145,7 +145,7 @@ commandBlock ::=                            CURLY_OPEN trailing? (script | scrip
 scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) trailing?
 // the contents of a script, contained by a scriptLine or Scalar
 scriptContent ::=                           declareVariable | variableAssignment | definePrefix | commandCall | assignmentStatement |
-                                            addToCollection | removeFromCollection | logicalBlock | returnStatement
+                                            addToCollection | removeFromCollection | logicalBlock | returnStatement | queryPath
 
 // DEFINED MEMBERS
 // ODT Members are Operator and Commands, both can be created by a DEFINE statement
