@@ -98,7 +98,8 @@ modelItemTypeElement ::=                    MODEL_ITEM_TYPE
 
 // COMMENTS
 // Can occur on empty lines (JavaDocs and End Of Line Comments) or at the end of lines (End of Line Comments)
-comment ::=                                 END_OF_LINE_COMMENT | JAVA_DOCS
+jdcomment ::=                               JAVADOCS_START JAVADOCS_CONTENT+ JAVADOCS_END
+comment ::=                                 END_OF_LINE_COMMENT | jdcomment
 eolComment ::=                              END_OF_LINE_COMMENT
 // trailing is everything at the end of the current line and before NEW_LINE.
 // It can be simply the NEW_LINE or an eolComment followed by a NEW_LINE
@@ -118,7 +119,7 @@ declareVariable ::=                         DECLARE_VAR (variableAssignment | va
 // a variable assignment is $var = 1234
 variableAssignment::=                       variable (COMMA variable)* EQUALS variableValue
 // a variable can be assigned with anything
-variableValue ::=                           constant_value | queryPath | commandCall
+variableValue ::=                           queryPath | commandCall | constant_value
 
 // a parameter type is used to typecast input parameters in OMT model items
 variable ::=                                VARIABLE_NAME | ignoredVariable | globalVariable {

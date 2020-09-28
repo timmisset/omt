@@ -38,7 +38,8 @@ SYMBOL=                         ({ALPHA}|{DIGIT}|{LATIN_EXT_A}|[_@\-])+
 SCHEME=                         {ALPHA}({ALPHA}|{DIGIT}|[+.-])*
 IRI=                            "<"{SCHEME}":"({SYMBOL}|[?&#/+*.-])+">"
 END_OF_LINE_COMMENT=            ("#" | "\/\/")[^\r\n]*
-JAVADOCS=                       \/\*\*([^]*)\*\/ // all between /** and */
+JDSTART=                         \/\*\*
+JDEND=                           \*\/ // all between /** and */
 NAME=                           {ALPHA}({ALPHA}|{DIGIT}|{UNDERSCORE})*
 CURIE=                          ({NAME})?":"{SYMBOL}
 TYPED_VALUE=                    {STRING}"^^"({IRI}|{CURIE})
@@ -65,7 +66,7 @@ void yypushback(int number, String id) {
     log("resetting " + number + " of " + yylength() + "'" + yytext() + "'" + " due to: " + id);
     yypushback(number);
     log("token moved back from " + position + " to " + zzMarkedPos);
-    pushbacks.put(pushbackId, pushbacks.getOrDefault(pushbackId, 0));
+    pushbacks.put(pushbackId, pushbacks.getOrDefault(pushbackId, 0) + 1);
 }
 boolean inScalarBlock = false;
 IElementType startScalarBlock() {
@@ -82,8 +83,10 @@ String getStateName(int state) {
     }
     return "UNKNOWN";
 }
+int previousState = 0;
 void setState(int state) {
     log("Setting state to: " + getStateName(state));
+    previousState = yystate();
     yybegin(state);
 }
 IElementType lastDedent;
@@ -174,6 +177,7 @@ void setBacktick(boolean state) {
 %state YAML_SCALAR
 %state CURIE
 %state BACKTICK
+%state JAVADOCS
 
 %%
 <YYINITIAL> {
@@ -223,7 +227,7 @@ void setBacktick(boolean state) {
                                                                    }
                                                               }
     {WHITE_SPACE}+                                            { return TokenType.WHITE_SPACE; } // capture all whitespace
-    {JAVADOCS}                                                { return returnElement(OMTTypes.JAVA_DOCS); }
+    {JDSTART}                                                 { setState(JAVADOCS); return returnElement(OMTTypes.JAVADOCS_START); }
     {END_OF_LINE_COMMENT}                                     { return returnElement(OMTTypes.END_OF_LINE_COMMENT); }
     <<EOF>>                                                   { return resetIndent(); }
     [^]                                                       { yypushback(yylength(), "initial"); setState(YAML_SCALAR); return returnElement(OMTTypes.START_TOKEN); }
@@ -237,7 +241,7 @@ void setBacktick(boolean state) {
                                                                     }
                                                               }
     {WHITE_SPACE}+                                            { return TokenType.WHITE_SPACE; } // capture all whitespace
-    {JAVADOCS}                                                { return returnElement(OMTTypes.JAVA_DOCS); }
+    {JDSTART}                                                 { setState(JAVADOCS); return returnElement(OMTTypes.JAVADOCS_START); }
     {END_OF_LINE_COMMENT}                                     { return returnElement(OMTTypes.END_OF_LINE_COMMENT); }
     {NEWLINE}                                                 { return returnElement(TokenType.WHITE_SPACE); }
     {NEWLINE}{NOT_WHITE_SPACE}                                {
@@ -343,6 +347,10 @@ void setBacktick(boolean state) {
     {NEWLINE}+                                                      { return returnElement(TokenType.WHITE_SPACE); }
     "`"                                                             { setBacktick(false); setState(YAML_SCALAR); return returnElement(OMTTypes.BACKTICK); }
     [^\$\`\{\}\ ]+                                                  { return returnElement(OMTTypes.STRING); }
+}
+<JAVADOCS> {
+    { JDEND }                                                       { setState(previousState); return returnElement(OMTTypes.JAVADOCS_END); }
+    [^]                                                             { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
 }
 
 [^]                                                                  { return returnElement(TokenType.BAD_CHARACTER); }
