@@ -349,8 +349,10 @@ void setBacktick(boolean state) {
     [^\$\`\{\}\ ]+                                                  { return returnElement(OMTTypes.STRING); }
 }
 <JAVADOCS> {
-    { JDEND }                                                       { setState(previousState); return returnElement(OMTTypes.JAVADOCS_END); }
-    [^]                                                             { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
+    {JDEND}                                                       { setState(previousState); return returnElement(OMTTypes.JAVADOCS_END); }
+    {WHITE_SPACE}+                                                  { return returnElement(TokenType.WHITE_SPACE); }
+    {NEWLINE}+                                                      { return returnElement(TokenType.WHITE_SPACE); }
+    [*]                                                             { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
+    [^*]+                                                           { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
 }
-
 [^]                                                                  { return returnElement(TokenType.BAD_CHARACTER); }
