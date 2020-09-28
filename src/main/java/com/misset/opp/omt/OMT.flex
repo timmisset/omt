@@ -6,6 +6,7 @@ import com.intellij.psi.tree.IElementType;
 import com.misset.opp.omt.psi.OMTElementType;import com.misset.opp.omt.psi.OMTTokenType;import com.misset.opp.omt.psi.OMTTypes;
 import com.intellij.psi.TokenType;import jdk.nashorn.internal.parser.Token;
 import java.util.Stack;
+import java.util.HashMap;
 
 %%
 
@@ -36,12 +37,10 @@ LATIN_EXT_A=                    [\u0100-\u017F] // Zie: http://en.wikipedia.org/
 SYMBOL=                         ({ALPHA}|{DIGIT}|{LATIN_EXT_A}|[_@\-])+
 SCHEME=                         {ALPHA}({ALPHA}|{DIGIT}|[+.-])*
 IRI=                            "<"{SCHEME}":"({SYMBOL}|[?&#/+*.-])+">"
-SCHEMALESS_IRI=                 "<"({SYMBOL}|[?&#/+*.-])+">"
 END_OF_LINE_COMMENT=            ("#" | "\/\/")[^\r\n]*
 JAVADOCS=                       \/\*\*([^]*)\*\/ // all between /** and */
 NAME=                           {ALPHA}({ALPHA}|{DIGIT}|{UNDERSCORE})*
 CURIE=                          ({NAME})?":"{SYMBOL}
-CURIE_PREFIX=                   ({ALPHA}({ALPHA}|{DIGIT})*)?":"
 TYPED_VALUE=                    {STRING}"^^"({IRI}|{CURIE})
 IMPORT_PATH=                    (\.{1,2}[^:]*:)
 PROPERTY_KEY=                   {IMPORT_PATH} | (({STRING}|{NAME})({WHITE_SPACE}*)":"({WHITE_SPACE}+ | {NEWLINE}))
@@ -50,6 +49,7 @@ PROPERTY_KEY=                   {IMPORT_PATH} | (({STRING}|{NAME})({WHITE_SPACE}
 /* globals to track current indentation */
 int yycolumn;
 Stack<Integer> indents = new Stack();
+HashMap<String, Integer> pushbacks = new HashMap<>();
 void log(String message) {
     if(logging) { System.out.println(message); }
 }
@@ -59,10 +59,13 @@ OMTLexer(java.io.Reader in, boolean enableLogging) {
     this.logging = enableLogging;
 }
 void yypushback(int number, String id) {
+    String pushbackId = String.format("%s.%s", number, zzMarkedPos);
+    if(pushbacks.getOrDefault(pushbackId, 0) > 5) { return; }
     int position = zzMarkedPos;
     log("resetting " + number + " of " + yylength() + "'" + yytext() + "'" + " due to: " + id);
     yypushback(number);
     log("token moved back from " + position + " to " + zzMarkedPos);
+    pushbacks.put(pushbackId, pushbacks.getOrDefault(pushbackId, 0));
 }
 boolean inScalarBlock = false;
 IElementType startScalarBlock() {
@@ -74,10 +77,6 @@ String getStateName(int state) {
     switch(state) {
         case 0: return "YYINITIAL";
         case 2: return "YAML_SCALAR";
-//        case 4: return "YAML_SEQUENCE";
-//        case 6: return "YAML_DICTIONARY";
-//        case 8: return "INDENT";
-//        case 10: return "ODT";
         case 4: return "CURIE";
         case 6: return "BACKTICK";
     }
@@ -179,7 +178,7 @@ void setBacktick(boolean state) {
 %%
 <YYINITIAL> {
     ^{WHITE_SPACE}*{NEWLINE}                                  { return returnElement(TokenType.WHITE_SPACE); }
-    {NEWLINE}*                                                { return returnElement(TokenType.WHITE_SPACE); }
+    {NEWLINE}+                                                { return returnElement(TokenType.WHITE_SPACE); }
 
     {PROPERTY_KEY}                                            {
                                                                 IElementType indent = setIndent();
