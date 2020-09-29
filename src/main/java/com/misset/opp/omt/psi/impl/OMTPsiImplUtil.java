@@ -5,6 +5,7 @@ import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.util.VariableUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -76,7 +77,7 @@ public class OMTPsiImplUtil {
 
     // Members
     public static String getName(OMTMember member) {
-        return member.getText();
+        return getNameIdentifier(member).getText();
     }
 
     public static PsiElement setName(OMTMember member, String newName) {
@@ -85,8 +86,9 @@ public class OMTPsiImplUtil {
         return replacement;
     }
 
+    @NotNull
     public static PsiElement getNameIdentifier(OMTMember member) {
-        return member;
+        return member.getStart().getNextSibling();
     }
 
     // ModelItemLabel

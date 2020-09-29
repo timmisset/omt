@@ -24,7 +24,7 @@ indentToken ::=                             INDENT | INDENT2
 dedentToken ::=                             DEDENT | DEDENT2
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
 block ::=                                   leading? (blockEntry+ | (indentToken blockEntry+ dedentToken)) trailing?
-blockEntry ::=                              leading? specificBlock | (leading? propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken))) {
+blockEntry ::=                              leading? specificBlock | (leading? propertyLabel trailing? ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken))) {
                                             mixin="com.misset.opp.omt.psi.impl.OMTAnnotationHolderImpl"
                                             implements="com.misset.opp.omt.psi.support.OMTAnnotationHolder"
 }
@@ -46,7 +46,7 @@ specificBlock ::=                          importBlock | exportBlock | prefixBlo
 
 // sequences
 exportBlock ::=                             EXPORT_START trailing? memberList?
-memberList ::=                              (SEQUENCE_BULLET member trailing?)+ | (indentToken (SEQUENCE_BULLET member trailing?)+ dedentToken)
+memberList ::=                              (leading? SEQUENCE_BULLET member trailing?)+ | (indentToken (leading? SEQUENCE_BULLET member trailing?)+ dedentToken)
 member ::=                                  start OPERATOR end {
                                                        mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
                                                        implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
@@ -207,7 +207,7 @@ removeFromCollection ::=                    queryPath trailing? REMOVE trailing?
 // to reduce the complexity of parsing, slashes will be captured but are not required
 queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+ (PIPE queryPath)?
 queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
-                                            operatorCall | IRI | DOT | subQuery | CONDITIONAL_OPERATOR |
+                                            operatorCall | IRI | DOT | OWLPROPERTY | subQuery | CONDITIONAL_OPERATOR |
                                             queryFilter | trailing | leading | chooseBlock | interpolatedString | PLUS | ASTERIX
 queryReverseStep ::=                        CARAT queryStep
 
