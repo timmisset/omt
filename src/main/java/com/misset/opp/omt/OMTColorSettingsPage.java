@@ -2,8 +2,11 @@ package com.misset.opp.omt;
 
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighter;
-import com.intellij.openapi.options.colors.*;
-import org.jetbrains.annotations.*;
+import com.intellij.openapi.options.colors.AttributesDescriptor;
+import com.intellij.openapi.options.colors.ColorDescriptor;
+import com.intellij.openapi.options.colors.ColorSettingsPage;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.util.Map;
@@ -21,6 +24,7 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
             new AttributesDescriptor("Comment Block", OMTSyntaxHighlighter.COMMENTBLOCK),
             new AttributesDescriptor("Operator and Command names", OMTSyntaxHighlighter.OPERATOR_OR_COMMAND),
             new AttributesDescriptor("Curie and Prefixes", OMTSyntaxHighlighter.PREFIX),
+            new AttributesDescriptor("OWL Properties", OMTSyntaxHighlighter.OWLPROPERTY),
 
 
     };
@@ -125,6 +129,7 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
                 "        returns: $voorgeleiding\n" +
                 "\n" +
                 "        onStart: |\n" +
+                "            VAR $sameAs = $voorgeleiding / <sameAs>;\n" +
                 "            IF $voorgeleiding / EMPTY {\n" +
                 "                $voorgeleiding = @MaakVoorgeleiding!nested($opvolgingsDossier, verdachtenInAanhouding());\n" +
                 "            }\n" +

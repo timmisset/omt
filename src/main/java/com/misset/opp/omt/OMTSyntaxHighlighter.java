@@ -35,6 +35,8 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
             createTextAttributesKey("CONSTANT", DefaultLanguageHighlighterColors.CONSTANT);
     public static final TextAttributesKey OPERATOR_OR_COMMAND =
             createTextAttributesKey("OPERATOR", DefaultLanguageHighlighterColors.IDENTIFIER);
+    public static final TextAttributesKey OWLPROPERTY =
+            createTextAttributesKey("OWLPROPERTY", DefaultLanguageHighlighterColors.IDENTIFIER);
 
     private static final TextAttributesKey[] BAD_CHAR_KEYS = new TextAttributesKey[]{BAD_CHARACTER};
     private static final TextAttributesKey[] COMMENTLINE_KEYS = new TextAttributesKey[]{COMMENTLINE};
@@ -47,6 +49,7 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     private static final TextAttributesKey[] VARIABLE_TYPE_KEYS = new TextAttributesKey[]{VARIABLE};
     private static final TextAttributesKey[] GLOBAL_VARIABLE_KEYS = new TextAttributesKey[]{GLOBAL_VARIABLE};
     private static final TextAttributesKey[] OPERATOR_OR_COMMAND_KEYS = new TextAttributesKey[]{OPERATOR_OR_COMMAND};
+    private static final TextAttributesKey[] OWLPROPERTY_KEYS = new TextAttributesKey[]{OWLPROPERTY};
     private static final TextAttributesKey[] PREFIX_KEYS = new TextAttributesKey[]{PREFIX};
 
     @NotNull
@@ -60,8 +63,9 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     public TextAttributesKey[] getTokenHighlights(IElementType tokenType) {
         switch (tokenType.toString()) {
             case "OMTTokenType.END_OF_LINE_COMMENT":
-            case "OMTTokenType.JAVA_DOCS":
                 return COMMENTLINE_KEYS;
+            case "OMTTokenType.JAVA_DOCS":
+                return COMMENTBLOCK_KEYS;
             case "BAD_CHARACTER":
                 return BAD_CHAR_KEYS;
             case "OMTTokenType.MODEL_ITEM_TYPE":
@@ -93,7 +97,11 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
             case "OMTTokenType.NAMESPACE_MEMBER":
                 return PREFIX_KEYS;
 
-            default: return EMPTY_KEYS;
+            case "OMTTokenType.OWLPROPERTY":
+                return OWLPROPERTY_KEYS;
+
+            default:
+                return EMPTY_KEYS;
         }
     }
 
