@@ -64,6 +64,8 @@ public class ProjectUtil {
 
         loadBuiltInMembers(project, "builtinCommands.ts", BuiltInType.Command);
         loadBuiltInMembers(project, "builtinOperators.ts", BuiltInType.Operator);
+        loadBuiltInMembers(project, "http-commands.ts", BuiltInType.HttpCommands);
+
     }
     private void loadBuiltInMembers(Project project, String filename, BuiltInType type) {
         List<VirtualFile> virtualFiles = getVirtualFilesByName(project, filename);

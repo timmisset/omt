@@ -56,9 +56,24 @@ public class BuiltInUtil {
                 .collect(Collectors.toList());
     }
 
+    public boolean isCommand(BuiltInType type) {
+        return type == BuiltInType.Command || type == BuiltInType.HttpCommands;
+    }
+
     private String getIndexedName(String name, BuiltInType type) {
-        name = name.startsWith("@") && type == BuiltInType.Command ? name.substring(1) : name;
-        return (type == BuiltInType.Command ? COMMAND_NAME_PREFIX : OPERATOR_NAME_PREFIX) + name;
+        name = name.startsWith("@") && isCommand(type) ? name.substring(1) : name;
+        return (isCommand(type) ? COMMAND_NAME_PREFIX : OPERATOR_NAME_PREFIX) + name;
+    }
+
+    public JsonObject parseHttpCommands(String block) {
+        Pattern regEx = Pattern.compile("(?<=return )([\\s\\S]*)};");
+        Matcher m = regEx.matcher(block);
+        boolean found = m.find();
+        if (found && m.groupCount() == 1) {
+            String group = m.group(1) + "}";
+            return parseBlock(group, BuiltInType.Command);
+        }
+        return null;
     }
 
     public JsonObject parseBuiltIn(String block, BuiltInType type) {
@@ -66,24 +81,27 @@ public class BuiltInUtil {
         Matcher m = regEx.matcher(block);
         boolean found = m.find();
         if (found && m.groupCount() == 2) {
-            JsonParser parser = new JsonParser();
-            String blockToParse = m.group(2);
-            blockToParse = blockToParse.replaceAll("\\/\\/.*", ""); // remove the comments
-            blockToParse = blockToParse.replaceAll("factory.*", ""); // remove the factor property
-            if (type == BuiltInType.Command) {
-                Pattern linkRegEx = Pattern.compile("link:.*");
-                Matcher linkM = linkRegEx.matcher(blockToParse);
-                while (linkM.find()) {
-                    String matchingPattern = linkM.group();
-                    String replacementPattern = matchingPattern.replace("link: ", "link: '");
-                    replacementPattern = replacementPattern.substring(0, replacementPattern.length() - 1) + "',";
-                    blockToParse = blockToParse.replace(matchingPattern, replacementPattern);
-                }
-            }
-            blockToParse = blockToParse.replaceAll("([,\\s]+})", "}"); // remove trailing commas
-            return (JsonObject) parser.parse(blockToParse);
+            return parseBlock(m.group(2), type);
         }
         return null;
+    }
+
+    private JsonObject parseBlock(String blockToParse, BuiltInType type) {
+        JsonParser parser = new JsonParser();
+        blockToParse = blockToParse.replaceAll("\\/\\/.*", ""); // remove the comments
+        blockToParse = blockToParse.replaceAll("factory.*", ""); // remove the factor property
+        if (type == BuiltInType.Command) {
+            Pattern linkRegEx = Pattern.compile("link:.*");
+            Matcher linkM = linkRegEx.matcher(blockToParse);
+            while (linkM.find()) {
+                String matchingPattern = linkM.group();
+                String replacementPattern = matchingPattern.replace("link: ", "link: '");
+                replacementPattern = replacementPattern.substring(0, replacementPattern.length() - 1) + "',";
+                blockToParse = blockToParse.replace(matchingPattern, replacementPattern);
+            }
+        }
+        blockToParse = blockToParse.replaceAll("([,\\s]+})", "}"); // remove trailing commas
+        return (JsonObject) parser.parse(blockToParse);
     }
 
     public void reset() {
@@ -95,7 +113,11 @@ public class BuiltInUtil {
     }
 
     public void reloadBuiltInFromDocument(Document document, BuiltInType type, Project project) {
-        JsonObject items = parseBuiltIn(document.getText(), type);
+        JsonObject items =
+                type == BuiltInType.HttpCommands ?
+                        parseHttpCommands(document.getText()) :
+                        parseBuiltIn(document.getText(), type);
+
         Parser parser = Parser.builder().build();
         HtmlRenderer renderer = HtmlRenderer.builder().build();
 
@@ -129,7 +151,21 @@ public class BuiltInUtil {
 
             if (!doc.isJsonNull()) {
                 String docAsString = doc.getAsString();
-                docAsString = docAsString.replace("com.", "").replace("ops.", "").replace(".doc", ".md");
+                switch (docAsString) {
+                    case "HttpCall.docGet":
+                        docAsString = "HttpCallCommandGet.md";
+                        break;
+                    case "HttpCall.docPost":
+                        docAsString = "HttpCallCommandPost.md";
+                        break;
+                    case "HttpCall.docPut":
+                        docAsString = "HttpCallCommandPut.md";
+                        break;
+                    default:
+                        docAsString = docAsString.replace("com.", "").replace("ops.", "").replace(".doc", ".md");
+                        break;
+                }
+
                 PsiFile[] filesByName = FilenameIndex.getFilesByName(project, docAsString, GlobalSearchScope.allScope(project));
                 if (filesByName.length == 1) {
                     Document builtInMemberDoc = FileDocumentManager.getInstance().getDocument(filesByName[0].getVirtualFile());
