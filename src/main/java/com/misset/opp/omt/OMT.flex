@@ -308,6 +308,7 @@ void setBacktick(boolean state) {
     {INTEGER}                                                       { return returnElement(OMTTypes.INTEGER); }
     {DECIMAL}                                                       { return returnElement(OMTTypes.DECIMAL); }
     {TYPED_VALUE}                                                   { return returnElement(OMTTypes.TYPED_VALUE); }
+    "<"{NAME}">"                                                    { return returnElement(OMTTypes.OWLPROPERTY); }
     {NAME}                                                          { return returnElement(OMTTypes.OPERATOR); }
     // all single characters that are resolved to special characters:
     // todo: some should be made more specifically available based on their lexer state

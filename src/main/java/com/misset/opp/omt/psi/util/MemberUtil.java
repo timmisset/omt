@@ -77,7 +77,7 @@ public class MemberUtil {
         OMTFile containingFile = (OMTFile) call.getContainingFile();
         List<OMTMember> importedMembers = containingFile.getImportedMembers();
         Optional<OMTMember> importedMember = importedMembers.stream()
-                .filter(member -> member.getText().trim().equals(callName))
+                .filter(member -> member.getName().trim().equals(callName))
                 .findFirst();
         if (importedMember.isPresent()) {
             return importUtil.resolveImportMember(importedMember.get());
@@ -256,7 +256,9 @@ public class MemberUtil {
                     .create();
             validateSignature(call, asExportMember, holder);
         } catch (Exception e) {
-            holder.newAnnotation(HighlightSeverity.ERROR, e.getMessage()).range(call.getNameIdentifier()).create();
+            AnnotationBuilder annotationBuilder = holder.newAnnotation(HighlightSeverity.ERROR, e.getMessage());
+            annotationBuilder.range(call.getNameIdentifier());
+            annotationBuilder.create();
         }
     }
 

@@ -1,5 +1,8 @@
 package com.misset.opp.omt.psi.util;
 
+import com.intellij.codeInsight.intention.IntentionAction;
+import com.intellij.lang.annotation.AnnotationBuilder;
+import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
@@ -20,9 +23,15 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
 class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
+
+    @Mock
+    AnnotationHolder annotationHolder;
+    @Mock
+    AnnotationBuilder annotationBuilder;
 
     @Mock
     ImportUtil importUtil;
@@ -46,6 +55,9 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
         ApplicationManager.getApplication().runReadAction(() -> {
             rootBlock = exampleFiles.getActivityWithMembers();
         });
+        doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());
+        doReturn(annotationBuilder).when(annotationBuilder).range(any(PsiElement.class));
+        doReturn(annotationBuilder).when(annotationBuilder).withFix(any(IntentionAction.class));
     }
 
     @AfterEach
@@ -114,11 +126,12 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
-    void getCallName() {
-    }
-
-    @Test
     void annotateCall() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+                    commandCall -> commandCall.getName().equals("myThirdCommand"));
+            memberUtil.annotateCall(call, annotationHolder);
+        });
     }
 
     @Test
