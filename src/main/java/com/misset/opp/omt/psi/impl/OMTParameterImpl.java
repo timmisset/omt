@@ -57,9 +57,10 @@ public class OMTParameterImpl implements OMTParameter {
     }
 
     public OMTParameterImpl(JsonPrimitive primitive, String name) {
-        if (primitive.getAsString().startsWith("p.")) {
+        if (primitive.getAsString().startsWith("p.") || primitive.getAsString().startsWith("param.")) {
             this.name = name;
-            parameterType = primitive.getAsString().substring(2);
+            parameterType = primitive.getAsString();
+            parameterType = parameterType.substring(parameterType.indexOf(".") + 1);
             rest = parameterType.startsWith("rest");
             required = !rest && !parameterType.startsWith("optional");
         }

@@ -37,6 +37,25 @@ public class BuiltInUtilTest {
     }
 
     @Test
+    void parseHttpCommands() throws IOException {
+        // ARRANGE
+        URL url = Thread.currentThread().getContextClassLoader().getResource("http-commands.ts");
+        assert url != null;
+        File file = new File(url.getPath());
+
+        String content = new String(Files.readAllBytes(file.toPath()));
+
+
+        // ACT
+        JsonObject jsonObject = builtInUtil.parseHttpCommands(content);
+
+        // ASSERT
+        assertNotNull(jsonObject);
+        assertTrue(jsonObject.has("HTTP_GET"));
+
+    }
+
+    @Test
     void parseBuiltInCommands() throws IOException {
         // ARRANGE
         URL url = Thread.currentThread().getContextClassLoader().getResource("builtinCommands.ts");

@@ -10,11 +10,11 @@ import java.util.List;
 public class BuiltInMember extends OMTCallableImpl implements OMTCallable {
 
     public BuiltInMember(String name, List<OMTParameter> params, BuiltInType type) {
-        super(type.name(), name, params, type == BuiltInType.Command);
+        super(type.name(), name, params, BuiltInUtil.SINGLETON.isCommand(type));
     }
 
     public BuiltInMember(String name, List<OMTParameter> params, BuiltInType type, List<String> localVariables) {
-        super(type.name(), name, params, type == BuiltInType.Command, localVariables);
+        super(type.name(), name, params, BuiltInUtil.SINGLETON.isCommand(type), localVariables);
     }
 
     @Override
