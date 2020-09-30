@@ -37,6 +37,24 @@ public class BuiltInUtilTest {
     }
 
     @Test
+    void parseParseJsonCommand() throws IOException {
+        // ARRANGE
+        URL url = Thread.currentThread().getContextClassLoader().getResource("json-parse-command.ts");
+        assert url != null;
+        File file = new File(url.getPath());
+
+        String content = new String(Files.readAllBytes(file.toPath()));
+
+
+        // ACT
+        JsonObject jsonObject = builtInUtil.parseJsonCommand(content);
+
+        // ASSERT
+        assertNotNull(jsonObject);
+        assertTrue(jsonObject.has("JSON_PARSE"));
+    }
+
+    @Test
     void parseHttpCommands() throws IOException {
         // ARRANGE
         URL url = Thread.currentThread().getContextClassLoader().getResource("http-commands.ts");
@@ -52,6 +70,8 @@ public class BuiltInUtilTest {
         // ASSERT
         assertNotNull(jsonObject);
         assertTrue(jsonObject.has("HTTP_GET"));
+        assertTrue(jsonObject.has("HTTP_POST"));
+        assertTrue(jsonObject.has("HTTP_PUT"));
 
     }
 
