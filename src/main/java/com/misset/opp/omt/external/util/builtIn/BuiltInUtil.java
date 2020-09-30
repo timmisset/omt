@@ -1,6 +1,9 @@
 package com.misset.opp.omt.external.util.builtIn;
 
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
@@ -57,7 +60,7 @@ public class BuiltInUtil {
     }
 
     public boolean isCommand(BuiltInType type) {
-        return type == BuiltInType.Command || type == BuiltInType.HttpCommands;
+        return type == BuiltInType.Command || type == BuiltInType.HttpCommands || type == BuiltInType.ParseJsonCommand;
     }
 
     private String getIndexedName(String name, BuiltInType type) {
@@ -72,6 +75,19 @@ public class BuiltInUtil {
         if (found && m.groupCount() == 1) {
             String group = m.group(1) + "}";
             return parseBlock(group, BuiltInType.Command);
+        }
+        return null;
+    }
+
+    public JsonObject parseJsonCommand(String block) {
+        Pattern regEx = Pattern.compile("(?<=export const jsonParseCommandDefinition)([^=]*)=([^;]*)");
+        Matcher m = regEx.matcher(block);
+        boolean found = m.find();
+        if (found && m.groupCount() == 2) {
+            String group = m.group(2);
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.add("JSON_PARSE", parseBlock(group, BuiltInType.Command));
+            return jsonObject;
         }
         return null;
     }
@@ -113,10 +129,18 @@ public class BuiltInUtil {
     }
 
     public void reloadBuiltInFromDocument(Document document, BuiltInType type, Project project) {
-        JsonObject items =
-                type == BuiltInType.HttpCommands ?
-                        parseHttpCommands(document.getText()) :
-                        parseBuiltIn(document.getText(), type);
+        JsonObject items;
+        switch (type) {
+            case HttpCommands:
+                items = parseHttpCommands(document.getText());
+                break;
+            case ParseJsonCommand:
+                items = parseJsonCommand(document.getText());
+                break;
+            default:
+                items = parseBuiltIn(document.getText(), type);
+                break;
+        }
 
         Parser parser = Parser.builder().build();
         HtmlRenderer renderer = HtmlRenderer.builder().build();
@@ -129,7 +153,7 @@ public class BuiltInUtil {
                 JsonArray parameters = (JsonArray) params;
                 parameters.forEach(jsonElement ->
                         inputParameters.add(
-                                new OMTParameterImpl((JsonPrimitive) jsonElement,
+                                new OMTParameterImpl(jsonElement,
                                         String.format("$param%s", inputParameters.size()))
                         ));
             }
@@ -149,7 +173,7 @@ public class BuiltInUtil {
             }
             BuiltInMember builtInMember = new BuiltInMember(name, inputParameters, type, localVariables);
 
-            if (!doc.isJsonNull()) {
+            if (doc != null && !doc.isJsonNull()) {
                 String docAsString = doc.getAsString();
                 switch (docAsString) {
                     case "HttpCall.docGet":

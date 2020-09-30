@@ -1,6 +1,7 @@
 package com.misset.opp.omt.psi.impl;
 
-import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTParameter;
 
@@ -56,14 +57,28 @@ public class OMTParameterImpl implements OMTParameter {
         required = false;
     }
 
-    public OMTParameterImpl(JsonPrimitive primitive, String name) {
-        if (primitive.getAsString().startsWith("p.") || primitive.getAsString().startsWith("param.")) {
-            this.name = name;
-            parameterType = primitive.getAsString();
-            parameterType = parameterType.substring(parameterType.indexOf(".") + 1);
+    public OMTParameterImpl(JsonElement element, String name) {
+        this.name = name;
+        if (element.isJsonPrimitive()) {
+            if ((element.getAsString().startsWith("p.") || element.getAsString().startsWith("param."))) {
+                parameterType = element.getAsString();
+                parameterType = parameterType.substring(parameterType.indexOf(".") + 1);
+            } else {
+                parameterType = element.getAsString();
+            }
             rest = parameterType.startsWith("rest");
             required = !rest && !parameterType.startsWith("optional");
+            return;
         }
+        if (element.isJsonObject()) {
+            JsonObject asObject = (JsonObject) element;
+            parameterType = asObject.has("type") ? asObject.get("type").getAsString() : "Unknown type";
+            rest = asObject.has("rest") && asObject.get("rest").getAsBoolean();
+            required = !(asObject.has("optional") && asObject.get("optional").getAsBoolean());
+            return;
+        }
+        throw new RuntimeException(String.format("Could not parse parameter information for: %s, name: %s",
+                element.toString(), name));
     }
 
     @Override
