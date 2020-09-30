@@ -22,6 +22,9 @@ model:
             @MijnProcedure();
             @myImportedMethod();
             @LOAD_ONTOLOGY(MijnOntology);
+            @myBuiltInMethod();
+            @LOCALCOMMAND();
+            @DONE();
 
     MijnProcedure: !Procedure
         onRun: |
