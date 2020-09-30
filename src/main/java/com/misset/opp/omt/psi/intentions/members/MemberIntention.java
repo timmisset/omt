@@ -25,8 +25,9 @@ import java.util.stream.Collectors;
 public class MemberIntention {
 
     private static MemberUtil memberUtil = MemberUtil.SINGLETON;
+    public static MemberIntention SINGLETON = new MemberIntention();
 
-    public static List<IntentionAction> getImportMemberIntentions(OMTCall call, Predicate<OMTExportMember> isCorrectType) {
+    public List<IntentionAction> getImportMemberIntentions(OMTCall call, Predicate<OMTExportMember> isCorrectType) {
         OMTFile containingFile = (OMTFile) call.getContainingFile();
         return containingFile.getImportedFiles().entrySet().stream()
                 .map(omtImportVirtualFileEntry -> {
@@ -43,15 +44,19 @@ public class MemberIntention {
                 .collect(Collectors.toList());
     }
 
-    public static IntentionAction getImportIntentionFromExistingImportedFile(OMTExportMember member, VirtualFile file, OMTImport omtImport) {
+    public IntentionAction getImportIntentionFromExistingImportedFile(OMTExportMember member, VirtualFile file, OMTImport omtImport) {
         return new IntentionAction() {
             @Override
-            public @Nls(capitalization = Nls.Capitalization.Sentence) @NotNull String getText() {
+            public @Nls(capitalization = Nls.Capitalization.Sentence)
+            @NotNull
+            String getText() {
                 return String.format("Add import %s to existing imports of %s", member.getName(), file.getName());
             }
 
             @Override
-            public @NotNull @Nls(capitalization = Nls.Capitalization.Sentence) String getFamilyName() {
+            public @NotNull
+            @Nls(capitalization = Nls.Capitalization.Sentence)
+            String getFamilyName() {
                 return "Import";
             }
 

@@ -32,6 +32,7 @@ public class MemberUtil {
     private ImportUtil importUtil = ImportUtil.SINGLETON;
     private ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
     private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
+    private MemberIntention memberIntention = MemberIntention.SINGLETON;
 
     public static final MemberUtil SINGLETON = new MemberUtil();
 
@@ -174,7 +175,7 @@ public class MemberUtil {
             AnnotationBuilder annotationBuilder = holder.newAnnotation(HighlightSeverity.ERROR, String.format("%s could not be resolved", call.getName()))
                     .range(call.getNameIdentifier());
 
-            List<IntentionAction> intentionActionList = MemberIntention.getImportMemberIntentions(call, omtExportMember ->
+            List<IntentionAction> intentionActionList = memberIntention.getImportMemberIntentions(call, omtExportMember ->
                     (omtExportMember.isCommand() && call.canCallCommand()) ||
                             (omtExportMember.isOperator() && call.canCallOperator())
             );
@@ -223,23 +224,18 @@ public class MemberUtil {
         if (builtInMember != null) {
             // is a builtIn member, annotate:
             holder.newAnnotation(HighlightSeverity.INFORMATION, builtInMember.shortDescription())
-                    .range(call.getNameIdentifier().getTextRange())
+                    .range(call.getNameIdentifier())
                     .tooltip(builtInMember.htmlDescription())
                     .create();
             validateSignature(call, builtInMember, holder);
             return true;
-        } else {
-            // check if the builtIn members are loaded:
-            if (!builtInUtil.isLoaded()) {
-                projectUtil.loadBuiltInMembers(call.getProject());
-                return annotateAsBuiltInMember(call, holder);
-            }
         }
         return false;
     }
 
     private void annotateReference(@NotNull PsiElement resolved, @NotNull OMTCall call, @NotNull AnnotationHolder holder) {
-        if (call.getNameIdentifier() == null) {
+        PsiElement nameIdentifier = call.getNameIdentifier();
+        if (nameIdentifier == null) {
             return;
         }
         try {
@@ -251,13 +247,13 @@ public class MemberUtil {
                 throw new Exception("Could not resolve callable element to exported member, this is a bug");
             }
             holder.newAnnotation(HighlightSeverity.INFORMATION, asExportMember.shortDescription())
-                    .range(call.getNameIdentifier().getTextRange())
+                    .range(nameIdentifier)
                     .tooltip(asExportMember.htmlDescription())
                     .create();
             validateSignature(call, asExportMember, holder);
         } catch (Exception e) {
             AnnotationBuilder annotationBuilder = holder.newAnnotation(HighlightSeverity.ERROR, e.getMessage());
-            annotationBuilder.range(call.getNameIdentifier());
+            annotationBuilder.range(nameIdentifier);
             annotationBuilder.create();
         }
     }

@@ -56,7 +56,6 @@ class AnnotationUtilTest extends LightJavaCodeInsightFixtureTestCase {
                             case "$usedVariable":
                                 if (usedVariableDeclaration == null) {
                                     usedVariableDeclaration = omtVariable;
-                                } else {
                                 }
                                 break;
                         }

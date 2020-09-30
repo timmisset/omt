@@ -181,7 +181,7 @@ void setBacktick(boolean state) {
 
 %%
 <YYINITIAL> {
-    ^{WHITE_SPACE}*{NEWLINE}                                  { return returnElement(TokenType.WHITE_SPACE); }
+    ^{WHITE_SPACE}+{NEWLINE}                                  { return returnElement(TokenType.BAD_CHARACTER); }
     {NEWLINE}+                                                { return returnElement(TokenType.WHITE_SPACE); }
 
     {PROPERTY_KEY}                                            {
