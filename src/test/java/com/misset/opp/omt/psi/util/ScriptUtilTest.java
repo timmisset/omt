@@ -7,7 +7,10 @@ import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.ExampleFiles;
+import com.misset.opp.omt.psi.OMTReturnStatement;
+import com.misset.opp.omt.psi.OMTScript;
+import com.misset.opp.omt.psi.OMTVariable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,15 +65,6 @@ class ScriptUtilTest extends LightJavaCodeInsightFixtureTestCase {
             OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock);
             Optional<OMTScript> script = scriptUtil.getScript(variable);
             assertTrue(script.isPresent());
-        });
-    }
-
-    @Test
-    void getScriptLine() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock);
-            Optional<OMTScriptLine> scriptLine = scriptUtil.getScriptLine(variable);
-            assertTrue(scriptLine.isPresent());
         });
     }
 

@@ -22,7 +22,7 @@ public class ScriptUtil {
         return Optional.ofNullable(PsiTreeUtil.getTopmostParentOfType(element, OMTScript.class));
     }
 
-    public Optional<OMTScriptLine> getScriptLine(PsiElement element) {
+    private Optional<OMTScriptLine> getScriptLine(PsiElement element) {
         return Optional.ofNullable(PsiTreeUtil.getParentOfType(element, OMTScriptLine.class));
     }
 

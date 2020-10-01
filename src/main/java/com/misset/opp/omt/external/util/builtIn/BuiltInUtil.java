@@ -5,14 +5,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.search.FilenameIndex;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.misset.opp.omt.psi.impl.OMTCallableImpl;
 import com.misset.opp.omt.psi.impl.OMTParameterImpl;
 import com.misset.opp.omt.psi.support.OMTParameter;
+import com.misset.opp.omt.psi.util.ProjectUtil;
 import org.commonmark.html.HtmlRenderer;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -29,17 +27,10 @@ public class BuiltInUtil {
     private final static String COMMAND_NAME_PREFIX = "COMMAND";
     private final static String OPERATOR_NAME_PREFIX = "OPERATOR";
 
+    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     public static BuiltInUtil SINGLETON = new BuiltInUtil();
 
     private HashMap<String, BuiltInMember> builtInMembers = new HashMap<>();
-
-    public boolean isBuiltInOperator(String name) {
-        return builtInMembers.containsKey(getIndexedName(name, BuiltInType.Operator));
-    }
-
-    public boolean isBuiltInCommand(String name) {
-        return builtInMembers.containsKey(getIndexedName(name, BuiltInType.Command));
-    }
 
     public BuiltInMember getBuiltInMember(String name, BuiltInType type) {
         return builtInMembers.get(getIndexedName(name, type));
@@ -68,7 +59,7 @@ public class BuiltInUtil {
         return (isCommand(type) ? COMMAND_NAME_PREFIX : OPERATOR_NAME_PREFIX) + name;
     }
 
-    public JsonObject parseHttpCommands(String block) {
+    private JsonObject parseHttpCommands(String block) {
         Pattern regEx = Pattern.compile("(?<=return )([\\s\\S]*)};");
         Matcher m = regEx.matcher(block);
         boolean found = m.find();
@@ -79,7 +70,7 @@ public class BuiltInUtil {
         return null;
     }
 
-    public JsonObject parseJsonCommand(String block) {
+    private JsonObject parseJsonCommand(String block) {
         Pattern regEx = Pattern.compile("(?<=export const jsonParseCommandDefinition)([^=]*)=([^;]*)");
         Matcher m = regEx.matcher(block);
         boolean found = m.find();
@@ -92,7 +83,7 @@ public class BuiltInUtil {
         return null;
     }
 
-    public JsonObject parseBuiltIn(String block, BuiltInType type) {
+    private JsonObject parseBuiltIn(String block, BuiltInType type) {
         Pattern regEx = Pattern.compile(String.format("(?<=export const builtin%s)([^=]*)=([^;]*)", type.name()));
         Matcher m = regEx.matcher(block);
         boolean found = m.find();
@@ -190,9 +181,10 @@ public class BuiltInUtil {
                         break;
                 }
 
-                PsiFile[] filesByName = FilenameIndex.getFilesByName(project, docAsString, GlobalSearchScope.allScope(project));
+                PsiFile[] filesByName = projectUtil.getFilesByName(project, docAsString);
+
                 if (filesByName.length == 1) {
-                    Document builtInMemberDoc = FileDocumentManager.getInstance().getDocument(filesByName[0].getVirtualFile());
+                    Document builtInMemberDoc = projectUtil.getDocument(filesByName[0].getVirtualFile());
                     String text = builtInMemberDoc.getText();
 
                     Node parse = parser.parse(text);
@@ -203,5 +195,4 @@ public class BuiltInUtil {
             builtInMembers.put(getIndexedName(name, type), builtInMember);
         });
     }
-
 }

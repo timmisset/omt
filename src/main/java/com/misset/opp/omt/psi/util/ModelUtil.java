@@ -17,14 +17,14 @@ import java.util.stream.Collectors;
 
 public class ModelUtil {
 
-    private static String ATTRIBUTESKEY = "attributes";
-    private static String MAPOFKEY = "mapOf";
-    private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private static String TYPE = "type";
+    private final String ATTRIBUTESKEY = "attributes";
+    private final String MAPOFKEY = "mapOf";
+    private final String TYPE = "type";
+    private final String DEF = "Def";
 
     public static final ModelUtil SINGLETON = new ModelUtil();
-    private static final RemoveIntention removeIntention = RemoveIntention.SINGLETON;
-    private static String DEF = "Def";
+    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+    private RemoveIntention removeIntention = RemoveIntention.SINGLETON;
 
     /**
      * Returns the modelitem block containing the element, for example an Activity or Procedure block

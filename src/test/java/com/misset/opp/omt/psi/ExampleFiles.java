@@ -11,8 +11,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -65,6 +65,10 @@ public class ExampleFiles {
         return process("examples/activity_with_imports.omt");
     }
 
+    public PsiElement getActivityWithVariables() {
+        return process("examples/activity_with_variables.omt");
+    }
+
     private PsiElement process(String resourcePath) {
         File file = new File(getClass().getClassLoader().getResource(resourcePath).getFile());
         String data = null;
@@ -82,17 +86,22 @@ public class ExampleFiles {
     }
 
     public <T> T getPsiElementFromRootDocument(Class<? extends PsiElement> elementClass, PsiElement rootBlock, Predicate<T> condition) {
-        Optional<T> matchingElement = getPsiElementsFromRootDocument(elementClass, rootBlock)
-                .stream()
-                .map(item -> (T) item)
-                .filter(condition::test)
-                .findFirst();
-        return matchingElement.orElse(null);
+        return getPsiElementsFromRootDocument(elementClass, rootBlock, condition).get(0);
     }
 
     public <T> List<T> getPsiElementsFromRootDocument(Class<? extends PsiElement> elementClass, PsiElement rootBlock) {
-        Collection<? extends PsiElement> childrenOfType = PsiTreeUtil.findChildrenOfType(rootBlock, elementClass);
+        return getPsiElementsFromRootDocument(elementClass, rootBlock, item -> true);
+    }
+
+    public <T> List<T> getPsiElementsFromRootDocument(Class<? extends PsiElement> elementClass, PsiElement rootBlock, Predicate<T> condition) {
+        Collection<T> childrenOfType =
+                PsiTreeUtil.findChildrenOfType(rootBlock, elementClass).stream()
+                        .map(item -> (T) item)
+                        .filter(condition::test)
+                        .collect(Collectors.toList());
+
         assertTrue(childrenOfType.size() > 0);
+
 
         return new ArrayList(childrenOfType);
     }
