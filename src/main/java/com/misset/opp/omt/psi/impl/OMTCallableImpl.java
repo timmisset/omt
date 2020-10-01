@@ -23,7 +23,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
     private List<String> localVariables = new ArrayList<>();
     private String description;
 
-    final ModelUtil modelUtil = ModelUtil.SINGLETON;
+    private ModelUtil modelUtil = ModelUtil.SINGLETON;
 
     public OMTCallableImpl(String type, boolean isCommand) {
         this.type = type;

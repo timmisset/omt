@@ -1,0 +1,45 @@
+import:
+    '../../test.omt':
+        -   myImportedMethod
+
+model:
+    MijnActiviteit: !Activity
+        title: Mijn Activiteit
+
+        params:
+            -   $paramA
+            -   $paramB
+            -   $paramWithType (abc:type)
+
+        variables:
+            -   $variableA
+            -   $variableB
+            -   $declaredVariablesVariable
+
+        commands: |
+            DEFINE COMMAND myCommand($commandParam) => {
+                VAR $commandParam2 = $commandParam;
+            }
+
+        onStart: |
+            $variableA = $paramA;
+            $variableB = $paramB;
+            $variableA = 'test';
+            $_, $committed = @SomeMethod();
+            $variableC = $username;
+
+            VAR $myDeclaredVariable = 'test';
+            @LOG($myDeclaredVariable);
+            @FOREACH('test', @LOG($value));
+
+        watchers:
+            -   query: testQuery
+                onChange: $variableA = $newValue
+
+    MijnComponent: !Component
+        bindings:
+            bindingsVariable: $bindingsVariable
+
+    MijnStandaloneQuery: !StandaloneQuery
+        base: $baseVariable
+        query: 'test'

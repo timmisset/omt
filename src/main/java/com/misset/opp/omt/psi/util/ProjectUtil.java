@@ -10,6 +10,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
@@ -45,14 +46,23 @@ public class ProjectUtil {
     public StatusBar getStatusBar(Project project) {
         return windowManager.getStatusBar(project);
     }
+
     public FileDocumentManager getFileDocumentManager() {
         return fileDocumentManager;
+    }
+
+    public PsiFile[] getFilesByName(Project project, String name) {
+        return FilenameIndex.getFilesByName(project, name, GlobalSearchScope.allScope(project));
     }
 
 
     public List<VirtualFile> getVirtualFilesByName(Project project, String filename) {
         return
                 new ArrayList<>(FilenameIndex.getVirtualFilesByName(project, filename, GlobalSearchScope.projectScope(project)));
+    }
+
+    public Document getDocument(VirtualFile virtualFile) {
+        return FileDocumentManager.getInstance().getDocument(virtualFile);
     }
 
     /**
