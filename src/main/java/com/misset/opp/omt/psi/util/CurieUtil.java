@@ -88,16 +88,18 @@ public class CurieUtil {
             List<OMTPrefix> knownPrefixes = projectUtil.getKnownPrefixes(namespacePrefix.getName());
             AnnotationBuilder annotationBuilder = annotationUtil.annotateOriginGetBuilder(namespacePrefix, holder);
 
-            if (annotationBuilder != null && !knownPrefixes.isEmpty()) {
-                knownPrefixes.stream().map(OMTPrefix::getNamespaceIri)
-                        .map(omtNamespaceIri -> omtNamespaceIri.getText())
-                        .distinct()
-                        .forEach(iri -> annotationBuilder.withFix(
-                                registerPrefixIntention.getRegisterPrefixIntention(namespacePrefix, iri)
-                                )
-                        );
+            if (annotationBuilder != null) {
+                if (!knownPrefixes.isEmpty()) {
+                    knownPrefixes.stream().map(OMTPrefix::getNamespaceIri)
+                            .map(omtNamespaceIri -> omtNamespaceIri.getText())
+                            .distinct()
+                            .forEach(iri -> annotationBuilder.withFix(
+                                    registerPrefixIntention.getRegisterPrefixIntention(namespacePrefix, iri)
+                                    )
+                            );
+                }
+                annotationBuilder.create();
             }
-            annotationBuilder.create();
         }
     }
 
