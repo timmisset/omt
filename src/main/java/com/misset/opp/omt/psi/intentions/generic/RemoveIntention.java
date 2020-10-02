@@ -5,11 +5,18 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.util.CurieUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 public class RemoveIntention {
     public static final RemoveIntention SINGLETON = new RemoveIntention();
+
+    private CurieUtil curieUtil = CurieUtil.SINGLETON;
 
     public IntentionAction getRemoveIntention(PsiElement element) {
         return getRemoveIntention(element, "Remove");
@@ -38,7 +45,7 @@ public class RemoveIntention {
 
             @Override
             public void invoke(@NotNull Project project, Editor editor, PsiFile file) {
-                element.delete();
+                deleteElementContainer(element);
             }
 
             @Override
@@ -46,5 +53,22 @@ public class RemoveIntention {
                 return true;
             }
         };
+    }
+
+    private void deleteElementContainer(PsiElement element) {
+        if (element instanceof OMTNamespacePrefix) {
+            if (element.getParent() instanceof OMTPrefix) {
+                PsiFile containingFile = element.getContainingFile();
+                element.getParent().delete();
+                curieUtil.resetPrefixBlock(containingFile);
+            }
+        }
+
+        if (element instanceof OMTVariable) {
+            List<OMTSequenceItem> omtSequenceItems = PsiTreeUtil.collectParents(element, OMTSequenceItem.class, false, item -> item instanceof OMTBlockEntry);
+            if (omtSequenceItems.size() == 1) {
+                omtSequenceItems.get(0).delete();
+            }
+        }
     }
 }

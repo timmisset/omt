@@ -160,4 +160,18 @@ public class OMTElementFactory {
         String spaces = new String(new char[length]).replace("\0", character);
         return PsiParserFacade.SERVICE.getInstance(project).createWhiteSpaceFromText(spaces);
     }
+
+    public static String getIndentSpace(int indents) {
+        return getIndentSpace(indents, 0);
+    }
+
+    public static String getIndentSpace(int indents, int offset) {
+        int length = indents * 4 - offset;
+        return new String(new char[length]).replace("\0", " ");
+    }
+
+    public static PsiElement fromString(String text, Class<? extends PsiElement> getClass, Project project) {
+        PsiElement rootElement = createFile(project, text);
+        return PsiTreeUtil.findChildOfType(rootElement, getClass);
+    }
 }

@@ -76,7 +76,7 @@ class AnnotationUtilTest extends LightJavaCodeInsightFixtureTestCase {
     void annotateUsageThrowsNotUsedAnnotation() {
         ApplicationManager.getApplication().runReadAction(() -> {
             annotationUtil.annotateUsage(unusedVariable, OMTVariable.class, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("$unusedVariable is never used"));
+            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.WARNING), eq("$unusedVariable is never used"));
             verify(annotationBuilder, times(1)).create();
         });
     }

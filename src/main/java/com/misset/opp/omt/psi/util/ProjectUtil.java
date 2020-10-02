@@ -29,9 +29,9 @@ import static util.Helper.getResources;
 public class ProjectUtil {
 
 
-    private static final HashMap<String, ArrayList<OMTPrefix>> knownPrefixes = new HashMap<>();
-    private static final HashMap<String, ArrayList<OMTExportMember>> exportingMembers = new HashMap<>();
-    private static final JsonObject parsedModel = new JsonObject();
+    private final HashMap<String, ArrayList<OMTPrefix>> knownPrefixes = new HashMap<>();
+    private final HashMap<String, ArrayList<OMTExportMember>> exportingMembers = new HashMap<>();
+    private final JsonObject parsedModel = new JsonObject();
 
     public static final ProjectUtil SINGLETON = new ProjectUtil();
 
@@ -115,7 +115,11 @@ public class ProjectUtil {
     }
 
     public List<OMTPrefix> getKnownPrefixes(String prefix) {
-        return knownPrefixes.get(prefix);
+        String prefixName = prefix.trim();
+        if (prefixName.endsWith(":")) {
+            prefixName = prefixName.substring(0, prefixName.length() - 1);
+        }
+        return knownPrefixes.get(prefixName);
     }
 
     private void registerExports(OMTFile file) {
