@@ -294,6 +294,7 @@ void setBacktick(boolean state) {
     // ODT operators
     // certain operators are used for assertions and should be recognized. They can be used within querysteps (grammar part)
     // when making filters or other boolean assertions
+    "AND(" | "OR(" | "NOT(" | "IN("                                 { yypushback(1, "CONDITIONAL_OPERATOR"); return returnElement(OMTTypes.OPERATOR); }
     "AND" | "OR" | "NOT" | "IN" | ">=" | "<=" | "==" | ">" | "<"    { return returnElement(OMTTypes.CONDITIONAL_OPERATOR); }
     "IF"                                                            { return returnElement(OMTTypes.IF_OPERATOR); }
     "ELSE"                                                          { return returnElement(OMTTypes.ELSE_OPERATOR); }

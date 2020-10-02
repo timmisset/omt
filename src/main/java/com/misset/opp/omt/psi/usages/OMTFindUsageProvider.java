@@ -18,7 +18,6 @@ public class OMTFindUsageProvider implements FindUsagesProvider {
                 TokenSet.create(
                         OMTTypes.VARIABLE_NAME,
                         OMTTypes.NAMESPACE_PREFIX,
-                        OMTTypes.PROPERTY_LABEL,
                         OMTTypes.OPERATOR,
                         OMTTypes.COMMAND
                 ),
@@ -30,6 +29,7 @@ public class OMTFindUsageProvider implements FindUsagesProvider {
     public boolean canFindUsagesFor(@NotNull PsiElement psiElement) {
         return (psiElement instanceof OMTVariable) ||
                 (psiElement instanceof OMTPropertyLabel) ||
+                (psiElement instanceof OMTModelItemLabel) ||
                 (psiElement instanceof OMTDefineName) ||
                 (psiElement instanceof OMTNamespacePrefix);
     }
