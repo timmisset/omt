@@ -17,6 +17,10 @@ public class BuiltInMember extends OMTCallableImpl implements OMTCallable {
         super(type.name(), name, params, BuiltInUtil.SINGLETON.isCommand(type), localVariables);
     }
 
+    public BuiltInMember(String name, List<OMTParameter> params, BuiltInType type, List<String> localVariables, List<String> flags) {
+        super(type.name(), name, params, BuiltInUtil.SINGLETON.isCommand(type), localVariables, flags);
+    }
+
     @Override
     public PsiElement getElement() {
         return null;

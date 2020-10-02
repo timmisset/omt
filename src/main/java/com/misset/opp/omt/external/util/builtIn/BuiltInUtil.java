@@ -118,6 +118,15 @@ public class BuiltInUtil {
         return !builtInMembers.isEmpty();
     }
 
+    private String mapFlag(String constName, String documentContent) {
+        Pattern regEx = Pattern.compile(String.format("const %s = '(.*)';", constName));
+        Matcher matcher = regEx.matcher(documentContent);
+        if (!matcher.find()) {
+            return constName;
+        }
+        return matcher.group(1);
+    }
+
     public void reloadBuiltInFromDocument(Document document,
                                           BuiltInType type,
                                           Project project,
@@ -138,6 +147,8 @@ public class BuiltInUtil {
         Parser parser = Parser.builder().build();
         HtmlRenderer renderer = HtmlRenderer.builder().build();
 
+        HashMap<String, String> flagNames = new HashMap<>();
+
         items.keySet().forEach(name -> {
             JsonObject operator = (JsonObject) items.get(name);
             JsonElement params = operator.get("params");
@@ -153,6 +164,7 @@ public class BuiltInUtil {
 
             JsonElement link = operator.get("link");
             JsonElement doc = operator.get("doc");
+            JsonElement flags = operator.get("flags");
             List<String> localVariables = new ArrayList<>();
             if (link != null) {
                 String linkVariables = link.getAsString();
@@ -164,7 +176,20 @@ public class BuiltInUtil {
                     localVariables.add(variableName);
                 }
             }
-            BuiltInMember builtInMember = new BuiltInMember(name, inputParameters, type, localVariables);
+            List<String> flagsAsList = new ArrayList<>();
+            if (flags != null) {
+                flags.getAsJsonArray().forEach(flag -> {
+                    if (flag != null && !flag.isJsonNull()) {
+                        String flagName = flag.getAsJsonArray().get(0).getAsString();
+                        if (!flagNames.containsKey(flagName)) {
+                            flagNames.put(flagName, mapFlag(flagName, document.getText()));
+                        }
+                        flagsAsList.add(flagNames.get(flagName));
+                    }
+                });
+            }
+
+            BuiltInMember builtInMember = new BuiltInMember(name, inputParameters, type, localVariables, flagsAsList);
 
             if (doc != null && !doc.isJsonNull()) {
                 String docAsString = doc.getAsString();

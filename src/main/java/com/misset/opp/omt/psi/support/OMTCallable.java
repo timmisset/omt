@@ -2,11 +2,16 @@ package com.misset.opp.omt.psi.support;
 
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
+import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 
 import java.util.List;
 
 public interface OMTCallable {
+
+    boolean hasFlags();
+
+    List<String> getFlags();
 
     boolean hasParameters();
 
@@ -20,7 +25,7 @@ public interface OMTCallable {
 
     void setHTMLDescription(String description);
 
-    void validateSignature(OMTCall call) throws NumberOfInputParametersMismatchException, CallCallableMismatchException;
+    void validateSignature(OMTCall call) throws NumberOfInputParametersMismatchException, CallCallableMismatchException, IncorrectFlagException;
 
     boolean isOperator();
 
