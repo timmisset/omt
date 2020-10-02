@@ -135,7 +135,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
         ApplicationManager.getApplication().runReadAction(() -> {
             loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
             curieUtil.annotateNamespacePrefix(def, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("def: is never used"));
+            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.WARNING), eq("def: is never used"));
             verify(annotationBuilder, times(1)).create();
         });
     }
@@ -165,6 +165,50 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
             loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
             curieUtil.annotateNamespacePrefix(abcUsage, annotationHolder);
             verify(annotationBuilder, times(0)).create();
+        });
+    }
+
+    @Test
+    void resetPrefixBlock() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
+            curieUtil.resetPrefixBlock(prefix);
+            OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
+            String asText = prefixBlock.getText();
+            assertEquals("prefixes:\n" +
+                    "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
+                    "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#>\n" +
+                    "\n", asText);
+        });
+    }
+
+    @Test
+    void addPrefixToBlockFromString() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
+            curieUtil.addPrefixToBlock(prefix, "def:", "<http://ontologie.alfabet.nl/def#>");
+            OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
+            String asText = prefixBlock.getText();
+            assertEquals("prefixes:\n" +
+                    "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
+                    "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#>\n" +
+                    "    def:    <http://ontologie.alfabet.nl/def#>\n" +
+                    "\n", asText);
+        });
+    }
+
+    @Test
+    void addPrefixToBlockFromPrefix() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
+            curieUtil.addPrefixToBlock(prefix, prefix);
+            OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
+            String asText = prefixBlock.getText();
+            assertEquals("prefixes:\n" +
+                    "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
+                    "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#>\n" +
+                    "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
+                    "\n", asText);
         });
     }
 
