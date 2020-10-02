@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.impl;
 
+import com.google.gson.JsonObject;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
@@ -8,6 +9,7 @@ import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
 import com.misset.opp.omt.psi.util.ModelUtil;
+import com.misset.opp.omt.psi.util.ProjectUtil;
 
 import java.util.*;
 
@@ -24,10 +26,20 @@ public abstract class OMTCallableImpl implements OMTCallable {
     private String description;
 
     private ModelUtil modelUtil = ModelUtil.SINGLETON;
+    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
 
     public OMTCallableImpl(String type, boolean isCommand) {
         this.type = type;
         this.isCommand = isCommand;
+        JsonObject parsedModel = projectUtil.getParsedModel();
+        if (parsedModel.has(type)) {
+            JsonObject modelItemType = parsedModel.getAsJsonObject(type);
+            if (modelItemType.has("flags")) {
+                modelItemType.getAsJsonArray("flags").forEach(
+                        flag -> flags.add(flag.getAsString())
+                );
+            }
+        }
     }
 
     public OMTCallableImpl(String type, String name, List<OMTParameter> parameterList, boolean isCommand) {

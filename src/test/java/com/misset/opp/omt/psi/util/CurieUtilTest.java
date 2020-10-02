@@ -11,9 +11,11 @@ import com.misset.opp.omt.psi.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,8 +29,11 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
     AnnotationHolder annotationHolder;
     @Mock
     AnnotationBuilder annotationBuilder;
+    @Mock
+    ProjectUtil projectUtil;
 
-    private static final CurieUtil curieUtil = CurieUtil.SINGLETON;
+    @InjectMocks
+    CurieUtil curieUtil;
     private final ExampleFiles exampleFiles = new ExampleFiles(this);
     PsiElement rootBlock;
 
@@ -155,6 +160,23 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
             loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
             curieUtil.annotateNamespacePrefix(ghi, annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("ghi: is not declared"));
+            verify(annotationBuilder, times(1)).create();
+        });
+    }
+
+    @Test
+    void annotateNamespacePrefixThrowsNotDeclaredAnnotationAddsFixSuggestion() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTPrefix knownPrefix = mock(OMTPrefix.class);
+            OMTNamespaceIri iri = mock(OMTNamespaceIri.class);
+            doReturn(iri).when(knownPrefix).getNamespaceIri();
+            doReturn("<http://myiri/>").when(iri).getText();
+
+            doReturn(Collections.singletonList(knownPrefix)).when(projectUtil).getKnownPrefixes(eq("ghi:"));
+            loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
+            curieUtil.annotateNamespacePrefix(ghi, annotationHolder);
+            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("ghi: is not declared"));
+            verify(annotationBuilder, times(2)).withFix(any());
             verify(annotationBuilder, times(1)).create();
         });
     }
