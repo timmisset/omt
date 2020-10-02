@@ -6,6 +6,9 @@ import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTParameter;
 
 public class OMTParameterImpl implements OMTParameter {
+    private static String REST = "rest";
+    private static String OPTIONAL = "optional";
+
     private OMTVariable variable;
     private Object defaultValue;
     private boolean required;
@@ -60,25 +63,34 @@ public class OMTParameterImpl implements OMTParameter {
     public OMTParameterImpl(JsonElement element, String name) {
         this.name = name;
         if (element.isJsonPrimitive()) {
-            if ((element.getAsString().startsWith("p.") || element.getAsString().startsWith("param."))) {
+            if (isParamIdentifier(element)) {
                 parameterType = element.getAsString();
                 parameterType = parameterType.substring(parameterType.indexOf(".") + 1);
             } else {
                 parameterType = element.getAsString();
             }
-            rest = parameterType.startsWith("rest");
-            required = !rest && !parameterType.startsWith("optional");
+            rest = parameterType.startsWith(REST);
+            required = !rest && !isIgnoreParam(parameterType);
             return;
         }
         if (element.isJsonObject()) {
             JsonObject asObject = (JsonObject) element;
             parameterType = asObject.has("type") ? asObject.get("type").getAsString() : "Unknown type";
-            rest = asObject.has("rest") && asObject.get("rest").getAsBoolean();
-            required = !(asObject.has("optional") && asObject.get("optional").getAsBoolean());
+            rest = asObject.has(REST) && asObject.get(REST).getAsBoolean();
+            required = !(asObject.has(OPTIONAL) && asObject.get(OPTIONAL).getAsBoolean());
             return;
         }
         throw new RuntimeException(String.format("Could not parse parameter information for: %s, name: %s",
                 element.toString(), name));
+    }
+
+    private boolean isParamIdentifier(JsonElement element) {
+        String asString = element.getAsString();
+        return asString != null && (asString.startsWith("p.") || asString.startsWith("param."));
+    }
+
+    private boolean isIgnoreParam(String type) {
+        return type.startsWith(OPTIONAL) || type.equals("ignoreCaseParam");
     }
 
     @Override

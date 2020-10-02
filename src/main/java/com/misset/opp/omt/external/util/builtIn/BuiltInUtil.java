@@ -27,7 +27,6 @@ public class BuiltInUtil {
     private final static String COMMAND_NAME_PREFIX = "COMMAND";
     private final static String OPERATOR_NAME_PREFIX = "OPERATOR";
 
-    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     public static BuiltInUtil SINGLETON = new BuiltInUtil();
 
     private HashMap<String, BuiltInMember> builtInMembers = new HashMap<>();
@@ -119,7 +118,10 @@ public class BuiltInUtil {
         return !builtInMembers.isEmpty();
     }
 
-    public void reloadBuiltInFromDocument(Document document, BuiltInType type, Project project) {
+    public void reloadBuiltInFromDocument(Document document,
+                                          BuiltInType type,
+                                          Project project,
+                                          ProjectUtil projectUtil) {
         JsonObject items;
         switch (type) {
             case HttpCommands:

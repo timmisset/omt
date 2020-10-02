@@ -159,15 +159,15 @@ public class MemberUtil {
             return;
         }
         PsiElement resolved = call.getReference().resolve();
+        if (annotateByAttribute(call)) {
+            return;
+        }
 
         if (resolved == null) {
             if (annotateAsBuiltInMember(call, holder)) {
                 return;
             }
             if (annotateAsLocalCommand(call, holder)) {
-                return;
-            }
-            if (annotateByAttribute(call)) {
                 return;
             }
 

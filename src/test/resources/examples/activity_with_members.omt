@@ -26,6 +26,9 @@ model:
             @LOCALCOMMAND();
             @DONE();
 
+    MijnTweedeActiviteit: !Activity
+        title: MijnTweedeActiviteit
+
     MijnProcedure: !Procedure
         onRun: |
             @LOG('test');
