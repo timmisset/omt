@@ -85,7 +85,7 @@ public class ProjectUtil {
             VirtualFile virtualFile = virtualFiles.get(0);
             Document document = fileDocumentManager.getDocument(virtualFile);
             if (document != null) {
-                builtInUtil.reloadBuiltInFromDocument(document, type, project);
+                builtInUtil.reloadBuiltInFromDocument(document, type, project, this);
                 getStatusBar(project).setInfo(
                         String.format("Finished loading %s", filename)
                 );

@@ -1,4 +1,4 @@
-package com.misset.opp.omt.domain.util;
+package com.misset.opp.omt.external.util.builtIn;
 
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
@@ -6,8 +6,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
-import com.misset.opp.omt.external.util.builtIn.BuiltInType;
-import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.util.ProjectUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -113,6 +111,6 @@ public class BuiltInUtilTest extends LightJavaCodeInsightFixtureTestCase {
         doReturn(helpDocument).when(projectUtil).getDocument(eq(virtualFile));
 
         // ACT
-        builtInUtil.reloadBuiltInFromDocument(document, type, project);
+        builtInUtil.reloadBuiltInFromDocument(document, type, project, projectUtil);
     }
 }

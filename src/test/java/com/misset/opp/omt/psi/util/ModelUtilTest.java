@@ -9,6 +9,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.support.OMTCall;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -297,6 +298,17 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
             OMTVariable payloadVariable = variables.get(variables.size() - 1);
             JsonObject json = modelUtil.getJsonAttributes(payloadVariable);
             assertEquals("ActionProperty", json.get("name").getAsString());
+        });
+    }
+
+    @Test
+    void getJsonAttributes_returnsTitelAttributes() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement activity = exampleFiles.getActivityWithMembers();
+            OMTCall titel = exampleFiles.getPsiElementFromRootDocument(OMTCall.class, activity, call -> call.getName().equals("MijnTweedeActiviteit"));
+            // last variable is in the action
+            JsonObject json = modelUtil.getJson(titel);
+            assertEquals("interpolatedString", json.get("type").getAsString());
         });
     }
 
