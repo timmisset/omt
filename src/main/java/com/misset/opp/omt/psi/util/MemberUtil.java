@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
+import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.external.util.builtIn.BuiltInMember;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
@@ -267,6 +268,10 @@ public class MemberUtil {
                 return;
             }
             holder.newAnnotation(HighlightSeverity.ERROR, e.getMessage()).range(call).create();
+        } catch (IncorrectFlagException exception) {
+            holder.newAnnotation(HighlightSeverity.ERROR, exception.getMessage())
+                    .range(call.getFlagSignature())
+                    .create();
         }
     }
 

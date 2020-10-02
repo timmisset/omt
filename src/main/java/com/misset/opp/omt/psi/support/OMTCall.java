@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.support;
 
+import com.misset.opp.omt.psi.OMTFlagSignature;
 import com.misset.opp.omt.psi.OMTSignature;
 import com.misset.opp.omt.psi.named.OMTMemberNamedElement;
 
@@ -14,4 +15,6 @@ public interface OMTCall extends OMTMemberNamedElement {
     boolean canCallCommand();
 
     OMTSignature getSignature();
+
+    OMTFlagSignature getFlagSignature();
 }

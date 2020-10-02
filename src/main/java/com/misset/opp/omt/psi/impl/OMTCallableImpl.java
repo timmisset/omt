@@ -1,11 +1,9 @@
 package com.misset.opp.omt.psi.impl;
 
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
+import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
-import com.misset.opp.omt.psi.OMTBlockEntry;
-import com.misset.opp.omt.psi.OMTDefineParam;
-import com.misset.opp.omt.psi.OMTModelItemBlock;
-import com.misset.opp.omt.psi.OMTSequenceItem;
+import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
@@ -17,10 +15,12 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     private final HashMap<String, OMTParameter> parameters = new HashMap<>();
     private final List<OMTParameter> parameterList = new ArrayList<>();
+    private final List<String> localVariables = new ArrayList<>();
+    private final List<String> flags = new ArrayList<>();
     private String name;
     private final String type;
     private final boolean isCommand;
-    private List<String> localVariables = new ArrayList<>();
+
     private String description;
 
     private ModelUtil modelUtil = ModelUtil.SINGLETON;
@@ -35,11 +35,26 @@ public abstract class OMTCallableImpl implements OMTCallable {
     }
 
     public OMTCallableImpl(String type, String name, List<OMTParameter> parameterList, boolean isCommand, List<String> localVariables) {
+        this(type, name, parameterList, isCommand, localVariables, new ArrayList<>());
+    }
+
+    public OMTCallableImpl(String type, String name, List<OMTParameter> parameterList, boolean isCommand, List<String> localVariables, List<String> flags) {
         this.type = type;
         this.name = name;
         this.isCommand = isCommand;
         parameterList.forEach(this::addParameter);
-        this.localVariables = localVariables;
+        this.localVariables.addAll(localVariables);
+        this.flags.addAll(flags);
+    }
+
+    @Override
+    public boolean hasFlags() {
+        return !flags.isEmpty();
+    }
+
+    @Override
+    public List<String> getFlags() {
+        return flags;
     }
 
     @Override
@@ -126,13 +141,20 @@ public abstract class OMTCallableImpl implements OMTCallable {
     }
 
     @Override
-    public void validateSignature(OMTCall call) throws CallCallableMismatchException, NumberOfInputParametersMismatchException {
+    public void validateSignature(OMTCall call) throws CallCallableMismatchException, NumberOfInputParametersMismatchException, IncorrectFlagException {
         if ((isOperator() && !call.canCallOperator()) || (isCommand() && !call.canCallCommand())) {
             throw new CallCallableMismatchException(this, call);
         }
         int intputParameters = call.getSignature() != null ? call.getSignature().numberOfParameters() : 0;
         if (intputParameters < getMinExpected() || (!hasRest() && intputParameters > getMaxExpected())) {
             throw new NumberOfInputParametersMismatchException(name, getMinExpected(), getMaxExpected(), intputParameters);
+        }
+        OMTFlagSignature flagSignature = call.getFlagSignature();
+        if (flagSignature != null) {
+            String flagName = flagSignature.getText().substring(1);
+            if (!flags.contains(flagName)) {
+                throw new IncorrectFlagException(flagName, flags);
+            }
         }
     }
 

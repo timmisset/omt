@@ -23,6 +23,7 @@ model:
             @myImportedMethod();
             @LOAD_ONTOLOGY(MijnOntology);
             @myBuiltInMethod();
+            @myBuiltInMethodWithFlag!someFlag();
             @LOCALCOMMAND();
             @DONE();
 

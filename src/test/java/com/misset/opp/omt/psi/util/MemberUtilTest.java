@@ -9,6 +9,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
+import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.external.util.builtIn.BuiltInMember;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
@@ -42,6 +43,7 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Mock
     AnnotationHolder annotationHolder;
+
     @Mock
     AnnotationBuilder annotationBuilder;
 
@@ -184,11 +186,27 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
                     commandCall -> commandCall.getName().equals("myBuiltInMethod"));
             try {
                 doThrow(new NumberOfInputParametersMismatchException("myBuiltInMethod", 0, 1, 2)).when(builtInMember).validateSignature(eq(call));
-            } catch (CallCallableMismatchException | NumberOfInputParametersMismatchException e) {
+            } catch (CallCallableMismatchException | NumberOfInputParametersMismatchException | IncorrectFlagException e) {
                 e.printStackTrace();
             }
             memberUtil.annotateCall(call, annotationHolder);
             verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("myBuiltInMethod expects between 0 and 1 parameters, found 2"));
+        });
+    }
+
+    @Test
+    void annotateCall_annotateAsBuiltInMemberThrowsNumberInvalidFlagSignature() {
+        doReturn(builtInMember).when(builtInUtil).getBuiltInMember(anyString(), eq(BuiltInType.Command));
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+                    commandCall -> commandCall.getName().equals("myBuiltInMethodWithFlag"));
+            try {
+                doThrow(new IncorrectFlagException("someFlag", Arrays.asList("flagA, flagB"))).when(builtInMember).validateSignature(eq(call));
+            } catch (CallCallableMismatchException | NumberOfInputParametersMismatchException | IncorrectFlagException e) {
+                e.printStackTrace();
+            }
+            memberUtil.annotateCall(call, annotationHolder);
+            verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("Incorrect flag 'someFlag' used, acceptable flags are: 'flagA, flagB'"));
         });
     }
 
