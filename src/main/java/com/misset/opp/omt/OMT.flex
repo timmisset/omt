@@ -54,6 +54,9 @@ HashMap<String, Integer> pushbacks = new HashMap<>();
 void log(String message) {
     if(logging) { System.out.println(message); }
 }
+void error(String error) {
+    System.out.println(error);
+}
 boolean logging = false;
 OMTLexer(java.io.Reader in, boolean enableLogging) {
     this.zzReader = in;
@@ -125,6 +128,8 @@ IElementType retryInInitial(boolean pushback, String reason) {
 }
 void trim(IElementType element) {
     if(element != TokenType.WHITE_SPACE &&
+        element != TokenType.BAD_CHARACTER &&
+        element != OMTTypes.JAVADOCS_CONTENT &&
         element != OMTTypes.START_TOKEN &&
         element != OMTTypes.END_TOKEN &&
         element != OMTTypes.INDENT &&
@@ -161,11 +166,41 @@ IElementType returnElement(IElementType element) {
     totalReturned++;
     return logAndReturn(element);
 }
+String lastResponse = null;
 IElementType logAndReturn(IElementType element) {
+    String response = yystate() + "." + element.toString() + "." + zzMarkedPos;
     if(element != TokenType.WHITE_SPACE) {
-        log("Returning " + yytext() + " as " + element.toString());
+        log("Returning " + yytext() + " as " + element.toString() + " --> " + response);
     }
+    if(response.equals(lastResponse)) {
+        error("===============> Warning, lexer not advancing!");
+        error("Returning " + yytext() + " as " + element.toString() + " --> " + response);
+    }
+    lastResponse = response;
     return element;
+}
+IElementType indentOrReturnAndSetState(IElementType elementToReturn, String pushbackMessage, int newState, int pushbackOnNoIndent) {
+    return dentOrReturnAndSetState(elementToReturn, pushbackMessage, newState, pushbackOnNoIndent, true);
+}
+IElementType dedentOrReturnAndSetState(IElementType elementToReturn, String pushbackMessage, int newState, int pushbackOnNoIndent) {
+    return dentOrReturnAndSetState(elementToReturn, pushbackMessage, newState, pushbackOnNoIndent, false);
+}
+IElementType dentOrReturnAndSetState(IElementType elementToReturn, String pushbackMessage, int newState, int pushbackOnNoIndent, boolean indent) {
+    IElementType indentOrDedent = indent ? setIndent() : resetIndent();
+        if(indentOrDedent == null) {
+            if(newState != -1) { setState(newState); }
+            if(pushbackOnNoIndent > 0) { yypushback(pushbackOnNoIndent, "pushback on no indent"); }
+            return returnElement(elementToReturn);
+        } else {
+            yypushback(yylength(), pushbackMessage);
+            return indentOrDedent;
+        }
+}
+IElementType indentOrReturn(IElementType elementToReturn, String pushbackMessage) {
+    return indentOrReturnAndSetState(elementToReturn, pushbackMessage, -1, 0);
+}
+IElementType dedentOrReturn(IElementType elementToReturn, String pushbackMessage) {
+    return dedentOrReturnAndSetState(elementToReturn, pushbackMessage, -1, 0);
 }
 boolean backtick = false;
 void setBacktick(boolean state) {
@@ -184,50 +219,23 @@ void setBacktick(boolean state) {
     ^{WHITE_SPACE}+{NEWLINE}                                  { return returnElement(TokenType.BAD_CHARACTER); }
     {NEWLINE}+                                                { return returnElement(TokenType.WHITE_SPACE); }
 
-    {PROPERTY_KEY}                                            {
-                                                                IElementType indent = setIndent();
-                                                                if(indent == null) {
-                                                                    return returnElement(OMTTypes.PROPERTY);
-                                                                } else {
-                                                                    yypushback(yylength(), "setting indent");
-                                                                    return indent;
-                                                                }
-                                                              }
+    {PROPERTY_KEY}                                            { return indentOrReturn(OMTTypes.PROPERTY, "setting indent"); }
     "!"{NAME}                                                 { return returnElement(OMTTypes.MODEL_ITEM_TYPE); }
-    "- "                                                      {
-                                                                  IElementType indent = setIndent();
-                                                                  if(indent == null) {
-                                                                      return returnElement(OMTTypes.SEQUENCE_BULLET);
-                                                                  } else {
-                                                                      yypushback(yylength(), "setting indent");
-                                                                      return indent;
-                                                                  }
-                                                                }
-    ^{WHITE_SPACE}+                                            {
+    "- "                                                      { return indentOrReturn(OMTTypes.SEQUENCE_BULLET, "setting indent"); }
+    ^{WHITE_SPACE}+                                           {
                                                                    if(yylength() == 0 || yylength() <= indents.peek()) {
-                                                                       IElementType dedent = resetIndent();
-                                                                       if(dedent == null) {
-                                                                           return returnElement(TokenType.WHITE_SPACE);
-                                                                       } else {
-                                                                           yypushback(yylength(), "resetting indent, indent < peek");
-                                                                           return dedent;
-                                                                       }
+                                                                       return dedentOrReturn(TokenType.WHITE_SPACE, "resetting indent, indent < peek");
                                                                    } else {
                                                                        return returnElement(TokenType.WHITE_SPACE);
                                                                    }
                                                               }
     {NEWLINE}{NOT_WHITE_SPACE}                                {
-                                                                    IElementType dedent = resetIndent();
-                                                                    if(dedent == null) {
-                                                                        yypushback(1, "resetting indent, new line no whitespace, returning whitespace");
-                                                                       return returnElement(TokenType.WHITE_SPACE);
-                                                                   } else {
-                                                                        yypushback(yylength(), "resetting indent, new line no whitespace, returning dedent");
-                                                                       return dedent;
-                                                                   }
+                                                                    return dedentOrReturnAndSetState(TokenType.WHITE_SPACE, "resetting indent, new line no whitespace, returning whitespace", -1, 1);
                                                               }
     {WHITE_SPACE}+                                            { return TokenType.WHITE_SPACE; } // capture all whitespace
-    {JDSTART}                                                 { setState(JAVADOCS); return returnElement(OMTTypes.JAVADOCS_START); }
+    {JDSTART}                                                 {
+                                                                  return indentOrReturnAndSetState(OMTTypes.JAVADOCS_START, "setting indent", JAVADOCS, 0);
+                                                              }
     {END_OF_LINE_COMMENT}                                     { return returnElement(OMTTypes.END_OF_LINE_COMMENT); }
     <<EOF>>                                                   { return resetIndent(); }
     [^]                                                       { yypushback(yylength(), "initial"); setState(YAML_SCALAR); return returnElement(OMTTypes.START_TOKEN); }

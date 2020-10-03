@@ -134,7 +134,7 @@ public class ProjectUtil {
     }
 
     public List<OMTExportMember> getExportMember(String name) {
-        return exportingMembers.get(name);
+        return exportingMembers.getOrDefault(name, new ArrayList<>());
     }
 
     public List<String> getExportingCommandsAsSuggestions() {

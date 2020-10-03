@@ -1,1 +1,4 @@
 /src/main/gen/
+/build/
+/.gradle/
+/.idea/sonarlint/

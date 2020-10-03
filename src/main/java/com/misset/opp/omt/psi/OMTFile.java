@@ -16,6 +16,7 @@ import com.misset.opp.omt.psi.util.ModelUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class OMTFile extends PsiFileBase {
     public OMTFile(@NotNull FileViewProvider viewProvider) {
@@ -36,6 +37,10 @@ public class OMTFile extends PsiFileBase {
         return "OMT File";
     }
 
+    public OMTBlock getRoot() {
+        return PsiTreeUtil.getChildOfType(this, OMTBlock.class);
+    }
+
     public Optional<OMTBlockEntry> getRootBlock(String name) {
         OMTBlock rootBlock = PsiTreeUtil.getChildOfType(this, OMTBlock.class);
         if (rootBlock == null) {
@@ -46,6 +51,7 @@ public class OMTFile extends PsiFileBase {
                 .filter(blockEntry -> modelUtil.getEntryBlockLabel(blockEntry).startsWith(name))
                 .findFirst();
     }
+
 
     public <T> Optional<T> getSpecificBlock(String name, Class<T> specificBlockClass) {
         Optional<OMTBlockEntry> blockEntry = getRootBlock(name);
@@ -67,7 +73,9 @@ public class OMTFile extends PsiFileBase {
         List<OMTMember> importedList = new ArrayList<>();
         Optional<OMTImportBlock> optionalOMTImportBlock = getSpecificBlock("import", OMTImportBlock.class);
         optionalOMTImportBlock.ifPresent(omtImportBlock ->
-                omtImportBlock.getImportList().forEach(omtImport -> importedList.addAll(omtImport.getMemberList().getMemberList()))
+                omtImportBlock.getImportList().forEach(omtImport -> importedList.addAll(
+                        omtImport.getMemberList().getMemberListItemList().stream().map(OMTMemberListItem::getMember).collect(Collectors.toList())
+                ))
         );
         return importedList;
     }

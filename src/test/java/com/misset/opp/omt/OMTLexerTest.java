@@ -115,4 +115,29 @@ class OMTLexerTest {
         return elements;
     }
 
+
+    @Test
+    public void testSpecificContent() throws IOException {
+        printLexerLog = true;
+        String contentToTest = "import:\n" +
+                "    /**\n" +
+                "    * Some info about the import\n" +
+                "    */\n" +
+                "    '@client/procedure_with_exporting_members.omt':  #or behind the path\n" +
+                "    /**\n" +
+                "    * specific information about the member\n" +
+                "    */\n" +
+                "    -   MijnProcedure   #and something about the member\n" +
+                "\n" +
+                "model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        title: Mijn Activiteit\n" +
+                "\n" +
+                "        onStart: |\n" +
+                "            @MijnProcedure();\n";
+
+        System.out.println(
+                String.join("\n", getElements(contentToTest))
+        );
+    }
 }
