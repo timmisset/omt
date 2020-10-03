@@ -67,7 +67,7 @@ moduleBlock::=                              leading? MODULE_NAME_START moduleNam
 moduleName::=                               NAME | OPERATOR
 
 // maps
-importBlock ::=                             leading? IMPORT_START trailing? indentToken import* dedentToken
+importBlock ::=                             leading? IMPORT_START trailing? (indentToken import* dedentToken)?
 import ::=                                  leading? importSource trailing? memberList?
 importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                            mixin="com.misset.opp.omt.psi.impl.OMTImportNamedElementImpl"
@@ -87,7 +87,7 @@ namespaceIri ::=                            start IRI end
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix]}
 curieConstantElement ::=                    CURIE_CONSTANT_ELEMENT_PREFIX curieElement
 
-modelBlock::=                               MODEL_BLOCK_START trailing? indentToken modelItemBlock* dedentToken
+modelBlock::=                               MODEL_BLOCK_START trailing? (indentToken modelItemBlock* dedentToken)?
 modelItemBlock::=                           leading? modelItemLabel trailing? block?
 modelItemLabel::=                           propertyLabel modelItemTypeElement  {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
@@ -140,7 +140,7 @@ parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEM
 // it can start on the same line and be restricted to that line (not required) or it can be started by the
 // literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and and 
 script ::=                                  PIPE trailing? (scriptLine+ | queryPath) 
-commandBlock ::=                            CURLY_OPEN trailing? (script | scriptLine+) CURLY_CLOSED
+commandBlock ::=                            CURLY_OPEN trailing? (script | scriptLine+)? CURLY_CLOSED
 // a scriptline is contained by the addition of the semicolon at the end
 scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) trailing?
 // the contents of a script, contained by a scriptLine or Scalar

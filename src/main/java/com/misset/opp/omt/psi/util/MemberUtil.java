@@ -88,11 +88,10 @@ public class MemberUtil {
         }
     }
 
-    public String getCallName(PsiElement call) {
-        if (call instanceof OMTOperatorCall) {
-            return call.getFirstChild().getText();
-        }
-        return call.getFirstChild().getText().substring(1);
+    public String getCallName(OMTCall call) {
+        String name = call.getFirstChild().getText();
+        String s = call.isCommandCall() && name.startsWith("@") ? name.substring(1) : name;
+        return s;
     }
 
     /**
@@ -180,7 +179,9 @@ public class MemberUtil {
                     (omtExportMember.isCommand() && call.canCallCommand()) ||
                             (omtExportMember.isOperator() && call.canCallOperator())
             );
-            intentionActionList.forEach(annotationBuilder::newFix);
+            intentionActionList.forEach(intentionAction -> {
+                annotationBuilder.withFix(intentionAction);
+            });
             annotationBuilder.create();
         } else {
             annotateReference(resolved, call, holder);

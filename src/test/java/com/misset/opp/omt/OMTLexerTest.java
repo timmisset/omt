@@ -9,56 +9,90 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.core.IsCollectionContaining.hasItem;
+import static org.junit.Assert.assertThat;
 
 class OMTLexerTest {
 
-    boolean printLexerLog = true;
-    boolean validate = false;
+    boolean printLexerLog = false;
+    boolean validate = true;
 
     @Test
-    public void testKopieerPersoon() throws IOException {
-        testOMTFile("testKopieerPersoon");
+    public void testActivityWithImportsPrefixesParamsVariablesGraphsAndPayload() throws IOException {
+        testOMTFile("activity_with_imports_prefixes_params_variables_graphs_payload");
     }
 
     @Test
-    public void testMaakVerhoor() throws IOException {
-        testOMTFile("testMaakVerhoor");
+    public void testActivityWithImports() throws IOException {
+        testOMTFile("activity_with_imports");
     }
 
     @Test
-    public void testMappingInDictionary() throws IOException {
-        testOMTFile("testMappingInDictionary");
+    public void testActivityWithMembers() throws IOException {
+        testOMTFile("activity_with_members");
     }
 
     @Test
-    public void testPersoonToon() throws IOException {
-        testOMTFile("testPersoonToon");
+    public void testActivityWithQueryWatcher() throws IOException {
+        testOMTFile("activity_with_query_watcher");
     }
 
     @Test
-    public void testQueries() throws IOException {
-        testOMTFile("testQueries");
+    public void testActivityWithUndeclaredElements() throws IOException {
+        testOMTFile("activity_with_undeclared_elements");
     }
 
     @Test
-    public void testVoorgeleiding() throws IOException {
-        testOMTFile("testVoorgeleiding");
+    public void testActivityWithVariables() throws IOException {
+        testOMTFile("activity_with_variables");
+    }
+
+    @Test
+    public void testActivityWithVariablesAndActions() throws IOException {
+        testOMTFile("activity_with_variables_actions");
+    }
+
+    @Test
+    public void testActivityWithWrongNestedAttribute() throws IOException {
+        testOMTFile("activity_with_wrong_nested_attribute");
+    }
+
+    @Test
+    public void testLoadOntology() throws IOException {
+        testOMTFile("load_ontology");
+    }
+
+    @Test
+    public void testModelWithWrongModelItemType() throws IOException {
+        testOMTFile("model_with_wrong_model_item_type");
+    }
+
+    @Test
+    public void testProcedureWithScript() throws IOException {
+        testOMTFile("procedure_with_script");
+    }
+
+
+    @Test
+    public void testStandaloneQueryWithMissingAttribute() throws IOException {
+        testOMTFile("standaloneQuery_with_missing_attribute");
+    }
+
+    @Test
+    public void testProcedureWithExportingMembers() throws IOException {
+        testOMTFile("frontend/libs/procedure_with_exporting_members");
     }
 
     private void testOMTFile(String name) throws IOException {
         // This method will test an entire OMT file for identical contents with the expected outcome
         // the expected content is based on the output after parsing was finally successful. Therefore, this method is to make
         // sure any changes to the lexer won't mess this minimally parsable file
-        String content = Helper.getResourceAsString(String.format("lexer/%s.omt", name));
+        String content = Helper.getResourceAsString(String.format("examples/%s.omt", name));
         String[] result = getElements(content).toArray(new String[0]);
 
         if (validate) {
-            String[] validationContent = Arrays.stream(Helper.getResourceAsString(
-                    String.format("lexer/valid/%s.txt", name))
-                    .split(",")).map(String::trim).toArray(String[]::new);
-
-            assertArrayEquals(validationContent, result);
+            assertThat(Arrays.asList(result), not(hasItem("BAD_CHARACTER")));
         }
 
     }
@@ -71,7 +105,9 @@ class OMTLexerTest {
         while (cont) {
             IElementType element = lexer.advance();
             if (element != null) {
-                elements.add(element.toString());
+                if (!element.toString().equals("WHITE_SPACE")) {
+                    elements.add(element.toString());
+                }
             } else {
                 cont = false;
             }

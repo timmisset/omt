@@ -1,20 +1,17 @@
 package util;
 
 import com.google.common.io.CharStreams;
-import com.intellij.ide.plugins.PluginManager;
+import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.extensions.PluginId;
 
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class Helper {
-
-    public static boolean hasResourcePath(String item) {
-        return Thread.currentThread().getContextClassLoader().getResource(item) != null;
-    }
 
     public static List<String> getResources(List<String> names, String folder) {
         ClassLoader classLoader = getClassLoader();
@@ -35,8 +32,10 @@ public class Helper {
     }
 
     private static ClassLoader getClassLoader() {
-        return PluginId.getRegisteredIds().containsKey("com.misset.OMT") ?
-                PluginManager.getPlugin(PluginId.getId("com.misset.OMT")).getPluginClassLoader() :
+        return PluginId.getRegisteredIdList()
+                .stream()
+                .anyMatch(pluginId -> pluginId.getIdString().equals("com.misset.OMT")) ?
+                Objects.requireNonNull(PluginManagerCore.getPlugin(PluginId.getId("com.misset.OMT"))).getPluginClassLoader() :
                 Thread.currentThread().getContextClassLoader();
     }
 

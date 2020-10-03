@@ -4,6 +4,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.named.NamedMemberType;
+import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.util.ImportUtil;
 import com.misset.opp.omt.psi.util.MemberUtil;
 import org.jetbrains.annotations.NotNull;
@@ -74,7 +75,7 @@ public class MemberReference extends PsiReferenceBase<PsiElement> implements Psi
     @Override
     public boolean isReferenceTo(@NotNull PsiElement element) {
         if ((type == NamedMemberType.CommandCall || type == NamedMemberType.OperatorCall) && element instanceof OMTMember) {
-            return ((OMTMember) element).getName().equals(memberUtil.getCallName(myElement));
+            return ((OMTMember) element).getName().equals(memberUtil.getCallName((OMTCall) myElement));
         }
         return super.isReferenceTo(element);
     }
