@@ -191,4 +191,81 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
             assertNull(importedFile);
         });
     }
+
+    @Test
+    void resetImportBlock() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            importUtil.resetImportBlock(rootBlock);
+            OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock);
+            String text = importBlock.getText();
+            assertSameContent("import:\n" +
+                    "    /**\n" +
+                    "    * Some info about the import\n" +
+                    "    */\n" +
+                    "    '@client/procedure_with_exporting_members.omt': #or behind the path\n" +
+                    "    /**\n" +
+                    "    * specific information about the member\n" +
+                    "    */\n" +
+                    "    -   MijnProcedure #and something about the member", text.replaceAll("\\s+", ""));
+        });
+    }
+
+    private void assertSameContent(String expected, String value) {
+        assertEquals(expected.replaceAll("\\s+", ""), value.replaceAll("\\s+", ""));
+    }
+
+    @Test
+    void addImportMemberToBlock_ToExistingImport() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            importUtil.addImportMemberToBlock(rootBlock, "'@client/procedure_with_exporting_members.omt':", "AnotherMember");
+            OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock);
+            String text = importBlock.getText();
+            assertSameContent("import:\n" +
+                    "    /**\n" +
+                    "    * Some info about the import\n" +
+                    "    */\n" +
+                    "    '@client/procedure_with_exporting_members.omt': #or behind the path\n" +
+                    "    /**\n" +
+                    "    * specific information about the member\n" +
+                    "    */\n" +
+                    "    -   MijnProcedure #and something about the member\n" +
+                    "    -   AnotherMember\n" +
+                    "\n", text);
+        });
+    }
+
+    @Test
+    void addImportMemberToBlock_ToNewImport() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            importUtil.addImportMemberToBlock(rootBlock, "'@client/someModule/activity.omt':", "AnotherMember");
+            OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock);
+            String text = importBlock.getText();
+            assertSameContent("import:\n" +
+                    "    /**\n" +
+                    "    * Some info about the import\n" +
+                    "    */\n" +
+                    "    '@client/procedure_with_exporting_members.omt': #or behind the path\n" +
+                    "    /**\n" +
+                    "    * specific information about the member\n" +
+                    "    */\n" +
+                    "    -   MijnProcedure #and something about the member\n" +
+                    "    '@client/someModule/activity.omt':\n" +
+                    "    -   AnotherMember\n" +
+                    "\n", text);
+        });
+    }
+
+    @Test
+    void addImportMemberToBlock_NewImport() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement procedureWithScript = exampleFiles.getProcedureWithScript();
+            importUtil.addImportMemberToBlock(procedureWithScript, "'@client/someModule/activity.omt':", "AnotherMember");
+            OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, procedureWithScript);
+            String text = importBlock.getText();
+            assertEquals("import:\n" +
+                    "    '@client/someModule/activity.omt':\n" +
+                    "    -   AnotherMember\n" +
+                    "\n", text);
+        });
+    }
 }

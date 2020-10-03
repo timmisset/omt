@@ -16,7 +16,7 @@
 }
 
 // the end of the file (or the entire file) can be a (set of) comment(s)
-OMTFile ::= leading? block* trailing?
+OMTFile ::= leading? block? trailing?
 
 start ::=                                   START_TOKEN leading?
 end ::=                                     trailing? END_TOKEN
@@ -46,7 +46,8 @@ specificBlock ::=                          importBlock | exportBlock | prefixBlo
 
 // sequences
 exportBlock ::=                             EXPORT_START trailing? memberList?
-memberList ::=                              (leading? SEQUENCE_BULLET member trailing?)+ | (indentToken (leading? SEQUENCE_BULLET member trailing?)+ dedentToken)
+memberList ::=                              memberListItem+ | (indentToken memberListItem+ dedentToken)
+memberListItem ::=                          (leading? SEQUENCE_BULLET member)
 member ::=                                  start OPERATOR end {
                                                        mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
                                                        implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
@@ -98,7 +99,7 @@ modelItemTypeElement ::=                    MODEL_ITEM_TYPE
 
 // COMMENTS
 // Can occur on empty lines (JavaDocs and End Of Line Comments) or at the end of lines (End of Line Comments)
-jdcomment ::=                               JAVADOCS_START JAVADOCS_CONTENT+ JAVADOCS_END
+jdcomment ::=                               JAVADOCS_START JAVADOCS_CONTENT* JAVADOCS_END
 comment ::=                                 END_OF_LINE_COMMENT | jdcomment
 eolComment ::=                              END_OF_LINE_COMMENT
 // trailing is everything at the end of the current line and before NEW_LINE.

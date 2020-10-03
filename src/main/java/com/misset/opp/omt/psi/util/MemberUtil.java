@@ -311,7 +311,7 @@ public class MemberUtil {
         if (element instanceof OMTModelItemLabel || element instanceof OMTPropertyLabel) {
             return NamedMemberType.ModelItem;
         }
-        if (element instanceof OMTMember && element.getParent().getParent() instanceof OMTImport) {
+        if (element instanceof OMTMember && element.getParent().getParent().getParent() instanceof OMTImport) {
             return NamedMemberType.ImportingMember;
         }
         return null;

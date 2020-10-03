@@ -1,6 +1,12 @@
 import:
-    '@client/procedure_with_exporting_members.omt':
-    -   MijnProcedure
+    /**
+    * Some info about the import
+    */
+    '@client/procedure_with_exporting_members.omt':  #or behind the path
+    /**
+    * specific information about the member
+    */
+    -   MijnProcedure   #and something about the member
 
 model:
     MijnActiviteit: !Activity
