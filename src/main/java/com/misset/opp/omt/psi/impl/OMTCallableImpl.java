@@ -194,6 +194,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
         return this.name;
     }
 
+    @Override
     public String asSuggestion() {
         String name = getName();
         if (isCommand) {
@@ -201,7 +202,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
         }
         String params = hasParameters() ? String.format(
                 "(%s)", String.join(", ", getParameterNames())
-        ) : "";
+        ) : (isCommand ? "()" : "");
         return name + params;
     }
 

@@ -42,4 +42,6 @@ public interface OMTCallable {
     String htmlDescription();
 
     String shortDescription();
+
+    String asSuggestion();
 }

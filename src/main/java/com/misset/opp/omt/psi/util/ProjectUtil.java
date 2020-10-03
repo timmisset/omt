@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static util.Helper.getResources;
 
@@ -134,6 +135,24 @@ public class ProjectUtil {
 
     public List<OMTExportMember> getExportMember(String name) {
         return exportingMembers.get(name);
+    }
+
+    public List<String> getExportingCommandsAsSuggestions() {
+        return getExportedMembersAsSuggestions(true);
+    }
+
+    public List<String> getExportingOperatorsAsSuggestions() {
+        return getExportedMembersAsSuggestions(false);
+    }
+
+    private List<String> getExportedMembersAsSuggestions(boolean commands) {
+        List<String> exportedCommands = new ArrayList<>();
+        exportingMembers.values().forEach(omtExportMembers ->
+                omtExportMembers.stream()
+                        .filter(omtExportMember -> (commands && omtExportMember.isCommand()) || !(commands && omtExportMember.isOperator()))
+                        .forEach(omtExportMember -> exportedCommands.add(omtExportMember.asSuggestion()))
+        );
+        return exportedCommands.stream().distinct().collect(Collectors.toList());
     }
 
     public void analyzeFile(OMTFile file) {

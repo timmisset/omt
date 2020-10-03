@@ -32,7 +32,7 @@ public class ExampleFiles {
         return process("examples/model_with_wrong_model_item_type.omt");
     }
     public PsiElement getStandaloneQueryWithMissingAttribute() {
-        return process("examples/StandaloneQuery_with_missing_attribute.omt");
+        return process("examples/standaloneQuery_with_missing_attribute.omt");
     }
     public PsiElement getActivityWithQueryWatcher() {
         return process("examples/activity_with_query_watcher.omt");
