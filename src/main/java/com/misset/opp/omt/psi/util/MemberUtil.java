@@ -1,7 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
 import com.google.gson.JsonObject;
-import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
@@ -90,8 +89,7 @@ public class MemberUtil {
 
     public String getCallName(OMTCall call) {
         String name = call.getFirstChild().getText();
-        String s = call.isCommandCall() && name.startsWith("@") ? name.substring(1) : name;
-        return s;
+        return call.isCommandCall() && name.startsWith("@") ? name.substring(1) : name;
     }
 
     /**
@@ -175,13 +173,7 @@ public class MemberUtil {
             AnnotationBuilder annotationBuilder = holder.newAnnotation(HighlightSeverity.ERROR, String.format("%s could not be resolved", call.getName()))
                     .range(call.getNameIdentifier());
 
-            List<IntentionAction> intentionActionList = memberIntention.getImportMemberIntentions(call, omtExportMember ->
-                    (omtExportMember.isCommand() && call.canCallCommand()) ||
-                            (omtExportMember.isOperator() && call.canCallOperator())
-            );
-            intentionActionList.forEach(intentionAction -> {
-                annotationBuilder.withFix(intentionAction);
-            });
+            memberIntention.getImportMemberIntentions(call).forEach(annotationBuilder::withFix);
             annotationBuilder.create();
         } else {
             annotateReference(resolved, call, holder);
@@ -240,23 +232,20 @@ public class MemberUtil {
         if (nameIdentifier == null) {
             return;
         }
-        try {
-            OMTExportMember asExportMember = memberToExportMember(resolved);
-            if (asExportMember == null) {
-                if (modelUtil.isOntology(resolved)) {
-                    return;
-                }
-                throw new Exception("Could not resolve callable element to exported member, this is a bug");
+        OMTExportMember asExportMember = memberToExportMember(resolved);
+        if (asExportMember == null) {
+            if (modelUtil.isOntology(resolved)) {
+                return;
             }
+            holder.newAnnotation(HighlightSeverity.ERROR,
+                    "Could not resolve callable element to exported member, this might be an issue with the imported file")
+                    .range(nameIdentifier).create();
+        } else {
             holder.newAnnotation(HighlightSeverity.INFORMATION, asExportMember.shortDescription())
                     .range(nameIdentifier)
                     .tooltip(asExportMember.htmlDescription())
                     .create();
             validateSignature(call, asExportMember, holder);
-        } catch (Exception e) {
-            AnnotationBuilder annotationBuilder = holder.newAnnotation(HighlightSeverity.ERROR, e.getMessage());
-            annotationBuilder.range(nameIdentifier);
-            annotationBuilder.create();
         }
     }
 

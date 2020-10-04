@@ -8,10 +8,14 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.search.FilenameIndex;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTPrefix;
+import com.misset.opp.omt.psi.support.OMTExportMember;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,8 +23,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Arrays;
-import java.util.Set;
+import java.lang.reflect.Field;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -145,5 +149,74 @@ class ProjectUtilTest extends LightJavaCodeInsightFixtureTestCase {
             assertEquals(1, projectUtil.getKnownPrefixes("abc").size());
             assertEquals(1, projectUtil.getKnownPrefixes("foaf").size());
         });
+    }
+
+    @Test
+    void getWindowManager() {
+        assertNotNull(projectUtil.getWindowManager());
+    }
+
+    @Test
+    void getFileDocumentManager() {
+        assertNotNull(projectUtil.getFileDocumentManager());
+    }
+
+    @Test
+    void getFilesByName() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            String[] allFilenames = FilenameIndex.getAllFilenames(getProject());
+            String firstFile = allFilenames[0];
+            PsiFile[] filesByName = projectUtil.getFilesByName(getProject(), firstFile);
+            assertNotNull(filesByName);
+            assertNotEmpty(Arrays.asList(filesByName));
+        });
+    }
+
+    @Test
+    void getDocument() {
+        Document document = mock(Document.class);
+        doReturn(document).when(fileDocumentManager).getDocument(eq(virtualFile));
+        assertEquals(document, projectUtil.getDocument(virtualFile));
+    }
+
+    @Test
+    void getKnownPrefixes() throws NoSuchFieldException, IllegalAccessException {
+        String prefix = "abc:";
+        Field prefixCollectionField = ProjectUtil.class.getDeclaredField("knownPrefixes");
+        prefixCollectionField.setAccessible(true);
+        HashMap<String, List<OMTPrefix>> prefixCollection = (HashMap<String, List<OMTPrefix>>) prefixCollectionField.get(projectUtil);
+        List<OMTPrefix> prefixes = new ArrayList<>();
+        prefixCollection.put("abc", prefixes);
+
+        assertEquals(prefixes, projectUtil.getKnownPrefixes(prefix));
+    }
+
+    @Test
+    void getExportingCommandsAsSuggestions() throws NoSuchFieldException, IllegalAccessException {
+        OMTExportMember mockCommand = mock(OMTExportMember.class);
+        OMTExportMember mockOperator = mock(OMTExportMember.class);
+
+        doReturn("myCommand").when(mockCommand).asSuggestion();
+        doReturn(true).when(mockCommand).isCommand();
+        doReturn(false).when(mockCommand).isOperator();
+        doReturn("myOperator").when(mockOperator).asSuggestion();
+        doReturn(true).when(mockOperator).isOperator();
+        doReturn(false).when(mockOperator).isCommand();
+
+        Field exportMemberCollection = ProjectUtil.class.getDeclaredField("exportingMembers");
+        exportMemberCollection.setAccessible(true);
+        HashMap<String, List<OMTExportMember>> exportMembers = (HashMap<String, List<OMTExportMember>>) exportMemberCollection.get(projectUtil);
+
+        exportMembers.put("commandOnly", new ArrayList<>(Collections.singletonList(mockCommand)));
+        exportMembers.put("operatorOnly", new ArrayList<>(Collections.singletonList(mockOperator)));
+        exportMembers.put("both", new ArrayList<>(Arrays.asList(mockCommand, mockOperator)));
+
+        List<String> exportingCommandsAsSuggestions = projectUtil.getExportingCommandsAsSuggestions();
+        List<String> exportingOperatorsAsSuggestions = projectUtil.getExportingOperatorsAsSuggestions();
+
+        assertEquals(1, exportingCommandsAsSuggestions.size());
+        assertEquals(1, exportingOperatorsAsSuggestions.size());
+        assertContainsElements(exportingCommandsAsSuggestions, "myCommand");
+        assertContainsElements(exportingOperatorsAsSuggestions, "myOperator");
     }
 }

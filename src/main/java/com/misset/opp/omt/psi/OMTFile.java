@@ -144,6 +144,59 @@ public class OMTFile extends PsiFileBase {
         }
     }
 
+    public void setRootBlock(OMTPrefixBlock prefixBlock) {
+        if (prefixBlock == null) {
+            return;
+        }
+        OMTBlockEntry prefixBlockAsEntry = (OMTBlockEntry) PsiTreeUtil.findFirstParent(prefixBlock, parent -> parent instanceof OMTBlockEntry);
+        setRootBlock(prefixBlockAsEntry, "prefixes");
+    }
+
+    public void setRootBlock(OMTImportBlock importBlock) {
+        if (importBlock == null) {
+            return;
+        }
+        OMTBlockEntry importBlockAsEntry = (OMTBlockEntry) PsiTreeUtil.findFirstParent(importBlock, parent -> parent instanceof OMTBlockEntry);
+        setRootBlock(importBlockAsEntry, "import");
+    }
+
+    private void setRootBlock(OMTBlockEntry blockEntry, String rootLabel) {
+        Optional<OMTBlockEntry> rootBlock = getRootBlock(rootLabel);
+        if (rootBlock.isPresent()) {
+            rootBlock.get().replace(blockEntry);
+        } else {
+            // always add the imports to the top of the page
+            // add the parent (block entry) to the root block
+            getRoot().addBefore(blockEntry, getBeforeAnchor(rootLabel));
+        }
+        quickFormat();
+    }
+
+    public void quickFormat() {
+        removeDuplicateEmptyLines();
+    }
+
+    private void removeDuplicateEmptyLines() {
+        String replace = getRoot().getText().replaceAll("(?:\\h*\\n){2,}", "\n\n");
+        if (!replace.equals(getRoot().getText())) {
+            PsiElement psiElement = OMTElementFactory.fromString(replace, OMTBlock.class, this.getProject());
+            getRoot().replace(((OMTFile) psiElement.getContainingFile()).getRoot());
+        }
+    }
+
+    private PsiElement getBeforeAnchor(String rootLabel) {
+        switch (rootLabel) {
+            case "prefixes":
+                // prefixes is either after import or at the very top
+                return getRootBlock("import").orElse(this.getRoot().getBlockEntryList().get(0));
+
+            // import or undefined can be added at the top
+            default:
+            case "import":
+                return this.getRoot().getFirstChild();
+        }
+    }
+
     private void updateExportMembers() {
         HashMap<String, OMTExportMember> exported = new HashMap<>();
         // commands

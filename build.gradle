@@ -29,6 +29,12 @@ test {
 }
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
+//    afterEvaluate {
+//        getClassDirectories().setFrom(files(classDirectories.files.collect {
+//            fileTree(dir: it,
+//                    exclude: ['src/main/gen/**'])
+//        }))
+//    }
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/

@@ -20,7 +20,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 
 public class MemberIntention {
 
@@ -28,7 +27,7 @@ public class MemberIntention {
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     public static MemberIntention SINGLETON = new MemberIntention();
 
-    public List<IntentionAction> getImportMemberIntentions(OMTCall call, Predicate<OMTExportMember> isCorrectType) {
+    public List<IntentionAction> getImportMemberIntentions(OMTCall call) {
         String _callname = call.getFirstChild().getText();
         final String callName = _callname.startsWith("@") ? _callname.substring(1) : _callname;
         List<OMTExportMember> exportMembers = projectUtil.getExportMember(callName);
