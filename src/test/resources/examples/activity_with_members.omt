@@ -30,6 +30,12 @@ model:
     MijnTweedeActiviteit: !Activity
         title: MijnTweedeActiviteit
 
+    MijnDerdeActiviteit: !Activity
+        title: titleQuery()
+
+        queries: |
+            DEFINE QUERY titleQuery() => 'Hello';
+
     MijnProcedure: !Procedure
         onRun: |
             @LOG('test');

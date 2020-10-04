@@ -104,7 +104,7 @@ public class CurieUtil {
     }
 
     public void resetPrefixBlock(PsiElement element) {
-        resetPrefixBlock(element, null, null);
+        resetPrefixBlock(element, "", "");
     }
 
     public void addPrefixToBlock(PsiElement element, String addNamespacePrefix, String addNamespaceIri) {
@@ -115,11 +115,20 @@ public class CurieUtil {
         resetPrefixBlock(element, prefix.getNamespacePrefix().getName().trim(), prefix.getNamespaceIri().getText().trim());
     }
 
-    private void resetPrefixBlock(PsiElement element, String addNamespacePrefix, String addNamespaceIri) {
+    private void resetPrefixBlock(PsiElement element, @NotNull String addNamespacePrefix, @NotNull String addNamespaceIri) {
         OMTPrefixBlock prefixBlock = getPrefixBlock(element);
         StringBuilder prefixBlockBuilder = new StringBuilder();
         prefixBlockBuilder.append("prefixes:\n");
+        int indents = 2;
         if (prefixBlock != null) {
+            // check the max length of the prefix label used
+            // adjust indentation based on that length to align the prefix IRIs
+            int maxPrefixLength = Math.max(addNamespacePrefix.length(), prefixBlock.getPrefixList().stream().map(
+                    prefix -> prefix.getNamespacePrefix().getText().length()
+            ).max(Integer::compareTo).orElse(0));
+            indents = (int) Math.ceil((double) (maxPrefixLength + 1) / OMTElementFactory.getIndentSpace(1).length());
+
+            int finalIndents = indents;
             prefixBlock.getPrefixList()
                     .forEach(prefix -> {
                         if (prefix.getLeading() != null) {
@@ -129,7 +138,7 @@ public class CurieUtil {
                                 .append(OMTElementFactory.getIndentSpace(1))
                                 .append(prefix.getNamespacePrefix().getName());
                         prefixBlockBuilder
-                                .append(OMTElementFactory.getIndentSpace(2, prefix.getNamespacePrefix().getName().length()))
+                                .append(OMTElementFactory.getIndentSpace(finalIndents, prefix.getNamespacePrefix().getText().length()))
                                 .append(prefix.getNamespaceIri().getText().trim());
                         if (prefix.getTrailing() != null) {
                             prefixBlockBuilder.append(prefix.getTrailing().getText().trim());
@@ -137,29 +146,16 @@ public class CurieUtil {
                         prefixBlockBuilder.append("\n");
                     });
         }
-        if (addNamespacePrefix != null && addNamespaceIri != null) {
+        if (!addNamespacePrefix.isEmpty() && !addNamespaceIri.isEmpty()) {
             prefixBlockBuilder
                     .append(OMTElementFactory.getIndentSpace(1))
                     .append(addNamespacePrefix);
             prefixBlockBuilder
-                    .append(OMTElementFactory.getIndentSpace(2, addNamespacePrefix.length()))
+                    .append(OMTElementFactory.getIndentSpace(indents, addNamespacePrefix.length()))
                     .append(addNamespaceIri.trim());
             prefixBlockBuilder.append("\n");
         }
         prefixBlockBuilder.append("\n");
-        PsiElement psiElement = OMTElementFactory.fromString(prefixBlockBuilder.toString(), OMTPrefixBlock.class, element.getProject());
-        if (psiElement instanceof OMTPrefixBlock) {
-            if (prefixBlock != null) {
-                prefixBlock.replace(psiElement);
-            } else {
-                OMTFile containingFile = (OMTFile) element.getContainingFile();
-                Optional<OMTBlockEntry> importBlock = containingFile.getRootBlock("import");
-                if (importBlock.isPresent()) {
-                    containingFile.addAfter(psiElement, importBlock.get());
-                } else {
-                    containingFile.addBefore(psiElement, containingFile.getFirstChild());
-                }
-            }
-        }
+        ((OMTFile) element.getContainingFile()).setRootBlock((OMTPrefixBlock) OMTElementFactory.fromString(prefixBlockBuilder.toString(), OMTPrefixBlock.class, element.getProject()));
     }
 }

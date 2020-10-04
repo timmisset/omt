@@ -17,6 +17,7 @@ import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.intentions.members.MemberIntention;
 import com.misset.opp.omt.psi.named.NamedMemberType;
+import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import org.junit.jupiter.api.AfterEach;
@@ -87,7 +88,7 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
         doReturn(annotationBuilder).when(annotationBuilder).range(any(PsiElement.class));
         doReturn(annotationBuilder).when(annotationBuilder).tooltip(anyString());
         doReturn(annotationBuilder).when(annotationBuilder).withFix(any(IntentionAction.class));
-        doReturn(Arrays.asList(intentionAction)).when(memberIntention).getImportMemberIntentions(any(), any());
+        doReturn(Arrays.asList(intentionAction)).when(memberIntention).getImportMemberIntentions(any());
     }
 
     @AfterEach
@@ -161,9 +162,19 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
             OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
                     commandCall -> commandCall.getName().equals("myThirdCommand"));
             memberUtil.annotateCall(call, annotationHolder);
+            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
         });
     }
 
+    @Test
+    void annotateCall_MyThirdActivity() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTOperatorCall call = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
+                    operatorCall -> operatorCall.getName().equals("titleQuery"));
+            memberUtil.annotateCall(call, annotationHolder);
+            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
+        });
+    }
 
     @Test
     void annotateCall_annotateAsBuiltInMember() {
@@ -287,7 +298,7 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
             memberUtil.annotateCall(call, annotationHolder);
             verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("Mijn could not be resolved"));
-            verify(memberIntention, times(1)).getImportMemberIntentions(eq(call), any());
+            verify(memberIntention, times(1)).getImportMemberIntentions(eq(call));
         });
     }
 
@@ -300,6 +311,42 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("Procedure: MijnProcedure"));
             verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
         });
+    }
+
+    @Test
+    void annotateCall_annotateCallToProcedureThrowsCannotBeResolved() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+                    commandCall -> commandCall.getName().equals("MijnProcedure"));
+            doReturn("WrongType").when(modelUtil).getModelItemType(any(PsiElement.class));
+            memberUtil.annotateCall(call, annotationHolder);
+            verify(annotationHolder, times(1))
+                    .newAnnotation(eq(HighlightSeverity.ERROR), eq("Could not resolve callable element to exported member, this might be an issue with the imported file"));
+        });
+    }
+
+    @Test
+    void annotateCall_annotateCallToProcedureThrowsCannotBeResolvedEscapesViaOntology() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+                    commandCall -> commandCall.getName().equals("MijnProcedure"));
+            doReturn("WrongType").when(modelUtil).getModelItemType(any(PsiElement.class));
+            doReturn(true).when(modelUtil).isOntology(any(PsiElement.class));
+            memberUtil.annotateCall(call, annotationHolder);
+            verify(annotationHolder, times(0))
+                    .newAnnotation(eq(HighlightSeverity.ERROR), anyString());
+        });
+    }
+
+    @Test
+    void annotateCall_StopsOnNullReference() {
+        OMTCall mockCall = mock(OMTCall.class);
+        memberUtil.annotateCall(mockCall, annotationHolder);
+        verify(mockCall, times(0)).getReference();
+
+        doReturn(mock(PsiElement.class)).when(mockCall).getNameIdentifier();
+        memberUtil.annotateCall(mockCall, annotationHolder);
+        verify(mockCall, times(1)).getReference();
     }
 
     @Test

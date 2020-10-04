@@ -53,7 +53,7 @@ public class ProjectUtil {
     }
 
     public PsiFile[] getFilesByName(Project project, String name) {
-        return FilenameIndex.getFilesByName(project, name, GlobalSearchScope.allScope(project));
+        return FilenameIndex.getFilesByName(project, name, GlobalSearchScope.everythingScope(project));
     }
 
 
@@ -63,7 +63,7 @@ public class ProjectUtil {
     }
 
     public Document getDocument(VirtualFile virtualFile) {
-        return FileDocumentManager.getInstance().getDocument(virtualFile);
+        return getFileDocumentManager().getDocument(virtualFile);
     }
 
     /**
@@ -149,7 +149,7 @@ public class ProjectUtil {
         List<String> exportedCommands = new ArrayList<>();
         exportingMembers.values().forEach(omtExportMembers ->
                 omtExportMembers.stream()
-                        .filter(omtExportMember -> (commands && omtExportMember.isCommand()) || !(commands && omtExportMember.isOperator()))
+                        .filter(omtExportMember -> (commands && omtExportMember.isCommand()) || (!commands && omtExportMember.isOperator()))
                         .forEach(omtExportMember -> exportedCommands.add(omtExportMember.asSuggestion()))
         );
         return exportedCommands.stream().distinct().collect(Collectors.toList());

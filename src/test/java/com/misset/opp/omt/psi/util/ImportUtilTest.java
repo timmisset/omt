@@ -91,7 +91,7 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
-    void annotateImport() {
+    void annotateImport_ThrowsCannotResolveFile() {
         ApplicationManager.getApplication().runReadAction(() -> {
             String examplesPath = new File("src/test/resources/examples").getAbsolutePath();
             doReturn(examplesPath).when(project).getBasePath();
@@ -99,6 +99,25 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
             importUtil.annotateImport(omtImport, annotationHolder);
 
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("'@client/procedure_with_exporting_members.omt': could not be resolved to a file"));
+            verify(annotationBuilder, times(1)).create();
+        });
+    }
+
+
+    @Test
+    void annotateImport_ThrowsCannotResolveMember() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            // use a spy on the inner method, happy flow is already validated via getImportedFile tests
+            OMTFile mockFile = mock(OMTFile.class);
+            ImportUtil spyOnImportUtil = spy(importUtil);
+
+            doReturn(virtualFile).when(spyOnImportUtil).getImportedFile(eq(omtImport));
+            doReturn(mockFile).when(psiManager).findFile(eq(virtualFile));
+            doReturn(Optional.empty()).when(mockFile).getExportedMember(eq("MijnProcedure"));
+
+            spyOnImportUtil.annotateImport(omtImport, annotationHolder);
+
+            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("MijnProcedure is not an exported member of '@client/procedure_with_exporting_members.omt':"));
             verify(annotationBuilder, times(1)).create();
         });
     }

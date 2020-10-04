@@ -7,7 +7,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 
@@ -107,7 +106,7 @@ public class ImportUtil {
                     .range(omtImport)
                     .create();
         } else {
-            OMTFile exportingFile = (OMTFile) PsiManager.getInstance(omtImport.getProject()).findFile(importedFile);
+            OMTFile exportingFile = (OMTFile) getPsiManager(omtImport.getProject()).findFile(importedFile);
             omtImport.getMemberList().getMemberListItemList().forEach(omtMemberListItem -> {
                 String memberName = omtMemberListItem.getMember().getName().trim();
                 if (!exportingFile.getExportedMember(memberName).isPresent()) {
@@ -186,16 +185,6 @@ public class ImportUtil {
             addImportMember(importMember, "", "", importBlockBuilder);
         }
         importBlockBuilder.append("\n");
-        PsiElement psiElement = OMTElementFactory.fromString(importBlockBuilder.toString(), OMTImportBlock.class, element.getProject());
-        if (psiElement instanceof OMTImportBlock) {
-            OMTBlockEntry importBlockAsEntry = (OMTBlockEntry) PsiTreeUtil.findFirstParent(psiElement, parent -> parent instanceof OMTBlockEntry);
-            if (rootBlock.isPresent()) {
-                rootBlock.get().replace(importBlockAsEntry);
-            } else {
-                // always add the imports to the top of the page
-                // add the parent (block entry) to the root block
-                targetFile.getRoot().addBefore(importBlockAsEntry, targetFile.getRoot().getFirstChild());
-            }
-        }
+        targetFile.setRootBlock((OMTImportBlock) OMTElementFactory.fromString(importBlockBuilder.toString(), OMTImportBlock.class, element.getProject()));
     }
 }
