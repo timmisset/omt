@@ -50,7 +50,7 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
             case Activity:
             case StandaloneQuery:
             case Procedure:
-                return ((OMTModelItemBlock) element).getModelItemLabel().getPropertyLabel();
+                return ((OMTModelItemBlock) element).getModelItemLabel();
 
             case Command:
                 return ((OMTDefineCommandStatement) element).getDefineName();

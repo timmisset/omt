@@ -93,7 +93,8 @@ public class OMTPsiImplUtil {
 
     // ModelItemLabel
     public static String getName(OMTModelItemLabel itemLabel) {
-        return itemLabel.getPropertyLabel().getText();
+
+        return itemLabel.getPropertyLabel().getPropertyLabelName();
     }
 
     public static PsiElement setName(OMTModelItemLabel itemLabel, String newName) {

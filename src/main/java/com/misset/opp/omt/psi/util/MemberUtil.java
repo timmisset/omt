@@ -275,7 +275,7 @@ public class MemberUtil {
      * @return
      */
     private PsiElement getContainingElement(PsiElement resolvedToElement) {
-        if (resolvedToElement instanceof OMTPropertyLabel) {
+        if (resolvedToElement instanceof OMTModelItemLabel) {
             Optional<OMTModelItemBlock> modelItemBlock = modelUtil.getModelItemBlock(resolvedToElement);
             if (modelItemBlock.isPresent()) {
                 return modelItemBlock.get();
