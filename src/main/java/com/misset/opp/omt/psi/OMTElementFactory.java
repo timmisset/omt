@@ -7,86 +7,26 @@ import com.intellij.psi.PsiParserFacade;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTFileType;
 import com.misset.opp.omt.psi.util.CurieUtil;
-//import com.misset.opp.omt.domain.util.CurieUtil;
 
 public class OMTElementFactory {
     private static final CurieUtil curieUtil = CurieUtil.SINGLETON;
 
-    private final static String defaultBlock = "prefixes:\n" +
-            "\n";
-
-    public static OMTPrefix createPrefix(String leftHand, String rightHand, Project project) {
-        if (!leftHand.endsWith(":")) {
-            leftHand += ":";
-        }
-        if (rightHand != null) {
-            rightHand = "<http://enter.your/iri/>";
-        }
-
-        OMTFile file = createFile(project, String.format("prefixes:\n" +
-                "    %s %s\n" +
-                "\n" +
-                "queries:", leftHand, rightHand));
-
-        OMTPrefixBlock prefixBlock = curieUtil.getPrefixBlock(file);
-        return prefixBlock.getPrefixList().get(0);
-    }
-
-    /**
-     * @param curie - entire curie => some:thing
-     * @param project
-     * @return
-     */
-    public static OMTCurieElement createCurieElement(Project project, String curie) {
-        OMTFile file = createFile(project, String.format("something: |\n" +
-                "\t%s", curie));
-        return PsiTreeUtil.findChildOfType(file, OMTCurieElement.class);
-    }
-
-    /**
-     * @param curie - entire constant curie => /some:thing
-     * @param project
-     * @return
-     */
-    public static OMTCurieConstantElement createCurieConstantElement(Project project, String curie) {
-        OMTFile file = createFile(project, String.format("something: |\n" +
-                "\t%s", curie));
-        return PsiTreeUtil.findChildOfType(file, OMTCurieConstantElement.class);
-    }
-
-    public static OMTPrefixBlock createPrefixBlock(Project project) {
-        OMTFile file = createFile(project, defaultBlock);
-
-        return curieUtil.getPrefixBlock(file);
-    }
-
-    private static OMTFile createFile(Project project, String text) {
-        String name = "dummy.omt";
-        return (OMTFile) PsiFileFactory.getInstance(project).createFileFromText(name, OMTFileType.INSTANCE, text);
-    }
     public static OMTVariable createVariable(Project project, String name) {
-        name = name.startsWith("$") ? name : String.format("$%s", name);
-        return (OMTVariable)createFile(project, name).getFirstChild();
+        name = name.startsWith("$") ? name.substring(1) : name;
+        OMTFile file = createFile(project, String.format("model:\n" +
+                "    Template: !Activity\n" +
+                "        variables:\n" +
+                "            -   $%s\n", name));
+        return PsiTreeUtil.findChildOfType(file, OMTVariable.class);
     }
 
-    public static PsiElement createOperator(Project project, String name) {
-        OMTFile file = createFile(project, String.format("queries: |\n" +
-                "\n" +
-                "            DEFINE QUERY %s() => ''; \n" +
-                "\n", name));
-        OMTDefineQueryStatement defineQueryStatement = PsiTreeUtil.findChildOfType(file, OMTDefineQueryStatement.class);
-        return defineQueryStatement.getDefineName();
-
-    }
-
-    public static PsiElement createCommand(Project project, String name) {
-        OMTFile file = createFile(project, String.format("commands: |\n" +
-                "\n" +
-                "            DEFINE COMMAND %s() => { RETURN ''} \n" +
-                "\n", name));
-        OMTDefineCommandStatement defineCommandStatement = PsiTreeUtil.findChildOfType(file, OMTDefineCommandStatement.class);
-        return defineCommandStatement.getDefineName();
-
+    public static OMTModelItemLabel createModelItemLabelPropertyLabel(Project project, String name, String type) {
+        name = name.endsWith(":") ? name.substring(0, name.length() - 1) : name;
+        OMTFile file = createFile(project, String.format("model:\n" +
+                "    %s: !%s\n" +
+                "        variables:\n" +
+                "            -   $variable\n", name, type));
+        return PsiTreeUtil.findChildOfType(file, OMTModelItemLabel.class);
     }
 
     public static PsiElement createMember(Project project, String name) {
@@ -100,10 +40,64 @@ public class OMTElementFactory {
         return member;
     }
 
-    public static PsiElement createModelItemLabelPropertyLabel(Project project, String name) {
-        OMTFile file = createFile(project, String.format("%s", name));
-        return file.getFirstChild();
+    /**
+     * @param curie   - entire curie => some:thing
+     * @param project
+     * @return
+     */
+    public static OMTCurieElement createCurieElement(Project project, String curie) {
+        OMTFile file = createFile(project, String.format("something: |\n" +
+                "\t%s", curie));
+        return PsiTreeUtil.findChildOfType(file, OMTCurieElement.class);
     }
+
+
+    public static OMTPrefixBlock createPrefixBlock(Project project) {
+        OMTFile file = createFile(project, "");
+
+        return curieUtil.getPrefixBlock(file);
+    }
+
+    private static OMTFile createFile(Project project, String text) {
+        String name = "dummy.omt";
+        return (OMTFile) PsiFileFactory.getInstance(project).createFileFromText(name, OMTFileType.INSTANCE, text);
+    }
+
+    public static OMTDefineName createOperator(Project project, String name) {
+        OMTFile file = createFile(project, String.format("queries: |\n" +
+                "\n" +
+                "            DEFINE QUERY %s() => ''; \n" +
+                "\n", name));
+        OMTDefineQueryStatement defineQueryStatement = PsiTreeUtil.findChildOfType(file, OMTDefineQueryStatement.class);
+        return defineQueryStatement.getDefineName();
+    }
+
+    public static OMTOperatorCall createOperatorCall(Project project, String name, String flagSignature, String signature) {
+        OMTFile file = createFile(project, String.format("model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        onStart: |\n" +
+                "            %s%s%s;", name, flagSignature, signature));
+        return PsiTreeUtil.findChildOfType(file, OMTOperatorCall.class);
+    }
+
+    public static OMTDefineName createCommand(Project project, String name) {
+        OMTFile file = createFile(project, String.format("commands: |\n" +
+                "\n" +
+                "            DEFINE COMMAND %s() => { RETURN ''} \n" +
+                "\n", name));
+        OMTDefineCommandStatement defineCommandStatement = PsiTreeUtil.findChildOfType(file, OMTDefineCommandStatement.class);
+        return defineCommandStatement.getDefineName();
+
+    }
+
+    public static OMTCommandCall createCommandCall(Project project, String name, String flagSignature, String signature) {
+        OMTFile file = createFile(project, String.format("model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        onStart: |\n" +
+                "            @%s%s%s;", name, flagSignature, signature));
+        return PsiTreeUtil.findChildOfType(file, OMTCommandCall.class);
+    }
+
 
     public static PsiElement createImportSource(Project project, String name) {
         OMTFile file = createFile(project, String.format("import:\n" +

@@ -2,7 +2,9 @@ package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
+import com.intellij.util.IncorrectOperationException;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.impl.OMTPsiImplUtil;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.util.ImportUtil;
@@ -78,5 +80,22 @@ public class MemberReference extends PsiReferenceBase<PsiElement> implements Psi
             return ((OMTMember) element).getName().equals(memberUtil.getCallName((OMTCall) myElement));
         }
         return super.isReferenceTo(element);
+    }
+
+    @Override
+    public PsiElement handleElementRename(@NotNull String newElementName) throws IncorrectOperationException {
+        switch (type) {
+            case ImportingMember:
+                return OMTPsiImplUtil.setName((OMTMember) super.myElement, newElementName);
+            case ModelItem:
+                return OMTPsiImplUtil.setName((OMTModelItemLabel) super.myElement, newElementName);
+            case DefineName:
+                return OMTPsiImplUtil.setName((OMTDefineName) super.myElement, newElementName);
+            case OperatorCall:
+                return OMTPsiImplUtil.setName((OMTOperatorCall) super.myElement, newElementName);
+            case CommandCall:
+                return OMTPsiImplUtil.setName((OMTCommandCall) super.myElement, newElementName);
+        }
+        return super.myElement;
     }
 }
