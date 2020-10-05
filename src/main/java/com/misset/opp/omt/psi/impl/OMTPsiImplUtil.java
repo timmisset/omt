@@ -14,15 +14,20 @@ public class OMTPsiImplUtil {
 
     private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
 
+    // ////////////////////////////////////////////////////////////////////////////
     // Variable
+    // ////////////////////////////////////////////////////////////////////////////
     public static String getName(OMTVariable variable) {
         return variable.getText();
     }
 
     public static OMTVariable setName(OMTVariable variable, String newName) {
-        OMTVariable replacement = OMTElementFactory.createVariable(variable.getProject(), newName);
-        variable.replace(replacement);
-        return replacement;
+        if (newName.startsWith("$")) {
+            OMTVariable replacement = OMTElementFactory.createVariable(variable.getProject(), newName);
+            variable.replace(replacement);
+            return replacement;
+        }
+        return variable;
     }
     public static PsiElement getNameIdentifier(OMTVariable variable) {
         return variable;
@@ -31,6 +36,7 @@ public class OMTPsiImplUtil {
 
         return variableUtil.isDeclaredVariable(variable);
     }
+
     public static boolean isGlobalVariable(OMTVariable variable) {
         return variable.getGlobalVariable() != null;
     }
@@ -39,8 +45,13 @@ public class OMTPsiImplUtil {
         return variable.getIgnoredVariable() != null;
     }
 
+    // ////////////////////////////////////////////////////////////////////////////
     // Namespace prefixes
-    public static String getName(OMTNamespacePrefix curieElement) { return curieElement.getText(); }
+    // ////////////////////////////////////////////////////////////////////////////
+    public static String getName(OMTNamespacePrefix curieElement) {
+        return curieElement.getText();
+    }
+
     public static OMTCurieElement setName(OMTNamespacePrefix curieElement, String newName) {
         OMTCurieElement replacement = OMTElementFactory.createCurieElement(curieElement.getProject(), newName);
         curieElement.replace(replacement);
@@ -51,7 +62,9 @@ public class OMTPsiImplUtil {
         return namespacePrefix;
     }
 
+    // ////////////////////////////////////////////////////////////////////////////
     // OMTDefineName
+    // ////////////////////////////////////////////////////////////////////////////
     public static String getName(OMTDefineName defineName) {
         return defineName.getText();
     }
@@ -66,7 +79,9 @@ public class OMTPsiImplUtil {
         return defineName;
     }
 
+    // ////////////////////////////////////////////////////////////////////////////
     // OMTDefinedBlocks
+    // ////////////////////////////////////////////////////////////////////////////
     public static List<OMTDefinedStatement> getStatements(OMTQueriesBlock omtQueriesBlock) {
         return omtQueriesBlock.getDefineQueryStatementList().stream().map(statement -> (OMTDefinedStatement) statement).collect(Collectors.toList());
     }
@@ -75,7 +90,9 @@ public class OMTPsiImplUtil {
         return omtCommandsBlock.getDefineCommandStatementList().stream().map(statement -> (OMTDefinedStatement) statement).collect(Collectors.toList());
     }
 
+    // ////////////////////////////////////////////////////////////////////////////
     // Members
+    // ////////////////////////////////////////////////////////////////////////////
     public static String getName(OMTMember member) {
         return getNameIdentifier(member).getText();
     }
@@ -91,14 +108,15 @@ public class OMTPsiImplUtil {
         return member.getStart().getNextSibling();
     }
 
+    // ////////////////////////////////////////////////////////////////////////////
     // ModelItemLabel
+    // ////////////////////////////////////////////////////////////////////////////
     public static String getName(OMTModelItemLabel itemLabel) {
-
         return itemLabel.getPropertyLabel().getPropertyLabelName();
     }
 
     public static PsiElement setName(OMTModelItemLabel itemLabel, String newName) {
-        PsiElement replacement = OMTElementFactory.createModelItemLabelPropertyLabel(itemLabel.getProject(), newName);
+        PsiElement replacement = OMTElementFactory.createModelItemLabelPropertyLabel(itemLabel.getProject(), newName, itemLabel.getModelItemTypeElement().getText());
         itemLabel.getPropertyLabel().replace(replacement);
         return replacement;
     }
@@ -107,8 +125,9 @@ public class OMTPsiImplUtil {
         return itemLabel.getPropertyLabel();
     }
 
-
+    // ////////////////////////////////////////////////////////////////////////////
     // Import source
+    // ////////////////////////////////////////////////////////////////////////////
     public static String getName(OMTImportSource importSource) {
         return importSource.getText();
     }
@@ -123,7 +142,35 @@ public class OMTPsiImplUtil {
         return importSource;
     }
 
-    // Curies
+    // ////////////////////////////////////////////////////////////////////////////
+    // Operator call
+    // ////////////////////////////////////////////////////////////////////////////
+    public static OMTOperatorCall setName(OMTOperatorCall operatorCall, String newName) {
+        OMTOperatorCall replacement = OMTElementFactory.createOperatorCall(
+                operatorCall.getProject(),
+                newName,
+                operatorCall.getFlagSignature() != null ? operatorCall.getFlagSignature().getText() : "",
+                operatorCall.getSignature() != null ? operatorCall.getSignature().getText() : "");
+        operatorCall.replace(replacement);
+        return replacement;
+    }
+
+    // ////////////////////////////////////////////////////////////////////////////
+    // Operator call
+    // ////////////////////////////////////////////////////////////////////////////
+    public static PsiElement setName(OMTCommandCall commandCall, String newName) {
+        PsiElement replacement = OMTElementFactory.createCommandCall(
+                commandCall.getProject(),
+                newName,
+                commandCall.getFlagSignature() != null ? commandCall.getFlagSignature().getText() : "",
+                commandCall.getSignature() != null ? commandCall.getSignature().getText() : "");
+        commandCall.replace(replacement);
+        return replacement;
+    }
+
+    // ////////////////////////////////////////////////////////////////////////////
+    // Prefixes
+    // ////////////////////////////////////////////////////////////////////////////
     public static PsiElement getPrefix(OMTCurieElement curieElement) {
         return curieElement.getFirstChild();
     }
@@ -132,7 +179,6 @@ public class OMTPsiImplUtil {
         return curieElement.getText().startsWith(prefix.getNamespacePrefix().getText());
     }
 
-    // ParameterTypes
     public static boolean isDefinedByPrefix(OMTParameterType parameterType, OMTPrefix prefix) {
         return parameterType.getText().startsWith(prefix.getNamespacePrefix().getText());
     }

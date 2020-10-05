@@ -28,6 +28,8 @@
         <lang.commenter language="OMT" implementationClass="com.misset.opp.omt.OMTCommenter"/>
         <lang.psiStructureViewFactory language="OMT"
                                       implementationClass="com.misset.opp.omt.structure.OMTStructureViewFactory"/>
+        <lang.refactoringSupport language="OMT"
+                                 implementationClass="com.misset.opp.omt.OMTRefactoringSupportProvider"/>
     </extensions>
 
     <actions>
