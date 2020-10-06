@@ -173,7 +173,7 @@ IElementType logAndReturn(IElementType element) {
         log("Returning " + yytext() + " as " + element.toString() + " --> " + response);
     }
     if(response.equals(lastResponse)) {
-        error("===============> Warning, lexer not advancing!");
+        error("===============> Error, lexer not advancing!");
         error("Returning " + yytext() + " as " + element.toString() + " --> " + response);
     }
     lastResponse = response;
@@ -193,7 +193,7 @@ IElementType dentOrReturnAndSetState(IElementType elementToReturn, String pushba
             return returnElement(elementToReturn);
         } else {
             yypushback(yylength(), pushbackMessage);
-            return indentOrDedent;
+            return returnElement(indentOrDedent);
         }
 }
 IElementType indentOrReturn(IElementType elementToReturn, String pushbackMessage) {
@@ -216,7 +216,11 @@ void setBacktick(boolean state) {
 
 %%
 <YYINITIAL> {
-    ^{WHITE_SPACE}+{NEWLINE}                                  { return returnElement(TokenType.BAD_CHARACTER); }
+    ^{WHITE_SPACE}+{NEWLINE}                                  {
+          // pushback the newline, this will make sure if a new block starts on the newline it is processed
+          // correctly with dedent handeling using the {NEWLINE}{NOT_WHITE_SPACE} method
+          yypushback(1, "initial");
+          return returnElement(TokenType.WHITE_SPACE); }
     {NEWLINE}+                                                { return returnElement(TokenType.WHITE_SPACE); }
 
     {PROPERTY_KEY}                                            { return indentOrReturn(OMTTypes.PROPERTY, "setting indent"); }
