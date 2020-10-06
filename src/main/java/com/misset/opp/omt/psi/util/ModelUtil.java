@@ -342,7 +342,10 @@ public class ModelUtil {
         while (!blockEntries.isEmpty()) {
             OMTBlockEntry omtBlockEntry = blockEntries.remove(blockEntries.size() - 1);
             String entryBlockLabel = getEntryBlockLabel(omtBlockEntry);
-            JsonObject subMember = getTypeAttributes(member.get(ATTRIBUTESKEY).getAsJsonObject(), entryBlockLabel, blockEntries);
+            JsonObject subMember = getTypeAttributes(
+                    member.has(ATTRIBUTESKEY) ?
+                            member.get(ATTRIBUTESKEY).getAsJsonObject() :
+                            new JsonObject(), entryBlockLabel, blockEntries);
             if (!subMember.keySet().isEmpty()) {
                 member = subMember;
                 branch.add(member);
