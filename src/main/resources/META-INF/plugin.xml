@@ -30,6 +30,12 @@
                                       implementationClass="com.misset.opp.omt.structure.OMTStructureViewFactory"/>
         <lang.refactoringSupport language="OMT"
                                  implementationClass="com.misset.opp.omt.OMTRefactoringSupportProvider"/>
+        <applicationConfigurable id="com.misset.opp.omt.settings.OMTConfigurable"
+                                 parentId="language"
+                                 displayName="OMT / ODT Settings"
+                                 instance="com.misset.opp.omt.settings.OMTConfigurable">
+        </applicationConfigurable>
+        <applicationService serviceImplementation="com.misset.opp.omt.settings.OMTSettingsState"/>
     </extensions>
 
     <actions>

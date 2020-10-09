@@ -8,6 +8,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.PsiFile;
@@ -18,18 +19,19 @@ import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.support.OMTExportMember;
+import com.misset.opp.omt.settings.OMTSettingsState;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static util.Helper.getResources;
 
 public class ProjectUtil {
-
-
     private final HashMap<String, ArrayList<OMTPrefix>> knownPrefixes = new HashMap<>();
     private final HashMap<String, ArrayList<OMTExportMember>> exportingMembers = new HashMap<>();
     private final JsonObject parsedModel = new JsonObject();
@@ -73,37 +75,60 @@ public class ProjectUtil {
         builtInUtil.reset();
         WindowManager.getInstance().getStatusBar(project).setInfo("Loading BuiltIn Members of OMT");
 
-        loadBuiltInMembers(project, "builtinCommands.ts", BuiltInType.Command);
-        loadBuiltInMembers(project, "builtinOperators.ts", BuiltInType.Operator);
-        loadBuiltInMembers(project, "http-commands.ts", BuiltInType.HttpCommands);
-        loadBuiltInMembers(project, "json-parse-command.ts", BuiltInType.ParseJsonCommand);
-    }
-    private void loadBuiltInMembers(Project project, String filename, BuiltInType type) {
-        List<VirtualFile> virtualFiles = getVirtualFilesByName(project, filename);
-        if (virtualFiles.size() == 1) {
-            windowManager.getStatusBar(project).setInfo(
-                    String.format("Discovered %s file, loading data", filename));
-            VirtualFile virtualFile = virtualFiles.get(0);
-            Document document = fileDocumentManager.getDocument(virtualFile);
-            if (document != null) {
-                builtInUtil.reloadBuiltInFromDocument(document, type, project, this);
-                getStatusBar(project).setInfo(
-                        String.format("Finished loading %s", filename)
-                );
-            } else {
-                getStatusBar(project).setInfo(
-                        String.format("Error loading %s", filename)
-                );
-            }
+        OMTSettingsState instance = OMTSettingsState.getInstance();
+        VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
 
+        loadBuiltInMembersViaSettingsOrFromFilename(project, "builtinCommands.ts",
+                BuiltInType.Command, instance.builtInCommandsPath, virtualFileManager, s -> instance.builtInCommandsPath = s);
+        loadBuiltInMembersViaSettingsOrFromFilename(project, "builtinOperators.ts",
+                BuiltInType.Operator, instance.builtInOperatorsPath, virtualFileManager, s -> instance.builtInOperatorsPath = s);
+        loadBuiltInMembersViaSettingsOrFromFilename(project, "http-commands.ts",
+                BuiltInType.HttpCommands, instance.builtInHttpCommandsPath, virtualFileManager, s -> instance.builtInHttpCommandsPath = s);
+        loadBuiltInMembersViaSettingsOrFromFilename(project, "json-parse-command.ts",
+                BuiltInType.ParseJsonCommand, instance.builtInParseJsonPath, virtualFileManager, s -> instance.builtInParseJsonPath = s);
+    }
+
+    private void loadBuiltInMembersViaSettingsOrFromFilename(Project project,
+                                                             String filename,
+                                                             BuiltInType type,
+                                                             String settingsPath,
+                                                             VirtualFileManager virtualFileManager,
+                                                             Consumer<String> pathToVirtualFile) {
+        File file = new File(settingsPath);
+        VirtualFile virtualFile = null;
+        if (file.exists()) {
+            virtualFile = virtualFileManager.findFileByNioPath(file.toPath());
         } else {
-            getStatusBar(project).setInfo(
-                    String.format("Number of virtual files found for %s in project != 1, number found is = %s",
-                            filename,
-                            virtualFiles.size())
-            );
+            List<VirtualFile> virtualFiles = getVirtualFilesByName(project, filename);
+            if (!virtualFiles.isEmpty()) {
+                virtualFile = virtualFiles.get(0);
+            }
+        }
+
+        if (virtualFile == null) {
+            return;
+        }
+        if (loadBuiltInMembersFile(virtualFile, project, filename, type)) {
+            pathToVirtualFile.accept(virtualFile.getPath());
         }
     }
+
+    private boolean loadBuiltInMembersFile(VirtualFile virtualFile, Project project, String filename, BuiltInType type) {
+        Document document = fileDocumentManager.getDocument(virtualFile);
+        if (document != null) {
+            builtInUtil.reloadBuiltInFromDocument(document, type, project, this);
+            getStatusBar(project).setInfo(
+                    String.format("Finished loading %s", filename)
+            );
+            return true;
+        } else {
+            getStatusBar(project).setInfo(
+                    String.format("Error loading %s", filename)
+            );
+            return false;
+        }
+    }
+
 
     private void registerPrefixes(OMTFile file) {
         file.getPrefixes().forEach((namespacePrefix, omtPrefix) -> {
