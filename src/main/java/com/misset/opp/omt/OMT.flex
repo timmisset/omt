@@ -331,7 +331,10 @@ void setBacktick(boolean state) {
     ";"                                                             { return returnElement(OMTTypes.SEMICOLON); }
     "{"                                                             { return returnElement(OMTTypes.CURLY_OPEN); }
     "}"                                                             {
-          if(backtick) { setState(BACKTICK); }
+          if(backtick) {
+              setState(BACKTICK);
+              return returnElement(OMTTypes.TEMPLATE_CLOSED);
+          }
           return returnElement(OMTTypes.CURLY_CLOSED); }
     "/"                                                             { return returnElement(OMTTypes.FORWARD_SLASH); }
     "^"                                                             { return returnElement(OMTTypes.CARAT); }
@@ -345,7 +348,6 @@ void setBacktick(boolean state) {
     "+="                                                            { return returnElement(OMTTypes.ADD); }
     "-="                                                            { return returnElement(OMTTypes.REMOVE); }
     "`"                                                             { setBacktick(true); setState(BACKTICK); return returnElement(OMTTypes.BACKTICK); }
-    "$"                                                             { return returnElement(OMTTypes.DOLLAR); }
     "*"                                                             { return returnElement(OMTTypes.ASTERIX); }
     <<EOF>>                                                         { setState(YYINITIAL); return returnElement(OMTTypes.END_TOKEN); }
 }
@@ -355,12 +357,12 @@ void setBacktick(boolean state) {
     [^]                                                             { yypushback(1, "ending curie"); setState(YAML_SCALAR); }
 }
 <BACKTICK> {
-    "$"                                                             { return returnElement(OMTTypes.DOLLAR); }
-    "{"                                                             { setState(YAML_SCALAR); return returnElement(OMTTypes.CURLY_OPEN); }
+    "${"                                                            { setState(YAML_SCALAR); return returnElement(OMTTypes.TEMPLATE_OPEN); }
     {WHITE_SPACE}+                                                  { return returnElement(TokenType.WHITE_SPACE); }
     {NEWLINE}+                                                      { return returnElement(TokenType.WHITE_SPACE); }
     "`"                                                             { setBacktick(false); setState(YAML_SCALAR); return returnElement(OMTTypes.BACKTICK); }
-    [^\$\`\{\}\ ]+                                                  { return returnElement(OMTTypes.STRING); }
+    [^\$\`\ ]+                                                        { return returnElement(OMTTypes.STRING); }
+    "$"                                                             { return returnElement(OMTTypes.STRING); }
 }
 <JAVADOCS> {
     {JDEND}                                                       { setState(previousState); return returnElement(OMTTypes.JAVADOCS_END); }

@@ -107,15 +107,17 @@ public class ImportUtil {
                     .create();
         } else {
             OMTFile exportingFile = (OMTFile) getPsiManager(omtImport.getProject()).findFile(importedFile);
-            omtImport.getMemberList().getMemberListItemList().forEach(omtMemberListItem -> {
-                String memberName = omtMemberListItem.getMember().getName().trim();
-                if (!exportingFile.getExportedMember(memberName).isPresent()) {
-                    holder.newAnnotation(HighlightSeverity.ERROR,
-                            String.format("%s is not an exported member of %s", memberName, omtImport.getImportSource().getText()))
-                            .range(omtMemberListItem.getMember())
-                            .create();
-                }
-            });
+            if (omtImport.getMemberList() != null) {
+                omtImport.getMemberList().getMemberListItemList().forEach(omtMemberListItem -> {
+                    String memberName = omtMemberListItem.getMember().getName().trim();
+                    if (!exportingFile.getExportedMember(memberName).isPresent()) {
+                        holder.newAnnotation(HighlightSeverity.ERROR,
+                                String.format("%s is not an exported member of %s", memberName, omtImport.getImportSource().getText()))
+                                .range(omtMemberListItem.getMember())
+                                .create();
+                    }
+                });
+            }
         }
     }
 

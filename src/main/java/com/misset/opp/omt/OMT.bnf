@@ -19,7 +19,11 @@
 OMTFile ::= leading? block? trailing?
 
 start ::=                                   START_TOKEN leading?
-end ::=                                     trailing? END_TOKEN
+// sometimes the comments following a block are indented wrong but this is not forbidden
+// however, to correctly close the indented block preceeding the comment, the comment should
+// be encapsulated within this end statement. This will be the leading block and should not be considered
+// an actual comment on the item closed by this end block
+end ::=                                     trailing? END_TOKEN leading?
 indentToken ::=                             INDENT | INDENT2
 dedentToken ::=                             DEDENT | DEDENT2
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
@@ -65,12 +69,12 @@ commandsBlock::=                            COMMAND_BLOCK_START (start PIPE trai
                                                                 }
 
 moduleBlock::=                              leading? MODULE_NAME_START moduleName trailing?
-moduleName::=                               NAME | OPERATOR
+moduleName::=                               NAME | (start OPERATOR end)
 
 // maps
 importBlock ::=                             leading? IMPORT_START trailing? (indentToken import* dedentToken)?
 import ::=                                  leading? importSource trailing? memberList?
-importSource ::=                            importLocation EMPTY_ARRAY? {
+importSource ::=                            importLocation (start EMPTY_ARRAY end)? {
                                                                            mixin="com.misset.opp.omt.psi.impl.OMTImportNamedElementImpl"
                                                                            implements="com.misset.opp.omt.psi.named.OMTImportNamedElement"
                                                                            methods=[getName setName getNameIdentifier]
@@ -220,5 +224,5 @@ queryFilter ::=                             BRACKET_OPEN queryPath BRACKET_CLOSE
 subQuery ::=                                PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
 
 // interpolation
-interpolation ::=                           DOLLAR CURLY_OPEN queryPath CURLY_CLOSED
+interpolation ::=                           TEMPLATE_OPEN queryPath TEMPLATE_CLOSED
 interpolatedString ::=                      BACKTICK (interpolation | STRING)* BACKTICK
