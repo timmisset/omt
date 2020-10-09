@@ -36,6 +36,11 @@ public class ProjectUtil {
     private final HashMap<String, ArrayList<OMTExportMember>> exportingMembers = new HashMap<>();
     private final JsonObject parsedModel = new JsonObject();
 
+    public static final String BUILTIN_COMMANDS = "builtinCommands.ts";
+    public static final String BUILTIN_OPERATORS = "builtinOperators.ts";
+    public static final String BUILTIN_HTTP_COMMANDS = "http-commands.ts";
+    public static final String BUILTIN_JSON_PARSE_COMMAND = "json-parse-command.ts";
+
     public static final ProjectUtil SINGLETON = new ProjectUtil();
 
     private WindowManager windowManager = WindowManager.getInstance();
@@ -78,14 +83,15 @@ public class ProjectUtil {
         OMTSettingsState instance = OMTSettingsState.getInstance();
         VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
 
-        loadBuiltInMembersViaSettingsOrFromFilename(project, "builtinCommands.ts",
+        loadBuiltInMembersViaSettingsOrFromFilename(project, BUILTIN_COMMANDS,
                 BuiltInType.Command, instance.builtInCommandsPath, virtualFileManager, s -> instance.builtInCommandsPath = s);
-        loadBuiltInMembersViaSettingsOrFromFilename(project, "builtinOperators.ts",
+        loadBuiltInMembersViaSettingsOrFromFilename(project, BUILTIN_OPERATORS,
                 BuiltInType.Operator, instance.builtInOperatorsPath, virtualFileManager, s -> instance.builtInOperatorsPath = s);
-        loadBuiltInMembersViaSettingsOrFromFilename(project, "http-commands.ts",
+        loadBuiltInMembersViaSettingsOrFromFilename(project, BUILTIN_HTTP_COMMANDS,
                 BuiltInType.HttpCommands, instance.builtInHttpCommandsPath, virtualFileManager, s -> instance.builtInHttpCommandsPath = s);
-        loadBuiltInMembersViaSettingsOrFromFilename(project, "json-parse-command.ts",
+        loadBuiltInMembersViaSettingsOrFromFilename(project, BUILTIN_JSON_PARSE_COMMAND,
                 BuiltInType.ParseJsonCommand, instance.builtInParseJsonPath, virtualFileManager, s -> instance.builtInParseJsonPath = s);
+
     }
 
     private void loadBuiltInMembersViaSettingsOrFromFilename(Project project,
