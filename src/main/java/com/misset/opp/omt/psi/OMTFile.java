@@ -73,11 +73,22 @@ public class OMTFile extends PsiFileBase {
         List<OMTMember> importedList = new ArrayList<>();
         Optional<OMTImportBlock> optionalOMTImportBlock = getSpecificBlock("import", OMTImportBlock.class);
         optionalOMTImportBlock.ifPresent(omtImportBlock ->
-                omtImportBlock.getImportList().forEach(omtImport -> importedList.addAll(
-                        omtImport.getMemberList().getMemberListItemList().stream().map(OMTMemberListItem::getMember).collect(Collectors.toList())
-                ))
+                omtImportBlock.getImportList()
+                        .stream()
+                        .map(OMTImport::getMemberList)
+                        .filter(Objects::nonNull)
+                        .forEach(omtMemberList -> importedList.addAll(
+                                omtMemberList.getMemberListItemList()
+                                        .stream()
+                                        .map(OMTMemberListItem::getMember)
+                                        .collect(Collectors.toList())
+                        ))
         );
         return importedList;
+    }
+
+    public boolean isModuleFile() {
+        return getRootBlock("module").isPresent();
     }
 
     public HashMap<OMTImport, VirtualFile> getImportedFiles() {

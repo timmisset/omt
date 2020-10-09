@@ -49,6 +49,10 @@
       "node": "sequence",
       "required": true,
       "namedReference": true
+    },
+    "declare": {
+      "type": "DeclareDef",
+      "node": "map"
     }
   }
 }

@@ -331,7 +331,9 @@ public class ModelUtil {
         List<OMTBlockEntry> blockEntries = PsiTreeUtil.collectParents(element,
                 OMTBlockEntry.class, false,
                 parent -> parent == null || parent instanceof OMTFile || parent instanceof OMTModelBlock);
-        String modelItemLabel = getModelItemType(element);
+
+        OMTFile file = (OMTFile) element.getContainingFile();
+        String modelItemLabel = file.isModuleFile() ? "module" : getModelItemType(element);
         JsonObject member = getAttributes(modelItemLabel);
         if (member == null || member.keySet().isEmpty()) {
             return branch;
@@ -345,16 +347,17 @@ public class ModelUtil {
             JsonObject subMember = getTypeAttributes(
                     member.has(ATTRIBUTESKEY) ?
                             member.get(ATTRIBUTESKEY).getAsJsonObject() :
-                            new JsonObject(), entryBlockLabel, blockEntries);
+                            new JsonObject(), entryBlockLabel);
             if (!subMember.keySet().isEmpty()) {
                 member = subMember;
                 branch.add(member);
+                member = addMapOfKeyElements(member, branch);
             }
         }
         return branch;
     }
 
-    private JsonObject getTypeAttributes(JsonObject attributes, String propertyLabel, List<OMTBlockEntry> blockEntries) {
+    private JsonObject getTypeAttributes(JsonObject attributes, String propertyLabel) {
         if (attributes.has(propertyLabel)) {
             JsonObject member = (JsonObject) attributes.get(propertyLabel);
             if (member.has(TYPE)) {
@@ -363,15 +366,20 @@ public class ModelUtil {
                     member = getAttributes(memberType.substring(0, memberType.length() - 3));
                 }
             }
-            if (member.has(MAPOFKEY)) {
-                String type = member.get(MAPOFKEY).getAsString();
-                if (type.endsWith(DEF)) {
-                    member = getAttributes(type.substring(0, type.length() - 3));
-                }
-            }
             return member;
         }
         return new JsonObject();
+    }
+
+    private JsonObject addMapOfKeyElements(JsonObject member, List<JsonObject> branch) {
+        while (member.has(MAPOFKEY)) {
+            String type = member.get(MAPOFKEY).getAsString();
+            if (type.endsWith(DEF)) {
+                member = getAttributes(type.substring(0, type.length() - 3));
+                branch.add(member);
+            }
+        }
+        return member;
     }
 
     private boolean hasOntologyCommand(PsiElement element) {
