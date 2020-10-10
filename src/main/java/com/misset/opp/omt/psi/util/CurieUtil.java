@@ -72,7 +72,7 @@ public class CurieUtil {
             if (annotationBuilder != null) {
                 if (!knownPrefixes.isEmpty()) {
                     knownPrefixes.stream().map(OMTPrefix::getNamespaceIri)
-                            .map(omtNamespaceIri -> omtNamespaceIri.getText())
+                            .map(PsiElement::getText)
                             .distinct()
                             .forEach(iri -> annotationBuilder.withFix(
                                     registerPrefixIntention.getRegisterPrefixIntention(namespacePrefix, iri)
