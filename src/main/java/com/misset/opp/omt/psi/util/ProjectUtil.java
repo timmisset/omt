@@ -22,10 +22,7 @@ import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.settings.OMTSettingsState;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -163,6 +160,13 @@ public class ProjectUtil {
         );
     }
 
+    private void removeExports(OMTFile file) {
+        exportingMembers.values().forEach(omtExportMembers -> {
+            Optional<OMTExportMember> exportingMember = omtExportMembers.stream().filter(omtExportMember -> omtExportMember.getResolvingElement().getContainingFile() == file).findFirst();
+            exportingMember.ifPresent(omtExportMembers::remove);
+        });
+    }
+
     public List<OMTExportMember> getExportMember(String name) {
         return exportingMembers.getOrDefault(name, new ArrayList<>());
     }
@@ -183,6 +187,17 @@ public class ProjectUtil {
                         .forEach(omtExportMember -> exportedCommands.add(omtExportMember.asSuggestion()))
         );
         return exportedCommands.stream().distinct().collect(Collectors.toList());
+    }
+
+    /**
+     * Resets the index with exported members based on changes made in this file
+     *
+     * @param file
+     * @return
+     */
+    public void resetExportedMembers(OMTFile file) {
+        removeExports(file);
+        registerExports(file);
     }
 
     public void analyzeFile(OMTFile file) {
