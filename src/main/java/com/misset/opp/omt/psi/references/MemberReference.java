@@ -44,6 +44,10 @@ public class MemberReference extends PsiReferenceBase<PsiElement> implements Psi
                 return declaringMemberToResolveResult(memberUtil.getDeclaringMember((OMTOperatorCall) myElement));
             case CommandCall:
                 return declaringMemberToResolveResult(memberUtil.getDeclaringMember((OMTCommandCall) myElement));
+            case ExportingMember:
+                return new ResolveResult[]{
+                        memberUtil.getDeclaringMemberFromImport(myElement, ((OMTMember) myElement).getName())
+                                .map(PsiElementResolveResult::new).orElseGet(() -> new PsiElementResolveResult(myElement))};
 
             default:
                 return ResolveResult.EMPTY_ARRAY;
@@ -86,6 +90,7 @@ public class MemberReference extends PsiReferenceBase<PsiElement> implements Psi
     public PsiElement handleElementRename(@NotNull String newElementName) throws IncorrectOperationException {
         switch (type) {
             case ImportingMember:
+            case ExportingMember:
                 return OMTPsiImplUtil.setName((OMTMember) super.myElement, newElementName);
             case ModelItem:
                 return OMTPsiImplUtil.setName((OMTModelItemLabel) super.myElement, newElementName);
