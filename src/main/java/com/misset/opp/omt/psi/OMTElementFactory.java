@@ -51,13 +51,6 @@ public class OMTElementFactory {
         return PsiTreeUtil.findChildOfType(file, OMTCurieElement.class);
     }
 
-
-    public static OMTPrefixBlock createPrefixBlock(Project project) {
-        OMTFile file = createFile(project, "");
-
-        return curieUtil.getPrefixBlock(file);
-    }
-
     private static OMTFile createFile(Project project, String text) {
         String name = "dummy.omt";
         return (OMTFile) PsiFileFactory.getInstance(project).createFileFromText(name, OMTFileType.INSTANCE, text);

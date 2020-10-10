@@ -206,6 +206,10 @@ boolean backtick = false;
 void setBacktick(boolean state) {
     backtick = state;
 }
+boolean templateInScalar = false;
+void setTemplateInScalar(boolean state) {
+    templateInScalar = state;
+}
 %}
 
 // YYINITIAL == MAP
@@ -335,6 +339,11 @@ void setBacktick(boolean state) {
               setState(BACKTICK);
               return returnElement(OMTTypes.TEMPLATE_CLOSED);
           }
+          // allow template parsing in the scalar values, annotation of the model tree should determine if their usage is legal
+          if(templateInScalar) {
+                setTemplateInScalar(false);
+                return returnElement(OMTTypes.TEMPLATE_CLOSED);
+          }
           return returnElement(OMTTypes.CURLY_CLOSED); }
     "/"                                                             { return returnElement(OMTTypes.FORWARD_SLASH); }
     "^"                                                             { return returnElement(OMTTypes.CARAT); }
@@ -349,6 +358,7 @@ void setBacktick(boolean state) {
     "-="                                                            { return returnElement(OMTTypes.REMOVE); }
     "`"                                                             { setBacktick(true); setState(BACKTICK); return returnElement(OMTTypes.BACKTICK); }
     "*"                                                             { return returnElement(OMTTypes.ASTERIX); }
+    "${"                                                            { setTemplateInScalar(true); return returnElement(OMTTypes.TEMPLATE_OPEN); }
     <<EOF>>                                                         { setState(YYINITIAL); return returnElement(OMTTypes.END_TOKEN); }
 }
 <CURIE> {

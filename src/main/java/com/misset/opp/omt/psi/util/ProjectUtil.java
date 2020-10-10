@@ -100,10 +100,9 @@ public class ProjectUtil {
                                                              String settingsPath,
                                                              VirtualFileManager virtualFileManager,
                                                              Consumer<String> pathToVirtualFile) {
-        File file = new File(settingsPath);
         VirtualFile virtualFile = null;
-        if (file.exists()) {
-            virtualFile = virtualFileManager.findFileByNioPath(file.toPath());
+        if (settingsPath != null && new File(settingsPath).exists()) {
+            virtualFile = virtualFileManager.findFileByNioPath(new File(settingsPath).toPath());
         } else {
             List<VirtualFile> virtualFiles = getVirtualFilesByName(project, filename);
             if (!virtualFiles.isEmpty()) {

@@ -127,7 +127,7 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
             );
             Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(commandCall);
             assertTrue(declaringMember.isPresent());
-            assertEquals("MijnProcedure", ((OMTPropertyLabel) declaringMember.get()).getPropertyLabelName());
+            assertEquals("MijnProcedure", ((OMTModelItemLabel) declaringMember.get()).getPropertyLabel().getPropertyLabelName());
         });
     }
 
@@ -404,9 +404,8 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
         method.setAccessible(true);
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTModelItemLabel modelItemLabel = exampleFiles.getPsiElementFromRootDocument(OMTModelItemLabel.class, rootBlock);
-            OMTPropertyLabel propertyLabel = modelItemLabel.getPropertyLabel();
             try {
-                OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) method.invoke(memberUtil, propertyLabel);
+                OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) method.invoke(memberUtil, modelItemLabel);
                 assertNotNull(modelItemBlock);
                 assertEquals(modelItemBlock.getModelItemLabel(), modelItemLabel);
             } catch (IllegalAccessException | InvocationTargetException e) {
