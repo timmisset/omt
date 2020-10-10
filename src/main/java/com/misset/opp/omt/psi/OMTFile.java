@@ -13,6 +13,7 @@ import com.misset.opp.omt.psi.support.ExportMemberType;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.ImportUtil;
 import com.misset.opp.omt.psi.util.ModelUtil;
+import com.misset.opp.omt.psi.util.ProjectUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -25,6 +26,18 @@ public class OMTFile extends PsiFileBase {
 
     private static final ModelUtil modelUtil = ModelUtil.SINGLETON;
     private static final ImportUtil importUtil = ImportUtil.SINGLETON;
+
+    private String currentContent = "";
+
+    @Override
+    public void subtreeChanged() {
+        super.subtreeChanged();
+        String activeContent = getText();
+        if (!currentContent.equals(activeContent)) {
+            updateMembers();
+            currentContent = activeContent;
+        }
+    }
 
     @NotNull
     @Override
@@ -131,6 +144,7 @@ public class OMTFile extends PsiFileBase {
 
     public void updateMembers() {
         updateExportMembers();
+        ProjectUtil.SINGLETON.resetExportedMembers(this);
     }
 
     public HashMap<String, OMTModelItemBlock> getDeclaredOntologies() {
