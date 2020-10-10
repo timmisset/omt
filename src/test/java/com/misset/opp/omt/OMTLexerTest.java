@@ -59,6 +59,11 @@ class OMTLexerTest {
     }
 
     @Test
+    public void testActivityWithInterpolatedStringTitle() throws IOException {
+        testOMTFile("activity_with_interpolated_string_title");
+    }
+
+    @Test
     public void testLoadOntology() throws IOException {
         testOMTFile("load_ontology");
     }
@@ -119,93 +124,12 @@ class OMTLexerTest {
     @Test
     public void testSpecificContent() throws IOException {
         printLexerLog = true;
-        String contentToTest = "import:\n" +
-                "    \"@client/melding/src/melding.queries.omt\":\n" +
-                "    -   kladblokRegels\n" +
-                "    \"@client/instellingen/src/voorkeur.queries.omt\":\n" +
-                "    -   gmsParsertermenTonen\n" +
-                "    ../activiteit-starten/activiteit-starten.activity.omt:\n" +
-                "    -   ActiviteitStarten\n" +
-                "    ../utils/verzend-status.queries.omt:\n" +
-                "    -   isTeVersturenNaarBvh\n" +
-                "    -   VerzendStatus\n" +
-                "\n" +
-                "prefixes:\n" +
-                "    pol:     <http://ontologie.politie.nl/def/politie#>\n" +
-                "    gms:    <http://ontologie.politie.nl/def/gms#>\n" +
-                "    rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-                "    xsd:    <http://www.w3.org/2001/XMLSchema#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "    DEFINE QUERY schermTitel($opvolgingsDossier) => $opvolgingsDossier / pol:incident / pol:incidentSoort / pol:omschrijving;\n" +
-                "    DEFINE QUERY signaalDossier($opvolgingsDossier) => $opvolgingsDossier / pol:signaal [ rdf:type == /pol:MeldkamerSignaalDossier ];\n" +
-                "    DEFINE QUERY signaal($opvolgingsDossier) => signaalDossier($opvolgingsDossier) / ^pol:signaalDossier / ORDER_BY(pol:tijdstip) / PICK(0);\n" +
-                "    DEFINE QUERY registratieOpgenomenInBvhRegel($opvolgingsDossier) =>\n" +
-                "            $opvolgingsDossier / pol:verzendStatus [pol:verzendStatusSoort == /pol:VerzendStatusSoort_OvergezetNaarBVH]\n" +
-                "            / CHOOSE\n" +
-                "                WHEN EXISTS => $opvolgingsDossier / pol:verzendStatus [pol:verzendStatusSoort == /pol:VerzendStatusSoort_TeVerzendenNaarBVH] /\n" +
-                "                        ORDER_BY(pol:beginTijdstip, true)/ PICK(0)\n" +
-                "                OTHERWISE => null\n" +
-                "            END ;\n" +
-                "    DEFINE QUERY tijdlijnRegels($opvolgingsDossier) =>\n" +
-                "            (kladblokRegels(signaal($opvolgingsDossier))\n" +
-                "                / MAP(`{\"type\": \"gms-regel\",\n" +
-                "                        \"tijdstip\": \"${gms:tijdstip}\",\n" +
-                "                        \"zender\": \"GMS\",\n" +
-                "                        \"inhoud\": \"${gms:inhoud}\"\n" +
-                "                    }`) / CAST(JSON)\n" +
-                "            )\n" +
-                "            |\n" +
-                "            (registratieOpgenomenInBvhRegel($opvolgingsDossier)\n" +
-                "                / MAP(`{\"type\": \"bvh-regel\",\n" +
-                "                        \"titel\": \"Overgezet naar BVH\",\n" +
-                "                        \"tijdstip\": \"${pol:beginTijdstip}\",\n" +
-                "                        ${pol:aangemaaktDoor / CAST(/xsd:string) / CONCAT('\"door\": \"', ., '\"')}\n" +
-                "                    }`) / CAST(JSON)\n" +
-                "            );\n" +
-                "\n" +
-                "model:\n" +
-                "    Raadplegen: !Activity\n" +
-                "        title: $title\n" +
-                "\n" +
-                "        params:\n" +
-                "        -   $opvolgingsDossier (pol:OpvolgingsDossier)\n" +
-                "\n" +
-                "        graphs:\n" +
-                "            live:\n" +
-                "                -   $opvolgingsDossier / GRAPH\n" +
-                "                -   $opvolgingsDossier / pol:incident / pol:incidentSoort / GRAPH\n" +
-                "                -   $opvolgingsDossier / pol:signaal / GRAPH\n" +
-                "                -   signaalDossier($opvolgingsDossier) /  pol:incident / pol:incidentSoort / GRAPH\n" +
+        String contentToTest = "model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        title: Mijn titel = ${$mijnVariable}\n" +
                 "\n" +
                 "        variables:\n" +
-                "            -   $title = schermTitel($opvolgingsDossier)\n" +
-                "\n" +
-                "        watchers:\n" +
-                "            -   query: schermTitel($opvolgingsDossier)\n" +
-                "                onChange: |\n" +
-                "                    $title = schermTitel($opvolgingsDossier);\n" +
-                "\n" +
-                "        payload:\n" +
-                "            dossier: $opvolgingsDossier\n" +
-                "            opvolgingsDossier: $opvolgingsDossier\n" +
-                "            tijdlijnRegels:\n" +
-                "                # De tijdlijn-component verwacht een array van JSON-objecten met de attributen:\n" +
-                "                #     - type (string) , wordt gebruikt in de data-cy\n" +
-                "                #     - tijdstip (dateTime geconverteerd naar string)\n" +
-                "                #     - zender (optioneel, degene die de regel veroorzaakt, b.v. 'GMS')\n" +
-                "                #     - inhoud (string)\n" +
-                "                # De component heeft geen kennis van hoe de informatie verzameld wordt.\n" +
-                "                # De component weet hoe deze weer te geven\n" +
-                "                value: tijdlijnRegels($opvolgingsDossier)\n" +
-                "                list: true\n" +
-                "\n" +
-                "        actions:\n" +
-                "            activiteitStarten:\n" +
-                "                precondition: isTeVersturenNaarBvh($opvolgingsDossier)\n" +
-                "                onSelect: |\n" +
-                "                    @ActiviteitStarten($opvolgingsDossier);\n" +
-                "\n";
+                "        -   $mijnVariable\n";
 
         System.out.println(
                 String.join("\n", getElements(contentToTest))

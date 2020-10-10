@@ -3,7 +3,6 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.intentions.prefix.RegisterPrefixIntention;
@@ -59,26 +58,8 @@ public class CurieUtil {
     }
 
     public OMTPrefixBlock getPrefixBlock(PsiElement element) {
-        return getPrefixBlock(element, false);
-    }
-
-    public OMTPrefixBlock getPrefixBlock(PsiElement element, boolean createIfNeeded) {
-        final PsiFile file = element.getContainingFile();
-        @NotNull Collection<OMTSpecificBlock> children = PsiTreeUtil.findChildrenOfType(file, OMTSpecificBlock.class);
-        for (OMTSpecificBlock child : children) {
-            if (child != null && child.getPrefixBlock() != null) {
-                return child.getPrefixBlock();
-            }
-        }
-        // create if required:
-        if (createIfNeeded) {
-            OMTPrefixBlock prefixBlock = OMTElementFactory.createPrefixBlock(element.getProject());
-            PsiElement firstChild = file.getFirstChild();
-            prefixBlock = (OMTPrefixBlock) file.addBefore(prefixBlock, firstChild);
-            file.addAfter(OMTElementFactory.createNewLine(element.getProject()), prefixBlock);
-            return prefixBlock;
-        }
-        return  null;
+        Optional<OMTBlockEntry> prefixes = ((OMTFile) element.getContainingFile()).getRootBlock("prefixes");
+        return prefixes.map(omtBlockEntry -> omtBlockEntry.getSpecificBlock().getPrefixBlock()).orElse(null);
     }
 
     public void annotateNamespacePrefix(@NotNull OMTNamespacePrefix namespacePrefix, @NotNull AnnotationHolder holder) {

@@ -88,32 +88,13 @@ class ProjectUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
-    void loadBuiltInMembers_ShowsErrorWhenNotDocumentNotLoaded() {
+    void loadBuiltInMembers_ShowsErrorWhenDocumentNotLoaded() {
         doReturn(Arrays.asList(virtualFile)).when(projectUtil).getVirtualFilesByName(
                 any(Project.class), anyString()
         );
         ApplicationManager.getApplication().runReadAction(() -> projectUtil.loadBuiltInMembers(getProject()));
         verify(statusBar).setInfo("Error loading builtinCommands.ts");
         verify(statusBar).setInfo("Error loading builtinOperators.ts");
-    }
-
-    @Test
-    void loadBuiltInMembers_ShowsErrorWhenNotFound() {
-        doReturn(document).when(fileDocumentManager).getDocument(eq(virtualFile));
-        ApplicationManager.getApplication().runReadAction(() -> projectUtil.loadBuiltInMembers(getProject()));
-        verify(statusBar).setInfo("Number of virtual files found for builtinCommands.ts in project != 1, number found is = 0");
-        verify(statusBar).setInfo("Number of virtual files found for builtinOperators.ts in project != 1, number found is = 0");
-    }
-
-    @Test
-    void loadBuiltInMembers_ShowsErrorWhenTooManyFound() {
-        doReturn(Arrays.asList(virtualFile, virtualFile)).when(projectUtil).getVirtualFilesByName(
-                any(Project.class), anyString()
-        );
-        doReturn(document).when(fileDocumentManager).getDocument(eq(virtualFile));
-        ApplicationManager.getApplication().runReadAction(() -> projectUtil.loadBuiltInMembers(getProject()));
-        verify(statusBar).setInfo("Number of virtual files found for builtinCommands.ts in project != 1, number found is = 2");
-        verify(statusBar).setInfo("Number of virtual files found for builtinOperators.ts in project != 1, number found is = 2");
     }
 
     @Test

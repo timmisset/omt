@@ -110,7 +110,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTCurieElement curieElement = exampleFiles.getPsiElementFromRootDocument(OMTCurieElement.class, rootBlock);
             OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
-            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixBlock(curieElement, true);
+            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixBlock(curieElement);
             assertEquals(prefixBlock, returnedPrefixBlock);
         });
     }
@@ -120,18 +120,8 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
         ApplicationManager.getApplication().runReadAction(() -> {
             PsiElement activityWithoutPrefixBlock = exampleFiles.getActivityWithQueryWatcher();
             OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, activityWithoutPrefixBlock);
-            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixBlock(variable, false);
+            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixBlock(variable);
             assertNull(returnedPrefixBlock);
-        });
-    }
-
-    @Test
-    void getPrefixBlockReturnsNewPrefixBlock() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement activityWithoutPrefixBlock = exampleFiles.getActivityWithQueryWatcher();
-            OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, activityWithoutPrefixBlock);
-            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixBlock(variable, true);
-            assertNotNull(returnedPrefixBlock);
         });
     }
 
