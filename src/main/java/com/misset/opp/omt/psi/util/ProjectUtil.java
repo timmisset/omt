@@ -150,7 +150,7 @@ public class ProjectUtil {
         if (prefixName.endsWith(":")) {
             prefixName = prefixName.substring(0, prefixName.length() - 1);
         }
-        return knownPrefixes.get(prefixName);
+        return knownPrefixes.getOrDefault(prefixName, new ArrayList<>());
     }
 
     private void registerExports(OMTFile file) {
