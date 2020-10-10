@@ -2,6 +2,6 @@ package com.misset.opp.omt.psi.named;
 
 public enum NamedMemberType {
 
-    DefineName, ImportingMember, OperatorCall, CommandCall, ModelItem
+    DefineName, ImportingMember, ExportingMember, OperatorCall, CommandCall, ModelItem
 
 }

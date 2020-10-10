@@ -69,16 +69,22 @@ public class MemberUtil {
         }
 
         // not found as a member of a defined block, check for imports:
-        return getDeclaringMemberFromImport(call);
+        return getDeclaringMemberFromImport(call, getCallName(call));
     }
 
-    private Optional<PsiElement> getDeclaringMemberFromImport(OMTCall call) {
-
-        String callName = getCallName(call);
-        OMTFile containingFile = (OMTFile) call.getContainingFile();
+    /**
+     * Method that will look for any corresponding import member based on this elements containing file
+     * and nameIdentifier
+     *
+     * @param element
+     * @param nameIdentifier
+     * @return
+     */
+    public Optional<PsiElement> getDeclaringMemberFromImport(PsiElement element, String nameIdentifier) {
+        OMTFile containingFile = (OMTFile) element.getContainingFile();
         List<OMTMember> importedMembers = containingFile.getImportedMembers();
         Optional<OMTMember> importedMember = importedMembers.stream()
-                .filter(member -> member.getName().trim().equals(callName))
+                .filter(member -> member.getName() != null && member.getName().trim().equals(nameIdentifier))
                 .findFirst();
         if (importedMember.isPresent()) {
             return importUtil.resolveImportMember(importedMember.get());
@@ -317,8 +323,11 @@ public class MemberUtil {
         if (element instanceof OMTModelItemLabel || element instanceof OMTPropertyLabel) {
             return NamedMemberType.ModelItem;
         }
-        if (element instanceof OMTMember && element.getParent().getParent().getParent() instanceof OMTImport) {
+        if (element instanceof OMTMember && PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTImportBlock) != null) {
             return NamedMemberType.ImportingMember;
+        }
+        if (element instanceof OMTMember && PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTExportBlock) != null) {
+            return NamedMemberType.ExportingMember;
         }
         return null;
     }
@@ -352,6 +361,13 @@ public class MemberUtil {
                     default:
                         return null;
                 }
+
+            case ExportingMember:
+                // return the exporting member by resolving it
+                if (element.getReference() == null || element.getReference().resolve() == null) {
+                    return null;
+                }
+                return memberToExportMember(element.getReference().resolve());
 
             case ImportingMember:
             case CommandCall:

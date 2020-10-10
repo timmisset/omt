@@ -44,6 +44,7 @@ public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement imp
             case DefineName:
                 return toReference((OMTDefineName) getPsi());
             case ImportingMember:
+            case ExportingMember:
                 return toReference((OMTMember) getPsi());
             case CommandCall:
                 return toReference((OMTCommandCall) getPsi());
@@ -68,7 +69,7 @@ public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement imp
         return new MemberReference(defineName, property, getType());
     }
     private PsiReference toReference(OMTMember member) {
-        TextRange property = new TextRange(0, member.getText().length());
+        TextRange property = member.getNameIdentifier().getTextRangeInParent();
         return new MemberReference(member, property, getType());
     }
 
