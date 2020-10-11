@@ -20,6 +20,8 @@ import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.settings.OMTSettingsState;
+import org.apache.jena.rdf.model.Model;
+import util.RDFModelUtil;
 
 import java.io.File;
 import java.util.*;
@@ -40,6 +42,7 @@ public class ProjectUtil {
 
     public static final ProjectUtil SINGLETON = new ProjectUtil();
 
+    private Model model;
     private WindowManager windowManager = WindowManager.getInstance();
     private FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
     private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
@@ -60,6 +63,10 @@ public class ProjectUtil {
         return FilenameIndex.getFilesByName(project, name, GlobalSearchScope.everythingScope(project));
     }
 
+    public Model getOntologyModel() {
+        return model;
+    }
+
 
     public List<VirtualFile> getVirtualFilesByName(Project project, String filename) {
         return
@@ -77,18 +84,30 @@ public class ProjectUtil {
         builtInUtil.reset();
         WindowManager.getInstance().getStatusBar(project).setInfo("Loading BuiltIn Members of OMT");
 
-        OMTSettingsState instance = OMTSettingsState.getInstance();
+        OMTSettingsState settings = OMTSettingsState.getInstance();
         VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
 
         loadBuiltInMembersViaSettingsOrFromFilename(project, BUILTIN_COMMANDS,
-                BuiltInType.Command, instance.builtInCommandsPath, virtualFileManager, s -> instance.builtInCommandsPath = s);
+                BuiltInType.Command, settings.builtInCommandsPath, virtualFileManager, s -> settings.builtInCommandsPath = s);
         loadBuiltInMembersViaSettingsOrFromFilename(project, BUILTIN_OPERATORS,
-                BuiltInType.Operator, instance.builtInOperatorsPath, virtualFileManager, s -> instance.builtInOperatorsPath = s);
+                BuiltInType.Operator, settings.builtInOperatorsPath, virtualFileManager, s -> settings.builtInOperatorsPath = s);
         loadBuiltInMembersViaSettingsOrFromFilename(project, BUILTIN_HTTP_COMMANDS,
-                BuiltInType.HttpCommands, instance.builtInHttpCommandsPath, virtualFileManager, s -> instance.builtInHttpCommandsPath = s);
+                BuiltInType.HttpCommands, settings.builtInHttpCommandsPath, virtualFileManager, s -> settings.builtInHttpCommandsPath = s);
         loadBuiltInMembersViaSettingsOrFromFilename(project, BUILTIN_JSON_PARSE_COMMAND,
-                BuiltInType.ParseJsonCommand, instance.builtInParseJsonPath, virtualFileManager, s -> instance.builtInParseJsonPath = s);
+                BuiltInType.ParseJsonCommand, settings.builtInParseJsonPath, virtualFileManager, s -> settings.builtInParseJsonPath = s);
 
+    }
+
+    public void loadOntologyModel(Project project) {
+        VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
+        OMTSettingsState settings = OMTSettingsState.getInstance();
+        VirtualFile virtualFile = getVirtualFileFromSettingOrVFS(virtualFileManager, project, "root.ttl", settings.ontologyModelRootPath);
+        if (virtualFile == null) {
+            return;
+        }
+        settings.ontologyModelRootPath = virtualFile.getPath();
+        String rootFolderPath = new File(virtualFile.getPath()).getParent();
+        model = new RDFModelUtil(rootFolderPath).readModel();
     }
 
     private void loadBuiltInMembersViaSettingsOrFromFilename(Project project,
@@ -97,6 +116,17 @@ public class ProjectUtil {
                                                              String settingsPath,
                                                              VirtualFileManager virtualFileManager,
                                                              Consumer<String> pathToVirtualFile) {
+
+        VirtualFile virtualFile = getVirtualFileFromSettingOrVFS(virtualFileManager, project, filename, settingsPath);
+        if (virtualFile == null) {
+            return;
+        }
+        if (loadBuiltInMembersFile(virtualFile, project, filename, type)) {
+            pathToVirtualFile.accept(virtualFile.getPath());
+        }
+    }
+
+    private VirtualFile getVirtualFileFromSettingOrVFS(VirtualFileManager virtualFileManager, Project project, String filename, String settingsPath) {
         VirtualFile virtualFile = null;
         if (settingsPath != null && new File(settingsPath).exists()) {
             virtualFile = virtualFileManager.findFileByNioPath(new File(settingsPath).toPath());
@@ -106,13 +136,7 @@ public class ProjectUtil {
                 virtualFile = virtualFiles.get(0);
             }
         }
-
-        if (virtualFile == null) {
-            return;
-        }
-        if (loadBuiltInMembersFile(virtualFile, project, filename, type)) {
-            pathToVirtualFile.accept(virtualFile.getPath());
-        }
+        return virtualFile;
     }
 
     private boolean loadBuiltInMembersFile(VirtualFile virtualFile, Project project, String filename, BuiltInType type) {

@@ -23,6 +23,7 @@ public class OMTSettingsState implements PersistentStateComponent<OMTSettingsSta
     public String builtInOperatorsPath = "";
     public String builtInHttpCommandsPath = "";
     public String builtInParseJsonPath = "";
+    public String ontologyModelRootPath = "";
 
     public static OMTSettingsState getInstance() {
         return ServiceManager.getService(OMTSettingsState.class);

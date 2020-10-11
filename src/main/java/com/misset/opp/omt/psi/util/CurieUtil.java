@@ -2,11 +2,14 @@ package com.misset.opp.omt.psi.util;
 
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.intentions.prefix.RegisterPrefixIntention;
+import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
+import util.RDFModelUtil;
 
 import java.util.Collection;
 import java.util.List;
@@ -19,7 +22,6 @@ public class CurieUtil {
     private static final AnnotationUtil annotationUtil = AnnotationUtil.SINGLETON;
     private static final RegisterPrefixIntention registerPrefixIntention = RegisterPrefixIntention.SINGLETON;
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private ModelUtil modelUtil = ModelUtil.SINGLETON;
 
     public Optional<OMTPrefix> getDefinedByPrefix(OMTParameterType parameterType) {
         // Otherwise the main prefixes block:
@@ -138,5 +140,13 @@ public class CurieUtil {
         }
         prefixBlockBuilder.append("\n");
         ((OMTFile) element.getContainingFile()).setRootBlock((OMTPrefixBlock) OMTElementFactory.fromString(prefixBlockBuilder.toString(), OMTPrefixBlock.class, element.getProject()));
+    }
+
+    public void annotateCurieElement(OMTCurieElement curieElement, AnnotationHolder annotationHolder) {
+        RDFModelUtil rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
+        Resource resource = curieElement.getAsResource();
+        if (rdfModelUtil.isClassResource(resource)) {
+            annotationHolder.newAnnotation(HighlightSeverity.INFORMATION, rdfModelUtil.describeResource(resource)).create();
+        }
     }
 }

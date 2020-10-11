@@ -4,7 +4,10 @@ package com.misset.opp.omt.psi.impl;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
+import com.misset.opp.omt.psi.util.ProjectUtil;
 import com.misset.opp.omt.psi.util.VariableUtil;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -13,6 +16,7 @@ import java.util.stream.Collectors;
 public class OMTPsiImplUtil {
 
     private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
+    private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
 
     // ////////////////////////////////////////////////////////////////////////////
     // Variable
@@ -181,6 +185,22 @@ public class OMTPsiImplUtil {
 
     public static boolean isDefinedByPrefix(OMTParameterType parameterType, OMTPrefix prefix) {
         return parameterType.getText().startsWith(prefix.getNamespacePrefix().getText());
+    }
+
+    /**
+     * Returns the curie resolved to the full iri as a Resource in the loaded ontology model
+     *
+     * @param curieElement
+     * @return
+     */
+    public static Resource getAsResource(OMTCurieElement curieElement) {
+        String resolvedIri = String.format("%s%s",
+                ((OMTFile) curieElement.getContainingFile()).getPrefixIri(curieElement.getPrefix().getText()),
+                curieElement.getPrefix().getNextSibling().getText()
+        );
+
+        Model ontologyModel = projectUtil.getOntologyModel();
+        return ontologyModel.getResource(resolvedIri);
     }
 
     public static int numberOfParameters(OMTSignature signature) {
