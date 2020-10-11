@@ -203,6 +203,24 @@ public class OMTPsiImplUtil {
         return ontologyModel.getResource(resolvedIri);
     }
 
+    /**
+     * Returns the curie resolved to the full iri as a Resource in the loaded ontology model
+     *
+     * @param parameterType
+     * @return
+     */
+    public static Resource getAsResource(OMTParameterType parameterType) {
+        String fullIri = parameterType.getNamespacePrefix() == null ?
+                parameterType.getFirstChild().getText() :
+                String.format("%s%s",
+                        ((OMTFile) parameterType.getContainingFile()).getPrefixIri(parameterType.getNamespacePrefix().getName()),
+                        parameterType.getNamespacePrefix().getNextSibling().getText()
+                );
+
+        Model ontologyModel = projectUtil.getOntologyModel();
+        return ontologyModel.getResource(fullIri);
+    }
+
     public static int numberOfParameters(OMTSignature signature) {
         return signature.getCommandBlockList().size() +
                 signature.getQueryPathList().size() +

@@ -143,10 +143,17 @@ public class CurieUtil {
     }
 
     public void annotateCurieElement(OMTCurieElement curieElement, AnnotationHolder annotationHolder) {
+        annotateAsResource(curieElement.getAsResource(), annotationHolder);
+    }
+
+    public void annotateParameterType(OMTParameterType parameterType, AnnotationHolder annotationHolder) {
+        annotateAsResource(parameterType.getAsResource(), annotationHolder);
+    }
+
+    private void annotateAsResource(Resource resource, AnnotationHolder annotationHolder) {
         RDFModelUtil rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
-        Resource resource = curieElement.getAsResource();
-        if (rdfModelUtil.isClassResource(resource)) {
-            annotationHolder.newAnnotation(HighlightSeverity.INFORMATION, rdfModelUtil.describeResource(resource)).create();
-        }
+        annotationHolder.newAnnotation(HighlightSeverity.INFORMATION, resource.toString())
+                .tooltip(rdfModelUtil.describeResource(resource))
+                .create();
     }
 }

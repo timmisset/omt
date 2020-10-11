@@ -48,6 +48,9 @@ public class OMTAnnotator implements Annotator {
         if (element instanceof OMTCurieElement) {
             curieUtil.annotateCurieElement((OMTCurieElement) element, holder);
         }
+        if (element instanceof OMTParameterType) {
+            curieUtil.annotateParameterType((OMTParameterType) element, holder);
+        }
     }
 
 }
