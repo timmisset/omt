@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class RDFModelUtil {
 
@@ -172,9 +171,57 @@ public class RDFModelUtil {
 
     public String describeResource(Resource resource) {
         if (isClassResource(resource)) {
-            List<Resource> classLineage = getClassLineage(resource);
-            return String.join("\n", classLineage.stream().map(Resource::toString).collect(Collectors.toList()));
+            return describeClass(resource);
         }
-        return "Describing " + resource.toString();
+        return resource.toString();
+    }
+
+    /**
+     * <p>Class:&nbsp;<strong>myClass</strong></p>
+     * <p>Parent lineage:</p>
+     * <ul>
+     * <li>First parent</li>
+     * <li>Grandparent</li>
+     * </ul>
+     * <p>Predicates:</p>
+     * <ul>
+     * <li>myPredicate (typeOfPredicate)</li>
+     * <li>mySecondPredicate (typeOfPredicate)</li>
+     * </ul>
+     * <p>Referred to by:</p>
+     * <ul>
+     * <li>referedByClass (viaPredicate)</li>
+     * </ul>
+     *
+     * @param resource
+     * @return
+     */
+    private String describeClass(Resource resource) {
+        StringBuilder description = new StringBuilder();
+
+        description.append(String.format("<p>Class:&nbsp;<strong>%s</strong></p>", resource.getLocalName()));
+        List<Resource> classLineage = getClassLineage(resource);
+        if (classLineage.size() > 1) {
+            List<Resource> superClasses = classLineage.subList(1, classLineage.size() - 1);
+            description.append("<p>Parent lineage:</p>");
+            description.append("<ul>");
+            superClasses.forEach(superClass ->
+                    description.append(String.format("<li>%s:%s (%s)</li>", superClass.getModel().getNsURIPrefix(superClass.getNameSpace()), superClass.getLocalName(), superClass.toString()))
+            );
+            description.append("</ul>");
+        }
+        HashMap<Statement, Resource> shaclProperties = getShaclProperties(resource);
+        if (!shaclProperties.isEmpty()) {
+            description.append("<p>Predicates:</p>");
+            description.append("<ul>");
+            shaclProperties.forEach((statement, fromResource) -> {
+                Resource predicate = statement.getProperty(SHACL_PATH).getObject().asResource();
+                description.append(String.format("<li>%s:%s (%s)</li>",
+                        statement.getModel().getNsURIPrefix(predicate.getNameSpace()), predicate.getLocalName(), fromResource.getLocalName()));
+            });
+            description.append("</ul>");
+        }
+
+        return description.toString();
     }
 }

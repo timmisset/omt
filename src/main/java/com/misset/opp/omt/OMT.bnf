@@ -137,7 +137,7 @@ globalVariable ::=                          GLOBAL_VARIABLE_NAME
 ignoredVariable ::=                         IGNORE_VARIABLE_NAME
 parameterWithType ::=                       variable PARENTHESES_OPEN (parameterType | OPERATOR) PARENTHESES_CLOSE
 parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) {
-    methods = [isDefinedByPrefix]
+    methods = [isDefinedByPrefix getAsResource]
 }
 
 // SCRIPT
