@@ -142,6 +142,13 @@ public class OMTFile extends PsiFileBase {
         return prefixHashMap;
     }
 
+    public String getPrefixIri(String prefix) {
+        String iri = getPrefixes().get(prefix).getNamespaceIri().getStart().getNextSibling().getText();
+        iri = iri.startsWith("<") ? iri.substring(1) : iri;
+        iri = iri.endsWith(">") ? iri.substring(0, iri.length() - 1) : iri;
+        return iri;
+    }
+
     public void updateMembers() {
         updateExportMembers();
         ProjectUtil.SINGLETON.resetExportedMembers(this);

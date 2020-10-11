@@ -43,6 +43,7 @@ public class OMTConfigurable implements Configurable {
         modified |= !settingsComponent.getBuiltinOperatorsLocation().equals(settingsState.builtInOperatorsPath);
         modified |= !settingsComponent.getBuiltinHttpCommandsLocation().equals(settingsState.builtInHttpCommandsPath);
         modified |= !settingsComponent.getBuiltinParseJsonLocation().equals(settingsState.builtInParseJsonPath);
+        modified |= !settingsComponent.getOntologyModelRootPath().equals(settingsState.ontologyModelRootPath);
         return modified;
     }
 
@@ -53,9 +54,11 @@ public class OMTConfigurable implements Configurable {
         settingsState.builtInOperatorsPath = settingsComponent.getBuiltinOperatorsLocation();
         settingsState.builtInHttpCommandsPath = settingsComponent.getBuiltinHttpCommandsLocation();
         settingsState.builtInParseJsonPath = settingsComponent.getBuiltinParseJsonLocation();
+        settingsState.ontologyModelRootPath = settingsComponent.getOntologyModelRootPath();
 
         // will try to reload the builtin members from the new file locations
         projectUtil.loadBuiltInMembers(ProjectManager.getInstance().getOpenProjects()[0]);
+        projectUtil.loadOntologyModel(ProjectManager.getInstance().getOpenProjects()[0]);
     }
 
     @Override
@@ -65,6 +68,7 @@ public class OMTConfigurable implements Configurable {
         settingsComponent.setBuiltinOperatorsLocation(settingsState.builtInOperatorsPath);
         settingsComponent.setBuiltinHttpCommandsLocation(settingsState.builtInHttpCommandsPath);
         settingsComponent.setBuiltinParseJsonLocation(settingsState.builtInParseJsonPath);
+        settingsComponent.setOntologyModelRootPath(settingsState.ontologyModelRootPath);
     }
 
     @Override

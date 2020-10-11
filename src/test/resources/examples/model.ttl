@@ -1,0 +1,49 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ont: <http://ontologie#> .
+
+<http://ontologie#ModelItem>
+  a owl:Ontology ;
+  owl:versionInfo "Created manually" ;
+.
+ont:ClassA
+  a owl:Class ;
+  a sh:NodeShape ;
+  rdfs:subClassOf ont:ClassB ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path ont:booleanProperty ;
+      sh:datatype xsd:boolean ;
+      sh:minCount 1 ;
+    ] ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path ont:classProperty ;
+      sh:class ont:ClassC ;
+      sh:maxCount 1 ;
+    ] ;
+.
+ont:ClassB
+  a owl:Class ;
+  a sh:NodeShape ;
+  rdfs:subClassOf ont:ClassB ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path ont:stringProperty ;
+      sh:datatype xsd:string ;
+      sh:maxCount 1 ;
+    ] ;
+.
+ont:ClassC
+  a owl:Class ;
+  a sh:NodeShape ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path ont:stringProperty ;
+      sh:datatype xsd:string ;
+      sh:maxCount 1 ;
+    ] ;
+.

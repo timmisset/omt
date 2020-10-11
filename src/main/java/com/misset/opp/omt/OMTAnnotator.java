@@ -45,6 +45,9 @@ public class OMTAnnotator implements Annotator {
         if (element instanceof OMTReturnStatement) {
             scriptUtil.annotateFinalStatement(element, holder);
         }
+        if (element instanceof OMTCurieElement) {
+            curieUtil.annotateCurieElement((OMTCurieElement) element, holder);
+        }
     }
 
 }

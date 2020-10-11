@@ -35,6 +35,9 @@ public class OMTStartupActivity implements StartupActivity {
             // parse the OMT Model, this is currently a static resource in the project
             projectUtil.getParsedModel();
 
+            // load the ontology model
+            projectUtil.loadOntologyModel(project);
+
             // finally, analyze all OMT files for exporting members and prefixess
             analyzeAllOMTFiles(project);
 

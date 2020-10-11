@@ -19,15 +19,17 @@ public class OMTSettingsComponent {
     private final TextFieldWithBrowseButton builtInOperatorsLocation = getFileLocationSetting("builtinOperators.ts");
     private final TextFieldWithBrowseButton builtInHttpCommandsLocation = getFileLocationSetting("http-commands.ts");
     private final TextFieldWithBrowseButton builtInParseJsonCommandLocation = getFileLocationSetting("json-parse-command.ts");
-    private final JBLabel label = new JBLabel("Project locations");
+    private final TextFieldWithBrowseButton ontologyModelRootPath = getFileLocationSetting("root.ttl");
 
     public OMTSettingsComponent() {
         myMainPanel = FormBuilder.createFormBuilder()
-                .addComponent(new JXTitledSeparator("Project locations"))
+                .addComponent(new JXTitledSeparator("Operator & Command locations"))
                 .addLabeledComponent(new JBLabel("Commands:"), builtInCommandsLocation, 1, false)
                 .addLabeledComponent(new JBLabel("Operators:"), builtInOperatorsLocation, 1, false)
                 .addLabeledComponent(new JBLabel("HttpCommands:"), builtInHttpCommandsLocation, 1, false)
                 .addLabeledComponent(new JBLabel("ParseJson:"), builtInParseJsonCommandLocation, 1, false)
+                .addComponent(new JXTitledSeparator("Ontology root"))
+                .addLabeledComponent(new JBLabel("Ontology model root:"), ontologyModelRootPath, 1, false)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
     }
@@ -86,4 +88,12 @@ public class OMTSettingsComponent {
         builtInParseJsonCommandLocation.setText(newText);
     }
 
+    @NotNull
+    public String getOntologyModelRootPath() {
+        return ontologyModelRootPath.getText();
+    }
+
+    public void setOntologyModelRootPath(@NotNull String newText) {
+        ontologyModelRootPath.setText(newText);
+    }
 }
