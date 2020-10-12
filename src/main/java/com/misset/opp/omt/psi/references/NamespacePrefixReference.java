@@ -6,6 +6,7 @@ import com.misset.opp.omt.psi.OMTCurieElement;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
 import com.misset.opp.omt.psi.OMTParameterType;
 import com.misset.opp.omt.psi.OMTPrefix;
+import com.misset.opp.omt.psi.impl.OMTPsiImplUtil;
 import com.misset.opp.omt.psi.util.CurieUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +23,7 @@ public class NamespacePrefixReference extends PsiReferenceBase<PsiElement> imple
         super(namespacePrefix, textRange);
     }
 
-    private final static CurieUtil curieUtil = CurieUtil.SINGLETON;
+    private static final CurieUtil curieUtil = CurieUtil.SINGLETON;
 
     @NotNull
     @Override
@@ -56,5 +57,10 @@ public class NamespacePrefixReference extends PsiReferenceBase<PsiElement> imple
     @Override
     public Object[] getVariants() {
         return new Object[0];
+    }
+
+    @Override
+    public PsiElement handleElementRename(@NotNull String newElementName) {
+        return OMTPsiImplUtil.setName((OMTNamespacePrefix) getElement(), newElementName);
     }
 }
