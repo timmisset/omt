@@ -54,4 +54,4 @@ De color scheme voor de OMT / ODT elementen kan worden ingesteld bij Preferences
 
 
 ## Installatie
-Op dit moment is er nog geen officiele release versie beschikbaar. Deze kan echter eenvoudig gebouwd worden door development branch binnen te trekken en te bouwen via Gradle Task -> Build plugin. Vervolgens de zip file selecteren in de Preferences | Plugins | Install plugin from disk (het tandwieltje naast Installed) 
+Op dit moment is er nog geen officiele release versie beschikbaar. Deze kan echter eenvoudig gebouwd worden door development branch binnen te trekken en te bouwen. Eerst de flex file bouwen -> dit wordt de Lexer, daarna de bnf -> die wordt de Grammar parser. Als laatste via Gradle Task -> Build plugin. Vervolgens de zip file selecteren in de Preferences | Plugins | Install plugin from disk (het tandwieltje naast Installed) 
