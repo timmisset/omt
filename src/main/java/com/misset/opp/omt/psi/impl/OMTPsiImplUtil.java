@@ -53,13 +53,15 @@ public class OMTPsiImplUtil {
     // Namespace prefixes
     // ////////////////////////////////////////////////////////////////////////////
     public static String getName(OMTNamespacePrefix curieElement) {
-        return curieElement.getText();
+        String prefix = curieElement.getText();
+        prefix = prefix.endsWith(":") ? prefix.substring(0, prefix.length() - 1) : prefix;
+
+        return prefix;
     }
 
-    public static OMTCurieElement setName(OMTNamespacePrefix curieElement, String newName) {
-        OMTCurieElement replacement = OMTElementFactory.createCurieElement(curieElement.getProject(), newName);
-        curieElement.replace(replacement);
-        return replacement;
+    public static OMTNamespacePrefix setName(OMTNamespacePrefix namespacePrefix, String newName) {
+        OMTNamespacePrefix replacement = OMTElementFactory.createNamespacePrefix(namespacePrefix.getProject(), newName);
+        return (OMTNamespacePrefix) namespacePrefix.replace(replacement);
     }
 
     public static PsiElement getNameIdentifier(OMTNamespacePrefix namespacePrefix) {
@@ -102,8 +104,8 @@ public class OMTPsiImplUtil {
     }
 
     public static PsiElement setName(OMTMember member, String newName) {
-        PsiElement replacement = OMTElementFactory.createMember(member.getProject(), newName);
-        member.replace(replacement);
+        OMTMember replacement = OMTElementFactory.createMember(member.getProject(), newName);
+        member.getNameIdentifier().replace(replacement.getNameIdentifier());
         return replacement;
     }
 
@@ -120,11 +122,12 @@ public class OMTPsiImplUtil {
     }
 
     public static PsiElement setName(OMTModelItemLabel itemLabel, String newName) {
-        PsiElement replacement = OMTElementFactory.createModelItemLabelPropertyLabel(itemLabel.getProject(), newName, itemLabel.getModelItemTypeElement().getText());
-        itemLabel.getPropertyLabel().replace(replacement);
+        OMTModelItemLabel replacement = OMTElementFactory.createModelItemLabelPropertyLabel(itemLabel.getProject(), newName, itemLabel.getModelItemTypeElement().getText());
+        itemLabel.replace(replacement);
         return replacement;
     }
 
+    @NotNull
     public static PsiElement getNameIdentifier(OMTModelItemLabel itemLabel) {
         return itemLabel.getPropertyLabel();
     }
