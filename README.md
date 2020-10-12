@@ -14,7 +14,7 @@ Via referenties kan een gebruiker vanuit het gebruik van een methode (command, q
  - Prefixes
 
 ## Rename-refactoring
-Op dit moment is enkel het refactor-renaming beschikbaar voor de variabelen.
+Refactor-rename is beschikbaar voor alle bovenstaande referenties
 
 ## OMT Model
 Het OMT Model, wat gebruikt wordt om de vormgeving van alle OMT objecten te bepalen is overgenomen vanuit de beschikbare informatie in het project en overgezet in een json structuur welke wordt gebruikt om te bepalen of er geen onjuiste properties worden gebruikt.
