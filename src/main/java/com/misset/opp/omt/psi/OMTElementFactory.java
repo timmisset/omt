@@ -22,6 +22,7 @@ public class OMTElementFactory {
 
     public static OMTModelItemLabel createModelItemLabelPropertyLabel(Project project, String name, String type) {
         name = name.endsWith(":") ? name.substring(0, name.length() - 1) : name;
+        type = type.startsWith("!") ? type.substring(1) : type;
         OMTFile file = createFile(project, String.format("model:\n" +
                 "    %s: !%s\n" +
                 "        variables:\n" +
@@ -29,15 +30,13 @@ public class OMTElementFactory {
         return PsiTreeUtil.findChildOfType(file, OMTModelItemLabel.class);
     }
 
-    public static PsiElement createMember(Project project, String name) {
+    public static OMTMember createMember(Project project, String name) {
         String format = String.format("import:\n" +
                 "    '@client/medewerker/src/utils/lidmaatschap.queries.omt':\n" +
-                "        -   %s\n" +
-                "\n", name);
+                "        -   %s\n", name);
         OMTFile file = createFile(project, format);
         PsiElement firstChild = file.getFirstChild();
-        OMTMember member = PsiTreeUtil.findChildOfType(firstChild, OMTMember.class);
-        return member;
+        return PsiTreeUtil.findChildOfType(firstChild, OMTMember.class);
     }
 
     /**
@@ -45,10 +44,11 @@ public class OMTElementFactory {
      * @param project
      * @return
      */
-    public static OMTCurieElement createCurieElement(Project project, String curie) {
-        OMTFile file = createFile(project, String.format("something: |\n" +
-                "\t%s", curie));
-        return PsiTreeUtil.findChildOfType(file, OMTCurieElement.class);
+    public static OMTNamespacePrefix createNamespacePrefix(Project project, String curie) {
+        OMTFile file = createFile(project, String.format("prefixes:\n" +
+                "    %s:    <http://ontologie.alfabet.nl/alfabet#>\n" +
+                "", curie));
+        return PsiTreeUtil.findChildOfType(file, OMTNamespacePrefix.class);
     }
 
     private static OMTFile createFile(Project project, String text) {
