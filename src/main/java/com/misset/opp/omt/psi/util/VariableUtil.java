@@ -1,6 +1,7 @@
 package com.misset.opp.omt.psi.util;
 
 import com.google.gson.JsonObject;
+import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
@@ -10,6 +11,7 @@ import com.misset.opp.omt.external.util.builtIn.BuiltInMember;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.intentions.variables.RenameVariableIntention;
 import com.misset.opp.omt.psi.support.OMTCall;
 import org.jetbrains.annotations.NotNull;
 
@@ -119,7 +121,14 @@ public class VariableUtil {
         }
         if (variable.isDeclaredVariable()) {
             // check that atleast 1 variable is using the declaration:
-            annotationUtil.annotateUsage(variable, OMTVariable.class, holder);
+            AnnotationBuilder annotationBuilder = annotationUtil.annotateUsageGetBuilder(variable, OMTVariable.class, holder);
+            if (annotationBuilder != null) {
+                if (variable.getParent() instanceof OMTVariableAssignment &&
+                        PsiTreeUtil.getNextSiblingOfType(variable, OMTVariable.class) != null) {
+                    annotationBuilder.withFix(RenameVariableIntention.SINGLETON.getRenameVariableIntention(variable, "$_"));
+                }
+                annotationBuilder.create();
+            }
         } else {
             // variable usage must have exactly 1 resolved value:
             if (variable.getReference() != null && variable.getReference().resolve() == null) {

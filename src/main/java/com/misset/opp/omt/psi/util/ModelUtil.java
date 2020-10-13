@@ -172,10 +172,8 @@ public class ModelUtil {
         String modelItemType = getModelItemType(type);
         JsonObject jsonObject = getAttributes(modelItemType);
         if (jsonObject.keySet().isEmpty()) {
-            AnnotationBuilder annotationBuilder = holder.newAnnotation(HighlightSeverity.ERROR,
-                    String.format("Unknown model type: %s", type.getText()));
-            annotationBuilder.range(type);
-            annotationBuilder.create();
+            getAnnotationBuilderForElement(holder, HighlightSeverity.ERROR,
+                    String.format("Unknown model type: %s", type.getText()), type).create();
         } else {
             JsonObject attributes = jsonObject.getAsJsonObject(ATTRIBUTESKEY);
             annotateModelTree(attributes, block, holder);
@@ -203,10 +201,17 @@ public class ModelUtil {
                 String errorMessage = String.format("%s is not a known attribute for %s",
                         label, entryBlockLabelText);
                 IntentionAction remove = removeIntention.getRemoveIntention(omtBlockEntry);
-                holder.newAnnotation(HighlightSeverity.ERROR, errorMessage)
-                        .range(targetLabel)
-                        .withFix(remove)
-                        .create();
+                try {
+                    getAnnotationBuilderForElement(holder, HighlightSeverity.ERROR, errorMessage, targetLabel)
+                            .withFix(remove)
+                            .create();
+                } catch (IllegalArgumentException e) {
+                    // can be thrown when the annotation and rebuilding of the PSI tree is conflicting
+                    // the annotation process than manages to target an element not considered part of the
+                    // ModelItem tree resulting in a 'Range must be inside element being annotated' exception
+                    // >> simply ignore it
+                }
+
             } else {
                 JsonObject entry = attributes.getAsJsonObject(label);
                 if (entry.has("type")) {
@@ -241,13 +246,11 @@ public class ModelUtil {
                 .collect(Collectors.toList());
 
         if (!missingElements.isEmpty()) {
-            AnnotationBuilder annotationBuilder = holder.newAnnotation(HighlightSeverity.ERROR,
+            getAnnotationBuilderForElement(holder, HighlightSeverity.ERROR,
                     String.format("%s is missing attribute(s): %n%s",
                             getEntryBlockLabel(block),
-                            String.join(", ", missingElements)));
-
-            annotationBuilder.range(getEntryBlockLabelElement(block));
-            annotationBuilder.create();
+                            String.join(", ", missingElements)), getEntryBlockLabelElement(block))
+                    .create();
         }
     }
 
@@ -435,5 +438,25 @@ public class ModelUtil {
     public boolean isOntology(PsiElement element) {
         return element instanceof OMTModelItemBlock &&
                 getModelItemType(element).equals("Ontology");
+    }
+
+    /**
+     * The annotation of a complete model tree can create collisions between the annotator and the PsiTree
+     * This is probably caused by the full tree annotation instead of a per-element approach
+     * For now, let's just ignore it since it will be annotated correctly when the PsiTree is analyzed correctly.
+     * This method will return an annotation builder for the entire modelItem instead
+     *
+     * @param holder
+     * @param severity
+     * @param message
+     */
+    private AnnotationBuilder getAnnotationBuilderForElement(AnnotationHolder holder, HighlightSeverity severity, String message, PsiElement target) {
+        try {
+            return holder.newAnnotation(severity, message)
+                    .range(target);
+        } catch (IllegalArgumentException e) {
+
+        }
+        return holder.newAnnotation(severity, message);
     }
 }

@@ -22,18 +22,24 @@ public class AnnotationUtil {
      * @param holder
      */
     public void annotateUsage(PsiElement element, Class<? extends PsiElement> usageClass, @NotNull AnnotationHolder holder) {
+        AnnotationBuilder annotationBuilder = annotateUsageGetBuilder(element, usageClass, holder);
+        if (annotationBuilder != null) {
+            annotationBuilder
+                    .withFix(RemoveIntention.SINGLETON.getRemoveIntention(element))
+                    .create();
+        }
+    }
+
+    public AnnotationBuilder annotateUsageGetBuilder(PsiElement element, Class<? extends PsiElement> usageClass, @NotNull AnnotationHolder holder) {
         Collection<? extends PsiElement> usages = PsiTreeUtil.findChildrenOfType(element.getContainingFile(), usageClass);
         for (PsiElement usage : usages) {
             if (!usage.isEquivalentTo(element) &&
                     usage.getReference() != null &&
                     usage.getReference().isReferenceTo(element)) {
-                return;
+                return null;
             }
         }
-        holder.newAnnotation(HighlightSeverity.WARNING, String.format("%s is never used", element.getText()))
-                .range(element)
-                .withFix(RemoveIntention.SINGLETON.getRemoveIntention(element))
-                .create();
+        return holder.newAnnotation(HighlightSeverity.WARNING, String.format("%s is never used", element.getText())).range(element);
     }
 
     /**
@@ -44,7 +50,10 @@ public class AnnotationUtil {
      * @param holder
      */
     public void annotateOrigin(PsiElement element, @NotNull AnnotationHolder holder) {
-        annotateOriginGetBuilder(element, holder).create();
+        AnnotationBuilder annotationBuilder = annotateOriginGetBuilder(element, holder);
+        if (annotationBuilder != null) {
+            annotationBuilder.create();
+        }
     }
 
     /**
