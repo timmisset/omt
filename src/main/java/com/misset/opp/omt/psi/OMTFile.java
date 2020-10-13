@@ -143,7 +143,11 @@ public class OMTFile extends PsiFileBase {
     }
 
     public String getPrefixIri(String prefix) {
-        String iri = getPrefixes().get(prefix).getNamespaceIri().getStart().getNextSibling().getText();
+        OMTPrefix omtPrefix = getPrefixes().get(prefix);
+        if (omtPrefix == null) {
+            return "";
+        }
+        String iri = omtPrefix.getNamespaceIri().getStart().getNextSibling().getText();
         iri = iri.startsWith("<") ? iri.substring(1) : iri;
         iri = iri.endsWith(">") ? iri.substring(0, iri.length() - 1) : iri;
         return iri;
