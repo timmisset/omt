@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '1.0-SNAPSHOT'
+version '1.0'
 
 sourceCompatibility = 1.8
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -29,12 +29,6 @@ test {
 }
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
-//    afterEvaluate {
-//        getClassDirectories().setFrom(files(classDirectories.files.collect {
-//            fileTree(dir: it,
-//                    exclude: ['src/main/gen/**'])
-//        }))
-//    }
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
