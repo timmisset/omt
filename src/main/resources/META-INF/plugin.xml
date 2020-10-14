@@ -1,9 +1,9 @@
 <idea-plugin>
     <id>com.misset.OMT</id>
-    <name>OMT / ODT</name>
+    <name>OMT / ODT Language</name>
     <vendor email="tim.misset@ordina.nl" url="https://www.ordina.nl">Ordina</vendor>
 
-    <description>OMT / ODT Plugin used to parse the specific language</description>
+    <description>OMT / ODT Plugin for the OPP specific languages</description>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
