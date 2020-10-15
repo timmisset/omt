@@ -3,8 +3,17 @@
     <name>OMT / ODT Language</name>
     <vendor email="tim.misset@ordina.nl" url="https://www.ordina.nl">Ordina</vendor>
 
-    <description>OMT / ODT Plugin for the OPP specific languages</description>
-
+    <description>Plugin for the OPP specific languages OMT and ODT</description>
+    <change-notes><![CDATA[
+        <h2>Features</h2>
+        <h3>References &amp; Find Usage</h3>
+        <p>Availabe for the OMT runnables Activity, Procedure and StandaloneQuery, the ODT Commands and Operators and the variables and prefixes.</p>
+        <p>For all these items refactor-renaming is also available</p>
+        <h3>Color scheme</h3>
+        <p>Most of the OMT and ODT specific items can be given specific highlighting colors in the Color Scheme settings</p>
+        <h3>File locations</h3>
+        <p>The locations used to process the builtIn operators, commands etc can be set in the Language &amp; Framework settings.</p>
+    ]]></change-notes>
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
     <!-- uncomment to enable plugin in all products
