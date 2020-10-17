@@ -1,5 +1,6 @@
 {
   "name": "Component",
+  "modelRoot": true,
   "flags": [],
   "localCommands": [
     "COMMIT",
