@@ -1,6 +1,7 @@
 [
   {
     "name": "Ontology",
+    "modelRoot": true,
     "localCommands": [
       "LOAD_ONTOLOGY"
     ],

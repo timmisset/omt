@@ -156,13 +156,16 @@ IElementType toSpecificBlockLabel() {
     }
 }
 int totalReturned = 0;
+IElementType lastElementReturned = null;
 IElementType returnElement(IElementType element) {
     trim(element);
-
-    if(element == OMTTypes.PROPERTY) { return toSpecificBlockLabel(); }
-    if(totalReturned > 100) {
-        //throw new RuntimeException("Done");
+    if(element == OMTTypes.PROPERTY && lastElementReturned == OMTTypes.PROPERTY) {
+        yypushback(yylength(), "returning empty scalar");
+        lastElementReturned = OMTTypes.EMPTY_ENTRY;
+        return logAndReturn(OMTTypes.EMPTY_ENTRY);
     }
+    lastElementReturned = element != TokenType.WHITE_SPACE ? element : lastElementReturned;
+    if(element == OMTTypes.PROPERTY) { return toSpecificBlockLabel(); }
     totalReturned++;
     return logAndReturn(element);
 }

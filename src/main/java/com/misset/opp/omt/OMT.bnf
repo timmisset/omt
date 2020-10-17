@@ -36,7 +36,7 @@ propertyLabel ::=                           PROPERTY { methods=[getPropertyLabel
 
 // a scalar single statement (multiline optional) following a property label
 scalar ::=                                  comment? scalarValue
-scalarValue ::=                             (start (parameterWithType | variableAssignment | block | queryPath | script) end) | nakedString
+scalarValue ::=                             (start (parameterWithType | variableAssignment | block | queryPath | script) end) | nakedString | EMPTY_ENTRY
 
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indentToken, it must 

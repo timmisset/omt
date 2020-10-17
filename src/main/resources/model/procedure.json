@@ -1,5 +1,6 @@
 {
   "name": "Procedure",
+  "modelRoot": true,
   "flags": [
     "nested",
     "autonomous"
