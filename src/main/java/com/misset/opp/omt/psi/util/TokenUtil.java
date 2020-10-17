@@ -20,6 +20,10 @@ public class TokenUtil {
         return isToken(element, "OMTTokenType.COMMAND");
     }
 
+    public boolean isOperator(PsiElement element) {
+        return isToken(element, "OMTTokenType.OPERATOR");
+    }
+
     public boolean isSemiColon(PsiElement element) {
         return isToken(element, "OMTTokenType.SEMICOLON");
     }

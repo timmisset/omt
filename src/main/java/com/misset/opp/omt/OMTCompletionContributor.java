@@ -1,6 +1,5 @@
 package com.misset.opp.omt;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
@@ -13,24 +12,19 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.util.ModelUtil;
-import com.misset.opp.omt.psi.util.ProjectUtil;
-import com.misset.opp.omt.psi.util.TokenUtil;
-import com.misset.opp.omt.psi.util.VariableUtil;
+import com.misset.opp.omt.psi.util.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class OMTCompletionContributor extends CompletionContributor {
 
-    private static String DUMMY_SCALAR_VALUE = "DUMMYSCALARVALUE";
-    private static String DUMMY_PROPERTY_VALUE = "DUMMYPROPERTYVALUE:";
-    private static String DUMMY_ENTRY_VALUE = String.format("%s %s", DUMMY_PROPERTY_VALUE, DUMMY_SCALAR_VALUE);
-    private static String DUMMY_STATEMENT = "@DUMMYSTATEMENT();";
+    private static String DUMMY_SCALAR = "DUMMYSCALARVALUE";
+    private static String DUMMY_PROPERTY = "DUMMYPROPERTYVALUE:";
+    private static String DUMMY_ENTRY = String.format("%s %s", DUMMY_PROPERTY, DUMMY_SCALAR);
     private static String SEMICOLON = ";";
 
     private static String usedContextPlaceHolder = "";
@@ -39,6 +33,7 @@ public class OMTCompletionContributor extends CompletionContributor {
 
     private PsiElement elementAtCaret;
     List<LookupElement> resolvedElements;
+    List<String> resolvedSuggestions;
     private boolean alreadyResolved;
 
     final ModelUtil modelUtil = ModelUtil.SINGLETON;
@@ -47,6 +42,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private TokenUtil tokenUtil = TokenUtil.SINGLETON;
+    private MemberUtil memberUtil = MemberUtil.SINGLETON;
 
     public OMTCompletionContributor() {
         /**
@@ -75,21 +71,17 @@ public class OMTCompletionContributor extends CompletionContributor {
                         }
                         if (tokenUtil.isCommand(element)) {
                             setResolvedElementsForCommand(element);
-                            addResolvedElementsToCompletionWithPrefix(result, element.getText());
+                            result.addAllElements(resolvedElements);
                             return;
                         }
-
-//                        if (isPropertyLabelSuggestion(atPosition) || isSequenceItem(atPosition)) {
-//                            addCompletionsForModelTreeAttributes(atPosition, result);
-//                        }
-//                        addCompletionsForScript(atPosition, result);
+                        if (tokenUtil.isOperator(element)) {
+                            setResolvedElementsForOperator(element);
+                            result.addAllElements(resolvedElements);
+                        }
                     }
                 });
     }
 
-    private void addResolvedElementsToCompletionWithPrefix(CompletionResultSet resultSet, String prefixIfEmpty) {
-        resultSet.withPrefixMatcher(prefixIfEmpty).addAllElements(resolvedElements);
-    }
 
     // add completion in the OMT model based on the Json attributes
     private void addJsonAttributes(PsiElement element, @NotNull CompletionResultSet result) {
@@ -135,21 +127,22 @@ public class OMTCompletionContributor extends CompletionContributor {
     public void beforeCompletion(@NotNull CompletionInitializationContext context) {
         alreadyResolved = false;
         resolvedElements = new ArrayList<>();
+        resolvedSuggestions = new ArrayList<>();
 
         PsiElement elementAtCaret = context.getFile().findElementAt(context.getCaret().getOffset());
         if (elementAtCaret == null) {
             // no element at caret, use the DUMMY_ENTRY_VALUE
-            setDummyPlaceHolder(DUMMY_ENTRY_VALUE, context);
+            setDummyPlaceHolder(DUMMY_ENTRY, context);
             return;
         }
         PsiElement elementAt = elementAtCaret.getParent();
 
         if (elementAt instanceof OMTBlockEntry) {
-            setDummyPlaceHolder(DUMMY_ENTRY_VALUE, context);
+            setDummyPlaceHolder(DUMMY_ENTRY, context);
             return;
         }
         if (elementAt instanceof OMTBlock) {
-            setDummyPlaceHolder(DUMMY_ENTRY_VALUE, context);
+            setDummyPlaceHolder(DUMMY_ENTRY, context);
             return;
         }
         // find the PsiElement containing the caret:
@@ -179,7 +172,10 @@ public class OMTCompletionContributor extends CompletionContributor {
             resolvedElements.add(LookupElementBuilder.create("DEFINE QUERY myQuery() => 'hello world';"));
             return;
         }
-        if (elementAt instanceof OMTCommandBlock) {
+        if (elementAt instanceof OMTCommandBlock ||
+                elementAt instanceof OMTScript ||
+                elementAt instanceof OMTScriptLine ||
+                elementAt.getText().trim().equals("|")) {
             setResolvedElementsForCommand(elementAt);
             alreadyResolved = true;
             return;
@@ -189,28 +185,133 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
 
+    // all suggestions for a command statement
+    // prioritize by likelihood of usage
     private void setResolvedElementsForCommand(PsiElement elementAt) {
-        resolvedElements.addAll(
-                modelUtil.getLocalCommands(elementAt).stream()
-                        .map(command -> LookupElementBuilder.create(String.format("@%s()", command)))
-                        .collect(Collectors.toList()));
+        // first check if there are local variables available, they also have the highest suggestion priority
+        includeLocalVariables(elementAt, 7);
 
-        resolvedElements.addAll(
-                builtInUtil.getBuiltInCommandsAsSuggestions().stream()
-                        .map(LookupElementBuilder::create)
-                        .collect(Collectors.toList()));
+        // then the declared variables available at the point of completion
+        includeDeclaredVariables(elementAt, 6);
 
-        resolvedElements.addAll(
-                projectUtil.getExportingCommandsAsSuggestions().stream()
-                        .map(LookupElementBuilder::create)
-                        .collect(Collectors.toList()));
+        // then the commands provided by this file
+        // first the ones within the same modelItem:
+        modelUtil.getModelItemBlock(elementAt).ifPresent(omtModelItemBlock ->
+                PsiTreeUtil.findChildrenOfType(omtModelItemBlock, OMTDefineCommandStatement.class)
+                        .forEach(omtDefineCommandStatement -> {
+                                    if (!PsiTreeUtil.isContextAncestor(omtModelItemBlock, elementAt, true)) {
+                                        addPriorityElement(
+                                                memberUtil.parseDefinedToCallable(omtDefineCommandStatement.getDefineName()).asSuggestion(), 5);
+                                    }
+                                }
+                        ));
+
+        // then the ones exported by the containing file:
+        ((OMTFile) elementAt.getContainingFile()).getExportedMembers().forEach(
+                (name, omtExportMember) -> {
+                    if (omtExportMember.isCommand() && !PsiTreeUtil.isContextAncestor(omtExportMember.getElement(), elementAt, true)) {
+                        addPriorityElement(omtExportMember.asSuggestion(), 4);
+                    }
+                }
+        );
+
+        // next are the locally available commands, such as COMMIT, DONE etc.
+        includeLocalCommands(elementAt, 3);
+
+        // then the built-in commands:
+        builtInUtil.getBuiltInCommandsAsSuggestions().forEach(suggestion ->
+                addPriorityElement(suggestion, 2)
+        );
+
+        // and finally all the available commands in the project
+        projectUtil.getExportingCommandsAsSuggestions().forEach(
+                suggestion -> {
+                    if (!resolvedSuggestions.contains(suggestion)) {
+                        addPriorityElement(suggestion, 1);
+                    }
+                }
+        );
         alreadyResolved = true;
     }
 
+    // all suggestions for an operator statement
+    // prioritize by likelihood of usage
+    private void setResolvedElementsForOperator(PsiElement elementAt) {
+        // first check if there are local variables available, they also have the highest suggestion priority
+        includeLocalVariables(elementAt, 7);
+
+        // then the declared variables available at the point of completion
+        includeDeclaredVariables(elementAt, 6);
+
+        // then the commands provided by this file
+        // first the ones within the same modelItem:
+        modelUtil.getModelItemBlock(elementAt).ifPresent(omtModelItemBlock ->
+                PsiTreeUtil.findChildrenOfType(omtModelItemBlock, OMTDefineQueryStatement.class)
+                        .forEach(omtDefineQueryStatement -> {
+                                    if (!PsiTreeUtil.isContextAncestor(omtModelItemBlock, elementAt, true)) {
+                                        addPriorityElement(
+                                                memberUtil.parseDefinedToCallable(omtDefineQueryStatement.getDefineName()).asSuggestion(), 5);
+                                    }
+                                }
+                        ));
+
+        // then the ones exported by the containing file:
+        ((OMTFile) elementAt.getContainingFile()).getExportedMembers().forEach(
+                (name, omtExportMember) -> {
+                    if (omtExportMember.isOperator() && !PsiTreeUtil.isContextAncestor(omtExportMember.getElement(), elementAt, true)) {
+                        addPriorityElement(omtExportMember.asSuggestion(), 4);
+                    }
+                }
+        );
+
+        // then the built-in operators:
+        builtInUtil.getBuiltInOperatorsAsSuggestions().forEach(suggestion ->
+                addPriorityElement(suggestion, 2)
+        );
+
+        // and finally all the available commands in the project
+        projectUtil.getExportingOperatorsAsSuggestions().forEach(
+                suggestion -> {
+                    if (!resolvedSuggestions.contains(suggestion)) {
+                        addPriorityElement(suggestion, 1);
+                    }
+                }
+        );
+        alreadyResolved = true;
+    }
+
+    private void addPriorityElement(String text, int priority) {
+        resolvedElements.add(PrioritizedLookupElement.withPriority(
+                LookupElementBuilder.create(text), priority
+        ));
+        resolvedSuggestions.add(text);
+    }
+
+    private void includeLocalCommands(PsiElement elementAt, int priority) {
+        modelUtil.getLocalCommands(elementAt).forEach(
+                command -> addPriorityElement(String.format("@%s()", command), priority)
+        );
+    }
+
+    private void includeDeclaredVariables(PsiElement elementAt, int priority) {
+        variableUtil.getDeclaredVariables(elementAt).forEach(
+                omtVariable -> addPriorityElement(omtVariable.getName(), priority)
+        );
+    }
+
+    private void includeLocalVariables(PsiElement elementAt, int priority) {
+        variableUtil.getLocalVariables(elementAt).forEach(
+                (variableName, provider) -> addPriorityElement(variableName, priority)
+        );
+    }
+
     private void setDummyContextFromExpectedList(List<String> expectedTypes, @NotNull CompletionInitializationContext context) {
-        if (expectedTypes.contains("block entry")) {
-            setDummyPlaceHolder(DUMMY_ENTRY_VALUE, context);
+        if (expectedTypes.contains("block entry") || expectedTypes.contains("block")) {
+            setDummyPlaceHolder(DUMMY_ENTRY, context);
             return;
+        }
+        if (expectedTypes.contains("query step")) {
+            setDummyPlaceHolder(DUMMY_SCALAR, context);
         }
         if (expectedTypes.contains("SEMICOLON")) {
             // incomplete, as a placeholder, use the current text with a semicolon closing
@@ -218,6 +319,7 @@ public class OMTCompletionContributor extends CompletionContributor {
             // make sure the offset is including the full text to be replace:
             return;
         }
+
     }
 
     private String getCurrentText(@NotNull CompletionInitializationContext context) {
@@ -253,90 +355,6 @@ public class OMTCompletionContributor extends CompletionContributor {
             expectedTypes.add(matcher.group(1) != null ? matcher.group(1) : matcher.group(2));
         }
         return expectedTypes;
-    }
-
-    private void addCompletionsForScript(PsiElement elementAtPosition, CompletionResultSet resultSet) {
-        addCompletionsForVariables(elementAtPosition, resultSet);
-
-        if (isInQueryPath(elementAtPosition)) {
-            List<String> suggestions = builtInUtil.getBuiltInOperatorsAsSuggestions();
-            suggestions.addAll(projectUtil.getExportingOperatorsAsSuggestions());
-
-            suggestions.forEach(
-                    suggestion -> resultSet.addElement(LookupElementBuilder.create(suggestion))
-            );
-        } else if (isInCommandBlock(elementAtPosition)) {
-            List<String> suggestions = modelUtil.getLocalCommands(elementAtPosition).stream().map(command -> String.format("@%s()", command)).collect(Collectors.toList());
-            suggestions.addAll(builtInUtil.getBuiltInCommandsAsSuggestions());
-            suggestions.addAll(projectUtil.getExportingCommandsAsSuggestions());
-
-            suggestions.forEach(
-                    suggestion -> resultSet.addElement(LookupElementBuilder.create(suggestion))
-            );
-        } else {
-            includeCaretPositionCompletions(resultSet);
-        }
-
-    }
-
-    private void includeCaretPositionCompletions(CompletionResultSet resultSet) {
-        if (elementAtCaret instanceof OMTQueriesBlock) {
-            resultSet.addElement(LookupElementBuilder.create("DEFINE QUERY"));
-            resultSet.addElement(LookupElementBuilder.create("DEFINE QUERY myQuery() => 'hello world';"));
-        }
-        if (elementAtCaret instanceof OMTCommandsBlock) {
-            resultSet.addElement(LookupElementBuilder.create("DEFINE COMMAND"));
-            resultSet.addElement(LookupElementBuilder.create("DEFINE COMMAND myCommand() => { @LOG('hello world'); }"));
-        }
-    }
-
-
-    private void addCompletionsForModelTreeAttributes(PsiElement elementAtPosition, CompletionResultSet resultSet) {
-        OMTBlockEntry blockEntry = (OMTBlockEntry) PsiTreeUtil.findFirstParent(elementAtPosition, parent -> parent instanceof OMTBlockEntry);
-        boolean isDummyProperty =
-                blockEntry != null && blockEntry.getPropertyLabel() != null &&
-                        blockEntry.getPropertyLabel().getText().equals(DUMMY_PROPERTY_VALUE);
-
-        JsonObject json = modelUtil.getJson(isDummyProperty ? blockEntry.getParent() : elementAtPosition);
-
-        if (json != null) {
-            if (json.has("attributes")) {
-                JsonObject attributes = json.getAsJsonObject("attributes");
-                attributes.keySet().forEach(attribute ->
-                        resultSet.addElement(LookupElementBuilder.create(attribute + ":")));
-            }
-            if (json.has("variables")) {
-                JsonArray variables = json.getAsJsonArray("variables");
-                variables.forEach(variable ->
-                        resultSet.addElement(LookupElementBuilder.create(variable.getAsString())));
-            }
-        }
-    }
-
-    private void addCompletionsForVariables(PsiElement elementAtPosition, CompletionResultSet resultSet) {
-        List<OMTVariable> declaredVariables = variableUtil.getDeclaredVariables(elementAtPosition);
-        declaredVariables.forEach(variable -> resultSet.addElement(LookupElementBuilder.create(variable.getText())));
-    }
-
-    private boolean isPropertyLabelSuggestion(PsiElement element) {
-        return element.getParent() instanceof OMTBlockEntry ||
-                element.getParent() instanceof OMTPropertyLabel ||
-                element.getParent() instanceof OMTBlock;
-    }
-
-    private boolean isSequenceItem(PsiElement element) {
-        return PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTSequenceItem) != null;
-    }
-
-    private boolean isInCommandBlock(PsiElement element) {
-        return
-                elementAtCaret instanceof OMTScript ||
-                        element instanceof OMTCommandBlock ||
-                        PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTScript || parent instanceof OMTCommandBlock) != null;
-    }
-
-    private boolean isInQueryPath(PsiElement element) {
-        return PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTQueryPath) != null;
     }
 
 }

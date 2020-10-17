@@ -2,7 +2,6 @@ package com.misset.opp.omt.psi.util;//package com.misset.opp.omt.domain.util;
 
 import com.google.gson.JsonObject;
 import com.intellij.codeInsight.intention.IntentionAction;
-import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
@@ -180,8 +179,10 @@ public class ModelUtil {
         String modelItemType = getModelItemType(omtModelItemTypeElement);
         JsonObject jsonObject = getAttributes(modelItemType);
         if (jsonObject.keySet().isEmpty()) {
-            getAnnotationBuilderForElement(holder, HighlightSeverity.ERROR,
-                    String.format("Unknown model type: %s", omtModelItemTypeElement.getText()), omtModelItemTypeElement).ifPresent(AnnotationBuilder::create);
+            holder.newAnnotation(HighlightSeverity.ERROR,
+                    String.format("Unknown model type: %s", omtModelItemTypeElement.getText()))
+                    .range(omtModelItemTypeElement)
+                    .create();
         }
     }
 
@@ -204,8 +205,10 @@ public class ModelUtil {
                     getEntryBlockLabel(targetLabel), containerName);
 
             IntentionAction remove = removeIntention.getRemoveIntention(omtBlockEntry);
-            getAnnotationBuilderForElement(holder, HighlightSeverity.ERROR, errorMessage, targetLabel)
-                    .ifPresent(annotationBuilder -> annotationBuilder.withFix(remove).create());
+            holder.newAnnotation(HighlightSeverity.ERROR, errorMessage)
+                    .range(targetLabel)
+                    .withFix(remove)
+                    .create();
         }
     }
 
@@ -225,11 +228,11 @@ public class ModelUtil {
                 .collect(Collectors.toList());
 
         if (!missingElements.isEmpty()) {
-            getAnnotationBuilderForElement(holder, HighlightSeverity.ERROR,
-                    String.format("%s is missing attribute(s): %n%s",
-                            getEntryBlockLabel(block),
-                            String.join(", ", missingElements)), getEntryBlockLabelElement(block))
-                    .ifPresent(AnnotationBuilder::create);
+            String error = String.format("%s is missing attribute(s): %n%s",
+                    getEntryBlockLabel(block),
+                    String.join(", ", missingElements));
+            holder.newAnnotation(HighlightSeverity.ERROR, error)
+                    .range(getEntryBlockLabelElement(block)).create();
         }
     }
 
@@ -390,24 +393,5 @@ public class ModelUtil {
     public boolean isOntology(PsiElement element) {
         return element instanceof OMTModelItemBlock &&
                 getModelItemType(element).equals("Ontology");
-    }
-
-    /**
-     * The annotation of a complete model tree can create collisions between the annotator and the PsiTree
-     * This is probably caused by the full tree annotation instead of a per-element approach
-     * For now, let's just ignore it since it will be annotated correctly when the PsiTree is analyzed correctly.
-     * This method will return an annotation builder for the entire modelItem instead
-     *
-     * @param holder
-     * @param severity
-     * @param message
-     */
-    private Optional<AnnotationBuilder> getAnnotationBuilderForElement(AnnotationHolder holder, HighlightSeverity severity, String message, PsiElement target) {
-        try {
-            return Optional.of(holder.newAnnotation(severity, message)
-                    .range(target));
-        } catch (IllegalArgumentException e) {
-            return Optional.empty();
-        }
     }
 }
