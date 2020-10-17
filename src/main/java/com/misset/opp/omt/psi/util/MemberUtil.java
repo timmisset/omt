@@ -332,6 +332,10 @@ public class MemberUtil {
         return null;
     }
 
+    public OMTCallable parseDefinedToCallable(OMTDefineName defineName) {
+        return memberToExportMember(defineName);
+    }
+
     private OMTExportMember memberToExportMember(PsiElement element) {
         NamedMemberType namedMemberType = getNamedMemberType(element);
         if (namedMemberType == null) {
