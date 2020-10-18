@@ -67,6 +67,7 @@ public class OMTPsiImplUtil {
     // ////////////////////////////////////////////////////////////////////////////
     // OMTDefineName
     // ////////////////////////////////////////////////////////////////////////////
+    @NotNull
     public static String getName(OMTDefineName defineName) {
         return defineName.getText();
     }
@@ -77,6 +78,7 @@ public class OMTPsiImplUtil {
         return replacement;
     }
 
+    @NotNull
     public static PsiElement getNameIdentifier(OMTDefineName defineName) {
         return defineName;
     }
@@ -95,6 +97,7 @@ public class OMTPsiImplUtil {
     // ////////////////////////////////////////////////////////////////////////////
     // Members
     // ////////////////////////////////////////////////////////////////////////////
+    @NotNull
     public static String getName(OMTMember member) {
         return getNameIdentifier(member).getText();
     }

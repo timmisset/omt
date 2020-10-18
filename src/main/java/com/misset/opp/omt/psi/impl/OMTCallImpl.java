@@ -31,6 +31,7 @@ public abstract class OMTCallImpl extends OMTMemberNamedElementImpl implements O
     }
 
     @Override
+    @NotNull
     public PsiElement getNameIdentifier() {
         return getNode().getPsi().getFirstChild();
     }

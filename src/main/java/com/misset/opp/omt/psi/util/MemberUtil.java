@@ -20,10 +20,7 @@ import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.support.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class MemberUtil {
 
@@ -84,7 +81,7 @@ public class MemberUtil {
         OMTFile containingFile = (OMTFile) element.getContainingFile();
         List<OMTMember> importedMembers = containingFile.getImportedMembers();
         Optional<OMTMember> importedMember = importedMembers.stream()
-                .filter(member -> member.getName() != null && member.getName().trim().equals(nameIdentifier))
+                .filter(member -> member.getName().trim().equals(nameIdentifier))
                 .findFirst();
         if (importedMember.isPresent()) {
             return importUtil.resolveImportMember(importedMember.get());
@@ -100,6 +97,7 @@ public class MemberUtil {
 
     /**
      * Checks if the call is made before the operator is defined
+     * This means that when this method returns true, the call is not resolvable to the definition
      *
      * @param call   - operatorCall or commandCall
      * @param define - definedQueryStatement or definedCommandStatement
@@ -112,15 +110,16 @@ public class MemberUtil {
             // call is part of the same block as the parent:
             return callContainingElement.getStartOffsetInParent() <= define.getStartOffsetInParent();
         } else {
-            // different containers. For example:
-            //
-            // title: getTitle()                            <<-- Block entry (Scalar)
-            // queries: |
-            //      DEFINE QUERY getTitle() => 'title';     <<-- DefineQueryStatement
+            // check if the defined statement block is part of the file root,
+            // in which case it's always accessible
+            if (((OMTFile) define.getContainingFile()).isPartOfRootBlock(define)) {
+                return false;
+            }
 
-            // in this case, the parent define statement, must have a lower or equal depth to the
-            // the block entry that's using it.
-            return PsiTreeUtil.getDepth(call, call.getContainingFile()) < PsiTreeUtil.getDepth(define.getParent(), define.getContainingFile());
+            // else, check if they are part of the same model item, in which case the defined statement is also accessible
+            PsiElement callModelBlock = PsiTreeUtil.findFirstParent(call, parent -> parent instanceof OMTModelItemBlock);
+            PsiElement defineModelBlock = PsiTreeUtil.findFirstParent(define, parent -> parent instanceof OMTModelItemBlock);
+            return callModelBlock != defineModelBlock;
         }
     }
 
@@ -153,13 +152,12 @@ public class MemberUtil {
         ArrayList<OMTDefinedStatement> omtDefinedStatements = new ArrayList<>(PsiTreeUtil.findChildrenOfType(containingFile, OMTDefinedStatement.class));
         return omtDefinedStatements.stream()
                 .filter(omtDefinedStatement ->
-                        omtDefinedStatement.getDefineName().getName() != null &&
                                 omtDefinedStatement.getDefineName().getName().equals(getCallName(call))
                 ).findFirst().orElse(null);
     }
 
     public void annotateCall(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {
-        if (call.getNameIdentifier() == null || call.getReference() == null) {
+        if (call.getReference() == null) {
             return;
         }
         PsiElement resolved = call.getReference().resolve();
@@ -202,11 +200,11 @@ public class MemberUtil {
         JsonObject json = modelUtil.getJson(call);
         String type = json != null && json.has("type") ? json.get("type").getAsString() : "unknown";
         switch (type) {
-            // plain scalar string is always ignored, any value should be accepted here since resolved to a string
             case "string":
+                // plain scalar string is always ignored, any value should be accepted here since resolved to a string
                 return true;
-            // if the call is NOT part of an interpolation template block, it can be ignored
             case "interpolatedString":
+                // if the call is NOT part of an interpolation template block, it can be ignored
                 return PsiTreeUtil.findFirstParent(call, parent -> parent instanceof OMTInterpolationTemplate) == null;
             default:
         }
@@ -220,12 +218,16 @@ public class MemberUtil {
     }
 
     private boolean annotateAsLocalCommand(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {
+        if (!call.isCommandCall()) {
+            return false;
+        }
+
         List<String> localCommands = modelUtil.getLocalCommands(call);
         if (localCommands.contains(call.getName())) {
             holder.newAnnotation(HighlightSeverity.INFORMATION, String.format("%s is available as local command", call.getName())).range(call).create();
 
             // check if final statement:
-            if (call.isCommandCall() && getCallName(call).equals("DONE") || getCallName(call).equals("CANCEL")) {
+            if (Arrays.asList("DONE", "CANCEL").contains(getCallName(call))) {
                 scriptUtil.annotateFinalStatement(call, holder);
             }
             return true;
@@ -234,9 +236,6 @@ public class MemberUtil {
     }
 
     private boolean annotateAsBuiltInMember(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {
-        if (call.getNameIdentifier() == null) {
-            return false;
-        }
         BuiltInMember builtInMember = builtInUtil.getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
         if (builtInMember != null) {
             // is a builtIn member, annotate:
@@ -252,9 +251,6 @@ public class MemberUtil {
 
     private void annotateReference(@NotNull PsiElement resolved, @NotNull OMTCall call, @NotNull AnnotationHolder holder) {
         PsiElement nameIdentifier = call.getNameIdentifier();
-        if (nameIdentifier == null) {
-            return;
-        }
         OMTExportMember asExportMember = memberToExportMember(resolved);
         if (asExportMember == null) {
             if (modelUtil.isOntology(resolved)) {
@@ -298,16 +294,10 @@ public class MemberUtil {
      * @return
      */
     private PsiElement getContainingElement(PsiElement resolvedToElement) {
-        if (resolvedToElement instanceof OMTModelItemLabel) {
-            Optional<OMTModelItemBlock> modelItemBlock = modelUtil.getModelItemBlock(resolvedToElement);
-            if (modelItemBlock.isPresent()) {
-                return modelItemBlock.get();
-            }
-        }
-        if (resolvedToElement instanceof OMTDefineName) {
-            return resolvedToElement.getParent();
-        }
-        return resolvedToElement;
+        // there are 2 options, either the call resolves to a modelItem or to a defined statement
+        return resolvedToElement instanceof OMTModelItemLabel ?
+                modelUtil.getModelItemBlock(resolvedToElement).orElse(null) :
+                resolvedToElement.getParent();
     }
 
     public NamedMemberType getNamedMemberType(PsiElement element) {
@@ -323,11 +313,8 @@ public class MemberUtil {
         if (element instanceof OMTModelItemLabel || element instanceof OMTPropertyLabel) {
             return NamedMemberType.ModelItem;
         }
-        if (element instanceof OMTMember && PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTImportBlock) != null) {
-            return NamedMemberType.ImportingMember;
-        }
-        if (element instanceof OMTMember && PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTExportBlock) != null) {
-            return NamedMemberType.ExportingMember;
+        if (element instanceof OMTMember) {
+            return PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTImportBlock) != null ? NamedMemberType.ImportingMember : NamedMemberType.ExportingMember;
         }
         return null;
     }
@@ -348,10 +335,9 @@ public class MemberUtil {
                 PsiElement callableDefine = getContainingElement(element);
                 if (callableDefine instanceof OMTDefineQueryStatement) {
                     return new OMTExportMemberImpl(callableDefine, ExportMemberType.Query);
-                } else if (callableDefine instanceof OMTDefineCommandStatement) {
+                } else {
                     return new OMTExportMemberImpl(callableDefine, ExportMemberType.Command);
                 }
-                break;
 
             case ModelItem:
                 OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) getContainingElement(element);
@@ -368,16 +354,18 @@ public class MemberUtil {
 
             case ExportingMember:
                 // return the exporting member by resolving it
-                if (element.getReference() == null || element.getReference().resolve() == null) {
+                if (element.getReference() == null) {
                     return null;
                 }
-                return memberToExportMember(element.getReference().resolve());
+
+                // resolve the exported member (probably via the import) to the original element
+                PsiElement resolvedElement = element.getReference().resolve();
+                return resolvedElement != element ? memberToExportMember(resolvedElement) : null;
 
             case ImportingMember:
             case CommandCall:
             case OperatorCall:
             default:
-                return null;
         }
         return null;
     }

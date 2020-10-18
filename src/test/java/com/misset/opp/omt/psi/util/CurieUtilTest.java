@@ -166,7 +166,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
             loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
             curieUtil.annotateNamespacePrefix(ghi, annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("ghi: is not declared"));
-            verify(annotationBuilder, times(2)).withFix(any());
+            verify(annotationBuilder, times(1)).withFix(any());
             verify(annotationBuilder, times(1)).create();
         });
     }
@@ -198,7 +198,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
     void addPrefixToBlockFromString() {
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
-            curieUtil.addPrefixToBlock(prefix, "def:", "<http://ontologie.alfabet.nl/def#>");
+            curieUtil.addPrefixToBlock(prefix, "def", "<http://ontologie.alfabet.nl/def#>");
             OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
             String asText = prefixBlock.getText();
             assertEquals("prefixes:\n" +
@@ -229,13 +229,13 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
         prefixes.forEach(prefix ->
                 {
                     switch (Objects.requireNonNull(prefix.getName())) {
-                        case "def:":
+                        case "def":
                             def = prefix;
                             break;
-                        case "ghi:":
+                        case "ghi":
                             ghi = prefix;
                             break;
-                        case "abc:":
+                        case "abc":
                             if (abcDeclared == null) {
                                 abcDeclared = prefix;
                             } else {
