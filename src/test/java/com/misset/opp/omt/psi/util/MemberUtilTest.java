@@ -7,6 +7,7 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
@@ -30,6 +31,7 @@ import org.mockito.Spy;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
@@ -120,6 +122,28 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void getDeclaringMember_ReturnsEmptyWhenCallOnDifferentModelItemDefinedStatement() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTCommandCall commandCall = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+                    call -> Objects.equals(call.getName(), "myFirstCommand")
+            );
+            Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(commandCall);
+            assertFalse(declaringMember.isPresent());
+        });
+    }
+
+    @Test
+    void getDeclaringMember_ReturnsWhenCallOnRootDefinedStatement() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTCommandCall commandCall = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+                    call -> Objects.equals(call.getName(), "myRootCommand")
+            );
+            Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(commandCall);
+            assertTrue(declaringMember.isPresent());
+        });
+    }
+
+    @Test
     void getDeclaringMember_ReturnsExportingMember() {
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTCommandCall commandCall = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
@@ -206,6 +230,48 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void annotateCall_annotateAsBuiltInMemberDoesNotThrowValidateSignatureErrorsWhenNamedReference() {
+        doReturn(builtInMember).when(builtInUtil).getBuiltInMember(anyString(), eq(BuiltInType.Command));
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+                    commandCall -> commandCall.getName().equals("myBuiltInMethod"));
+            try {
+                doThrow(new NumberOfInputParametersMismatchException("myBuiltInMethod", 0, 1, 2)).when(builtInMember).validateSignature(eq(call));
+            } catch (CallCallableMismatchException | NumberOfInputParametersMismatchException | IncorrectFlagException e) {
+                e.printStackTrace();
+            }
+
+            JsonObject attributes = new JsonObject();
+            attributes.addProperty("namedReference", true);
+            doReturn(attributes).when(modelUtil).getJson(call);
+
+            memberUtil.annotateCall(call, annotationHolder);
+            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
+        });
+    }
+
+    @Test
+    void annotateCall_annotateAsBuiltInMemberDoesThrowValidateSignatureErrorsWhenNamedReferenceFalse() {
+        doReturn(builtInMember).when(builtInUtil).getBuiltInMember(anyString(), eq(BuiltInType.Command));
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+                    commandCall -> commandCall.getName().equals("myBuiltInMethod"));
+            try {
+                doThrow(new NumberOfInputParametersMismatchException("myBuiltInMethod", 0, 1, 2)).when(builtInMember).validateSignature(eq(call));
+            } catch (CallCallableMismatchException | NumberOfInputParametersMismatchException | IncorrectFlagException e) {
+                e.printStackTrace();
+            }
+
+            JsonObject attributes = new JsonObject();
+            attributes.addProperty("namedReference", false);
+            doReturn(attributes).when(modelUtil).getJson(call);
+
+            memberUtil.annotateCall(call, annotationHolder);
+            verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("myBuiltInMethod expects between 0 and 1 parameters, found 2"));
+        });
+    }
+
+    @Test
     void annotateCall_annotateAsBuiltInMemberThrowsNumberInvalidFlagSignature() {
         doReturn(builtInMember).when(builtInUtil).getBuiltInMember(anyString(), eq(BuiltInType.Command));
         ApplicationManager.getApplication().runReadAction(() -> {
@@ -247,6 +313,31 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void annotateCall_annotateAsLocalCommandCallsDoesNotAnnotateWhenOperatorCall() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+                    commandCall -> commandCall.getName().equals("DONE"));
+            OMTCommandCall callAsSpy = spy(call);
+            doReturn(false).when(callAsSpy).isCommandCall();
+            doReturn(Arrays.asList("DONE")).when(modelUtil).getLocalCommands(eq(call));
+            memberUtil.annotateCall(callAsSpy, annotationHolder);
+            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("DONE is available as local command"));
+        });
+    }
+
+    @Test
+    void annotateCall_annotateAsLocalCommandCallsDoesNotAnnotateWhenUnknownLocalCommand() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+                    commandCall -> commandCall.getName().equals("DONE"));
+            OMTCommandCall callAsSpy = spy(call);
+            doReturn(new ArrayList<>()).when(modelUtil).getLocalCommands(eq(callAsSpy));
+            memberUtil.annotateCall(callAsSpy, annotationHolder);
+            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("DONE is available as local command"));
+        });
+    }
+
+    @Test
     void annotateCall_annotateByAttributeString() {
         JsonObject attributes = new JsonObject();
         attributes.addProperty("type", "string");
@@ -275,6 +366,20 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void annotateCall_annotateByAttributeInterpolatedStringThrowsError() {
+        JsonObject attributes = new JsonObject();
+        attributes.addProperty("type", "interpolatedString");
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTOperatorCall call = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
+                    operatorCall -> operatorCall.getName().equals("mijnInterpolatedTitel"));
+            doReturn(attributes).when(modelUtil).getJson(eq(call));
+
+            memberUtil.annotateCall(call, annotationHolder);
+            verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("mijnInterpolatedTitel could not be resolved"));
+        });
+    }
+
+    @Test
     void annotateCall_annotateByAttributeShortcut() {
         JsonObject attributes = new JsonObject();
         attributes.addProperty("shortcut", "bladiebla");
@@ -285,6 +390,20 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
             memberUtil.annotateCall(call, annotationHolder);
             verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
+        });
+    }
+
+    @Test
+    void annotateCall_annotateByAttributeNoJsonThrows() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTOperatorCall call = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
+                    operatorCall -> operatorCall.getName().equals("Mijn"));
+            doReturn(null).when(modelUtil).getJson(eq(call));
+
+            memberUtil.annotateCall(call, annotationHolder);
+
+            // since there is no valid way to check that the operator should not be annotated with an error, it gets annotated
+            verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("Mijn could not be resolved"));
         });
     }
 
@@ -342,10 +461,6 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
     void annotateCall_StopsOnNullReference() {
         OMTCall mockCall = mock(OMTCall.class);
         memberUtil.annotateCall(mockCall, annotationHolder);
-        verify(mockCall, times(0)).getReference();
-
-        doReturn(mock(PsiElement.class)).when(mockCall).getNameIdentifier();
-        memberUtil.annotateCall(mockCall, annotationHolder);
         verify(mockCall, times(1)).getReference();
     }
 
@@ -357,7 +472,8 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
             assertEquals(NamedMemberType.ModelItem, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTModelItemLabel.class, rootBlock)));
             assertEquals(NamedMemberType.ModelItem, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTPropertyLabel.class, rootBlock)));
             assertEquals(NamedMemberType.DefineName, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTDefineName.class, rootBlock)));
-            assertEquals(NamedMemberType.ImportingMember, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock)));
+            assertEquals(NamedMemberType.ImportingMember, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock, member -> ((OMTMember) member).getName().equals("myImportedMethod"))));
+            assertEquals(NamedMemberType.ExportingMember, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock, member -> ((OMTMember) member).getName().equals("myExportedMethod"))));
 
             assertNull(memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock)));
         });
@@ -365,16 +481,15 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
-    void memberToExportMember_ReturnsExportMemberQuery() throws NoSuchMethodException {
+    void memberToExportMember_Procedure() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
         method.setAccessible(true);
         ApplicationManager.getApplication().runReadAction(() -> {
-            OMTDefineQueryStatement queryStatement = exampleFiles.getPsiElementFromRootDocument(OMTDefineQueryStatement.class, rootBlock);
-            OMTDefineName defineName = queryStatement.getDefineName();
+            OMTModelItemLabel modelItemLabel = exampleFiles.getPsiElementFromRootDocument(OMTModelItemLabel.class, rootBlock, label -> label.getName().equals("MijnProcedure"));
             try {
-                OMTExportMember exportMember = (OMTExportMember) method.invoke(memberUtil, defineName);
-                assertTrue(exportMember.isOperator());
-                assertEquals(defineName, exportMember.getResolvingElement());
+                OMTExportMember exportMember = (OMTExportMember) method.invoke(memberUtil, modelItemLabel);
+                assertTrue(exportMember.isCommand());
+                assertEquals(modelItemLabel, exportMember.getResolvingElement());
             } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
@@ -382,19 +497,169 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
-    void memberToExportMember_ReturnsExportMemberCommand() throws NoSuchMethodException {
+    void memberToExportMember_Activity() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
         method.setAccessible(true);
         ApplicationManager.getApplication().runReadAction(() -> {
-            OMTDefineCommandStatement commandStatement = exampleFiles.getPsiElementFromRootDocument(OMTDefineCommandStatement.class, rootBlock);
-            OMTDefineName defineName = commandStatement.getDefineName();
+            OMTModelItemLabel modelItemLabel = exampleFiles.getPsiElementFromRootDocument(OMTModelItemLabel.class, rootBlock, label -> label.getName().equals("MijnActiviteitMetInterpolatedTitel"));
             try {
-                OMTExportMember exportMember = (OMTExportMember) method.invoke(memberUtil, defineName);
+                OMTExportMember exportMember = (OMTExportMember) method.invoke(memberUtil, modelItemLabel);
                 assertTrue(exportMember.isCommand());
-                assertEquals(defineName, exportMember.getResolvingElement());
+                assertEquals(modelItemLabel, exportMember.getResolvingElement());
             } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
+        });
+    }
+
+    @Test
+    void memberToExportMember_StandaloneQuery() throws NoSuchMethodException {
+        Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
+        method.setAccessible(true);
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTModelItemLabel modelItemLabel = exampleFiles.getPsiElementFromRootDocument(OMTModelItemLabel.class, rootBlock, label -> label.getName().equals("MijnStandaloneQuery"));
+            try {
+                OMTExportMember exportMember = (OMTExportMember) method.invoke(memberUtil, modelItemLabel);
+                assertTrue(exportMember.isOperator());
+                assertEquals(modelItemLabel, exportMember.getResolvingElement());
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Test
+    void memberToExportMember_ExportedMemberReturnsNullOnNoReference() throws NoSuchMethodException {
+        Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
+        method.setAccessible(true);
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTMember exportingMember = exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock, member -> member.getName().equals("myExportedMethod"));
+            try {
+                OMTMember spy = spy(exportingMember);
+                doReturn(null).when(spy).getReference();
+                assertNull(method.invoke(memberUtil, spy));
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Test
+    void memberToExportMember_ExportedMemberReturnsNullWhenReferenceResolvesToSelf() throws NoSuchMethodException {
+        Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
+        method.setAccessible(true);
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTMember exportingMember = exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock, member -> member.getName().equals("myExportedMethod"));
+            try {
+                OMTExportMember exportMember = (OMTExportMember) method.invoke(memberUtil, exportingMember);
+                assertNull(exportMember);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Test
+    void memberToExportMember_ExportedMember() throws NoSuchMethodException {
+        Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
+        method.setAccessible(true);
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTMember exportingMember = exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock, member -> member.getName().equals("myExportedMethod"));
+            OMTModelItemLabel modelItemLabel = exampleFiles.getPsiElementFromRootDocument(OMTModelItemLabel.class, rootBlock, label -> label.getName().equals("MijnActiviteitMetInterpolatedTitel"));
+            try {
+                OMTMember spy = spy(exportingMember);
+                PsiReference refSpy = spy(exportingMember.getReference());
+                doReturn(refSpy).when(spy).getReference();
+                doReturn(modelItemLabel).when(refSpy).resolve();
+                OMTExportMember exportMember = (OMTExportMember) method.invoke(memberUtil, spy);
+                assertTrue(exportMember.isCommand());
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Test
+    void memberToExportMember_ReturnsNullOnUnknownType() throws NoSuchMethodException {
+        Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
+        method.setAccessible(true);
+        ApplicationManager.getApplication().runReadAction(() -> {
+            // ModelItemBlock is not a valid type
+            OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, rootBlock);
+            try {
+                assertNull(method.invoke(memberUtil, modelItemBlock));
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Test
+    void memberToExportMember_ReturnsNullOnImportedMember() throws NoSuchMethodException {
+        Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
+        method.setAccessible(true);
+        ApplicationManager.getApplication().runReadAction(() -> {
+            // ModelItemBlock is not a valid type
+            OMTMember member = exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock, member1 -> member1.getName().equals("myImportedMethod"));
+            try {
+                assertNull(method.invoke(memberUtil, member));
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Test
+    void memberToExportMember_ReturnsNullOnCommandCall() throws NoSuchMethodException {
+        Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
+        method.setAccessible(true);
+        ApplicationManager.getApplication().runReadAction(() -> {
+            // ModelItemBlock is not a valid type
+            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock);
+            try {
+                assertNull(method.invoke(memberUtil, call));
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Test
+    void memberToExportMember_ReturnsNullOnOperatorCall() throws NoSuchMethodException {
+        Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
+        method.setAccessible(true);
+        ApplicationManager.getApplication().runReadAction(() -> {
+            // ModelItemBlock is not a valid type
+            OMTOperatorCall call = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock);
+            try {
+                assertNull(method.invoke(memberUtil, call));
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Test
+    void parseDefinedToCallable_CommandStatement() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTDefineCommandStatement commandStatement = exampleFiles.getPsiElementFromRootDocument(OMTDefineCommandStatement.class, rootBlock);
+            OMTDefineName defineName = commandStatement.getDefineName();
+
+            OMTExportMember exportMember = (OMTExportMember) memberUtil.parseDefinedToCallable(defineName);
+            assertTrue(exportMember.isCommand());
+            assertEquals(defineName, exportMember.getResolvingElement());
+        });
+    }
+
+    @Test
+    void parseDefinedToCallable_QueryStatement() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTDefineQueryStatement queryStatement = exampleFiles.getPsiElementFromRootDocument(OMTDefineQueryStatement.class, rootBlock);
+            OMTDefineName defineName = queryStatement.getDefineName();
+
+            OMTExportMember exportMember = (OMTExportMember) memberUtil.parseDefinedToCallable(defineName);
+            assertTrue(exportMember.isOperator());
+            assertEquals(defineName, exportMember.getResolvingElement());
         });
     }
 
@@ -428,6 +693,24 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 e.printStackTrace();
             }
         });
+    }
+
+    @Test
+    void getCallName() {
+        PsiElement firstChild = mock(PsiElement.class);
+
+        OMTCall call = mock(OMTCall.class);
+        doReturn(firstChild).when(call).getFirstChild();
+        doReturn(true).when(call).isCommandCall();
+
+        // with prefix:
+        doReturn("@Call").when(firstChild).getText();
+        assertEquals("Call", memberUtil.getCallName(call));
+
+        // without prefix
+        doReturn("Call").when(firstChild).getText();
+        assertEquals("Call", memberUtil.getCallName(call));
+
     }
 
 }

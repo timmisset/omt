@@ -37,7 +37,7 @@ public class RegisterPrefixIntention {
             @Override
             public void invoke(@NotNull Project project, Editor editor, PsiFile file) {
                 curieUtil.addPrefixToBlock(
-                        namespacePrefix, namespacePrefix.getName(), iri
+                        namespacePrefix, namespacePrefix.getName().trim(), iri
                 );
             }
 

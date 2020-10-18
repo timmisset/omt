@@ -2,6 +2,12 @@ import:
     '../../test.omt':
         -   myImportedMethod
 
+export:
+    - myExportedMethod
+
+commands: |
+    DEFINE COMMAND myRootCommand() => { @LOG('Hello'); }
+
 model:
     MijnActiviteit: !Activity
         title: Mijn Activiteit
@@ -30,11 +36,20 @@ model:
     MijnTweedeActiviteit: !Activity
         title: MijnTweedeActiviteit
 
+        onRun: |
+            @myFirstCommand();
+            @myRootCommand();
+
     MijnDerdeActiviteit: !Activity
         title: titleQuery()
 
         queries: |
             DEFINE QUERY titleQuery() => 'Hello';
+
+    MijnActiviteitMetInterpolatedTitel: !Activity
+        title: ${ mijnInterpolatedTitel }
+
+    MijnStandaloneQuery: !StandaloneQuery
 
     MijnProcedure: !Procedure
         onRun: |
