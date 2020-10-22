@@ -5,60 +5,74 @@ import com.intellij.psi.*;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.impl.OMTPsiImplUtil;
 import com.misset.opp.omt.psi.named.NamedMemberType;
+import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.util.ImportUtil;
 import com.misset.opp.omt.psi.util.MemberUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Optional;
 
 /**
  * A member reference takes care of all references from operator/command calls to their declarations
  */
 public class MemberReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
 
-    private static final MemberUtil memberUtil = MemberUtil.SINGLETON;
-    private static final ImportUtil importUtil = ImportUtil.SINGLETON;
+    private final MemberUtil memberUtil;
+    private final ImportUtil importUtil;
 
     private final NamedMemberType type;
 
     public MemberReference(@NotNull PsiElement member, TextRange textRange, NamedMemberType type) {
         super(member, textRange);
         this.type = type;
+        memberUtil = MemberUtil.SINGLETON;
+        importUtil = ImportUtil.SINGLETON;
     }
+
+    public MemberReference(@NotNull PsiElement member, TextRange textRange, NamedMemberType type, MemberUtil memberUtil, ImportUtil importUtil) {
+        super(member, textRange);
+        this.type = type;
+        this.memberUtil = memberUtil;
+        this.importUtil = importUtil;
+    }
+
 
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
+        ResolveResult[] result;
         switch (type) {
             case ImportingMember:
-                Optional<PsiElement> resolved = importUtil.resolveImportMember((OMTMember) myElement);
-                return new ResolveResult[]{
-                        resolved.map(PsiElementResolveResult::new).orElseGet(() -> new PsiElementResolveResult(myElement))};
+                result = toResolveResult(importUtil.resolveImportMember((OMTMember) myElement).orElse(myElement));
+                break;
+            case ExportingMember:
+                result = toResolveResult(memberUtil.getDeclaringMemberFromImport(myElement, ((OMTMember) myElement).getName())
+                        .orElse(myElement));
+                break;
+            case OperatorCall:
+                result = declaringMemberToResolveResult(memberUtil.getDeclaringMember((OMTOperatorCall) myElement).orElse(null));
+                break;
+            case CommandCall:
+                result = declaringMemberToResolveResult(memberUtil.getDeclaringMember((OMTCommandCall) myElement).orElse(null));
+                break;
             case ModelItem:
             case DefineName:
-                return new ResolveResult[]{new PsiElementResolveResult(myElement)};
-            case OperatorCall:
-                return declaringMemberToResolveResult(memberUtil.getDeclaringMember((OMTOperatorCall) myElement));
-            case CommandCall:
-                return declaringMemberToResolveResult(memberUtil.getDeclaringMember((OMTCommandCall) myElement));
-            case ExportingMember:
-                return new ResolveResult[]{
-                        memberUtil.getDeclaringMemberFromImport(myElement, ((OMTMember) myElement).getName())
-                                .map(PsiElementResolveResult::new).orElseGet(() -> new PsiElementResolveResult(myElement))};
-
-            default:
-                return ResolveResult.EMPTY_ARRAY;
+            default: // not possible, added for branch coverage
+                result = toResolveResult(myElement);
         }
+        return result;
     }
 
-    private ResolveResult[] declaringMemberToResolveResult(Optional<PsiElement> declaringMember) {
+    private ResolveResult[] toResolveResult(PsiElement element) {
+        return new ResolveResult[]{new PsiElementResolveResult(element)};
+    }
+
+    private ResolveResult[] declaringMemberToResolveResult(PsiElement declaringMember) {
         // resolve to either the importing member or the defineName in the DEFINE QUERY [defineName](...) =>
-        if(declaringMember.isPresent()) {
-            PsiElement element = declaringMember.get();
-            if(element instanceof OMTDefineCommandStatement) { element = ((OMTDefineCommandStatement)element).getDefineName(); }
-            if(element instanceof OMTDefineQueryStatement) { element = ((OMTDefineQueryStatement)element).getDefineName(); }
-            return new ResolveResult[] { new PsiElementResolveResult(element) };
+        if (declaringMember != null) {
+            if (declaringMember instanceof OMTDefinedStatement) {
+                declaringMember = ((OMTDefinedStatement) declaringMember).getDefineName();
+            }
+            return new ResolveResult[]{new PsiElementResolveResult(declaringMember)};
         }
         return ResolveResult.EMPTY_ARRAY;
     }
@@ -79,19 +93,26 @@ public class MemberReference extends PsiReferenceBase<PsiElement> implements Psi
 
     @Override
     public PsiElement handleElementRename(@NotNull String newElementName) {
+        PsiElement element;
         switch (type) {
+            default: // not possible, added for branch coverage
             case ImportingMember:
             case ExportingMember:
-                return OMTPsiImplUtil.setName((OMTMember) super.myElement, newElementName);
+                element = OMTPsiImplUtil.setName((OMTMember) super.myElement, newElementName);
+                break;
             case ModelItem:
-                return OMTPsiImplUtil.setName((OMTModelItemLabel) super.myElement, newElementName);
+                element = OMTPsiImplUtil.setName((OMTModelItemLabel) super.myElement, newElementName);
+                break;
             case DefineName:
-                return OMTPsiImplUtil.setName((OMTDefineName) super.myElement, newElementName);
+                element = OMTPsiImplUtil.setName((OMTDefineName) super.myElement, newElementName);
+                break;
             case OperatorCall:
-                return OMTPsiImplUtil.setName((OMTOperatorCall) super.myElement, newElementName);
+                element = OMTPsiImplUtil.setName((OMTOperatorCall) super.myElement, newElementName);
+                break;
             case CommandCall:
-                return OMTPsiImplUtil.setName((OMTCommandCall) super.myElement, newElementName);
+                element = OMTPsiImplUtil.setName((OMTCommandCall) super.myElement, newElementName);
+                break;
         }
-        return super.myElement;
+        return element;
     }
 }

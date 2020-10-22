@@ -61,27 +61,22 @@ public class ModelUtil {
 
         return block.getBlockEntryList().stream()
                 .filter(omtBlockEntry ->
-                        isSameProperty(propertyLabel, getPropertyLabelText(omtBlockEntry)))
+                        propertyLabel.equals(omtBlockEntry.getName()))
                 .findFirst();
     }
 
-    private boolean isSameProperty(String propertyLabelA, String propertyLabelB) {
-        String stringA = propertyLabelA.endsWith(":") ? propertyLabelA.substring(0, propertyLabelA.length() - 1) : propertyLabelA;
-        String stringB = propertyLabelB.endsWith(":") ? propertyLabelB.substring(0, propertyLabelB.length() - 1) : propertyLabelB;
-        return stringA.equals(stringB);
-    }
-
-    private String getPropertyLabelText(OMTBlockEntry omtBlockEntry) {
-        if (omtBlockEntry == null || omtBlockEntry.getPropertyLabel() == null) {
-            return "";
-        }
-        return omtBlockEntry.getPropertyLabel().getText();
-    }
-
+    /**
+     * Returns the block entries that are accessible to this element. This is the case when the entry blocks
+     * are direct parents (recursive) or their siblings. But not the child entries in the siblings of parents.
+     *
+     * @param element
+     * @param labels
+     * @return
+     */
     public List<OMTBlockEntry> getConnectedEntries(PsiElement element, List<String> labels) {
         List<OMTBlockEntry> blockEntries = new ArrayList<>();
         List<OMTBlockEntry> parents = PsiTreeUtil.collectParents(element,
-                OMTBlockEntry.class, false, parent -> parent == null || parent instanceof OMTModelItemBlock);
+                OMTBlockEntry.class, false, parent -> parent instanceof OMTModelItemBlock);
         for (OMTBlockEntry parent : parents) {
             getSiblingEntryBlocks(parent).stream().filter(entry ->
                     labels.contains(getEntryBlockLabel(entry)))
@@ -106,31 +101,15 @@ public class ModelUtil {
      */
     public String getEntryBlockLabel(PsiElement element) {
         PsiElement labelElement = getEntryBlockLabelElement(element);
-        if (labelElement == null) {
-            return  ""; }
-        String label = labelElement.getText();
-        return label.endsWith(":") ? label.substring(0, label.length() - 1) : label;
-    }
-
-    private PsiElement getEntryBlockLabelElement(OMTBlockEntry omtBlockEntry) {
-        return omtBlockEntry.getSpecificBlock() != null ?
-                omtBlockEntry.getSpecificBlock().getFirstChild().getFirstChild() :
-                omtBlockEntry.getPropertyLabel();
-    }
-
-    private OMTModelItemLabel getEntryBlockLabelElement(OMTModelItemBlock omtModelItemBlock) {
-        return omtModelItemBlock.getModelItemLabel();
+        return labelElement == null ? "" : labelElement.getText().replace(":", "");
     }
 
     private PsiElement getEntryBlockLabelElement(PsiElement element) {
         if (element instanceof OMTModelItemBlock) {
-            return getEntryBlockLabelElement((OMTModelItemBlock) element).getPropertyLabel();
+            return ((OMTModelItemBlock) element).getModelItemLabel().getPropertyLabel();
         }
         if (element instanceof OMTBlockEntry) {
-            return getEntryBlockLabelElement((OMTBlockEntry) element);
-        }
-        if (element instanceof OMTSequenceItem) {
-            return element;
+            return ((OMTBlockEntry) element).getLabel();
         }
         if (element == null) {
             return null;
@@ -187,9 +166,7 @@ public class ModelUtil {
     }
 
     public void annotateBlock(OMTBlock block, AnnotationHolder holder) {
-        JsonObject jsonBlock = getJsonAttributes(block);
-        JsonObject attributes = jsonBlock.has(ATTRIBUTES) ? jsonBlock.getAsJsonObject(ATTRIBUTES) : jsonBlock;
-        annotateMissingEntries(attributes, block, holder);
+        annotateMissingEntries(getJsonAttributes(block).getAsJsonObject(ATTRIBUTES), block, holder);
     }
 
     public void annotateBlockEntry(OMTBlockEntry omtBlockEntry, AnnotationHolder holder) {

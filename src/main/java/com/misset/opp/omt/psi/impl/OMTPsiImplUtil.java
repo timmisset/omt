@@ -189,6 +189,9 @@ public class OMTPsiImplUtil {
         return parameterType.getText().startsWith(prefix.getNamespacePrefix().getText());
     }
 
+    // ////////////////////////////////////////////////////////////////////////////
+    // Signature
+    // ////////////////////////////////////////////////////////////////////////////
     public static int numberOfParameters(OMTSignature signature) {
         return signature.getCommandBlockList().size() +
                 signature.getQueryPathList().size() +
@@ -196,6 +199,21 @@ public class OMTPsiImplUtil {
                 signature.getOperatorCallList().size();
     }
 
+    // ////////////////////////////////////////////////////////////////////////////
+    // BlockEntry
+    // ////////////////////////////////////////////////////////////////////////////
+    public static String getName(OMTBlockEntry blockEntry) {
+        PsiElement label = getLabel(blockEntry);
+        return label instanceof OMTPropertyLabel ? getPropertyLabelName((OMTPropertyLabel) label) : getName(blockEntry.getSpecificBlock());
+    }
+
+    public static PsiElement getLabel(OMTBlockEntry blockEntry) {
+        return blockEntry.getSpecificBlock() != null ? blockEntry.getSpecificBlock().getFirstChild().getFirstChild() : blockEntry.getPropertyLabel();
+    }
+
+    // ////////////////////////////////////////////////////////////////////////////
+    // PropertyLabel
+    // ////////////////////////////////////////////////////////////////////////////
     public static String getPropertyLabelName(OMTPropertyLabel propertyLabel) {
         String propertyLabelText = propertyLabel.getText();
         return propertyLabelText.endsWith(":") ?
@@ -203,6 +221,9 @@ public class OMTPsiImplUtil {
                 propertyLabelText;
     }
 
+    // ////////////////////////////////////////////////////////////////////////////
+    // Specific blocks
+    // ////////////////////////////////////////////////////////////////////////////
     public static String getName(OMTSpecificBlock specificBlock) {
         if (specificBlock.getCommandsBlock() != null) {
             return "commands";

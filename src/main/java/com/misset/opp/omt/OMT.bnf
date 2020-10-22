@@ -31,6 +31,7 @@ block ::=                                   leading? (blockEntry+ | (indentToken
 blockEntry ::=                              leading? specificBlock | (leading? propertyLabel trailing? ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken))) {
                                             mixin="com.misset.opp.omt.psi.impl.OMTAnnotationHolderImpl"
                                             implements="com.misset.opp.omt.psi.support.OMTAnnotationHolder"
+                                            methods=[ getName getLabel ]
 }
 propertyLabel ::=                           PROPERTY { methods=[getPropertyLabelName]}
 
