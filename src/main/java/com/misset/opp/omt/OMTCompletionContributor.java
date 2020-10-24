@@ -1,161 +1,297 @@
 package com.misset.opp.omt;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.codeInsight.completion.*;
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
+import com.misset.opp.omt.external.util.builtIn.BuiltInType;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.util.ModelUtil;
-import com.misset.opp.omt.psi.util.ProjectUtil;
-import com.misset.opp.omt.psi.util.VariableUtil;
+import com.misset.opp.omt.psi.support.OMTDefinedStatement;
+import com.misset.opp.omt.psi.util.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class OMTCompletionContributor extends CompletionContributor {
 
-    private static String DUMMY_SCALAR_VALUE = "DUMMYSCALARVALUE";
-    private static String DUMMY_PROPERTY_VALUE = "DUMMYPROPERTYVALUE:";
-    private static String DUMMY_STATEMENT = "@DUMMYSTATEMENT();";
+    private static String DUMMY_SCALAR = "DUMMYSCALARVALUE";
+    private static String DUMMY_PROPERTY = "DUMMYPROPERTYVALUE:";
+    private static String DUMMY_ENTRY = String.format("%s %s", DUMMY_PROPERTY, DUMMY_SCALAR);
+    private static String SEMICOLON = ";";
 
-    private PsiElement elementAtCaret;
+    private static String ATTRIBUTES = "attributes";
+    private boolean dummyPlaceHolderSet = false;
+
+    List<LookupElement> resolvedElements;
+    List<String> resolvedSuggestions;
+    private boolean isResolved;
 
     final ModelUtil modelUtil = ModelUtil.SINGLETON;
 
     private VariableUtil variableUtil = VariableUtil.SINGLETON;
     private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+    private TokenUtil tokenUtil = TokenUtil.SINGLETON;
+    private MemberUtil memberUtil = MemberUtil.SINGLETON;
+
 
     public OMTCompletionContributor() {
         /**
          * Generic completion that resolves the suggestion based on the cursor position
          */
-        extend(CompletionType.BASIC, PlatformPatterns.psiElement(),
-                new CompletionProvider<CompletionParameters>() {
-                    @Override
-                    protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
-                        PsiElement atPosition = parameters.getPosition();
-                        if (isPropertyLabelSuggestion(atPosition) || isSequenceItem(atPosition)) {
-                            addCompletionsForModelTreeAttributes(atPosition, result);
-                        }
-                        addCompletionsForScript(atPosition, result);
-                    }
-                });
+        extend(CompletionType.BASIC, PlatformPatterns.psiElement(), getCompletionProvider());
     }
 
+    private CompletionProvider<CompletionParameters> getCompletionProvider() {
+        return new CompletionProvider<CompletionParameters>() {
+            @Override
+            protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
+                if (isResolved) {
+                    result.addAllElements(resolvedElements);
+                    return;
+                }
+
+                PsiElement element = parameters.getPosition();
+                while (tokenUtil.isWhiteSpace(element) && element != null) {
+                    element = element.getParent();
+                }
+                // !ModelItemType
+                if (tokenUtil.isModelItemType(element)) {
+                    modelUtil.getModelRootItems().forEach(label -> result.addElement(LookupElementBuilder.create(label)));
+                }
+                // entry: for a model item
+                if (tokenUtil.isProperty(element)) {
+                    addJsonAttributes(element, result);
+                }
+                if (tokenUtil.isCommand(element)) {
+                    setResolvedElementsForCommand(element);
+                    result.addAllElements(resolvedElements);
+                    return;
+                }
+                if (tokenUtil.isOperator(element)) {
+                    setResolvedElementsForOperator(element);
+                    result.addAllElements(resolvedElements);
+                }
+            }
+        };
+    }
+
+    // add completion in the OMT model based on the Json attributes
+    private void addJsonAttributes(PsiElement element, @NotNull CompletionResultSet result) {
+        JsonObject json = modelUtil.getJsonAtDepth(element, modelUtil.getModelDepth(element) - 1);
+        List<String> existingSiblingEntryLabels = getExistingSiblingEntryLabels(element);
+        if (json != null && json.has(ATTRIBUTES)) {
+            json.getAsJsonObject(ATTRIBUTES).keySet()
+                    .stream()
+                    .filter(key -> !existingSiblingEntryLabels.contains(key))
+                    .forEach(key -> result.addElement(LookupElementBuilder.create(
+                            String.format("%s:", key).trim()
+                            ))
+                    );
+        }
+    }
+
+    // used to fetch the entries already available for the item that is targeted by the completion
+    private List<String> getExistingSiblingEntryLabels(PsiElement element) {
+        List<String> entryList = new ArrayList<>();
+        PsiElement container = PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTBlock);
+        if (container == null) {
+            return entryList;
+        }
+
+        List<OMTBlockEntry> childrenOfTypeAsList = PsiTreeUtil.getChildrenOfTypeAsList(container, OMTBlockEntry.class);
+        childrenOfTypeAsList.forEach(blockEntry -> entryList.add(modelUtil.getEntryBlockLabel(blockEntry)));
+        return entryList;
+    }
+
+    private void setDummyPlaceHolder(String placeHolder, @NotNull CompletionInitializationContext context) {
+        dummyPlaceHolderSet = true;
+        context.setDummyIdentifier(placeHolder);
+    }
+
+    /**
+     * This method is used to check if the current caret position can be used to determine the type of completion
+     * that can be expected. Since IntelliJ will actually parse the document with a placeholder and resolve that
+     * placeholder to a PsiElement, the correct template must be used or the Lexer or Grammar will throw
+     *
+     * @param context
+     */
     @Override
     public void beforeCompletion(@NotNull CompletionInitializationContext context) {
-        PsiElement elementAt = context.getFile().findElementAt(context.getCaret().getOffset()).getParent();
-        // find the PsiElement containing the carrot:
+        isResolved = false;
+        resolvedElements = new ArrayList<>();
+        resolvedSuggestions = new ArrayList<>();
+        dummyPlaceHolderSet = true;
 
-        if (elementAt instanceof OMTBlock) {
-            context.setDummyIdentifier(DUMMY_PROPERTY_VALUE + " " + DUMMY_SCALAR_VALUE);
+        PsiElement elementAtCaret = context.getFile().findElementAt(context.getCaret().getOffset());
+        if (elementAtCaret == null) {
+            // no element at caret, use the DUMMY_ENTRY_VALUE
+            setDummyPlaceHolder(DUMMY_ENTRY, context);
             return;
         }
-        if (elementAt instanceof OMTBlockEntry) {
-            context.setDummyIdentifier(DUMMY_PROPERTY_VALUE + " " + DUMMY_SCALAR_VALUE);
-            return;
-        }
-        if (elementAt instanceof OMTCommandBlock) {
-            context.setDummyIdentifier(DUMMY_STATEMENT);
-            return;
-        }
-        if (elementAt instanceof OMTFile) {
-            context.setDummyIdentifier(DUMMY_PROPERTY_VALUE + " " + DUMMY_SCALAR_VALUE);
-            return;
-        }
-        context.setDummyIdentifier(DUMMY_SCALAR_VALUE);
-        elementAtCaret = elementAt;
+        trySuggestionsForCurrentElementAt(elementAtCaret.getParent(), elementAtCaret, context);
     }
 
-    private void addCompletionsForScript(PsiElement elementAtPosition, CompletionResultSet resultSet) {
-        addCompletionsForVariables(elementAtPosition, resultSet);
+    private void trySuggestionsForCurrentElementAt(PsiElement element, PsiElement elementAtCaret, CompletionInitializationContext context) {
+        if (element instanceof OMTBlockEntry || element instanceof OMTBlock || element instanceof OMTModelBlock) {
+            setDummyPlaceHolder(DUMMY_ENTRY, context);
+            return;
+        }
+        // find the PsiElement containing the caret:
 
-        if (isInQueryPath(elementAtPosition)) {
-            List<String> suggestions = builtInUtil.getBuiltInOperatorsAsSuggestions();
-            suggestions.addAll(projectUtil.getExportingOperatorsAsSuggestions());
+        if (element instanceof OMTFile) {
+            List<String> expectedTypesAtDummyBlock = getExpectedTypeAtOMTFile(elementAtCaret, false);
+            setDummyContextFromExpectedList(expectedTypesAtDummyBlock, context, hasValuePosition(elementAtCaret, context));
+            return;
+        }
 
-            suggestions.forEach(
-                    suggestion -> resultSet.addElement(LookupElementBuilder.create(suggestion))
+        if (element instanceof OMTCommandsBlock) {
+            isResolved = true;
+            resolvedElements.add(LookupElementBuilder.create("DEFINE COMMAND"));
+            resolvedElements.add(LookupElementBuilder.create("DEFINE COMMAND myCommand() => { @LOG('hello world'); }"));
+            return;
+        }
+        if (element instanceof OMTQueriesBlock) {
+            isResolved = true;
+            resolvedElements.add(LookupElementBuilder.create("DEFINE QUERY"));
+            resolvedElements.add(LookupElementBuilder.create("DEFINE QUERY myQuery() => 'hello world';"));
+            return;
+        }
+        if (element instanceof OMTCommandBlock ||
+                element instanceof OMTScript ||
+                element instanceof OMTScriptLine ||
+                element.getText().trim().equals("|")) {
+            setResolvedElementsForCommand(element);
+            isResolved = true;
+            return;
+        }
+        if (element instanceof OMTScalarValue) {
+            // scalar value as a block is not enough for useful completion:
+            // check to see if there are children that can be used
+            Arrays.stream(element.getChildren()).forEach(child -> {
+                if (!(child instanceof OMTStart) && !(child instanceof OMTEnd) && !(tokenUtil.isWhiteSpace(child))) {
+                    trySuggestionsForCurrentElementAt(child, elementAtCaret, context);
+                }
+            });
+        }
+    }
+
+    private void setResolvedElementsFor(PsiElement elementAt, Class<? extends OMTDefinedStatement> definedType, BuiltInType builtInType) {
+        // first check if there are local variables available, they also have the highest suggestion priority
+        variableUtil.getLocalVariables(elementAt).forEach(
+                (variableName, provider) -> addPriorityElement(variableName, 7)
+        );
+
+        // then the declared variables available at the point of completion
+        variableUtil.getDeclaredVariables(elementAt).forEach(
+                omtVariable -> addPriorityElement(omtVariable.getName(), 6)
+        );
+
+        // then the commands provided by this file
+        // first the ones within the same modelItem:
+        modelUtil.getModelItemBlock(elementAt).ifPresent(omtModelItemBlock ->
+                PsiTreeUtil.findChildrenOfType(omtModelItemBlock, definedType)
+                        .forEach(omtDefinedStatement -> {
+                                    if (!PsiTreeUtil.isContextAncestor(omtDefinedStatement, elementAt, true)) {
+                                        addPriorityElement(
+                                                memberUtil.parseDefinedToCallable(omtDefinedStatement.getDefineName()).asSuggestion(), 5);
+                                    }
+                                }
+                        ));
+
+        if (definedType == OMTDefineCommandStatement.class) {
+            modelUtil.getLocalCommands(elementAt).forEach(
+                    command -> addPriorityElement(String.format("@%s()", command), 3)
             );
-        } else if (isInCommandBlock(elementAtPosition)) {
-            List<String> suggestions = modelUtil.getLocalCommands(elementAtPosition).stream().map(command -> String.format("@%s()", command)).collect(Collectors.toList());
-            suggestions.addAll(builtInUtil.getBuiltInCommandsAsSuggestions());
-            suggestions.addAll(projectUtil.getExportingCommandsAsSuggestions());
+        }
+        builtInUtil.getBuiltInSuggestions(builtInType)
+                .forEach(suggestion -> addPriorityElement(suggestion, 2));
+        projectUtil.getExportedMembersAsSuggestions(builtInType == BuiltInType.Command).forEach(
+                suggestion -> addPriorityElement(suggestion, 1)
+        );
+        isResolved = true;
+    }
 
-            suggestions.forEach(
-                    suggestion -> resultSet.addElement(LookupElementBuilder.create(suggestion))
-            );
+    // all suggestions for a command statement
+    // prioritize by likelihood of usage
+    private void setResolvedElementsForCommand(PsiElement elementAt) {
+        setResolvedElementsFor(elementAt, OMTDefineCommandStatement.class, BuiltInType.Command);
+    }
+
+    // all suggestions for an operator statement
+    // prioritize by likelihood of usage
+    private void setResolvedElementsForOperator(PsiElement elementAt) {
+        setResolvedElementsFor(elementAt, OMTDefineQueryStatement.class, BuiltInType.Operator);
+    }
+
+    private void addPriorityElement(String text, int priority) {
+        if (resolvedSuggestions.contains(text)) {
+            return;
+        }
+        resolvedElements.add(PrioritizedLookupElement.withPriority(
+                LookupElementBuilder.create(text), priority
+        ));
+        resolvedSuggestions.add(text);
+    }
+
+    private void setDummyContextFromExpectedList(List<String> expectedTypes, @NotNull CompletionInitializationContext context, boolean hasValuePosition) {
+        if (!hasValuePosition && (expectedTypes.contains("block entry") || expectedTypes.contains("block"))) {
+            setDummyPlaceHolder(DUMMY_ENTRY, context);
+            return;
+        }
+        if (expectedTypes.contains("query step") || expectedTypes.contains("scalar")) {
+            setDummyPlaceHolder(DUMMY_SCALAR, context);
+        }
+
+        // indicates that the current line isn't properly closed with a semicolon.
+        if (expectedTypes.contains("SEMICOLON") || expectedTypes.contains("query path")) {
+            setDummyPlaceHolder(String.format("%s%s", DUMMY_SCALAR, SEMICOLON), context);
+        }
+    }
+
+    private boolean hasValuePosition(@NotNull PsiElement element, @NotNull CompletionInitializationContext context) {
+        Document document = context.getEditor().getDocument();
+        int line = document.getLineNumber(element.getTextOffset());
+        String textAtLine = document.getText(TextRange.create(document.getLineStartOffset(line), document.getLineEndOffset(line))).trim();
+        return textAtLine.contains(":");
+
+    }
+
+    private List<String> getExpectedTypeAtOMTFile(PsiElement element, boolean reverse) {
+        PsiElement sibling = reverse ? element.getPrevSibling() : element.getNextSibling();
+        while (!(sibling instanceof PsiErrorElement) && sibling != null && sibling.getNextSibling() != null) {
+            sibling = reverse ? sibling.getPrevSibling() : sibling.getNextSibling();
+        }
+
+        if (reverse) {
+            return sibling instanceof PsiErrorElement ? getExpectedTypesFromError((PsiErrorElement) sibling) : new ArrayList<>();
         } else {
-            includeCaretPositionCompletions(resultSet);
-        }
-
-    }
-
-    private void includeCaretPositionCompletions(CompletionResultSet resultSet) {
-        if (elementAtCaret instanceof OMTQueriesBlock) {
-            resultSet.addElement(LookupElementBuilder.create("DEFINE QUERY"));
-            resultSet.addElement(LookupElementBuilder.create("DEFINE QUERY myQuery() => 'hello world';"));
-        }
-        if (elementAtCaret instanceof OMTCommandsBlock) {
-            resultSet.addElement(LookupElementBuilder.create("DEFINE COMMAND"));
-            resultSet.addElement(LookupElementBuilder.create("DEFINE COMMAND myCommand() => { @LOG('hello world'); }"));
+            return sibling instanceof PsiErrorElement ? getExpectedTypesFromError((PsiErrorElement) sibling) : getExpectedTypeAtOMTFile(element, true);
         }
     }
 
-
-    private void addCompletionsForModelTreeAttributes(PsiElement elementAtPosition, CompletionResultSet resultSet) {
-        OMTBlockEntry blockEntry = (OMTBlockEntry) PsiTreeUtil.findFirstParent(elementAtPosition, parent -> parent instanceof OMTBlockEntry);
-        boolean isDummyProperty =
-                blockEntry != null && blockEntry.getPropertyLabel() != null &&
-                        blockEntry.getPropertyLabel().getText().equals(DUMMY_PROPERTY_VALUE);
-
-        JsonObject json = modelUtil.getJson(isDummyProperty ? blockEntry.getParent() : elementAtPosition);
-
-        if (json != null) {
-            if (json.has("attributes")) {
-                JsonObject attributes = json.getAsJsonObject("attributes");
-                attributes.keySet().forEach(attribute ->
-                        resultSet.addElement(LookupElementBuilder.create(attribute + ":")));
-            }
-            if (json.has("variables")) {
-                JsonArray variables = json.getAsJsonArray("variables");
-                variables.forEach(variable ->
-                        resultSet.addElement(LookupElementBuilder.create(variable.getAsString())));
-            }
+    private List<String> getExpectedTypesFromError(PsiErrorElement errorElement) {
+        List<String> expectedTypes = new ArrayList<>();
+        String errorDescription = errorElement.getErrorDescription();
+        Pattern pattern = Pattern.compile("\\<(.*?)\\>|OMTTokenType.([^ ]*)");
+        Matcher matcher = pattern.matcher(errorDescription);
+        while (matcher.find()) {
+            // every match is grouped as either 1 (<...>) or 2 OMTTokenType.
+            expectedTypes.add(matcher.group(1) != null ? matcher.group(1) : matcher.group(2));
         }
-    }
-
-    private void addCompletionsForVariables(PsiElement elementAtPosition, CompletionResultSet resultSet) {
-        List<OMTVariable> declaredVariables = variableUtil.getDeclaredVariables(elementAtPosition);
-        declaredVariables.forEach(variable -> resultSet.addElement(LookupElementBuilder.create(variable.getText())));
-    }
-
-    private boolean isPropertyLabelSuggestion(PsiElement element) {
-        return element.getParent() instanceof OMTBlockEntry ||
-                element.getParent() instanceof OMTPropertyLabel ||
-                element.getParent() instanceof OMTBlock;
-    }
-
-    private boolean isSequenceItem(PsiElement element) {
-        return PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTSequenceItem) != null;
-    }
-
-    private boolean isInCommandBlock(PsiElement element) {
-        return
-                elementAtCaret instanceof OMTScript ||
-                        element instanceof OMTCommandBlock ||
-                        PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTScript || parent instanceof OMTCommandBlock) != null;
-    }
-
-    private boolean isInQueryPath(PsiElement element) {
-        return PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTQueryPath) != null;
+        return expectedTypes;
     }
 
 }
