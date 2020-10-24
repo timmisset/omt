@@ -1,8 +1,10 @@
 {
   "name": "StandaloneQuery",
+  "modelRoot": true,
   "attributes": {
     "base": {
-      "type": "string"
+      "type": "string",
+      "required": false
     },
     "params": {
       "type": "ParamDef",
@@ -11,7 +13,8 @@
     },
     "graphs": {
       "type": "GraphSelectionDef",
-      "node": "map"
+      "node": "map",
+      "required": false
     },
     "prefixes": {
       "node": "map"

@@ -29,13 +29,6 @@ public class CurieUtil {
     }
 
     public Optional<OMTPrefix> getDefinedByPrefix(OMTCurieElement curieElement) {
-        // First the script block:
-        Optional<OMTPrefix> definedByScript = getDefinedByPrefix(PsiTreeUtil.getParentOfType(curieElement, OMTScript.class), curieElement);
-        if (definedByScript.isPresent()) {
-            return definedByScript;
-        }
-
-        // Otherwise the main prefixes block:
         return getDefinedByPrefix(getPrefixBlock(curieElement), curieElement);
     }
 
@@ -115,26 +108,28 @@ public class CurieUtil {
             prefixBlock.getPrefixList()
                     .forEach(prefix -> {
                         if (prefix.getLeading() != null) {
+                            prefixBlockBuilder.append(OMTElementFactory.getIndentSpace(1));
                             prefixBlockBuilder.append(prefix.getLeading().getText().trim());
+                            prefixBlockBuilder.append("\n");
                         }
                         prefixBlockBuilder
                                 .append(OMTElementFactory.getIndentSpace(1))
-                                .append(prefix.getNamespacePrefix().getName());
+                                .append(prefix.getNamespacePrefix().getName())
+                                .append(":");
                         prefixBlockBuilder
                                 .append(OMTElementFactory.getIndentSpace(finalIndents, prefix.getNamespacePrefix().getText().length()))
-                                .append(prefix.getNamespaceIri().getText().trim());
-                        if (prefix.getTrailing() != null) {
-                            prefixBlockBuilder.append(prefix.getTrailing().getText().trim());
-                        }
+                                .append(prefix.getNamespaceIri().getText().trim()); // this will include EOL comments captured in the END
                         prefixBlockBuilder.append("\n");
                     });
         }
-        if (!addNamespacePrefix.isEmpty() && !addNamespaceIri.isEmpty()) {
+        if (!addNamespaceIri.isEmpty()) {
             prefixBlockBuilder
                     .append(OMTElementFactory.getIndentSpace(1))
-                    .append(addNamespacePrefix);
+                    .append(addNamespacePrefix)
+                    .append(":");
             prefixBlockBuilder
-                    .append(OMTElementFactory.getIndentSpace(indents, addNamespacePrefix.length()))
+                    // prefixlength + 1 for the colon, which is not included in the getName() of the existing prefixes
+                    .append(OMTElementFactory.getIndentSpace(indents, addNamespacePrefix.length() + 1))
                     .append(addNamespaceIri.trim());
             prefixBlockBuilder.append("\n");
         }

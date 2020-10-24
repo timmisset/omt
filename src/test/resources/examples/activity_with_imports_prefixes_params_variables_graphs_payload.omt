@@ -7,8 +7,11 @@ import:
     -   anotherMethod
 
 prefixes:
+    /**
+    * Some info about abc
+    */
     abc:    <http://ontologie.alfabet.nl/alfabet#>
-    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#>
+    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#> // and about foaf
 
 model:
     MijnActiviteit: !Activity
@@ -34,6 +37,8 @@ model:
             VAR $declaredVariable = @CONCAT($variableA, $variableB);
             @LOG(declaredVariable);
             @LOG(/abc:Test);
+
+            @LOG(/defPrefix:test);
 
         payload:
             payloadA: $variableA

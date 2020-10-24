@@ -7,8 +7,6 @@ import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.util.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Optional;
-
 public class OMTAnnotator implements Annotator {
 
     private static final ModelUtil modelUtil = ModelUtil.SINGLETON;
@@ -35,12 +33,14 @@ public class OMTAnnotator implements Annotator {
         if (element instanceof OMTOperatorCall) {
             memberUtil.annotateCall((OMTOperatorCall) element, holder);
         }
-        if (element instanceof OMTModelItemBlock) {
-            modelUtil.annotateModelItem((OMTModelItemBlock) element, holder);
+        if (element instanceof OMTModelItemTypeElement) {
+            modelUtil.annotateModelItemType((OMTModelItemTypeElement) element, holder);
+        }
+        if (element instanceof OMTBlockEntry) {
+            modelUtil.annotateBlockEntry((OMTBlockEntry) element, holder);
         }
         if (element instanceof OMTBlock) {
-            Optional<OMTModelItemBlock> modelItemBlock = modelUtil.getModelItemBlock(element);
-            modelItemBlock.ifPresent(omtModelItemBlock -> modelUtil.annotateModelItem(omtModelItemBlock, holder));
+            modelUtil.annotateBlock((OMTBlock) element, holder);
         }
         if (element instanceof OMTReturnStatement) {
             scriptUtil.annotateFinalStatement(element, holder);

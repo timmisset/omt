@@ -1,5 +1,6 @@
 {
   "name": "StandaloneQuery",
+  "modelRoot": true,
   "attributes": {
     "base": {
       "type": "string",

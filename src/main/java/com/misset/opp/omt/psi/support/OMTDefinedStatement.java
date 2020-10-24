@@ -2,6 +2,7 @@ package com.misset.opp.omt.psi.support;
 
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.OMTDefineName;
+import org.jetbrains.annotations.NotNull;
 
 public interface OMTDefinedStatement extends PsiElement {
 
@@ -9,6 +10,7 @@ public interface OMTDefinedStatement extends PsiElement {
 
     boolean isQuery();
 
+    @NotNull
     OMTDefineName getDefineName();
 
 }

@@ -31,12 +31,13 @@ block ::=                                   leading? (blockEntry+ | (indentToken
 blockEntry ::=                              leading? specificBlock | (leading? propertyLabel trailing? ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken))) {
                                             mixin="com.misset.opp.omt.psi.impl.OMTAnnotationHolderImpl"
                                             implements="com.misset.opp.omt.psi.support.OMTAnnotationHolder"
+                                            methods=[ getName getLabel ]
 }
 propertyLabel ::=                           PROPERTY { methods=[getPropertyLabelName]}
 
 // a scalar single statement (multiline optional) following a property label
 scalar ::=                                  comment? scalarValue
-scalarValue ::=                             (start (parameterWithType | variableAssignment | block | queryPath | script) end) | nakedString
+scalarValue ::=                             (start (parameterWithType | variableAssignment | block | queryPath | script) end) | nakedString | EMPTY_ENTRY
 
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indentToken, it must 
@@ -144,7 +145,7 @@ parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEM
 // an ODT (script) block is always started by a Yaml scalar node
 // it can start on the same line and be restricted to that line (not required) or it can be started by the
 // literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and and 
-script ::=                                  PIPE trailing? (scriptLine+ | queryPath) 
+script ::=                                  PIPE trailing? (scriptLine+ | queryPath)?
 commandBlock ::=                            CURLY_OPEN trailing? (script | scriptLine+)? CURLY_CLOSED
 // a scriptline is contained by the addition of the semicolon at the end
 scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) trailing?
@@ -214,7 +215,7 @@ queryPath ::=                               (FORWARD_SLASH? (queryStep | queryRe
 queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
                                             operatorCall | IRI | DOT | OWLPROPERTY | subQuery | CONDITIONAL_OPERATOR |
                                             queryFilter | trailing | leading | chooseBlock | interpolatedString | PLUS | ASTERIX
-queryReverseStep ::=                        CARAT queryStep
+queryReverseStep ::=                        CARET queryStep
 
 // a query filter is contained by brackets [] and should resolve to boolean
 queryFilter ::=                             BRACKET_OPEN queryPath BRACKET_CLOSED

@@ -1,6 +1,7 @@
 [
   {
     "name": "Activity",
+    "modelRoot": true,
     "flags": [
       "nested",
       "autonomous",

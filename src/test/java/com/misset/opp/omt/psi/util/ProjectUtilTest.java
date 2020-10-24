@@ -192,8 +192,8 @@ class ProjectUtilTest extends LightJavaCodeInsightFixtureTestCase {
         exportMembers.put("operatorOnly", new ArrayList<>(Collections.singletonList(mockOperator)));
         exportMembers.put("both", new ArrayList<>(Arrays.asList(mockCommand, mockOperator)));
 
-        List<String> exportingCommandsAsSuggestions = projectUtil.getExportingCommandsAsSuggestions();
-        List<String> exportingOperatorsAsSuggestions = projectUtil.getExportingOperatorsAsSuggestions();
+        List<String> exportingCommandsAsSuggestions = projectUtil.getExportedMembersAsSuggestions(true);
+        List<String> exportingOperatorsAsSuggestions = projectUtil.getExportedMembersAsSuggestions(false);
 
         assertEquals(1, exportingCommandsAsSuggestions.size());
         assertEquals(1, exportingOperatorsAsSuggestions.size());

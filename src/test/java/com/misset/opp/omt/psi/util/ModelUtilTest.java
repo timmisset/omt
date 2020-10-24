@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +33,8 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
     AnnotationHolder annotationHolder;
     @Mock
     AnnotationBuilder annotationBuilder;
+    @Spy
+    ProjectUtil projectUtil;
 
     OMTModelItemBlock activity;
     OMTImportBlock importBlock;
@@ -39,6 +42,7 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @InjectMocks
     ModelUtil modelUtil;
+
 
     PsiElement rootBlock;
 
@@ -145,6 +149,38 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
         });
     }
 
+    @Test
+    void getConnectedEntries_RootItems() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
+            List<OMTBlockEntry> connectedEntries = modelUtil.getConnectedEntries(prefix, Arrays.asList("import"));
+            List<String> labels = connectedEntries.stream().map(OMTBlockEntry::getName)
+                    .collect(Collectors.toList());
+            assertEquals(1, labels.size());
+            assertTrue(labels.contains("import"));
+        });
+    }
+
+    @Test
+    void getModelRootItems() {
+        JsonObject modelRootItem = new JsonObject();
+        modelRootItem.addProperty("name", "modelRootItem");
+        modelRootItem.addProperty("modelRoot", true);
+
+        JsonObject notModelRootItem = new JsonObject();
+        notModelRootItem.addProperty("name", "notModelRootItem");
+        notModelRootItem.addProperty("modelRoot", false);
+
+        JsonObject notModelRootItem2 = new JsonObject();
+        notModelRootItem2.addProperty("name", "notModelRootItem2");
+
+        JsonObject tree = new JsonObject();
+        tree.add("modelRoot", modelRootItem);
+        tree.add("notModelRootItem", notModelRootItem);
+        tree.add("notModelRootItem2", notModelRootItem2);
+        doReturn(tree).when(projectUtil).getParsedModel();
+        assertContainsElements(modelUtil.getModelRootItems(), "modelRootItem");
+    }
 
     @Test
     void getEntryBlockLabel_ReturnsEmptyStringWhenNull() {
@@ -169,52 +205,45 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
-    void annotateModelItem_StopsWhenBlockPartIsFound() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTModelItemBlock mockBlock = mock(OMTModelItemBlock.class);
-            doReturn(null).when(mockBlock).getBlock();
-            modelUtil.annotateModelItem(mockBlock, annotationHolder);
-            verify(mockBlock, times(1)).getBlock();
-        });
-    }
-
-    @Test
-    void annotateModelItem_ThrowsUnknownModelType() {
+    void annotateModelItemType_ThrowsUnknownModelType() {
         ApplicationManager.getApplication().runReadAction(() -> {
             PsiElement modelWithWrongModelItemType = exampleFiles.getModelWithWrongModelItemType();
             OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, modelWithWrongModelItemType);
-            modelUtil.annotateModelItem(modelItemBlock, annotationHolder);
+            modelUtil.annotateModelItemType(modelItemBlock.getModelItemLabel().getModelItemTypeElement(), annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("Unknown model type: !WrongModelItemType"));
             verify(annotationBuilder, times(1)).create();
         });
     }
 
     @Test
-    void annotateModelItem_ThrowsMissingAttributes() {
+    void annotateModelItemType() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, rootBlock);
+            modelUtil.annotateModelItemType(modelItemBlock.getModelItemLabel().getModelItemTypeElement(), annotationHolder);
+            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), eq("Unknown model type: !WrongModelItemType"));
+            verify(annotationBuilder, times(0)).create();
+        });
+    }
+
+    @Test
+    void annotateBlock_ThrowsMissingAttributes() {
         ApplicationManager.getApplication().runReadAction(() -> {
             PsiElement modelWithWrongModelItemType = exampleFiles.getStandaloneQueryWithMissingAttribute();
             OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, modelWithWrongModelItemType);
-            modelUtil.annotateModelItem(modelItemBlock, annotationHolder);
+            modelUtil.annotateBlock(modelItemBlock.getBlock(), annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), startsWith("myStandAloneQuery is missing attribute(s)"));
             verify(annotationBuilder, times(1)).create();
         });
     }
 
     @Test
-    void annotateModelItem_ThrowsWrongAttributeErrorOnNestedAttribute() {
+    void annotateBlockEntry_ThrowsWrongAttribute() {
         ApplicationManager.getApplication().runReadAction(() -> {
             PsiElement modelWithWrongNestedAttribute = exampleFiles.getActivityWithWrongNestedAttribute();
-            OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, modelWithWrongNestedAttribute);
-            modelUtil.annotateModelItem(modelItemBlock, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), startsWith("queryX is not a known attribute for payloadC"));
+            OMTBlockEntry blockEntry = exampleFiles.getPsiElementFromRootDocument(OMTBlockEntry.class, modelWithWrongNestedAttribute, omtBlockEntry -> modelUtil.getEntryBlockLabel(omtBlockEntry).equals("queryX"));
+            modelUtil.annotateBlockEntry(blockEntry, annotationHolder);
+            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), startsWith("queryX is not a known attribute for PayloadProperty"));
             verify(annotationBuilder, times(1)).create();
-        });
-    }
-
-    @Test
-    void annotateModelItem() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            modelUtil.annotateModelItem(activity, annotationHolder);
         });
     }
 

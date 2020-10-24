@@ -53,7 +53,7 @@ public class OMTParameterImpl implements OMTParameter {
 
     public OMTParameterImpl(OMTQueryPath queryPath) {
         if (!(queryPath.getFirstChild().getFirstChild() instanceof OMTVariable)) {
-            throw new Error("OMTQueryPath must start with a variable to be parsed to a parameter");
+            return;
         }
         variable = (OMTVariable) queryPath.getFirstChild().getFirstChild();
         name = variable.getName();

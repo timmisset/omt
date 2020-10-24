@@ -126,10 +126,27 @@ class OMTLexerTest {
         printLexerLog = true;
         String contentToTest = "model:\n" +
                 "    MijnActiviteit: !Activity\n" +
-                "        title: Mijn titel = ${$mijnVariable}\n" +
+                "        params:\n" +
+                "            - $mijnVariable\n" +
+                "        graphs:\n" +
+                "            edit:\n" +
+                "                - $mijnVariable / GRAPH\n" +
                 "\n" +
+                "        onCommit: |\n" +
+                "            @LOG($param0);\n" +
+                "\n" +
+                "        onDone:\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "        commands: |\n" +
+                "            DEFINE COMMAND myCommand() => { @ActiviteitStarten($param1); }\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "    MijnProcedure: !Component\n" +
                 "        variables:\n" +
-                "        -   $mijnVariable\n";
+                "            -   $test";
 
         System.out.println(
                 String.join("\n", getElements(contentToTest))

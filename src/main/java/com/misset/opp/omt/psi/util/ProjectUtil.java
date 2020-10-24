@@ -195,15 +195,7 @@ public class ProjectUtil {
         return exportingMembers.getOrDefault(name, new ArrayList<>());
     }
 
-    public List<String> getExportingCommandsAsSuggestions() {
-        return getExportedMembersAsSuggestions(true);
-    }
-
-    public List<String> getExportingOperatorsAsSuggestions() {
-        return getExportedMembersAsSuggestions(false);
-    }
-
-    private List<String> getExportedMembersAsSuggestions(boolean commands) {
+    public List<String> getExportedMembersAsSuggestions(boolean commands) {
         List<String> exportedCommands = new ArrayList<>();
         exportingMembers.values().forEach(omtExportMembers ->
                 omtExportMembers.stream()

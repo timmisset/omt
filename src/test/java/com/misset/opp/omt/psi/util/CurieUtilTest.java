@@ -32,6 +32,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
     @Mock
     ProjectUtil projectUtil;
 
+
     @InjectMocks
     CurieUtil curieUtil;
     private final ExampleFiles exampleFiles = new ExampleFiles(this);
@@ -155,6 +156,22 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void annotateNamespacePrefixThrowsNotDeclaredAnnotationWithFix() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            List<OMTPrefix> suggestions = exampleFiles.getPsiElementsFromRootDocument(OMTPrefix.class, rootBlock);
+            doReturn(suggestions).when(projectUtil).getKnownPrefixes(eq("ghi"));
+
+            loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
+            curieUtil.annotateNamespacePrefix(ghi, annotationHolder);
+            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("ghi: is not declared"));
+            verify(annotationBuilder, times(1)).create();
+
+            // verify a call for each prefix and + 1 remove suggestion
+            verify(annotationBuilder, times(suggestions.size() + 1)).withFix(any(IntentionAction.class));
+        });
+    }
+
+    @Test
     void annotateNamespacePrefixThrowsNotDeclaredAnnotationAddsFixSuggestion() {
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTPrefix knownPrefix = mock(OMTPrefix.class);
@@ -166,7 +183,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
             loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
             curieUtil.annotateNamespacePrefix(ghi, annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("ghi: is not declared"));
-            verify(annotationBuilder, times(2)).withFix(any());
+            verify(annotationBuilder, times(1)).withFix(any()); // remove fix only
             verify(annotationBuilder, times(1)).create();
         });
     }
@@ -187,9 +204,12 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
             curieUtil.resetPrefixBlock(prefix);
             OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
             String asText = prefixBlock.getText();
-            assertEquals("prefixes:\n" +
+            assertSameContent("prefixes:\n" +
+                    "    /**\n" +
+                    "    * Some info about abc\n" +
+                    "    */\n" +
                     "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
-                    "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#>\n" +
+                    "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#> // and about foaf\n" +
                     "\n", asText);
         });
     }
@@ -198,12 +218,34 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
     void addPrefixToBlockFromString() {
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
-            curieUtil.addPrefixToBlock(prefix, "def:", "<http://ontologie.alfabet.nl/def#>");
+            curieUtil.addPrefixToBlock(prefix, "def", "<http://ontologie.alfabet.nl/def#>");
             OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
             String asText = prefixBlock.getText();
-            assertEquals("prefixes:\n" +
+            assertSameContent("prefixes:\n" +
+                    "    /**\n" +
+                    "    * Some info about abc\n" +
+                    "    */\n" +
                     "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
-                    "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#>\n" +
+                    "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#> // and about foaf\n" +
+                    "    def:    <http://ontologie.alfabet.nl/def#>\n" +
+                    "\n", asText);
+        });
+    }
+
+    @Test
+    void addNewPrefixToBlockFromString() {
+        ApplicationManager.getApplication().runReadAction(() -> {
+            OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
+
+            OMTFile file = (OMTFile) spy(prefix.getContainingFile());
+            OMTPrefix prefixSpy = spy(prefix);
+            doReturn(file).when(prefixSpy).getContainingFile();
+            doReturn(Optional.empty()).when(file).getRootBlock("prefixes");
+
+            curieUtil.addPrefixToBlock(prefixSpy, "def", "<http://ontologie.alfabet.nl/def#>");
+            OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
+            String asText = prefixBlock.getText();
+            assertSameContent("prefixes:\n" +
                     "    def:    <http://ontologie.alfabet.nl/def#>\n" +
                     "\n", asText);
         });
@@ -216,26 +258,30 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
             curieUtil.addPrefixToBlock(prefix, prefix);
             OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
             String asText = prefixBlock.getText();
-            assertEquals("prefixes:\n" +
+            assertSameContent("prefixes:\n" +
+                    "    /**\n" +
+                    "    * Some info about abc\n" +
+                    "    */\n" +
                     "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
-                    "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#>\n" +
+                    "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#> // and about foaf\n" +
                     "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
                     "\n", asText);
         });
     }
 
     private void loadUndeclaredNamespacePrefixes(PsiElement rootBlock) {
+        // TODO: refactor to usage of the predicate getPsiElementsFromRootDocument
         List<OMTNamespacePrefix> prefixes = exampleFiles.getPsiElementsFromRootDocument(OMTNamespacePrefix.class, rootBlock);
         prefixes.forEach(prefix ->
                 {
                     switch (Objects.requireNonNull(prefix.getName())) {
-                        case "def:":
+                        case "def":
                             def = prefix;
                             break;
-                        case "ghi:":
+                        case "ghi":
                             ghi = prefix;
                             break;
-                        case "abc:":
+                        case "abc":
                             if (abcDeclared == null) {
                                 abcDeclared = prefix;
                             } else {
@@ -247,4 +293,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
         );
     }
 
+    private void assertSameContent(String expected, String value) {
+        assertEquals(expected.replaceAll("\\s+", ""), value.replaceAll("\\s+", ""));
+    }
 }
