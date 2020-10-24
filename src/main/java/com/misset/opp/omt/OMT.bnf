@@ -215,7 +215,7 @@ queryPath ::=                               (FORWARD_SLASH? (queryStep | queryRe
 queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
                                             operatorCall | IRI | DOT | OWLPROPERTY | subQuery | CONDITIONAL_OPERATOR |
                                             queryFilter | trailing | leading | chooseBlock | interpolatedString | PLUS | ASTERIX
-queryReverseStep ::=                        CARAT queryStep
+queryReverseStep ::=                        CARET queryStep
 
 // a query filter is contained by brackets [] and should resolve to boolean
 queryFilter ::=                             BRACKET_OPEN queryPath BRACKET_CLOSED

@@ -49,6 +49,10 @@ public class BuiltInUtil {
                 .collect(Collectors.toList());
     }
 
+    public List<String> getBuiltInSuggestions(BuiltInType type) {
+        return type == BuiltInType.Command ? getBuiltInCommandsAsSuggestions() : getBuiltInOperatorsAsSuggestions();
+    }
+
     public boolean isCommand(BuiltInType type) {
         return type == BuiltInType.Command || type == BuiltInType.HttpCommands || type == BuiltInType.ParseJsonCommand;
     }
