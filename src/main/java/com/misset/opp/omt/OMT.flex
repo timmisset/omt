@@ -349,7 +349,7 @@ void setTemplateInScalar(boolean state) {
           }
           return returnElement(OMTTypes.CURLY_CLOSED); }
     "/"                                                             { return returnElement(OMTTypes.FORWARD_SLASH); }
-    "^"                                                             { return returnElement(OMTTypes.CARAT); }
+    "^"                                                             { return returnElement(OMTTypes.CARET); }
     "[]"                                                            { return returnElement(OMTTypes.EMPTY_ARRAY); }
     "["                                                             { return returnElement(OMTTypes.BRACKET_OPEN); }
     "]"                                                             { return returnElement(OMTTypes.BRACKET_CLOSED); }
