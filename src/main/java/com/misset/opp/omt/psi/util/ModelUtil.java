@@ -196,6 +196,9 @@ public class ModelUtil {
 
     private void annotateMissingEntries(JsonObject attributes, OMTBlock block, AnnotationHolder holder) {
         List<String> entryLabels = block.getBlockEntryList().stream().map(this::getEntryBlockLabel).collect(Collectors.toList());
+        if (attributes == null) {
+            return;
+        }
         List<String> missingElements = attributes.entrySet().stream()
                 .filter(entry ->
                         entry.getValue().getAsJsonObject().has("required") &&

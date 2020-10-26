@@ -143,7 +143,7 @@ class VariableUtilTest extends LightJavaCodeInsightFixtureTestCase {
                     OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$myDeclaredVariable")
             );
             variableUtil.annotateVariable(declaredVariable, annotationHolder);
-            verify(annotationUtil, times(1)).annotateUsage(eq(declaredVariable), eq(OMTVariable.class), eq(annotationHolder));
+            verify(annotationUtil, times(1)).annotateUsageGetBuilder(eq(declaredVariable), eq(OMTVariable.class), eq(annotationHolder));
         });
     }
 

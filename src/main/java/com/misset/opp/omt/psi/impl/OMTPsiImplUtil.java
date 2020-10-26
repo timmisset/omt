@@ -185,6 +185,10 @@ public class OMTPsiImplUtil {
         return curieElement.getFirstChild();
     }
 
+    public static String getPrefixName(OMTCurieElement curieElement) {
+        return getPrefix(curieElement).getText().replace(":", "");
+    }
+
     public static boolean isDefinedByPrefix(OMTCurieElement curieElement, OMTPrefix prefix) {
         return curieElement.getText().startsWith(prefix.getNamespacePrefix().getText());
     }
@@ -201,7 +205,7 @@ public class OMTPsiImplUtil {
      */
     public static Resource getAsResource(OMTCurieElement curieElement) {
         String resolvedIri = String.format("%s%s",
-                ((OMTFile) curieElement.getContainingFile()).getPrefixIri(curieElement.getPrefix().getText()),
+                ((OMTFile) curieElement.getContainingFile()).getPrefixIri(curieElement.getPrefixName()),
                 curieElement.getPrefix().getNextSibling().getText()
         );
 
@@ -282,5 +286,13 @@ public class OMTPsiImplUtil {
             return "queries";
         }
         return "unknown";
+    }
+
+    // ////////////////////////////////////////////////////////////////////////////
+    // Query paths
+    // ////////////////////////////////////////////////////////////////////////////
+    public static Resource resolveToResource(OMTQueryPath path) {
+        PsiElement lastChild = path.getLastChild();
+        return null;
     }
 }

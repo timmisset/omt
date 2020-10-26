@@ -90,7 +90,7 @@ namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)        
                                                                                          methods=[getName setName getNameIdentifier]
                                                                                    }
 namespaceIri ::=                            start IRI end
-curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix getAsResource]}
+curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix getAsResource getPrefixName]}
 curieConstantElement ::=                    CURIE_CONSTANT_ELEMENT_PREFIX curieElement
 
 modelBlock::=                               MODEL_BLOCK_START trailing? (indentToken modelItemBlock* dedentToken)?

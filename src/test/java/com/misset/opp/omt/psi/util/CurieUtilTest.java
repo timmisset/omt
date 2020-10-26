@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
+import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
@@ -14,7 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -29,7 +32,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
     AnnotationHolder annotationHolder;
     @Mock
     AnnotationBuilder annotationBuilder;
-    @Mock
+    @Spy
     ProjectUtil projectUtil;
 
 
@@ -49,8 +52,10 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
         super.setUp();
 
         MockitoAnnotations.initMocks(this);
+        myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
 
         ApplicationManager.getApplication().runReadAction(() -> {
+            ProjectUtil.SINGLETON.loadOntologyModel(getProject());
             rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
         });
 
@@ -268,6 +273,40 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
                     "\n", asText);
         });
     }
+
+    @Test
+    void annotateParameterTypeAsResource() {
+        List<HighlightInfo> highlighting = getHighlighting("prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        params:\n" +
+                "        -   $paramA (ont:Something)\n" +
+                "        ");
+        assertEquals(2, highlighting.size());
+        assertEquals("http://ontologie#Something", highlighting.get(1).getDescription());
+    }
+
+    @Test
+    void annotateCurieAsResource() {
+        List<HighlightInfo> highlighting = getHighlighting("prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        onStart: |\n" +
+                "           'test' / ont:Something\n" +
+                "        ");
+        assertEquals(1, highlighting.size());
+        assertEquals("http://ontologie#Something", highlighting.get(0).getDescription());
+    }
+
+    List<HighlightInfo> getHighlighting(String content) {
+        myFixture.configureByText("test.omt", content);
+        return myFixture.doHighlighting();
+    }
+
 
     private void loadUndeclaredNamespacePrefixes(PsiElement rootBlock) {
         // TODO: refactor to usage of the predicate getPsiElementsFromRootDocument
