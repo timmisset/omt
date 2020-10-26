@@ -78,7 +78,15 @@ public class ExampleFiles {
             e.printStackTrace();
         }
 
-        return testCase.createLightFile(file.getName(), OMTLanguage.INSTANCE, data);
+        return fromContent(file.getName(), data);
+    }
+
+    public PsiElement fromContent(String content) {
+        return fromContent("test.omt", content);
+    }
+
+    public PsiElement fromContent(String fileName, String content) {
+        return testCase.createLightFile(fileName, OMTLanguage.INSTANCE, content);
     }
 
     public <T> T getPsiElementFromRootDocument(Class<? extends PsiElement> elementClass, PsiElement rootBlock) {

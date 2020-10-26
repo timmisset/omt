@@ -1,136 +1,47 @@
 package com.misset.opp.omt.psi.impl;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.psi.PsiElement;
+import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.psi.ExampleFiles;
+import com.misset.opp.omt.psi.OMTQueryPath;
+import com.misset.opp.omt.psi.util.ProjectUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class OMTPsiImplUtilTest {
+class OMTPsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
+
+    private final ExampleFiles exampleFiles = new ExampleFiles(this);
 
     @BeforeEach
-    void setUp() {
+    void setUpSuite() throws Exception {
+        super.setName("OMTPsiImplUtilTest");
+        super.setUp();
+
+        ApplicationManager.getApplication().runReadAction(() -> ProjectUtil.SINGLETON.loadOntologyModel(getProject()));
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDownSuite() throws Exception {
+        super.tearDown();
     }
 
     @Test
-    void getName() {
-    }
+    void queryPathResolveToResource() {
+        String content = "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        onStart: |\n" +
+                "           'test' / ont:Something\n" +
+                "        ";
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement rootBlock = exampleFiles.fromContent(content);
+            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
+            OMTPsiImplUtil.resolveToResource(queryPath);
+        });
 
-    @Test
-    void setName() {
-    }
-
-    @Test
-    void getNameIdentifier() {
-    }
-
-    @Test
-    void isDeclaredVariable() {
-    }
-
-    @Test
-    void isGlobalVariable() {
-    }
-
-    @Test
-    void isIgnoredVariable() {
-    }
-
-    @Test
-    void testGetName() {
-    }
-
-    @Test
-    void testSetName() {
-    }
-
-    @Test
-    void testGetNameIdentifier() {
-    }
-
-    @Test
-    void testGetName1() {
-    }
-
-    @Test
-    void testSetName1() {
-    }
-
-    @Test
-    void testGetNameIdentifier1() {
-    }
-
-    @Test
-    void getStatements() {
-    }
-
-    @Test
-    void testGetStatements() {
-    }
-
-    @Test
-    void testGetName2() {
-    }
-
-    @Test
-    void testSetName2() {
-    }
-
-    @Test
-    void testGetNameIdentifier2() {
-    }
-
-    @Test
-    void testGetName3() {
-    }
-
-    @Test
-    void testSetName3() {
-    }
-
-    @Test
-    void testGetNameIdentifier3() {
-    }
-
-    @Test
-    void testGetName4() {
-    }
-
-    @Test
-    void testSetName4() {
-    }
-
-    @Test
-    void testGetNameIdentifier4() {
-    }
-
-    @Test
-    void getPrefix() {
-    }
-
-    @Test
-    void isDefinedByPrefix() {
-    }
-
-    @Test
-    void testIsDefinedByPrefix() {
-    }
-
-    @Test
-    void numberOfParameters() {
-    }
-
-    @Test
-    void hasPreceedingArgument() {
-    }
-
-    @Test
-    void getPropertyLabelName() {
-    }
-
-    @Test
-    void testGetName5() {
     }
 }

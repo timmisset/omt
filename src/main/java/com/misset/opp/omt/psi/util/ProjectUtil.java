@@ -107,6 +107,9 @@ public class ProjectUtil {
         }
         settings.ontologyModelRootPath = virtualFile.getPath();
         String rootFolderPath = new File(virtualFile.getPath()).getParent();
+        if (rootFolderPath.startsWith(File.separator)) {
+            rootFolderPath = rootFolderPath.substring(1);
+        }
         model = new RDFModelUtil(rootFolderPath).readModel();
     }
 
