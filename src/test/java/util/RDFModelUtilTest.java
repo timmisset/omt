@@ -5,6 +5,11 @@ import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
+import java.util.List;
+
+import static com.intellij.testFramework.UsefulTestCase.assertContainsElements;
+import static com.intellij.testFramework.UsefulTestCase.assertDoesntContain;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,6 +43,42 @@ class RDFModelUtilTest {
         Resource predicate = resourceFor("classProperty");
         Resource expectedResource = resourceFor("ClassC");
         assertEquals(expectedResource, modelUtil.getClassBySubjectPredicate(subject, predicate));
+    }
+
+    @Test
+    void listSubjectsWithPredicateObjectClass_ReturnsClassPointingToClass() {
+        Resource predicate = resourceFor("classProperty");
+        Resource object = resourceFor("ClassC");
+        List<Resource> resources = modelUtil.listSubjectsWithPredicateObjectClass(predicate, object);
+        assertContainsElements(resources, resourceFor("ClassA"));
+        assertEquals(1, resources.size());
+    }
+
+    @Test
+    void listSubjectsWithPredicateObjectClasses_ReturnsClassPointingToClass() {
+        Resource predicate = resourceFor("classProperty");
+        Resource object = resourceFor("ClassC");
+        List<Resource> resources = modelUtil.listSubjectsWithPredicateObjectClass(predicate, Collections.singletonList(object));
+        assertContainsElements(resources, resourceFor("ClassA"));
+        assertEquals(1, resources.size());
+    }
+
+    @Test
+    void listSubjectsWithPredicateObjectClass_DoesntReturnClassWhenUsingDifferentPredicate() {
+        Resource predicate = resourceFor("otherProperty");
+        Resource object = resourceFor("ClassC");
+        List<Resource> resources = modelUtil.listSubjectsWithPredicateObjectClass(predicate, object);
+        assertDoesntContain(resources, resourceFor("ClassA"));
+        assertEquals(0, resources.size());
+    }
+
+    @Test
+    void listObjectsWithSubjectPredicate() {
+        Resource predicate = resourceFor("classProperty");
+        Resource subject = resourceFor("ClassA");
+        List<Resource> resources = modelUtil.listObjectsWithSubjectPredicate(Collections.singletonList(subject), predicate);
+        assertContainsElements(resources, resourceFor("ClassC"));
+        assertEquals(1, resources.size());
     }
 
     @Test

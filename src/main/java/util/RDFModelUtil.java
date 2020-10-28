@@ -8,11 +8,9 @@ import org.apache.jena.shared.PropertyNotFoundException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class RDFModelUtil {
 
@@ -109,7 +107,7 @@ public class RDFModelUtil {
                 .anyMatch(statement -> statement.getProperty(SHACL_PATH).getObject().asResource().equals(predicate));
     }
 
-    private Optional<Statement> getPredicate(Resource subject, Resource predicate) {
+    private Optional<Statement> getSubjectPredicate(Resource subject, Resource predicate) {
         return getShaclProperties(subject)
                 .keySet()
                 .stream()
@@ -125,8 +123,40 @@ public class RDFModelUtil {
         return getPropertyFromSubjectPredicate(subject, predicate, SHACL_DATATYPE);
     }
 
+    /**
+     * Returns the classes that point to the given class using the specified predicate, traversing the shacl structure
+     *
+     * @param predicate
+     * @param targetClass
+     * @return
+     */
+    public List<Resource> listSubjectsWithPredicateObjectClass(Resource predicate, Resource targetClass) {
+        ResIterator shaclsPointingToTargetClass = model.listSubjectsWithProperty(SHACL_CLASS, targetClass);
+        List<Resource> resources = new ArrayList<>();
+        while (shaclsPointingToTargetClass.hasNext()) {
+            Resource shacl = shaclsPointingToTargetClass.next();
+            if (shacl.hasProperty(SHACL_PATH, predicate)) {
+                ResIterator classPointingToShacl = model.listSubjectsWithProperty(SHACL_PROPERTY, shacl);
+                resources.add(classPointingToShacl.nextResource());
+            }
+        }
+        return resources;
+    }
+
+    public List<Resource> listSubjectsWithPredicateObjectClass(Resource predicate, List<Resource> targetClass) {
+        List<Resource> resources = new ArrayList<>();
+        targetClass.forEach(resource -> resources.addAll(listSubjectsWithPredicateObjectClass(predicate, resource)));
+        return resources;
+    }
+
+    public List<Resource> listObjectsWithSubjectPredicate(List<Resource> subjects, Resource predicate) {
+        return subjects.stream().map(subject -> getClassBySubjectPredicate(subject, predicate))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
     private Resource getPropertyFromSubjectPredicate(Resource subject, Resource predicate, Property property) {
-        Optional<Statement> optionalPredicate = getPredicate(subject, predicate);
+        Optional<Statement> optionalPredicate = getSubjectPredicate(subject, predicate);
         if (optionalPredicate.isPresent()) {
             Statement propertyStatement = optionalPredicate.get().getProperty(property);
             if (propertyStatement.getObject() != null) {
@@ -144,8 +174,9 @@ public class RDFModelUtil {
         return getIntOrDefault(subject, predicate, SHACL_MAXCOUNT, 0);
     }
 
+
     private int getIntOrDefault(Resource subject, Resource predicate, Property property, int defaultValue) {
-        Optional<Statement> optionalPredicate = getPredicate(subject, predicate);
+        Optional<Statement> optionalPredicate = getSubjectPredicate(subject, predicate);
         return optionalPredicate.map(statement -> getPropertyValueOrDefault(statement, property,
                 subject.getModel().createTypedLiteral(defaultValue)).getInt()).orElse(defaultValue);
     }
