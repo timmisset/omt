@@ -212,10 +212,12 @@ removeFromCollection ::=                    queryPath trailing? REMOVE trailing?
 // A queryPath consists of one or more querySteps. A queryStep can be considered forward or reverse (indicated by ^)
 // to reduce the complexity of parsing, slashes will be captured but are not required
 queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+ (PIPE queryPath)?
+                                            { methods = [ resolveToResource ]}
 queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
                                             operatorCall | IRI | DOT | OWLPROPERTY | subQuery | CONDITIONAL_OPERATOR |
                                             queryFilter | trailing | leading | chooseBlock | interpolatedString | PLUS | ASTERIX
-queryReverseStep ::=                        CARET queryStep
+                                            { methods = [ resolveToResource ]}
+queryReverseStep ::=                        CARET queryStep { methods = [ resolveToResource ]}
 
 // a query filter is contained by brackets [] and should resolve to boolean
 queryFilter ::=                             BRACKET_OPEN queryPath BRACKET_CLOSED

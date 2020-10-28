@@ -5,11 +5,15 @@ import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.util.ProjectUtil;
+import com.misset.opp.omt.psi.util.TokenUtil;
 import com.misset.opp.omt.psi.util.VariableUtil;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
+import util.RDFModelUtil;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +21,8 @@ public class OMTPsiImplUtil {
 
     private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
     private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+    private static final TokenUtil tokenUtil = TokenUtil.SINGLETON;
+    private static final RDFModelUtil rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
 
     // ////////////////////////////////////////////////////////////////////////////
     // Variable
@@ -291,8 +297,59 @@ public class OMTPsiImplUtil {
     // ////////////////////////////////////////////////////////////////////////////
     // Query paths
     // ////////////////////////////////////////////////////////////////////////////
-    public static Resource resolveToResource(OMTQueryPath path) {
-        PsiElement lastChild = path.getLastChild();
-        return null;
+    public static List<Resource> resolveToResource(OMTQueryPath path) {
+        return resolvePathPart(path.getLastChild());
+    }
+
+    public static List<Resource> resolveToResource(OMTQueryStep step) {
+        // steps that do not include preceeding info
+        if (step.getCurieConstantElement() != null) {
+            // a curie constant is a fixed value and is indifferent to previous steps
+            return Arrays.asList(step.getCurieConstantElement().getCurieElement().getAsResource());
+        }
+        if (step.getConstantValue() != null) {
+            return Arrays.asList(projectUtil.getOntologyModel().createTypedLiteral(
+                    tokenUtil.parseToTypedLiteral(step.getConstantValue())
+            ).asResource());
+        }
+
+        // steps that require preceeding info
+        List<Resource> previousStep = getPreviousStep(step);
+        if (step.getCurieElement() != null) {
+            // a regular curie element will always originate from a previous query step since
+            return rdfModelUtil.listObjectsWithSubjectPredicate(previousStep, step.getCurieElement().getAsResource());
+        }
+        return new ArrayList<>();
+    }
+
+    public static List<Resource> resolveToResource(OMTQueryReverseStep step) {
+        List<Resource> resources = getPreviousStep(step);
+        return rdfModelUtil.listSubjectsWithPredicateObjectClass(step.getQueryStep().getCurieElement().getAsResource(), resources);
+    }
+
+    private static List<Resource> getPreviousStep(PsiElement step) {
+        PsiElement previous = step.getPrevSibling();
+        while (previous != null
+                && !(previous instanceof OMTQueryPath)
+                && !(previous instanceof OMTQueryStep)
+                && !(previous instanceof OMTQueryReverseStep)) {
+            previous = previous.getPrevSibling();
+        }
+        return previous == null ? new ArrayList<>() : resolvePathPart(previous);
+    }
+
+    private static List<Resource> resolvePathPart(PsiElement part) {
+        if (part != null) {
+            if (part instanceof OMTQueryStep) {
+                return ((OMTQueryStep) part).resolveToResource();
+            }
+            if (part instanceof OMTQueryPath) {
+                return ((OMTQueryPath) part).resolveToResource();
+            }
+            if (part instanceof OMTQueryReverseStep) {
+                return ((OMTQueryReverseStep) part).resolveToResource();
+            }
+        }
+        return new ArrayList<>();
     }
 }

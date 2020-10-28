@@ -3,6 +3,7 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.misset.opp.omt.psi.OMTConstantValue;
 
 public class TokenUtil {
 
@@ -30,6 +31,13 @@ public class TokenUtil {
 
     public boolean isWhiteSpace(PsiElement element) {
         return element instanceof PsiWhiteSpace;
+    }
+
+    public Object parseToTypedLiteral(OMTConstantValue constantValue) {
+        if (isToken(constantValue.getFirstChild(), "OMTTokenType.STRING")) {
+            return constantValue.getText().substring(1, constantValue.getTextLength() - 1);
+        }
+        return null;
     }
 
     private boolean isToken(PsiElement element, String debugName) {
