@@ -4,8 +4,7 @@
     <vendor email="tim.misset@ordina.nl" url="https://www.ordina.nl">Ordina</vendor>
 
     <description>Plugin for the OPP specific languages OMT and ODT</description>
-    <change-notes>Many improvements made to the completion contributor. Works much better now, including special
-        suggestions like command specific variable, local commands etc
+    <change-notes>Bugs 10 and 11 are fixed in this release
     </change-notes>
     <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.java</depends>
