@@ -130,6 +130,10 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     void setParametersFromModelItem(OMTModelItemBlock block) {
         Optional<OMTBlockEntry> params = modelUtil.getModelItemBlockEntry(block, "params");
+        if (!params.isPresent() || params.get().getSequence() == null) {
+            return;
+        }
+
         params.ifPresent(omtBlockEntry -> omtBlockEntry
                 .getSequence()
                 .getSequenceItemList()
