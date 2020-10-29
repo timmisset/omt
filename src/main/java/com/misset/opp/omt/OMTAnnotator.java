@@ -2,6 +2,7 @@ package com.misset.opp.omt;
 
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.util.*;
@@ -50,6 +51,13 @@ public class OMTAnnotator implements Annotator {
         }
         if (element instanceof OMTParameterType) {
             curieUtil.annotateParameterType((OMTParameterType) element, holder);
+        }
+        if (element instanceof OMTQueryStep) {
+            holder.newAnnotation(HighlightSeverity.INFORMATION, ((OMTQueryStep) element).resolveToResource().toString()).create();
+        }
+        if (element instanceof OMTQueryReverseStep) {
+            holder.newAnnotation(HighlightSeverity.INFORMATION, ((OMTQueryReverseStep) element).resolveToResource().toString()).create();
+            ;
         }
     }
 

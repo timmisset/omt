@@ -26,7 +26,7 @@ public class RDFModelUtil {
      */
     public static final Property RDF_TYPE = new PropertyImpl("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
     private final String rootFolder;
-    Model model = ModelFactory.createDefaultModel();
+    Model model;
     public final Supplier<Resource> OWL_CLASS = () -> this.model.createResource("http://www.w3.org/2002/07/owl#Class");
 
     public RDFModelUtil(String rootFolder) {
@@ -37,6 +37,10 @@ public class RDFModelUtil {
     public RDFModelUtil(Model model) {
         this.model = model;
         this.rootFolder = "";
+    }
+
+    public boolean isLoaded() {
+        return model != null;
     }
 
     public Model readModel() {
@@ -181,17 +185,27 @@ public class RDFModelUtil {
     }
 
     public List<Resource> listObjectsWithSubjectPredicate(List<Resource> subjects, Resource predicate) {
-        return subjects.stream().map(subject -> getClassBySubjectPredicate(subject, predicate))
+        List<Resource> resources = new ArrayList<>();
+        resources.addAll(subjects.stream().map(subject -> getClassBySubjectPredicate(subject, predicate))
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
+        resources.addAll(subjects.stream().map(subject -> getDataTypeSubjectPredicate(subject, predicate))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()));
+        return distinctResources(resources);
     }
 
     private Resource getPropertyFromSubjectPredicate(Resource subject, Resource predicate, Property property) {
         Optional<Statement> optionalPredicate = getSubjectPredicate(subject, predicate);
         if (optionalPredicate.isPresent()) {
-            Statement propertyStatement = optionalPredicate.get().getProperty(property);
-            if (propertyStatement.getObject() != null) {
-                return propertyStatement.getObject().asResource();
+            Statement statement = optionalPredicate.get();
+            try {
+                Statement propertyStatement = statement.getProperty(property);
+                if (propertyStatement.getObject() != null) {
+                    return propertyStatement.getObject().asResource();
+                }
+            } catch (Exception ignored) {
+
             }
         }
         return null;

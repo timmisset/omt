@@ -252,11 +252,16 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void addPriorityElement(String text, int priority) {
+        addPriorityElement(text, priority, text);
+    }
+
+    private void addPriorityElement(String text, int priority, String title) {
         if (resolvedSuggestions.contains(text)) {
             return;
         }
+        LookupElementBuilder lookupElementBuilder = LookupElementBuilder.create(text).withPresentableText(title);
         resolvedElements.add(PrioritizedLookupElement.withPriority(
-                LookupElementBuilder.create(text), priority
+                lookupElementBuilder, priority
         ));
         resolvedSuggestions.add(text);
     }
