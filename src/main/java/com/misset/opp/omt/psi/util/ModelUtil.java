@@ -9,6 +9,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
 import com.sun.istack.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -194,7 +195,7 @@ public class ModelUtil {
                 jsonInfo.has(MAPOF);
     }
 
-    private void annotateMissingEntries(JsonObject attributes, OMTBlock block, AnnotationHolder holder) {
+    private void annotateMissingEntries(@NotNull JsonObject attributes, OMTBlock block, AnnotationHolder holder) {
         List<String> entryLabels = block.getBlockEntryList().stream().map(this::getEntryBlockLabel).collect(Collectors.toList());
         if (attributes == null) {
             return;
@@ -358,16 +359,20 @@ public class ModelUtil {
      * @param element
      * @return
      */
+    @NotNull
     public JsonObject getJsonAttributes(PsiElement element) {
         List<JsonObject> attributesBranch = getAttributesBranch(element);
+        JsonObject attributesJson = new JsonObject();
+        attributesJson.add(ATTRIBUTES, new JsonObject());
+
         if (attributesBranch.isEmpty()) {
-            return new JsonObject();
+            return attributesJson;
         }
 
         List<JsonObject> jsonObjectsWithName = attributesBranch.stream().filter(
                 jsonObject -> jsonObject.has("name")
         ).collect(Collectors.toList());
-        return jsonObjectsWithName.isEmpty() ? new JsonObject() : jsonObjectsWithName.get(jsonObjectsWithName.size() - 1);
+        return jsonObjectsWithName.isEmpty() ? attributesJson : jsonObjectsWithName.get(jsonObjectsWithName.size() - 1);
     }
 
     public boolean isOntology(PsiElement element) {

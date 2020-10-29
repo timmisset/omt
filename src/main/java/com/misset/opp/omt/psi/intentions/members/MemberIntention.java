@@ -45,6 +45,9 @@ public class MemberIntention {
             String clientPath = "@client" + exportPath.substring(exportPath.indexOf("/frontend/libs") + "/frontend/libs".length());
 
             String relativePath = relativize.toString().replace("\\", "/");
+            if (!relativePath.startsWith(".")) {
+                relativePath = "./" + relativePath;
+            }
 
             intentionActions.add(getImportIntention(clientPath, callName, call));
             intentionActions.add(getImportIntention(relativePath, callName, call));

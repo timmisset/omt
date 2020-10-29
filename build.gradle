@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '1.1'
+version '1.2'
 
 sourceCompatibility = 1.8
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -19,10 +19,6 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.1.0'
     compile group: 'com.atlassian.commonmark', name: 'commonmark', version: '0.2.0'
-    compile group: 'org.apache.jena', name: 'jena', version: '3.16.0', ext: 'pom' exclude group: 'org.slf4j'
-    compile group: 'org.apache.jena', name: 'jena-core', version: '3.16.0' exclude group: 'org.slf4j'
-    compile group: 'commons-io', name: 'commons-io', version: '2.8.0'
-
 }
 test {
     useJUnitPlatform()
@@ -41,8 +37,10 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>"""
+      Completion improved<br>
+      OMT Model covered in the suggestions<br>
+      Better suggestions inside command blocks
+      """
 }
 tasks{
     runIde {

@@ -37,6 +37,7 @@ LATIN_EXT_A=                    [\u0100-\u017F] // Zie: http://en.wikipedia.org/
 SYMBOL=                         ({ALPHA}|{DIGIT}|{LATIN_EXT_A}|[_@\-])+
 SCHEME=                         {ALPHA}({ALPHA}|{DIGIT}|[+.-])*
 IRI=                            "<"{SCHEME}":"({SYMBOL}|[?&#/+*.-])+">"
+INCOMPLETE_IRI=                 "<"{SCHEME}":"({SYMBOL}|[?&#/+*.-])+
 END_OF_LINE_COMMENT=            ("#" | "\/\/")[^\r\n]*
 JDSTART=                         \/\*\*
 JDEND=                           \*\/ // all between /** and */
@@ -63,13 +64,10 @@ OMTLexer(java.io.Reader in, boolean enableLogging) {
     this.logging = enableLogging;
 }
 void yypushback(int number, String id) {
-    String pushbackId = String.format("%s.%s", number, zzMarkedPos);
-    if(pushbacks.getOrDefault(pushbackId, 0) > 5) { return; }
     int position = zzMarkedPos;
     log("resetting " + number + " of " + yylength() + "'" + yytext() + "'" + " due to: " + id);
     yypushback(number);
     log("token moved back from " + position + " to " + zzMarkedPos);
-    pushbacks.put(pushbackId, pushbacks.getOrDefault(pushbackId, 0) + 1);
 }
 boolean inScalarBlock = false;
 IElementType startScalarBlock() {
@@ -234,7 +232,7 @@ void setTemplateInScalar(boolean state) {
     "!"{NAME}                                                 { return returnElement(OMTTypes.MODEL_ITEM_TYPE); }
     "- "                                                      { return indentOrReturn(OMTTypes.SEQUENCE_BULLET, "setting indent"); }
     ^{WHITE_SPACE}+                                           {
-                                                                   if(yylength() == 0 || yylength() <= indents.peek()) {
+                                                                   if(yylength() == 0 || (!indents.isEmpty() && yylength() <= indents.peek())) {
                                                                        return dedentOrReturn(TokenType.WHITE_SPACE, "resetting indent, indent < peek");
                                                                    } else {
                                                                        return returnElement(TokenType.WHITE_SPACE);
@@ -253,7 +251,7 @@ void setTemplateInScalar(boolean state) {
 }
 <YAML_SCALAR> {
     ^{WHITE_SPACE}+                                           {
-                                                                    if(yylength() == 0 || yylength() <= indents.peek()) {
+                                                                    if(yylength() == 0 || (!indents.isEmpty() && yylength() <= indents.peek())) {
                                                                         return retryInInitial("indent < peek");
                                                                     } else {
                                                                         return returnElement(TokenType.WHITE_SPACE);
@@ -324,6 +322,7 @@ void setTemplateInScalar(boolean state) {
     "RETURN"                                                        { return returnElement(OMTTypes.RETURN_OPERATOR); }
 
     {IRI}                                                            { return returnElement(OMTTypes.IRI); }
+    {INCOMPLETE_IRI}                                                { return returnElement(TokenType.BAD_CHARACTER); }
     {STRING}                                                        { return returnElement(OMTTypes.STRING); }
     {INTEGER}                                                       { return returnElement(OMTTypes.INTEGER); }
     {DECIMAL}                                                       { return returnElement(OMTTypes.DECIMAL); }
