@@ -19,7 +19,6 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.1.0'
     compile group: 'com.atlassian.commonmark', name: 'commonmark', version: '0.2.0'
-
 }
 test {
     useJUnitPlatform()
@@ -38,8 +37,10 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>"""
+      Completion improved<br>
+      OMT Model covered in the suggestions<br>
+      Better suggestions inside command blocks
+      """
 }
 tasks{
     runIde {

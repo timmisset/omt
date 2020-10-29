@@ -7,11 +7,15 @@ import util.Helper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 class OMTLexerTest {
 
@@ -20,6 +24,8 @@ class OMTLexerTest {
 
     @Test
     public void testActivityWithImportsPrefixesParamsVariablesGraphsAndPayload() throws IOException {
+        testOMTFile("activity_with_imports_prefixes_params_variables_graphs_payload");
+        testOMTFile("activity_with_imports_prefixes_params_variables_graphs_payload");
         testOMTFile("activity_with_imports_prefixes_params_variables_graphs_payload");
     }
 
@@ -89,29 +95,99 @@ class OMTLexerTest {
         testOMTFile("frontend/libs/procedure_with_exporting_members");
     }
 
+    @Test
+    public void testExactContentMatch_ModelWithQueryAndParameter() throws IOException {
+        String contentToTest = "model:\n" +
+                "    test: !Activity\n" +
+                "        queries: |\n" +
+                "            DEFINE QUERY myQuery() => 'mijn query';\n" +
+                "\n" +
+                "\n" +
+                "        params:\n" +
+                "            -   $mijnParameter";
+        HashMap<String, String> parsedElementsAsTypes = getParsedElementsAsTypes(contentToTest);
+        assertTrue(parsedElementsAsTypes.containsKey("params:"));
+        assertEquals("OMTTokenType.PROPERTY", parsedElementsAsTypes.get("params:"));
+    }
+
+    @Test
+    public void testExactContentMatch_ModelWithQueryAndParameterPartial() throws IOException {
+        String contentToTest = "model:\n" +
+                "    test: !Activity\n" +
+                "        queries: |\n" +
+                "            DEFINE QUERY myQuery() => 'mijn query';\n" +
+                "\n" +
+                "\n" +
+                "        params:\n" +
+                "            -   $mijnParameter";
+        HashMap<String, String> parsedElementsAsTypes = getParsedElementsAsTypes(contentToTest, 44, contentToTest.length());
+        assertTrue(parsedElementsAsTypes.containsKey("params:"));
+        assertEquals("OMTTokenType.PROPERTY", parsedElementsAsTypes.get("params:"));
+    }
+
+    @Test
+    public void testIncompletePushbacks() throws IOException {
+        String contentToTest = "prefixes:\n" +
+                "    pol:    <http://ontologie.politie.nl/def/politie#>\n" +
+                "    rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "    xsd:    <http://www.w3.org/2001/XMLSchema#";
+        List<String> elements = getElements(contentToTest);
+        assertThat(elements, hasItem("BAD_CHARACTER"));
+    }
+
     private void testOMTFile(String name) throws IOException {
         // This method will test an entire OMT file for identical contents with the expected outcome
         // the expected content is based on the output after parsing was finally successful. Therefore, this method is to make
         // sure any changes to the lexer won't mess this minimally parsable file
         String content = Helper.getResourceAsString(String.format("examples/%s.omt", name));
+        long startTime = System.currentTimeMillis();
         String[] result = getElements(content).toArray(new String[0]);
-
+        long endTime = System.currentTimeMillis();
+        System.out.println(name + " took " + (endTime - startTime) + ", " + startTime + " to " + endTime + ", with " + result.length + " results");
         if (validate) {
             assertThat(Arrays.asList(result), not(hasItem("BAD_CHARACTER")));
         }
 
     }
 
-    private List<String> getElements(String content) throws IOException {
-        OMTLexer lexer = new OMTLexer(null, printLexerLog);
-        lexer.reset(content, 0, content.length(), 0);
+    private List<String> getElements(String content, int start, int end) throws IOException {
+        OMTLexerAdapter lexer = new OMTLexerAdapter();
+        lexer.start(content, start, end, 0);
         List<String> elements = new ArrayList<>();
         boolean cont = true;
         while (cont) {
-            IElementType element = lexer.advance();
+            lexer.advance();
+            IElementType element = lexer.getTokenType();
             if (element != null) {
                 if (!element.toString().equals("WHITE_SPACE")) {
                     elements.add(element.toString());
+                }
+            } else {
+                cont = false;
+            }
+        }
+        return elements;
+    }
+
+    private List<String> getElements(String content) throws IOException {
+        return getElements(content, 0, content.length());
+    }
+
+    private HashMap<String, String> getParsedElementsAsTypes(String content) throws IOException {
+        return getParsedElementsAsTypes(content, 0, content.length());
+    }
+
+    private HashMap<String, String> getParsedElementsAsTypes(String content, int start, int end) throws IOException {
+        OMTLexerAdapter lexer = new OMTLexerAdapter();
+        lexer.start(content, start, end, 0);
+        HashMap<String, String> elements = new HashMap<>();
+        boolean cont = true;
+        while (cont) {
+            lexer.advance();
+            IElementType element = lexer.getTokenType();
+            if (element != null) {
+                if (!element.toString().equals("WHITE_SPACE")) {
+                    elements.put(lexer.getTokenText(), element.toString());
                 }
             } else {
                 cont = false;
@@ -125,31 +201,18 @@ class OMTLexerTest {
     public void testSpecificContent() throws IOException {
         printLexerLog = true;
         String contentToTest = "model:\n" +
-                "    MijnActiviteit: !Activity\n" +
+                "    test: !Activity\n" +
+                "        queries: |\n" +
+                "            DEFINE QUERY myQuery() => 'dsdf worsdf';\n" +
+                "\n" +
+                "\n" +
                 "        params:\n" +
-                "            - $mijnVariable\n" +
-                "        graphs:\n" +
-                "            edit:\n" +
-                "                - $mijnVariable / GRAPH\n" +
-                "\n" +
-                "        onCommit: |\n" +
-                "            @LOG($param0);\n" +
-                "\n" +
-                "        onDone:\n" +
-                "\n" +
-                "\n" +
-                "\n" +
-                "        commands: |\n" +
-                "            DEFINE COMMAND myCommand() => { @ActiviteitStarten($param1); }\n" +
-                "\n" +
-                "\n" +
-                "\n" +
-                "    MijnProcedure: !Component\n" +
-                "        variables:\n" +
-                "            -   $test";
+                "            -   $mijnParameter";
 
         System.out.println(
-                String.join("\n", getElements(contentToTest))
+                String.join("\n", getElements(contentToTest, 44, 146))
         );
     }
+
+
 }
