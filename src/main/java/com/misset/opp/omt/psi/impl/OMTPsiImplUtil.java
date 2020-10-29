@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import util.RDFModelUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -203,6 +203,16 @@ public class OMTPsiImplUtil {
         return parameterType.getText().startsWith(prefix.getNamespacePrefix().getText());
     }
 
+    public static String getName(OMTNamespaceIri namespaceIri) {
+        String name = namespaceIri.getText();
+        return name.substring(name.indexOf("<"), name.indexOf(">") + 1);
+    }
+
+    public static String getNamespace(OMTNamespaceIri namespaceIri) {
+        String name = namespaceIri.getText();
+        return name.substring(name.indexOf("<") + 1, name.indexOf(">"));
+    }
+
     /**
      * Returns the curie resolved to the full iri as a Resource in the loaded ontology model
      *
@@ -305,12 +315,15 @@ public class OMTPsiImplUtil {
         // steps that do not include preceeding info
         if (step.getCurieConstantElement() != null) {
             // a curie constant is a fixed value and is indifferent to previous steps
-            return Arrays.asList(step.getCurieConstantElement().getCurieElement().getAsResource());
+            return Collections.singletonList(step.getCurieConstantElement().getCurieElement().getAsResource());
         }
         if (step.getConstantValue() != null) {
-            return Arrays.asList(projectUtil.getOntologyModel().createTypedLiteral(
-                    tokenUtil.parseToTypedLiteral(step.getConstantValue())
-            ).asResource());
+            Model ontologyModel = projectUtil.getOntologyModel();
+            return Collections.singletonList(
+                    ontologyModel.createResource(ontologyModel.createTypedLiteral(
+                            tokenUtil.parseToTypedLiteral(step.getConstantValue())
+                    ).getDatatypeURI())
+            );
         }
 
         // steps that require preceeding info
@@ -327,7 +340,7 @@ public class OMTPsiImplUtil {
         return rdfModelUtil.listSubjectsWithPredicateObjectClass(step.getQueryStep().getCurieElement().getAsResource(), resources);
     }
 
-    private static List<Resource> getPreviousStep(PsiElement step) {
+    public static List<Resource> getPreviousStep(PsiElement step) {
         PsiElement previous = step.getPrevSibling();
         while (previous != null
                 && !(previous instanceof OMTQueryPath)

@@ -14,6 +14,7 @@ import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.ImportUtil;
 import com.misset.opp.omt.psi.util.ModelUtil;
 import com.misset.opp.omt.psi.util.ProjectUtil;
+import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -144,7 +145,10 @@ public class OMTFile extends PsiFileBase {
         HashMap<String, OMTPrefix> prefixHashMap = new HashMap<>();
         Optional<OMTPrefixBlock> prefixes = getSpecificBlock("prefixes", OMTPrefixBlock.class);
         prefixes.ifPresent(omtPrefixBlock -> omtPrefixBlock.getPrefixList().forEach(omtPrefix ->
-                prefixHashMap.put(omtPrefix.getNamespacePrefix().getName(), omtPrefix)));
+        {
+            prefixHashMap.put(omtPrefix.getNamespacePrefix().getName(), omtPrefix);
+            prefixHashMap.put(omtPrefix.getNamespaceIri().getNamespace(), omtPrefix);
+        }));
         return prefixHashMap;
     }
 
@@ -157,6 +161,15 @@ public class OMTFile extends PsiFileBase {
         iri = iri.startsWith("<") ? iri.substring(1) : iri;
         iri = iri.endsWith(">") ? iri.substring(0, iri.length() - 1) : iri;
         return iri;
+    }
+
+    public String resourceToCurie(Resource resource) {
+        OMTPrefix prefix = getPrefixes().get(resource.getNameSpace());
+        if (prefix == null) {
+            return resource.toString();
+        }
+
+        return String.format("%s:%s", prefix.getNamespacePrefix().getName(), resource.getLocalName());
     }
 
     public void updateMembers() {

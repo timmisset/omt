@@ -75,6 +75,7 @@ public class RDFModelUtil {
         return statementMap;
     }
 
+
     /**
      * Returns the parent classes of this resource (if any)
      *
@@ -131,7 +132,10 @@ public class RDFModelUtil {
      * @return
      */
     public List<Resource> listSubjectsWithPredicateObjectClass(Resource predicate, Resource targetClass) {
-        ResIterator shaclsPointingToTargetClass = model.listSubjectsWithProperty(SHACL_CLASS, targetClass);
+
+        ResIterator shaclsPointingToTargetClass = targetClass.getNameSpace().equals("http://www.w3.org/2001/XMLSchema#") ?
+                model.listSubjectsWithProperty(SHACL_DATATYPE, targetClass) :
+                model.listSubjectsWithProperty(SHACL_CLASS, targetClass);
         List<Resource> resources = new ArrayList<>();
         while (shaclsPointingToTargetClass.hasNext()) {
             Resource shacl = shaclsPointingToTargetClass.next();
@@ -147,6 +151,33 @@ public class RDFModelUtil {
         List<Resource> resources = new ArrayList<>();
         targetClass.forEach(resource -> resources.addAll(listSubjectsWithPredicateObjectClass(predicate, resource)));
         return resources;
+    }
+
+    public List<Resource> listPredicatesForObjectClass(List<Resource> objectClasses) {
+        List<Resource> resources = new ArrayList<>();
+        objectClasses.forEach(object -> {
+            ResIterator shaclsPointingToTargetClass = object.getNameSpace().equals("http://www.w3.org/2001/XMLSchema#") ?
+                    model.listSubjectsWithProperty(SHACL_DATATYPE, object) :
+                    model.listSubjectsWithProperty(SHACL_CLASS, object);
+
+            while (shaclsPointingToTargetClass.hasNext()) {
+                Resource shacl = shaclsPointingToTargetClass.next();
+                resources.add(shacl.getProperty(SHACL_PATH).getObject().asResource());
+            }
+        });
+        return distinctResources(resources);
+    }
+
+    public List<Resource> listPredicatesForSubjectClass(List<Resource> subjectClasses) {
+        List<Resource> resources = new ArrayList<>();
+        subjectClasses.forEach(subject ->
+                getShaclProperties(subject).keySet().forEach(statement ->
+                        resources.add(statement.getProperty(SHACL_PATH).getObject().asResource())));
+        return distinctResources(resources);
+    }
+
+    private List<Resource> distinctResources(List<Resource> resources) {
+        return resources.stream().map(Resource::toString).distinct().map(value -> model.createResource(value)).collect(Collectors.toList());
     }
 
     public List<Resource> listObjectsWithSubjectPredicate(List<Resource> subjects, Resource predicate) {
@@ -252,7 +283,6 @@ public class RDFModelUtil {
             });
             description.append("</ul>");
         }
-
         return description.toString();
     }
 }
