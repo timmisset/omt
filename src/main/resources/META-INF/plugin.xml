@@ -4,8 +4,6 @@
     <vendor email="tim.misset@ordina.nl" url="https://www.ordina.nl">Ordina</vendor>
 
     <description>Plugin for the OPP specific languages OMT and ODT</description>
-    <change-notes>Bugs 10 and 11 are fixed in this release
-    </change-notes>
     <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.java</depends>
     <depends>com.intellij.modules.all</depends>
