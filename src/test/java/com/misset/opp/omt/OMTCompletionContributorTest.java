@@ -1,8 +1,10 @@
 package com.misset.opp.omt;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.ExampleFiles;
+import com.misset.opp.omt.psi.util.ProjectUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +22,10 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
         super.setUp();
         myFixture.copyFileToProject(new File("src/test/resources/builtinCommands.ts").getAbsolutePath(), "builtinCommands.ts");
         myFixture.copyFileToProject(new File("src/test/resources/builtinOperators.ts").getAbsolutePath(), "builtinOperators.ts");
+        myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
         exampleFiles = new ExampleFiles(this);
+
+        ApplicationManager.getApplication().runReadAction(() -> ProjectUtil.SINGLETON.loadOntologyModel(getProject()));
     }
 
     @AfterEach
@@ -175,13 +180,40 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
         assertContainsElements(suggestions, BuiltInUtil.SINGLETON.getBuiltInOperatorsAsSuggestions());
     }
 
+    @Test
+    void completionProvider_addsSuggestionsForQueryPathFromModelReverse() {
+        List<String> suggestions = getSuggestions("" +
+                "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY myFirstQuery() => 'Hello world' / <caret>;\n");
+        assertContainsElements(suggestions, "^ont:stringProperty");
+    }
+
+    @Test
+    void completionProvider_addsSuggestionsForQueryPathFromModelForward() {
+        List<String> suggestions = getSuggestions("" +
+                "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY myFirstQuery() => 'Hello world' / ^ont:stringProperty / <caret>;\n");
+        assertContainsElements(suggestions, "ont:stringProperty", "^ont:classProperty");
+    }
+
+    @Test
+    void completionProvider_addsSuggestionsForQueryPathFromModelForwardForClass() {
+        List<String> suggestions = getSuggestions("" +
+                "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY myFirstQuery() => /ont:ClassA / <caret>;\n");
+        assertContainsElements(suggestions, "ont:stringProperty", "ont:classProperty", "ont:booleanProperty");
+    }
+
     private List<String> getSuggestions(String content) {
         myFixture.configureByText("test.omt", content);
         myFixture.completeBasic();
         return myFixture.getLookupElementStrings();
     }
 
-    @Test
-    void beforeCompletion() {
-    }
 }

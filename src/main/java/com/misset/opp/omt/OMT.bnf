@@ -89,7 +89,7 @@ namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)        
                                                                                          implements="com.misset.opp.omt.psi.named.OMTNamespacePrefixNamedElement"
                                                                                          methods=[getName setName getNameIdentifier]
                                                                                    }
-namespaceIri ::=                            start IRI end
+namespaceIri ::=                            start IRI end                          { methods = [getName getNamespace] }
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix getAsResource getPrefixName]}
 curieConstantElement ::=                    CURIE_CONSTANT_ELEMENT_PREFIX curieElement
 

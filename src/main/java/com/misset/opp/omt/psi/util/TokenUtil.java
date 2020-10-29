@@ -37,7 +37,16 @@ public class TokenUtil {
         if (isToken(constantValue.getFirstChild(), "OMTTokenType.STRING")) {
             return constantValue.getText().substring(1, constantValue.getTextLength() - 1);
         }
-        return null;
+        if (isToken(constantValue.getFirstChild(), "OMTTokenType.INTEGER")) {
+            return Integer.parseInt(constantValue.getText());
+        }
+        if (isToken(constantValue.getFirstChild(), "OMTTokenType.DECIMAL")) {
+            return Double.parseDouble(constantValue.getText());
+        }
+        if (isToken(constantValue.getFirstChild(), "OMTTokenType.BOOLEAN")) {
+            return constantValue.getText().equals("true");
+        }
+        return constantValue.getText();
     }
 
     private boolean isToken(PsiElement element, String debugName) {

@@ -14,9 +14,12 @@ import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.impl.OMTPsiImplUtil;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.util.*;
+import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
+import util.RDFModelUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +48,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private TokenUtil tokenUtil = TokenUtil.SINGLETON;
     private MemberUtil memberUtil = MemberUtil.SINGLETON;
+    private RDFModelUtil rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
 
 
     public OMTCompletionContributor() {
@@ -189,7 +193,18 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void setResolvedElementsFor(PsiElement elementAt, Class<? extends OMTDefinedStatement> definedType, BuiltInType builtInType) {
-        // first check if there are local variables available, they also have the highest suggestion priority
+        // check if the path can be resolved to a model based suggestion
+        OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(elementAt, parent -> parent instanceof OMTQueryStep);
+        if (queryStep != null) {
+            List<Resource> previousStep = OMTPsiImplUtil.getPreviousStep(queryStep);
+            OMTFile omtFile = (OMTFile) elementAt.getContainingFile();
+            rdfModelUtil.listPredicatesForSubjectClass(previousStep).forEach(resource ->
+                    addPriorityElement(omtFile.resourceToCurie(resource), 9));
+            rdfModelUtil.listPredicatesForObjectClass(previousStep).forEach(resource ->
+                    addPriorityElement(String.format("^%s", omtFile.resourceToCurie(resource)), 8));
+        }
+
+        // check if there are local variables available, they also have the highest suggestion priority
         variableUtil.getLocalVariables(elementAt).forEach(
                 (variableName, provider) -> addPriorityElement(variableName, 7)
         );
