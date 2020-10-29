@@ -22,7 +22,17 @@ public class OMTPsiImplUtil {
     private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
     private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private static final TokenUtil tokenUtil = TokenUtil.SINGLETON;
-    private static final RDFModelUtil rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
+    private static RDFModelUtil rdfModelUtil;
+
+    private static RDFModelUtil getRdfModelUtil() {
+        if (rdfModelUtil == null) {
+            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
+        }
+        if (!rdfModelUtil.isLoaded()) {
+            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
+        }
+        return rdfModelUtil;
+    }
 
     // ////////////////////////////////////////////////////////////////////////////
     // Variable
@@ -330,14 +340,14 @@ public class OMTPsiImplUtil {
         List<Resource> previousStep = getPreviousStep(step);
         if (step.getCurieElement() != null) {
             // a regular curie element will always originate from a previous query step since
-            return rdfModelUtil.listObjectsWithSubjectPredicate(previousStep, step.getCurieElement().getAsResource());
+            return getRdfModelUtil().listObjectsWithSubjectPredicate(previousStep, step.getCurieElement().getAsResource());
         }
         return new ArrayList<>();
     }
 
     public static List<Resource> resolveToResource(OMTQueryReverseStep step) {
         List<Resource> resources = getPreviousStep(step);
-        return rdfModelUtil.listSubjectsWithPredicateObjectClass(step.getQueryStep().getCurieElement().getAsResource(), resources);
+        return getRdfModelUtil().listSubjectsWithPredicateObjectClass(step.getQueryStep().getCurieElement().getAsResource(), resources);
     }
 
     public static List<Resource> getPreviousStep(PsiElement step) {
