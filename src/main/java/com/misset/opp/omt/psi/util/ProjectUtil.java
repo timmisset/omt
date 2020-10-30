@@ -18,6 +18,7 @@ import com.misset.opp.omt.external.util.builtIn.BuiltInType;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
+import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.settings.OMTSettingsState;
 import org.apache.jena.rdf.model.Model;
@@ -25,7 +26,10 @@ import util.RDFModelUtil;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static util.Helper.getResources;
@@ -160,13 +164,13 @@ public class ProjectUtil {
 
 
     private void registerPrefixes(OMTFile file) {
-        file.getPrefixes().forEach((namespacePrefix, omtPrefix) -> {
-            namespacePrefix = namespacePrefix.endsWith(":") ? namespacePrefix.substring(0, namespacePrefix.length() - 1) : namespacePrefix;
-            ArrayList<OMTPrefix> prefixes = knownPrefixes.getOrDefault(namespacePrefix, new ArrayList<>());
-            prefixes.add(omtPrefix);
-
-            knownPrefixes.put(namespacePrefix, prefixes);
-        });
+        file.getPrefixes().forEach((namespacePrefix, omtPrefix) -> Arrays.asList(omtPrefix.getNamespacePrefix().getName(), omtPrefix.getNamespaceIri().getNamespace())
+                .forEach(key -> {
+                    // register the prefix by namespace and prefix
+                    ArrayList<OMTPrefix> prefixes = knownPrefixes.getOrDefault(key, new ArrayList<>());
+                    prefixes.add(omtPrefix);
+                    knownPrefixes.put(key, prefixes);
+                }));
     }
 
     public List<OMTPrefix> getKnownPrefixes(String prefix) {
@@ -174,7 +178,13 @@ public class ProjectUtil {
         if (prefixName.endsWith(":")) {
             prefixName = prefixName.substring(0, prefixName.length() - 1);
         }
-        return knownPrefixes.getOrDefault(prefixName, new ArrayList<>());
+        return knownPrefixes.getOrDefault(prefixName, new ArrayList<>())
+                .stream().filter(distinctByKey(OMTPrefix::getName)).collect(Collectors.toList());
+    }
+
+    private <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Set<Object> seen = ConcurrentHashMap.newKeySet();
+        return t -> seen.add(keyExtractor.apply(t));
     }
 
     private void registerExports(OMTFile file) {
@@ -199,13 +209,17 @@ public class ProjectUtil {
     }
 
     public List<String> getExportedMembersAsSuggestions(boolean commands) {
-        List<String> exportedCommands = new ArrayList<>();
+        return getExportedMembers(commands).stream().map(OMTCallable::asSuggestion).distinct().collect(Collectors.toList());
+    }
+
+    public List<OMTExportMember> getExportedMembers(boolean commands) {
+        List<OMTExportMember> exportedCommands = new ArrayList<>();
         exportingMembers.values().forEach(omtExportMembers ->
                 omtExportMembers.stream()
                         .filter(omtExportMember -> (commands && omtExportMember.isCommand()) || (!commands && omtExportMember.isOperator()))
-                        .forEach(omtExportMember -> exportedCommands.add(omtExportMember.asSuggestion()))
+                        .forEach(exportedCommands::add)
         );
-        return exportedCommands.stream().distinct().collect(Collectors.toList());
+        return exportedCommands;
     }
 
     /**

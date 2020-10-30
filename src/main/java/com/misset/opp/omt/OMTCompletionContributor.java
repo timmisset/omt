@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.patterns.PlatformPatterns;
@@ -16,6 +17,7 @@ import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.impl.OMTPsiImplUtil;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
+import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.*;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +26,7 @@ import util.RDFModelUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,6 +51,8 @@ public class OMTCompletionContributor extends CompletionContributor {
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private TokenUtil tokenUtil = TokenUtil.SINGLETON;
     private MemberUtil memberUtil = MemberUtil.SINGLETON;
+    private CurieUtil curieUtil = CurieUtil.SINGLETON;
+    private ImportUtil importUtil = ImportUtil.SINGLETON;
     private RDFModelUtil rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
 
 
@@ -197,11 +202,8 @@ public class OMTCompletionContributor extends CompletionContributor {
         OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(elementAt, parent -> parent instanceof OMTQueryStep);
         if (queryStep != null) {
             List<Resource> previousStep = OMTPsiImplUtil.getPreviousStep(queryStep);
-            OMTFile omtFile = (OMTFile) elementAt.getContainingFile();
-            rdfModelUtil.listPredicatesForSubjectClass(previousStep).forEach(resource ->
-                    addPriorityElement(omtFile.resourceToCurie(resource), 9));
-            rdfModelUtil.listPredicatesForObjectClass(previousStep).forEach(resource ->
-                    addPriorityElement(String.format("^%s", omtFile.resourceToCurie(resource)), 8));
+            rdfModelUtil.listPredicatesForSubjectClass(previousStep).forEach(resource -> setCurieSuggestion(elementAt, resource, false, 9));
+            rdfModelUtil.listPredicatesForObjectClass(previousStep).forEach(resource -> setCurieSuggestion(elementAt, resource, true, 8));
         }
 
         // check if there are local variables available, they also have the highest suggestion priority
@@ -233,10 +235,57 @@ public class OMTCompletionContributor extends CompletionContributor {
         }
         builtInUtil.getBuiltInSuggestions(builtInType)
                 .forEach(suggestion -> addPriorityElement(suggestion, 2));
-        projectUtil.getExportedMembersAsSuggestions(builtInType == BuiltInType.Command).forEach(
-                suggestion -> addPriorityElement(suggestion, 1)
+        projectUtil.getExportedMembers(builtInType == BuiltInType.Command).forEach(
+                omtExportMember -> setImportMemberSuggestion(elementAt, omtExportMember, 1)
         );
         isResolved = true;
+    }
+
+    private void setImportMemberSuggestion(PsiElement elementAt, OMTExportMember exportMember, int priority) {
+        addPriorityElement(exportMember.asSuggestion(), priority, exportMember.asSuggestion(),
+                (context, item) -> {
+                    OMTFile omtFile = (OMTFile) context.getFile();
+                    if (!omtFile.hasImportFor(exportMember)) {
+                        List<String> importPaths = importUtil.getImportPaths(exportMember, omtFile);
+                        if (!importPaths.isEmpty()) {
+                            String importPath = importPaths.get(0);
+                            importUtil.addImportMemberToBlock(context.getFile(), importPath, exportMember.getName());
+                        }
+                    }
+                });
+    }
+
+    private void setCurieSuggestion(PsiElement elementAt, Resource resource, boolean reverse, int priority) {
+        OMTFile omtFile = (OMTFile) elementAt.getContainingFile();
+        String curieElement = omtFile.resourceToCurie(resource);
+        String title = curieElement;
+        AtomicBoolean registerPrefix = new AtomicBoolean(false);
+        if (curieElement.equals(resource.toString())) {
+            curieElement = getPrefixSuggestion(resource);
+            title = resource.toString();
+            registerPrefix.set(true);
+        }
+        if (reverse) {
+            title = "^" + title;
+            curieElement = "^" + curieElement;
+        }
+        addPriorityElement(curieElement, priority, title, (context, item) ->
+                // if the iri is not registered in the page, do it
+                ApplicationManager.getApplication().runWriteAction(() -> {
+                    if (registerPrefix.get()) {
+                        curieUtil.addPrefixToBlock(context.getFile(),
+                                item.getLookupString().split(":")[0].substring(reverse ? 1 : 0),
+                                resource.getNameSpace());
+                    }
+                }));
+    }
+
+    private String getPrefixSuggestion(Resource resource) {
+        List<OMTPrefix> knownPrefixes = projectUtil.getKnownPrefixes(resource.getNameSpace());
+        if (!knownPrefixes.isEmpty()) {
+            return knownPrefixes.get(0).getNamespacePrefix().getName() + ":" + resource.getLocalName();
+        }
+        return "test:" + resource.getLocalName();
     }
 
     // all suggestions for a command statement
@@ -252,14 +301,27 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void addPriorityElement(String text, int priority) {
-        addPriorityElement(text, priority, text);
+        addPriorityElement(text, priority, text, (context, item) -> {
+        });
     }
 
     private void addPriorityElement(String text, int priority, String title) {
+        addPriorityElement(text, priority, title, (context, item) -> {
+        });
+    }
+
+    private void addPriorityElement(String text, int priority, InsertHandler insertHandler) {
+        addPriorityElement(text, priority, text, insertHandler);
+    }
+
+    private void addPriorityElement(String text, int priority, String title, InsertHandler insertHandler) {
         if (resolvedSuggestions.contains(text)) {
             return;
         }
-        LookupElementBuilder lookupElementBuilder = LookupElementBuilder.create(text).withPresentableText(title);
+        LookupElementBuilder lookupElementBuilder = LookupElementBuilder
+                .create(text)
+                .withPresentableText(title)
+                .withInsertHandler(insertHandler);
         resolvedElements.add(PrioritizedLookupElement.withPriority(
                 lookupElementBuilder, priority
         ));

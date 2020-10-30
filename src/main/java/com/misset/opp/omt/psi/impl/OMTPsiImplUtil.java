@@ -223,6 +223,10 @@ public class OMTPsiImplUtil {
         return name.substring(name.indexOf("<") + 1, name.indexOf(">"));
     }
 
+    public static String getName(OMTPrefix prefix) {
+        return String.format("%s:%s", prefix.getNamespacePrefix().getName(), prefix.getNamespaceIri().getNamespace());
+    }
+
     /**
      * Returns the curie resolved to the full iri as a Resource in the loaded ontology model
      *
