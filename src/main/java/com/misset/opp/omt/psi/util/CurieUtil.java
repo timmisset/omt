@@ -123,6 +123,7 @@ public class CurieUtil {
                     });
         }
         if (!addNamespaceIri.isEmpty()) {
+            String trimmedNamespaceIri = addNamespaceIri.trim();
             prefixBlockBuilder
                     .append(OMTElementFactory.getIndentSpace(1))
                     .append(addNamespacePrefix)
@@ -130,7 +131,9 @@ public class CurieUtil {
             prefixBlockBuilder
                     // prefixlength + 1 for the colon, which is not included in the getName() of the existing prefixes
                     .append(OMTElementFactory.getIndentSpace(indents, addNamespacePrefix.length() + 1))
-                    .append(addNamespaceIri.trim());
+                    .append(trimmedNamespaceIri.startsWith("<") ? "" : "<")
+                    .append(trimmedNamespaceIri)
+                    .append(trimmedNamespaceIri.endsWith(">") ? "" : ">");
             prefixBlockBuilder.append("\n");
         }
         prefixBlockBuilder.append("\n");

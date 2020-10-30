@@ -227,6 +227,32 @@ public class OMTFile extends PsiFileBase {
         quickFormat();
     }
 
+    /**
+     * Checks if this file already has an import for this exporting member
+     *
+     * @param exportMember
+     * @return
+     */
+    public boolean hasImportFor(OMTExportMember exportMember) {
+        Optional<OMTBlockEntry> imports = getRootBlock("import");
+        if (!imports.isPresent()) {
+            return false;
+        }
+        Collection<OMTMember> importingMembers = PsiTreeUtil.findChildrenOfType(imports.get(), OMTMember.class);
+        for (OMTMember member : importingMembers) {
+            if (member.getReference() != null && member.getReference().resolve().equals(exportMember.getResolvingElement())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasImport(String importPath) {
+        return PsiTreeUtil.findChildrenOfType(this, OMTImport.class).stream().anyMatch(
+                omtImport -> omtImport.getImportSource().getImportLocation().getText().equals(importPath)
+        );
+    }
+
     public void quickFormat() {
         removeDuplicateEmptyLines();
     }

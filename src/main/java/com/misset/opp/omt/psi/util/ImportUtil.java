@@ -12,6 +12,9 @@ import com.misset.opp.omt.psi.support.OMTExportMember;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,16 +32,16 @@ public class ImportUtil {
         return psiManager;
     }
 
-    private static void addImportSource(String source, String leadingComment, String endOfLineComment, StringBuilder builder) {
+    private void addImportSource(String source, String leadingComment, String endOfLineComment, StringBuilder builder) {
         addLeadingComment(leadingComment, builder);
         builder
                 .append(OMTElementFactory.getIndentSpace(1))
-                .append(source.trim())
+                .append(formatImportPath(source))
                 .append(endOfLineComment.isEmpty() ? "" : (" " + endOfLineComment))
                 .append("\n");
     }
 
-    private static void addImportMember(String member, String leadingComment, String endOfLineComment, StringBuilder builder) {
+    private void addImportMember(String member, String leadingComment, String endOfLineComment, StringBuilder builder) {
         addLeadingComment(leadingComment, builder);
         builder.append(OMTElementFactory.getIndentSpace(1))
                 .append("-   ")
@@ -145,6 +148,38 @@ public class ImportUtil {
         resetImportBlock(element, importPath, importMember);
     }
 
+    /**
+     * Returns a @client and relative import options for the exporting member in the context of the importing file
+     * if the file already contains one of the options, that will be the only one showing
+     *
+     * @param exportMember
+     * @param importingFile
+     * @return
+     */
+    public List<String> getImportPaths(OMTExportMember exportMember, OMTFile importingFile) {
+        OMTFile exportingFile = (OMTFile) exportMember.getResolvingElement().getContainingFile();
+        String exportPath = exportingFile.getVirtualFile().getPath();
+
+        String importFilePath = importingFile.getVirtualFile().getPath();
+
+        Path relativize = new File(importFilePath).getParentFile().toPath().relativize(new File(exportPath).toPath());
+        exportPath = exportPath.replace("\\", "/");
+        String clientPath = "@client" + exportPath.substring(exportPath.indexOf("/frontend/libs") + "/frontend/libs".length());
+        if (importingFile.hasImport(clientPath)) {
+            return Collections.singletonList(clientPath);
+        }
+
+        String relativePath = relativize.toString().replace("\\", "/");
+        if (!relativePath.startsWith(".")) {
+            relativePath = "./" + relativePath;
+        }
+        if (importingFile.hasImport(relativePath)) {
+            return Collections.singletonList(relativePath);
+        }
+
+        return Arrays.asList(clientPath, relativePath);
+    }
+
     private void resetImportBlock(PsiElement element, String importPath, String importMember) {
         OMTFile targetFile = (OMTFile) element.getContainingFile();
         Optional<OMTBlockEntry> rootBlock = targetFile.getRootBlock("import");
@@ -175,7 +210,7 @@ public class ImportUtil {
                             }
 
                             // add new import if identical import path:
-                            if (!importProcessed.get() && omtImport.getImportSource().getText().trim().equals(importPath)) {
+                            if (!importProcessed.get() && sameImportLocation(omtImport, importPath)) {
                                 addImportMember(importMember, "", "", importBlockBuilder);
                                 importProcessed.set(true);
                             }
@@ -188,5 +223,24 @@ public class ImportUtil {
         }
         importBlockBuilder.append("\n");
         targetFile.setRootBlock((OMTImportBlock) OMTElementFactory.fromString(importBlockBuilder.toString(), OMTImportBlock.class, element.getProject()));
+    }
+
+    private boolean sameImportLocation(OMTImport omtImport, String path) {
+        return cleanUpPath(omtImport.getImportSource().getImportLocation().getText()).equals(cleanUpPath(path));
+    }
+
+    private String cleanUpPath(String path) {
+        path = path.trim();
+        path = path.startsWith("\"") ? path.substring(1) : path;
+        path = path.startsWith("'") ? path.substring(1) : path;
+        path = path.endsWith(":") ? path.substring(0, path.length() - 1) : path;
+        path = path.endsWith("\"") ? path.substring(0, path.length() - 1) : path;
+        path = path.endsWith("'") ? path.substring(0, path.length() - 1) : path;
+        return path;
+    }
+
+    private String formatImportPath(String path) {
+        path = cleanUpPath(path);
+        return String.format("'%s':", path);
     }
 }

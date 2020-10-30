@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -298,8 +299,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 "        onStart: |\n" +
                 "           'test' / ont:Something\n" +
                 "        ");
-        assertEquals(1, highlighting.size());
-        assertEquals("http://ontologie#Something", highlighting.get(0).getDescription());
+        assertContainsElements(highlighting.stream().map(HighlightInfo::getDescription).collect(Collectors.toList()), "http://ontologie#Something");
     }
 
     List<HighlightInfo> getHighlighting(String content) {

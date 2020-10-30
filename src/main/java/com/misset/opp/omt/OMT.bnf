@@ -83,7 +83,7 @@ importSource ::=                            importLocation (start EMPTY_ARRAY en
 importLocation ::=                          PROPERTY | IMPORT_PATH
 
 prefixBlock::=                              PREFIX_BLOCK_START trailing? (prefix+ | (indentToken prefix+ dedentToken))?
-prefix::=                                   leading? namespacePrefix namespaceIri trailing?
+prefix::=                                   leading? namespacePrefix namespaceIri trailing? { methods=[getName] }
 namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)            {
                                                                                          mixin="com.misset.opp.omt.psi.impl.OMTNamespacePrefixNamedElementImpl"
                                                                                          implements="com.misset.opp.omt.psi.named.OMTNamespacePrefixNamedElement"
