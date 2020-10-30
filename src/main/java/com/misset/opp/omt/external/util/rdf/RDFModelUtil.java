@@ -1,4 +1,4 @@
-package util;
+package com.misset.opp.omt.external.util.rdf;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.jena.rdf.model.*;
@@ -195,7 +195,14 @@ public class RDFModelUtil {
         return distinctResources(resources);
     }
 
+    public boolean isTypePredicate(Resource resource) {
+        return resource.toString().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+    }
+
     private Resource getPropertyFromSubjectPredicate(Resource subject, Resource predicate, Property property) {
+        if (isTypePredicate(predicate)) {
+            return subject;
+        }
         Optional<Statement> optionalPredicate = getSubjectPredicate(subject, predicate);
         if (optionalPredicate.isPresent()) {
             Statement statement = optionalPredicate.get();

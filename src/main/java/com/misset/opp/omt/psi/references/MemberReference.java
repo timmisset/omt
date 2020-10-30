@@ -3,11 +3,11 @@ package com.misset.opp.omt.psi.references;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.impl.OMTPsiImplUtil;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.util.ImportUtil;
 import com.misset.opp.omt.psi.util.MemberUtil;
+import com.misset.opp.omt.psi.util.PsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -98,19 +98,19 @@ public class MemberReference extends PsiReferenceBase<PsiElement> implements Psi
             default: // not possible, added for branch coverage
             case ImportingMember:
             case ExportingMember:
-                element = OMTPsiImplUtil.setName((OMTMember) super.myElement, newElementName);
+                element = PsiImplUtil.setName((OMTMember) super.myElement, newElementName);
                 break;
             case ModelItem:
-                element = OMTPsiImplUtil.setName((OMTModelItemLabel) super.myElement, newElementName);
+                element = PsiImplUtil.setName((OMTModelItemLabel) super.myElement, newElementName);
                 break;
             case DefineName:
-                element = OMTPsiImplUtil.setName((OMTDefineName) super.myElement, newElementName);
+                element = PsiImplUtil.setName((OMTDefineName) super.myElement, newElementName);
                 break;
             case OperatorCall:
-                element = OMTPsiImplUtil.setName((OMTOperatorCall) super.myElement, newElementName);
+                element = PsiImplUtil.setName((OMTOperatorCall) super.myElement, newElementName);
                 break;
             case CommandCall:
-                element = OMTPsiImplUtil.setName((OMTCommandCall) super.myElement, newElementName);
+                element = PsiImplUtil.setName((OMTCommandCall) super.myElement, newElementName);
                 break;
         }
         return element;

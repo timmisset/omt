@@ -1,23 +1,20 @@
-package com.misset.opp.omt.psi.impl;
+package com.misset.opp.omt.psi.util;
 
 
 import com.intellij.psi.PsiElement;
+import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
-import com.misset.opp.omt.psi.util.ProjectUtil;
-import com.misset.opp.omt.psi.util.TokenUtil;
-import com.misset.opp.omt.psi.util.VariableUtil;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
-import util.RDFModelUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class OMTPsiImplUtil {
+public class PsiImplUtil {
 
     private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
     private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
@@ -325,6 +322,31 @@ public class OMTPsiImplUtil {
         return resolvePathPart(path.getLastChild());
     }
 
+    public static List<Resource> filter(OMTQueryPath path, List<Resource> resources) {
+        return filter((OMTQueryStep) path.getLastChild(), resources);
+    }
+
+    public static List<Resource> filter(OMTQueryStep step, List<Resource> resources) {
+        List<Resource> previousStep = getPreviousStep(step);
+        if (step.getEquationStatement() == null || previousStep.stream().noneMatch(resource -> getRdfModelUtil().isTypePredicate(resource))) {
+            // no type filter, return all:
+            return resources;
+        }
+        List<Resource> acceptableResources = resolvePathPart(step.getEquationStatement().getLastChild());
+        if (acceptableResources.isEmpty()) {
+            // cannot resolve filter, return all:
+            return resources;
+        }
+        boolean negativeAssertion = step.getEquationStatement().getText().contains("NOT");
+        return negativeAssertion ?
+                // negative assertions are to complex to process for now, only support simple filter statement
+                // like [rdf:type == /ont:Something]
+                resources :
+                resources.stream().filter(resource -> acceptableResources.stream().anyMatch(
+                        matchingResource -> matchingResource.toString().equals(resource.toString())
+                )).collect(Collectors.toList());
+    }
+
     public static List<Resource> resolveToResource(OMTQueryStep step) {
         // steps that do not include preceeding info
         if (step.getCurieConstantElement() != null) {
@@ -343,8 +365,15 @@ public class OMTPsiImplUtil {
         // steps that require preceeding info
         List<Resource> previousStep = getPreviousStep(step);
         if (step.getCurieElement() != null) {
-            // a regular curie element will always originate from a previous query step since
-            return getRdfModelUtil().listObjectsWithSubjectPredicate(previousStep, step.getCurieElement().getAsResource());
+            // list based on the preceeding data
+            if (!previousStep.isEmpty()) {
+                return getRdfModelUtil().listObjectsWithSubjectPredicate(previousStep, step.getCurieElement().getAsResource());
+            }
+            // only resolve the curie at the current location, for example [ rdf:type == /ont:ClassA ]
+            return Collections.singletonList(step.getCurieElement().getAsResource());
+        }
+        if (step.getQueryFilter() != null) {
+            return step.getQueryFilter().getQueryPath().filter(previousStep);
         }
         return new ArrayList<>();
     }

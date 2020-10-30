@@ -5,11 +5,11 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.intentions.prefix.RegisterPrefixIntention;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
-import util.RDFModelUtil;
 
 import java.util.Collection;
 import java.util.List;
