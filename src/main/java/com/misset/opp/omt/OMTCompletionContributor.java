@@ -14,14 +14,13 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
+import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.impl.OMTPsiImplUtil;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.*;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
-import util.RDFModelUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -201,7 +200,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         // check if the path can be resolved to a model based suggestion
         OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(elementAt, parent -> parent instanceof OMTQueryStep);
         if (queryStep != null) {
-            List<Resource> previousStep = OMTPsiImplUtil.getPreviousStep(queryStep);
+            List<Resource> previousStep = PsiImplUtil.getPreviousStep(queryStep);
             rdfModelUtil.listPredicatesForSubjectClass(previousStep).forEach(resource -> setCurieSuggestion(elementAt, resource, false, 9));
             rdfModelUtil.listPredicatesForObjectClass(previousStep).forEach(resource -> setCurieSuggestion(elementAt, resource, true, 8));
         }

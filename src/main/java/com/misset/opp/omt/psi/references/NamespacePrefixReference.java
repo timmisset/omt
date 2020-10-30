@@ -6,8 +6,8 @@ import com.misset.opp.omt.psi.OMTCurieElement;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
 import com.misset.opp.omt.psi.OMTParameterType;
 import com.misset.opp.omt.psi.OMTPrefix;
-import com.misset.opp.omt.psi.impl.OMTPsiImplUtil;
 import com.misset.opp.omt.psi.util.CurieUtil;
+import com.misset.opp.omt.psi.util.PsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -61,6 +61,6 @@ public class NamespacePrefixReference extends PsiReferenceBase<PsiElement> imple
 
     @Override
     public PsiElement handleElementRename(@NotNull String newElementName) {
-        return OMTPsiImplUtil.setName((OMTNamespacePrefix) getElement(), newElementName);
+        return PsiImplUtil.setName((OMTNamespacePrefix) getElement(), newElementName);
     }
 }

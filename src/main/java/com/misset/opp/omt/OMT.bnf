@@ -12,7 +12,7 @@
   elementTypeClass="com.misset.opp.omt.psi.OMTElementType"
   tokenTypeClass="com.misset.opp.omt.psi.OMTTokenType"
 
-  psiImplUtilClass="com.misset.opp.omt.psi.impl.OMTPsiImplUtil"
+  psiImplUtilClass="com.misset.opp.omt.psi.util.PsiImplUtil"
 }
 
 // the end of the file (or the entire file) can be a (set of) comment(s)
@@ -212,11 +212,11 @@ removeFromCollection ::=                    queryPath trailing? REMOVE trailing?
 // A queryPath consists of one or more querySteps. A queryStep can be considered forward or reverse (indicated by ^)
 // to reduce the complexity of parsing, slashes will be captured but are not required
 queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+ (PIPE queryPath)?
-                                            { methods = [ resolveToResource ]}
+                                            { methods = [ resolveToResource filter ]}
 queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
                                             operatorCall | IRI | DOT | OWLPROPERTY | subQuery | CONDITIONAL_OPERATOR |
                                             queryFilter | trailing | leading | chooseBlock | interpolatedString | PLUS | ASTERIX
-                                            { methods = [ resolveToResource ]}
+                                            { methods = [ resolveToResource filter ]}
 queryReverseStep ::=                        CARET queryStep { methods = [ resolveToResource ]}
 
 // a query filter is contained by brackets [] and should resolve to boolean
