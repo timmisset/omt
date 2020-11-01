@@ -1,6 +1,7 @@
 package com.misset.opp.omt;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.ExampleFiles;
@@ -8,6 +9,7 @@ import com.misset.opp.omt.psi.util.ProjectUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockitoAnnotations;
 
 import java.io.File;
 import java.util.List;
@@ -20,6 +22,8 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
     void setUpSuite() throws Exception {
         super.setName("OMTCompletionContributorTest");
         super.setUp();
+        MockitoAnnotations.initMocks(this);
+
         myFixture.copyFileToProject(new File("src/test/resources/builtinCommands.ts").getAbsolutePath(), "builtinCommands.ts");
         myFixture.copyFileToProject(new File("src/test/resources/builtinOperators.ts").getAbsolutePath(), "builtinOperators.ts");
         myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
@@ -210,10 +214,45 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
         assertContainsElements(suggestions, "ont:stringProperty", "ont:classProperty", "ont:booleanProperty");
     }
 
+    @Test
+    void completionProviders_addsSuggestionsForImport() {
+        String exportData = "queries: |\n" +
+                "   DEFINE QUERY myQuery() => 'hello';\n" +
+                "";
+
+        copyFileToProject(exportData, "frontend/libs", "exportFile.omt");
+
+        List<String> suggestions = getSuggestions("" +
+                "import:\n" +
+                "    '@client/exportFile.omt':\n" +
+                "    <caret>\n");
+        assertContainsElements(suggestions, " - myQuery");
+    }
+
+    @Test
+    void completionProviders_addsSuggestionsForImport2() {
+        String exportData = "queries: |\n" +
+                "   DEFINE QUERY myQuery() => 'hello';\n" +
+                "";
+
+        copyFileToProject(exportData, "frontend/libs", "exportFile.omt");
+
+        List<String> suggestions = getSuggestions("" +
+                "import:\n" +
+                "    '@client/exportFile.omt':\n" +
+                "    - <caret>\n");
+        assertContainsElements(suggestions, "myQuery");
+    }
+
     private List<String> getSuggestions(String content) {
-        myFixture.configureByText("test.omt", content);
+        myFixture.configureFromExistingVirtualFile(copyFileToProject(content, "tmp", "test.omt"));
         myFixture.completeBasic();
         return myFixture.getLookupElementStrings();
+    }
+
+    private VirtualFile copyFileToProject(String content, String folder, String fileName) {
+        String target = String.format("%s/%s", folder, fileName);
+        return myFixture.addFileToProject(target, content).getVirtualFile();
     }
 
 }

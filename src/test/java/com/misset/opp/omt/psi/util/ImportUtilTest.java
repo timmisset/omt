@@ -76,6 +76,7 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
             doReturn(psiFile).when(omtImport).getContainingFile();
             doReturn(virtualFile).when(psiFile).getVirtualFile();
+            doReturn("myUrl").when(virtualFile).getUrl();
             doReturn(project).when(omtImport).getProject();
         });
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());

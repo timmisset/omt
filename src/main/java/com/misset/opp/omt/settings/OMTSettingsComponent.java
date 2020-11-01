@@ -5,6 +5,7 @@ import com.intellij.openapi.ui.TextBrowseFolderListener;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.SystemInfo;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.util.ui.FormBuilder;
 import org.jdesktop.swingx.JXTitledSeparator;
@@ -20,6 +21,7 @@ public class OMTSettingsComponent {
     private final TextFieldWithBrowseButton builtInHttpCommandsLocation = getFileLocationSetting("http-commands.ts");
     private final TextFieldWithBrowseButton builtInParseJsonCommandLocation = getFileLocationSetting("json-parse-command.ts");
     private final TextFieldWithBrowseButton ontologyModelRootPath = getFileLocationSetting("root.ttl");
+    private final JBCheckBox includeMochaFolderImportSuggestions = new JBCheckBox("Suggest imports from mocha subfolders");
 
     public OMTSettingsComponent() {
         myMainPanel = FormBuilder.createFormBuilder()
@@ -31,6 +33,8 @@ public class OMTSettingsComponent {
                 .addComponent(new JXTitledSeparator("Ontology root"))
                 .addLabeledComponent(new JBLabel("Ontology model root:"), ontologyModelRootPath, 1, false)
                 .addComponentFillVertically(new JPanel(), 0)
+                .addComponent(new JXTitledSeparator("Imports"))
+                .addComponent(includeMochaFolderImportSuggestions)
                 .getPanel();
     }
 
@@ -95,5 +99,14 @@ public class OMTSettingsComponent {
 
     public void setOntologyModelRootPath(@NotNull String newText) {
         ontologyModelRootPath.setText(newText);
+    }
+
+    @NotNull
+    public boolean getIncludeMochaFolderImportSuggestions() {
+        return includeMochaFolderImportSuggestions.isSelected();
+    }
+
+    public void setIncludeMochaFolderImportSuggestions(boolean selected) {
+        includeMochaFolderImportSuggestions.setSelected(selected);
     }
 }

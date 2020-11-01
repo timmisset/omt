@@ -7,6 +7,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 
@@ -50,22 +52,36 @@ public class ImportUtil {
                 .append("\n");
     }
 
+
     public VirtualFile getImportedFile(OMTImport omtImport) {
-        VirtualFile currentFile = omtImport.getContainingFile().getVirtualFile();
+        return getImportedFile(omtImport, omtImport.getContainingFile().getVirtualFile());
+    }
+
+    public VirtualFile getImportedFile(OMTImport omtImport, VirtualFile importingFile) {
         String importLocation = omtImport.getImportSource().getImportLocation().getText();
         importLocation = importLocation.replaceAll("[\'\":]", "");
+
+        // Fix to allow testing the completion which is triggered in the fixture
+        // The fixture will copy files in a temp memory index only so the files do not exist
+        // and thus cannot be resolved. Also there is no method to stub this behavior since
+        // most of the process is performed using static classes
+        // ugly solition: defer the virtualfile via the FilenameIndex:
+        if (importingFile.getUrl().startsWith("temp:///")) {
+            String[] split = importLocation.split("/");
+            return FilenameIndex.getFilesByName(omtImport.getProject(), split[split.length - 1], GlobalSearchScope.allScope(omtImport.getProject()))[0].getVirtualFile();
+        }
 
         String relativePath = null;
         if (importLocation.startsWith("@")) {
             String basePath = omtImport.getProject().getBasePath();
-            String mappedLocation = String.format("%s/%s", basePath, getMappedLocation(importLocation));
-            relativePath = getRelativePath(mappedLocation, currentFile);
+            importLocation = String.format("%s/%s", basePath, getMappedLocation(importLocation));
+            relativePath = getRelativePath(importLocation, importingFile);
         } else if (importLocation.startsWith(".")) {
             relativePath = "../" + importLocation;
         } else if (importLocation.startsWith(MODULE)) {
-            relativePath = getRelativePath(getModuleLocation(importLocation), currentFile);
+            relativePath = getRelativePath(getModuleLocation(importLocation), importingFile);
         }
-        return relativePath != null ? currentFile.findFileByRelativePath(relativePath) : null;
+        return relativePath != null ? importingFile.findFileByRelativePath(relativePath) : null;
     }
 
     private String getRelativePath(String path, VirtualFile currentFile) {
@@ -192,19 +208,20 @@ public class ImportUtil {
             omtBlockEntry.getImportList()
                     .forEach(omtImport -> {
                         if (omtImport.getImportSource().getName() != null) {
-                            String leadingComment = omtImport.getLeading() != null ? omtImport.getLeading().getText() : "";
-                            String trailingComment = omtImport.getTrailing() != null ? omtImport.getTrailing().getText() : "";
-                            addImportSource(omtImport.getImportSource().getName(), leadingComment, trailingComment, importBlockBuilder);
+                            if ((omtImport.getMemberList() != null && !omtImport.getMemberList().getMemberListItemList().isEmpty()) ||
+                                    sameImportLocation(omtImport, importPath)) {
+                                String leadingComment = omtImport.getLeading() != null ? omtImport.getLeading().getText() : "";
+                                String trailingComment = omtImport.getTrailing() != null ? omtImport.getTrailing().getText() : "";
+                                addImportSource(omtImport.getImportSource().getName(), leadingComment, trailingComment, importBlockBuilder);
+                            }
 
                             // add existing imports
                             if (omtImport.getMemberList() != null) {
                                 omtImport.getMemberList().getMemberListItemList().forEach(
                                         memberItem -> {
-                                            if (memberItem.getMember().getName() != null) {
-                                                String leadingMemberComment = memberItem.getLeading() != null ? memberItem.getLeading().getText() : "";
-                                                String trailingMemberComment = memberItem.getMember().getEnd().getTrailing() != null ? memberItem.getMember().getEnd().getTrailing().getText() : "";
-                                                addImportMember(memberItem.getMember().getName(), leadingMemberComment, trailingMemberComment, importBlockBuilder);
-                                            }
+                                            String leadingMemberComment = memberItem.getLeading() != null ? memberItem.getLeading().getText() : "";
+                                            String trailingMemberComment = memberItem.getMember().getEnd().getTrailing() != null ? memberItem.getMember().getEnd().getTrailing().getText() : "";
+                                            addImportMember(memberItem.getMember().getName(), leadingMemberComment, trailingMemberComment, importBlockBuilder);
                                         }
                                 );
                             }
@@ -230,6 +247,9 @@ public class ImportUtil {
     }
 
     private String cleanUpPath(String path) {
+        if (path == null) {
+            return "";
+        }
         path = path.trim();
         path = path.startsWith("\"") ? path.substring(1) : path;
         path = path.startsWith("'") ? path.substring(1) : path;

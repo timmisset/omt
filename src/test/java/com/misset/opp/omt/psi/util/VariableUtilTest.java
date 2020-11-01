@@ -47,7 +47,7 @@ class VariableUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @BeforeEach
     void setUpSuite() throws Exception {
-        super.setName("MemberUtilTest");
+        super.setName("VariableUtilTest");
         super.setUp();
 
         MockitoAnnotations.initMocks(this);

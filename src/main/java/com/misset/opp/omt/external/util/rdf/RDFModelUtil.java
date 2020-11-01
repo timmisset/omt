@@ -21,6 +21,8 @@ public class RDFModelUtil {
     public static final Property SHACL_MAXCOUNT = new PropertyImpl("http://www.w3.org/ns/shacl#maxCount");
     public static final Property SHACL_MINCOUNT = new PropertyImpl("http://www.w3.org/ns/shacl#minCount");
     public static final Property RDFS_SUBCLASS = new PropertyImpl("http://www.w3.org/2000/01/rdf-schema#subClassOf");
+
+    public static final String XSD = "http://www.w3.org/2001/XMLSchema#";
     /**
      * RDF TYPE alias 'a' in usage => some:thing a ClassName == some:thing rdf:type ClassName
      */
@@ -137,7 +139,7 @@ public class RDFModelUtil {
      */
     public List<Resource> listSubjectsWithPredicateObjectClass(Resource predicate, Resource targetClass) {
 
-        ResIterator shaclsPointingToTargetClass = targetClass.getNameSpace().equals("http://www.w3.org/2001/XMLSchema#") ?
+        ResIterator shaclsPointingToTargetClass = targetClass.getNameSpace().equals(XSD) ?
                 model.listSubjectsWithProperty(SHACL_DATATYPE, targetClass) :
                 model.listSubjectsWithProperty(SHACL_CLASS, targetClass);
         List<Resource> resources = new ArrayList<>();
@@ -160,7 +162,7 @@ public class RDFModelUtil {
     public List<Resource> listPredicatesForObjectClass(List<Resource> objectClasses) {
         List<Resource> resources = new ArrayList<>();
         objectClasses.forEach(object -> {
-            ResIterator shaclsPointingToTargetClass = object.getNameSpace().equals("http://www.w3.org/2001/XMLSchema#") ?
+            ResIterator shaclsPointingToTargetClass = object.getNameSpace().equals(XSD) ?
                     model.listSubjectsWithProperty(SHACL_DATATYPE, object) :
                     model.listSubjectsWithProperty(SHACL_CLASS, object);
 
@@ -197,6 +199,10 @@ public class RDFModelUtil {
 
     public boolean isTypePredicate(Resource resource) {
         return resource.toString().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+    }
+
+    public Resource getPrimitiveTypeAsResource(String name) {
+        return model.createResource(String.format("%s%s", XSD, name));
     }
 
     private Resource getPropertyFromSubjectPredicate(Resource subject, Resource predicate, Property property) {

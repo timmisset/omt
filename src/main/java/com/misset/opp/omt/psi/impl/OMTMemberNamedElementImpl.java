@@ -26,7 +26,8 @@ public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement imp
 
     private NamedMemberType type;
 
-    private NamedMemberType getType() {
+    @Override
+    public NamedMemberType getType() {
         if (type == null) {
             type = memberUtil.getNamedMemberType(getPsi());
         }

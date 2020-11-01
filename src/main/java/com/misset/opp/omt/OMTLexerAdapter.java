@@ -14,6 +14,9 @@ public class OMTLexerAdapter extends FlexAdapter {
 
     @Override
     public void start(@NotNull CharSequence buffer, int startOffset, int endOffset, int initialState) {
-        super.start(buffer, 0, endOffset, initialState);
+
+        super.start(buffer, 0, endOffset, 0);
     }
+
+
 }

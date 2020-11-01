@@ -14,6 +14,10 @@
                                implementationClass="com.misset.opp.omt.OMTParserDefinition"/>
         <lang.syntaxHighlighterFactory language="OMT"
                                        implementationClass="com.misset.opp.omt.OMTSyntaxHighlighterFactory"/>
+        <codeInsight.parameterNameHints language="OMT"
+                                        implementationClass="com.misset.opp.omt.OMTParameterHints"
+        ></codeInsight.parameterNameHints>
+        <enterHandlerDelegate implementation="com.misset.opp.omt.OMTEnterTypedHandler"/>
         <colorSettingsPage implementation="com.misset.opp.omt.OMTColorSettingsPage"/>
         <annotator language="OMT" implementationClass="com.misset.opp.omt.OMTAnnotator"/>
         <completion.contributor language="OMT"

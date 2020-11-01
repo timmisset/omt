@@ -131,12 +131,13 @@ variableValue ::=                           queryPath | commandCall | constant_v
 variable ::=                                VARIABLE_NAME | ignoredVariable | globalVariable {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTVariableNamedElementImpl"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTVariableNamedElement"
-                                                                                 methods=[getName setName isDeclaredVariable isIgnoredVariable isGlobalVariable getNameIdentifier]
+                                                                                 methods=[getName setName isDeclaredVariable isIgnoredVariable isGlobalVariable getNameIdentifier getType]
                                                                                }
 // the lexer should determine if operating in a state of declare and provide a difference response for the discovered variable name
 globalVariable ::=                          GLOBAL_VARIABLE_NAME
 ignoredVariable ::=                         IGNORE_VARIABLE_NAME
-parameterWithType ::=                       variable PARENTHESES_OPEN (parameterType | OPERATOR) PARENTHESES_CLOSE
+parameterWithType ::=                       variable PARENTHESES_OPEN (parameterType | OPERATOR) PARENTHESES_CLOSE { methods=[ getType ]}
+
 parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) {
     methods = [isDefinedByPrefix getAsResource]
 }

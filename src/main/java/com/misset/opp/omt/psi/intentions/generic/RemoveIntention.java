@@ -8,6 +8,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.util.CurieUtil;
+import com.misset.opp.omt.psi.util.ImportUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,6 +18,7 @@ public class RemoveIntention {
     public static final RemoveIntention SINGLETON = new RemoveIntention();
 
     private CurieUtil curieUtil = CurieUtil.SINGLETON;
+    private ImportUtil importUtil = ImportUtil.SINGLETON;
 
     public IntentionAction getRemoveIntention(PsiElement element) {
         return getRemoveIntention(element, "Remove");
@@ -56,9 +58,9 @@ public class RemoveIntention {
     }
 
     private void deleteElementContainer(PsiElement element) {
+        PsiFile containingFile = element.getContainingFile();
         if (element instanceof OMTNamespacePrefix) {
             if (element.getParent() instanceof OMTPrefix) {
-                PsiFile containingFile = element.getContainingFile();
                 element.getParent().delete();
                 curieUtil.resetPrefixBlock(containingFile);
             }
@@ -69,6 +71,10 @@ public class RemoveIntention {
             if (omtSequenceItems.size() == 1) {
                 omtSequenceItems.get(0).delete();
             }
+        }
+        if (element instanceof OMTMemberListItem) {
+            element.delete();
+            importUtil.resetImportBlock(containingFile);
         }
     }
 }

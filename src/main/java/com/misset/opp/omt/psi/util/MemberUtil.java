@@ -15,6 +15,7 @@ import com.misset.opp.omt.external.util.builtIn.BuiltInType;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.impl.OMTExportMemberImpl;
+import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
 import com.misset.opp.omt.psi.intentions.members.MemberIntention;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.support.*;
@@ -30,6 +31,7 @@ public class MemberUtil {
     private ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
     private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
     private MemberIntention memberIntention = MemberIntention.SINGLETON;
+    private RemoveIntention removeIntention = RemoveIntention.SINGLETON;
 
     public static final MemberUtil SINGLETON = new MemberUtil();
 
@@ -368,5 +370,23 @@ public class MemberUtil {
             default:
         }
         return null;
+    }
+
+    public void annotateImportedMember(OMTMember importedMember, AnnotationHolder holder) {
+        PsiElement reference = importedMember.getReference().resolve();
+        if (reference != null) {
+            Collection<OMTCall> calls = PsiTreeUtil.findChildrenOfType(importedMember.getContainingFile(), OMTCall.class);
+            for (OMTCall call : calls) {
+                if (call.getReference() != null && call.getReference().isReferenceTo(reference)) {
+                    return;
+                }
+            }
+            // import is not used:
+            holder.newAnnotation(HighlightSeverity.WARNING, String.format(
+                    "%s is not used", importedMember.getName()
+            )).withFix(removeIntention.getRemoveIntention(
+                    PsiTreeUtil.findFirstParent(importedMember, parent -> parent instanceof OMTMemberListItem)
+            )).create();
+        }
     }
 }

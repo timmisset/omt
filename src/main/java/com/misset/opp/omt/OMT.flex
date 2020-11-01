@@ -45,7 +45,7 @@ NAME=                           {ALPHA}({ALPHA}|{DIGIT}|{UNDERSCORE})*
 CURIE=                          ({NAME})?":"{SYMBOL}
 TYPED_VALUE=                    {STRING}"^^"({IRI}|{CURIE})
 IMPORT_PATH=                    (\.{1,2}[^:]*:)
-PROPERTY_KEY=                   {IMPORT_PATH} | (({STRING}|{NAME})({WHITE_SPACE}*)":"({WHITE_SPACE}+ | {NEWLINE}))
+PROPERTY_KEY=                   {IMPORT_PATH} | (({STRING}|{NAME})({WHITE_SPACE}*)":")
 
 %{
 /* globals to track current indentation */
@@ -268,7 +268,7 @@ void setTemplateInScalar(boolean state) {
                                                                     if(inScalarBlock) {
                                                                         yypushback(1, "yaml_scalar");
                                                                         return returnElement(OMTTypes.OPERATOR); }
-                                                                    else { return retryInInitial("propetry key outside scalar block"); }
+                                                                    else { return retryInInitial("property key outside scalar block"); }
                                                               }
     "- "                                                      {
                                                                     if(inScalarBlock) {

@@ -4,6 +4,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.misset.opp.omt.psi.OMTConstantValue;
+import com.misset.opp.omt.psi.OMTMember;
+import com.misset.opp.omt.psi.named.NamedMemberType;
 
 public class TokenUtil {
 
@@ -25,12 +27,22 @@ public class TokenUtil {
         return isToken(element, "OMTTokenType.OPERATOR");
     }
 
+    public boolean isMemberImport(PsiElement element) {
+        return isOperator(element) &&
+                element.getParent() instanceof OMTMember &&
+                ((OMTMember) element.getParent()).getType() == NamedMemberType.ImportingMember;
+    }
+
     public boolean isSemiColon(PsiElement element) {
         return isToken(element, "OMTTokenType.SEMICOLON");
     }
 
     public boolean isWhiteSpace(PsiElement element) {
         return element instanceof PsiWhiteSpace;
+    }
+
+    public boolean isSequenceBullet(PsiElement element) {
+        return isToken(element, "OMTTokenType.SEQUENCE_BULLET");
     }
 
     public Object parseToTypedLiteral(OMTConstantValue constantValue) {

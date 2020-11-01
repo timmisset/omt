@@ -7,9 +7,12 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
@@ -19,6 +22,7 @@ import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.*;
+import com.misset.opp.omt.settings.OMTSettingsState;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,11 +32,13 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class OMTCompletionContributor extends CompletionContributor {
 
     private static String DUMMY_SCALAR = "DUMMYSCALARVALUE";
     private static String DUMMY_PROPERTY = "DUMMYPROPERTYVALUE:";
+    private static String DUMMY_IMPORT = "- DUMMYIMPORT";
     private static String DUMMY_ENTRY = String.format("%s %s", DUMMY_PROPERTY, DUMMY_SCALAR);
     private static String SEMICOLON = ";";
 
@@ -89,8 +95,15 @@ public class OMTCompletionContributor extends CompletionContributor {
                     return;
                 }
                 if (tokenUtil.isOperator(element)) {
+                    if (tokenUtil.isMemberImport(element)) {
+                        setResolvedElementsForImport(
+                                PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTImport),
+                                false, parameters.getOriginalPosition());
+                        result.addAllElements(resolvedElements);
+                        return;
+                    }
                     setResolvedElementsForOperator(element);
-                    result.addAllElements(resolvedElements);
+                    resolvedElements.forEach(result::addElement);
                 }
             }
         };
@@ -159,7 +172,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         }
         // find the PsiElement containing the caret:
 
-        if (element instanceof OMTFile) {
+        if (element instanceof OMTFile || element instanceof PsiErrorElement) {
             List<String> expectedTypesAtDummyBlock = getExpectedTypeAtOMTFile(elementAtCaret, false);
             setDummyContextFromExpectedList(expectedTypesAtDummyBlock, context, hasValuePosition(elementAtCaret, context));
             return;
@@ -193,6 +206,12 @@ public class OMTCompletionContributor extends CompletionContributor {
                     trySuggestionsForCurrentElementAt(child, elementAtCaret, context);
                 }
             });
+        }
+        if (element instanceof OMTImportBlock) {
+            // get the import itself:
+            setResolvedElementsForImport(elementAtCaret, true, elementAtCaret);
+            isResolved = true;
+            return;
         }
     }
 
@@ -235,15 +254,43 @@ public class OMTCompletionContributor extends CompletionContributor {
         builtInUtil.getBuiltInSuggestions(builtInType)
                 .forEach(suggestion -> addPriorityElement(suggestion, 2));
         projectUtil.getExportedMembers(builtInType == BuiltInType.Command).forEach(
-                omtExportMember -> setImportMemberSuggestion(elementAt, omtExportMember, 1)
+                omtExportMember -> setImportMemberSuggestion(omtExportMember, 1)
         );
         isResolved = true;
     }
 
-    private void setImportMemberSuggestion(PsiElement elementAt, OMTExportMember exportMember, int priority) {
-        addPriorityElement(exportMember.asSuggestion(), priority, exportMember.asSuggestion(),
+    private void setImportMemberSuggestion(OMTExportMember exportMember, int priority) {
+        if (exportMember.getResolvingElement() == null || exportMember.getResolvingElement().getContainingFile() == null) {
+            return;
+        }
+        final PsiFile containingFile = exportMember.getResolvingElement().getContainingFile();
+
+        // filter out suggestions from mocha subfolders
+        OMTSettingsState settings = OMTSettingsState.getInstance();
+        if (!settings.includeMochaFolderImportSuggestions &&
+                containingFile.getVirtualFile() != null &&
+                containingFile.getVirtualFile().getPath().contains("/mocha/")
+        ) {
+            return;
+        }
+
+        String title = String.format("%s from %s/%s",
+                exportMember.asSuggestion(),
+                containingFile.getContainingDirectory() != null ?
+                        containingFile.getContainingDirectory().getName() :
+                        "<root>",
+                containingFile.getName()
+        );
+        addPriorityElement(title, priority, title,
                 (context, item) -> {
                     OMTFile omtFile = (OMTFile) context.getFile();
+                    // we need to replace the full text with the exportMember asSuggestion only
+                    // this is required because the completion list filteres for distinct completions meanings that multiple usages
+                    // of the same query name are not all listed unless fully specified
+                    int startOffset = context.getStartOffset();
+                    int endOffset = context.getTailOffset();
+                    context.getDocument().replaceString(startOffset, endOffset, exportMember.asSuggestion());
+                    context.commitDocument();
                     if (!omtFile.hasImportFor(exportMember)) {
                         List<String> importPaths = importUtil.getImportPaths(exportMember, omtFile);
                         if (!importPaths.isEmpty()) {
@@ -252,6 +299,33 @@ public class OMTCompletionContributor extends CompletionContributor {
                         }
                     }
                 });
+    }
+
+    private void setResolvedElementsForImport(PsiElement elementAtCaret, boolean includeLeadingBullet, PsiElement originalElement) {
+        PsiElement sibling = elementAtCaret;
+        while (sibling != null && !(sibling instanceof OMTImport)) {
+            sibling = sibling.getPrevSibling();
+        }
+        if (sibling != null) {
+            OMTImport omtImport = (OMTImport) sibling;
+            VirtualFile importedFile = importUtil.getImportedFile(omtImport, originalElement.getContainingFile().getVirtualFile());
+            List<String> existingImports =
+                    omtImport.getMemberList() == null ? new ArrayList<>() :
+                            omtImport.getMemberList().getMemberListItemList()
+                                    .stream()
+                                    .map(OMTMemberListItem::getMember)
+                                    .map(OMTMember::getName)
+                                    .collect(Collectors.toList());
+            OMTFile omtFile = importedFile == null ? null : (OMTFile) PsiManager.getInstance(elementAtCaret.getProject()).findFile(importedFile);
+            if (omtFile != null) {
+                omtFile.getExportedMembers().values().stream()
+                        .filter(exportMember -> !existingImports.contains(exportMember.getName()))
+                        .forEach(exportMember -> resolvedElements.add(LookupElementBuilder.create(
+                                String.format("%s%s", includeLeadingBullet ? " - " : "", exportMember.getName())
+                        ).withPresentableText(exportMember.getName())));
+            }
+            isResolved = true;
+        }
     }
 
     private void setCurieSuggestion(PsiElement elementAt, Resource resource, boolean reverse, int priority) {
@@ -314,7 +388,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void addPriorityElement(String text, int priority, String title, InsertHandler insertHandler) {
-        if (resolvedSuggestions.contains(text)) {
+        if (resolvedSuggestions.contains(title)) {
             return;
         }
         LookupElementBuilder lookupElementBuilder = LookupElementBuilder
@@ -324,7 +398,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         resolvedElements.add(PrioritizedLookupElement.withPriority(
                 lookupElementBuilder, priority
         ));
-        resolvedSuggestions.add(text);
+        resolvedSuggestions.add(title);
     }
 
     private void setDummyContextFromExpectedList(List<String> expectedTypes, @NotNull CompletionInitializationContext context, boolean hasValuePosition) {
@@ -339,6 +413,9 @@ public class OMTCompletionContributor extends CompletionContributor {
         // indicates that the current line isn't properly closed with a semicolon.
         if (expectedTypes.contains("SEMICOLON") || expectedTypes.contains("query path")) {
             setDummyPlaceHolder(String.format("%s%s", DUMMY_SCALAR, SEMICOLON), context);
+        }
+        if (expectedTypes.contains("import $")) {
+            setDummyPlaceHolder(DUMMY_IMPORT, context);
         }
     }
 
