@@ -58,7 +58,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     private MemberUtil memberUtil = MemberUtil.SINGLETON;
     private CurieUtil curieUtil = CurieUtil.SINGLETON;
     private ImportUtil importUtil = ImportUtil.SINGLETON;
-    private RDFModelUtil rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
+    private RDFModelUtil rdfModelUtil;
 
 
     public OMTCompletionContributor() {
@@ -66,6 +66,13 @@ public class OMTCompletionContributor extends CompletionContributor {
          * Generic completion that resolves the suggestion based on the cursor position
          */
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), getCompletionProvider());
+    }
+
+    private RDFModelUtil getRDFModel() {
+        if (rdfModelUtil == null || !rdfModelUtil.isLoaded()) {
+            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
+        }
+        return rdfModelUtil;
     }
 
     private CompletionProvider<CompletionParameters> getCompletionProvider() {
@@ -166,7 +173,10 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void trySuggestionsForCurrentElementAt(PsiElement element, PsiElement elementAtCaret, CompletionInitializationContext context) {
-        if (element instanceof OMTBlockEntry || element instanceof OMTBlock || element instanceof OMTModelBlock) {
+        if (element instanceof OMTBlockEntry ||
+                element instanceof OMTBlock ||
+                element instanceof OMTModelBlock ||
+                element instanceof OMTModelItemBlock) {
             setDummyPlaceHolder(DUMMY_ENTRY, context);
             return;
         }
@@ -220,8 +230,8 @@ public class OMTCompletionContributor extends CompletionContributor {
         OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(elementAt, parent -> parent instanceof OMTQueryStep);
         if (queryStep != null) {
             List<Resource> previousStep = PsiImplUtil.getPreviousStep(queryStep);
-            rdfModelUtil.listPredicatesForSubjectClass(previousStep).forEach(resource -> setCurieSuggestion(elementAt, resource, false, 9));
-            rdfModelUtil.listPredicatesForObjectClass(previousStep).forEach(resource -> setCurieSuggestion(elementAt, resource, true, 8));
+            getRDFModel().listPredicatesForSubjectClass(previousStep).forEach(resource -> setCurieSuggestion(elementAt, resource, false, 9));
+            getRDFModel().listPredicatesForObjectClass(previousStep).forEach(resource -> setCurieSuggestion(elementAt, resource, true, 8));
         }
 
         // check if there are local variables available, they also have the highest suggestion priority
