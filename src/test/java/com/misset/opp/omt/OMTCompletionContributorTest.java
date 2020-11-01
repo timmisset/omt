@@ -55,6 +55,16 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void completionProviders_addsSuggestionsWithLeadingAttributes() {
+        List<String> suggestions = getSuggestions("model:\n" +
+                "    test: !Activity\n" +
+                "        <caret>\n" +
+                "        params:\n" +
+                "            -   $variable");
+        assertContainsElements(suggestions, "title:", "graphs:", "actions:", "onCancel:", "onCommit:");
+    }
+
+    @Test
     void completionProvider_skipsAttributesAlreadyPartOfTheActivity() {
         List<String> suggestions = getSuggestions("model:\n" +
                 "    MijnActiviteit: !Activity\n" +

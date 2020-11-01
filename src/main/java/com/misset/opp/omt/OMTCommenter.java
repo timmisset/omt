@@ -25,7 +25,7 @@ public class OMTCommenter implements Commenter {
     @Nullable
     @Override
     public String getCommentedBlockCommentPrefix() {
-        return null;
+        return "*";
     }
 
     @Nullable
