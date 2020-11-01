@@ -92,9 +92,24 @@ public class RDFModelUtil {
         List<Resource> lineage = new ArrayList<>();
         lineage.add(resource);
         if (resource.getProperty(RDFS_SUBCLASS) != null && resource.getProperty(RDFS_SUBCLASS).getObject() != null) {
-            lineage.addAll(getClassLineage(resource.getProperty(RDFS_SUBCLASS).getObject().asResource()));
+            final Resource subClass = resource.getProperty(RDFS_SUBCLASS).getObject().asResource();
+            if (subClass.toString().equals(resource.toString())) {
+                lineage.addAll(getClassLineage(subClass));
+            }
         }
         return lineage;
+    }
+
+    public List<Resource> getClassDescendants(Resource resource) {
+        List<Resource> descendants = new ArrayList<>();
+        final ResIterator resIterator = model.listSubjectsWithProperty(RDFS_SUBCLASS, resource);
+        resIterator.forEachRemaining(
+                descendant -> {
+                    descendants.add(descendant);
+                    descendants.addAll(getClassDescendants(descendant));
+                }
+        );
+        return descendants;
     }
 
     public boolean isClassResource(Resource resource) {
@@ -147,10 +162,12 @@ public class RDFModelUtil {
             Resource shacl = shaclsPointingToTargetClass.next();
             if (shacl.hasProperty(SHACL_PATH, predicate)) {
                 ResIterator classPointingToShacl = model.listSubjectsWithProperty(SHACL_PROPERTY, shacl);
-                resources.add(classPointingToShacl.nextResource());
+                final Resource resource = classPointingToShacl.nextResource();
+                resources.add(resource);
+                resources.addAll(getClassDescendants(resource));
             }
         }
-        return resources;
+        return distinctResources(resources);
     }
 
     public List<Resource> listSubjectsWithPredicateObjectClass(Resource predicate, List<Resource> targetClass) {

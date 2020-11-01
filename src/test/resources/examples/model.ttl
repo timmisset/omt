@@ -29,7 +29,6 @@ ont:ClassA
 ont:ClassB
   a owl:Class ;
   a sh:NodeShape ;
-  rdfs:subClassOf ont:ClassB ;
   sh:property [
       a sh:PropertyShape ;
       sh:path ont:stringProperty ;

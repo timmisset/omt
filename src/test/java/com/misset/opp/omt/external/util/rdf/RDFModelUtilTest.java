@@ -55,12 +55,21 @@ class RDFModelUtilTest {
     }
 
     @Test
+    void listSubjectsWithPredicateObjectClass_ReturnsClassPointingToDataType() {
+        Resource predicate = resourceFor("stringProperty");
+        Resource object = modelUtil.getPrimitiveTypeAsResource("string");
+        List<Resource> resources = modelUtil.listSubjectsWithPredicateObjectClass(predicate, object);
+        assertContainsElements(resources, resourceFor("ClassA"), resourceFor("ClassB"), resourceFor("ClassC"));
+        assertEquals(3, resources.size());
+    }
+
+    @Test
     void listSubjectsWithPredicateObjectClasses_ReturnsClassPointingToClass() {
         Resource predicate = resourceFor("classProperty");
         Resource object = resourceFor("ClassC");
         List<Resource> resources = modelUtil.listSubjectsWithPredicateObjectClass(predicate, Collections.singletonList(object));
         assertContainsElements(resources, resourceFor("ClassA"));
-        assertEquals(1, resources.size());
+        assertEquals(2, resources.size());
     }
 
     @Test
