@@ -44,6 +44,7 @@ public class OMTConfigurable implements Configurable {
         modified |= !settingsComponent.getBuiltinHttpCommandsLocation().equals(settingsState.builtInHttpCommandsPath);
         modified |= !settingsComponent.getBuiltinParseJsonLocation().equals(settingsState.builtInParseJsonPath);
         modified |= !settingsComponent.getOntologyModelRootPath().equals(settingsState.ontologyModelRootPath);
+        modified |= settingsComponent.getIncludeMochaFolderImportSuggestions() != settingsState.includeMochaFolderImportSuggestions;
         return modified;
     }
 
@@ -55,6 +56,7 @@ public class OMTConfigurable implements Configurable {
         settingsState.builtInHttpCommandsPath = settingsComponent.getBuiltinHttpCommandsLocation();
         settingsState.builtInParseJsonPath = settingsComponent.getBuiltinParseJsonLocation();
         settingsState.ontologyModelRootPath = settingsComponent.getOntologyModelRootPath();
+        settingsState.includeMochaFolderImportSuggestions = settingsComponent.getIncludeMochaFolderImportSuggestions();
 
         // will try to reload the builtin members from the new file locations
         projectUtil.loadBuiltInMembers(ProjectManager.getInstance().getOpenProjects()[0]);
@@ -69,6 +71,7 @@ public class OMTConfigurable implements Configurable {
         settingsComponent.setBuiltinHttpCommandsLocation(settingsState.builtInHttpCommandsPath);
         settingsComponent.setBuiltinParseJsonLocation(settingsState.builtInParseJsonPath);
         settingsComponent.setOntologyModelRootPath(settingsState.ontologyModelRootPath);
+        settingsComponent.setIncludeMochaFolderImportSuggestions(settingsState.includeMochaFolderImportSuggestions);
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.intellij.lang.annotation.Annotator;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.util.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,6 +28,11 @@ public class OMTAnnotator implements Annotator {
         }
         if (element instanceof OMTImport) {
             importUtil.annotateImport((OMTImport) element, holder);
+        }
+        if (element instanceof OMTMember) {
+            if (((OMTMember) element).getType() == NamedMemberType.ImportingMember) {
+                memberUtil.annotateImportedMember((OMTMember) element, holder);
+            }
         }
         if (element instanceof OMTCommandCall) {
             memberUtil.annotateCall((OMTCommandCall) element, holder);

@@ -3,7 +3,9 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.ExampleFiles;
+import com.misset.opp.omt.psi.OMTParameterWithType;
 import com.misset.opp.omt.psi.OMTQueryPath;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.AfterEach;
@@ -229,6 +231,85 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
             assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
                     , "ClassB");
 
+        });
+    }
+
+    @Test
+    void queryPathResolveToResource_ResolvesSubQuery() {
+        String content = "prefixes:\n" +
+                "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY test() => 'test' / (^ont:stringProperty);\n";
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement rootBlock = exampleFiles.fromContent(content);
+            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
+            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
+            assertEquals(2, resources.size());
+            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
+                    , "ClassB", "ClassC");
+
+        });
+    }
+
+    @Test
+    void queryPathResolveToResource_ResolvesParameterType() {
+        String content = "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "model:\n" +
+                "   activity: !Activity\n" +
+                "       params:\n" +
+                "           -   $mijnParam (ont:ClassA)\n" +
+                "       queries: |\n" +
+                "           DEFINE QUERY test() => $mijnParam;\n";
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement rootBlock = exampleFiles.fromContent(content);
+            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
+            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
+            assertEquals(1, resources.size());
+            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
+                    , "ClassA");
+        });
+    }
+
+    @Test
+    void getType_ParameterWithTypeFromCurie() {
+        String content = "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "model:\n" +
+                "   activity: !Activity\n" +
+                "       params:\n" +
+                "           -   $mijnParam (ont:ClassA)\n";
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement rootBlock = exampleFiles.fromContent(content);
+            OMTParameterWithType parameterWithType = exampleFiles.getPsiElementFromRootDocument(OMTParameterWithType.class, rootBlock);
+
+            List<Resource> type = parameterWithType.getType();
+            assertEquals(1, type.size());
+            assertEquals("ClassA", type.get(0).getLocalName());
+        });
+    }
+
+    @Test
+    void getType_ParameterWithTypeFromPrimitiveType() {
+        String content = "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "model:\n" +
+                "   activity: !Activity\n" +
+                "       params:\n" +
+                "           -   $mijnParam (string)\n";
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement rootBlock = exampleFiles.fromContent(content);
+            OMTParameterWithType parameterWithType = exampleFiles.getPsiElementFromRootDocument(OMTParameterWithType.class, rootBlock);
+
+            List<Resource> type = parameterWithType.getType();
+            assertEquals(1, type.size());
+            assertEquals(RDFModelUtil.XSD, type.get(0).getNameSpace());
+            assertEquals("string", type.get(0).getLocalName());
         });
     }
 }

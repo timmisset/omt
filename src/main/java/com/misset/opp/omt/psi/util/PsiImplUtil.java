@@ -2,6 +2,7 @@ package com.misset.opp.omt.psi.util;
 
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
@@ -12,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PsiImplUtil {
@@ -361,6 +364,9 @@ public class PsiImplUtil {
                     ).getDatatypeURI())
             );
         }
+        if (step.getVariable() != null) {
+            return step.getVariable().getType();
+        }
 
         // steps that require preceeding info
         List<Resource> previousStep = getPreviousStep(step);
@@ -371,6 +377,9 @@ public class PsiImplUtil {
             }
             // only resolve the curie at the current location, for example [ rdf:type == /ont:ClassA ]
             return Collections.singletonList(step.getCurieElement().getAsResource());
+        }
+        if (step.getSubQuery() != null) {
+            return step.getSubQuery().getQueryPath().resolveToResource();
         }
         if (step.getQueryFilter() != null) {
             return step.getQueryFilter().getQueryPath().filter(previousStep);
@@ -391,6 +400,15 @@ public class PsiImplUtil {
                 && !(previous instanceof OMTQueryReverseStep)) {
             previous = previous.getPrevSibling();
         }
+        if (previous == null) {
+            // retrieve the previous value via the parent
+            final PsiElement containingQueryStep = PsiTreeUtil.findFirstParent(step, parent -> parent != step &&
+                    (parent instanceof OMTQueryStep || parent instanceof OMTQueryFilter));
+            // if the first container is also a query step. If this is a filter, ignore it
+            if (containingQueryStep instanceof OMTQueryStep) {
+                return getPreviousStep(containingQueryStep);
+            }
+        }
         return previous == null ? new ArrayList<>() : resolvePathPart(previous);
     }
 
@@ -407,5 +425,40 @@ public class PsiImplUtil {
             }
         }
         return new ArrayList<>();
+    }
+
+    public static List<Resource> getType(OMTVariable variable) {
+        if (variable.isDeclaredVariable()) {
+            // a declared variable
+            if (variable.getParent() instanceof OMTParameterWithType) {
+                return getType((OMTParameterWithType) variable.getParent());
+            }
+        } else {
+            if (variable.isGlobalVariable()) {
+                return new ArrayList<>();
+            }
+            if (variable.isIgnoredVariable()) {
+                return new ArrayList<>();
+            }
+            OMTVariable declaredByVariable = variableUtil.getDeclaredByVariable(variable).get();
+            return declaredByVariable.isDeclaredVariable() ? declaredByVariable.getType() : new ArrayList<>();
+        }
+        return new ArrayList<>();
+    }
+
+    public static List<Resource> getType(OMTParameterWithType parameterWithType) {
+        if (parameterWithType.getParameterType() != null) {
+            return Collections.singletonList(parameterWithType.getParameterType().getAsResource());
+        } else {
+            // defined as 'operator', which means a shortname like 'string':
+            Pattern pattern = Pattern.compile("\\(([a-z]*)\\)");
+            Matcher matcher = pattern.matcher(parameterWithType.getText());
+            matcher.find();
+            if (matcher.group(1) != null) {
+                return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource(matcher.group(1)));
+            } else {
+                return new ArrayList<>();
+            }
+        }
     }
 }
