@@ -432,6 +432,16 @@ public class PsiImplUtil {
             // a declared variable
             if (variable.getParent() instanceof OMTParameterWithType) {
                 return getType((OMTParameterWithType) variable.getParent());
+            } else if (variable.getParent() instanceof OMTDefineParam) {
+                // query or command statement
+                OMTDefinedStatement statement = (OMTDefinedStatement) variable.getParent().getParent();
+                Pattern pattern = Pattern.compile(String.format("@param \\%s \\((.*)\\)", variable.getName()));
+                Matcher matcher = pattern.matcher(
+                        statement.getLeading() != null ?
+                                statement.getLeading().getText() : "");
+                if (matcher.find()) {
+                    return Collections.singletonList(getTypeAsResource(matcher.group(1), variable));
+                }
             }
         } else {
             if (variable.isGlobalVariable()) {
@@ -444,6 +454,16 @@ public class PsiImplUtil {
             return declaredByVariable.isDeclaredVariable() ? declaredByVariable.getType() : new ArrayList<>();
         }
         return new ArrayList<>();
+    }
+
+    public static Resource getTypeAsResource(String type, PsiElement element) {
+        if (type.contains(":")) {
+            final String prefixIri = ((OMTFile) element.getContainingFile()).getPrefixIri(type.split(":")[0]);
+            final String iriAsString = String.format("%s%s", prefixIri, type.split(":")[1]);
+            return getRdfModelUtil().createResource(iriAsString);
+        } else {
+            return getRdfModelUtil().getPrimitiveTypeAsResource(type);
+        }
     }
 
     public static List<Resource> getType(OMTParameterWithType parameterWithType) {

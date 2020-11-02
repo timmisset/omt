@@ -34,6 +34,9 @@ public class OMTAnnotator implements Annotator {
                 memberUtil.annotateImportedMember((OMTMember) element, holder);
             }
         }
+        if (element instanceof OMTDefineParam) {
+            variableUtil.annotateDefineParameter((OMTDefineParam) element, holder);
+        }
         if (element instanceof OMTCommandCall) {
             memberUtil.annotateCall((OMTCommandCall) element, holder);
         }
@@ -63,7 +66,6 @@ public class OMTAnnotator implements Annotator {
         }
         if (element instanceof OMTQueryReverseStep) {
             holder.newAnnotation(HighlightSeverity.INFORMATION, ((OMTQueryReverseStep) element).resolveToResource().toString()).create();
-            ;
         }
     }
 
