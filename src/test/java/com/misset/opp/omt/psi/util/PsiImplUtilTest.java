@@ -275,6 +275,26 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void queryPathResolveToResource_ResolvesFromAnnotation() {
+        String content = "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "queries: |\n" +
+                "    /**\n" +
+                "    * @param $mijnParameter (ont:ClassA)\n" +
+                "    */\n" +
+                "    DEFINE QUERY myQuery($mijnParameter) => $mijnParameter;";
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement rootBlock = exampleFiles.fromContent(content);
+            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
+            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
+            assertEquals(1, resources.size());
+            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
+                    , "ClassA");
+        });
+    }
+
+    @Test
     void getType_ParameterWithTypeFromCurie() {
         String content = "prefixes:\n" +
                 "    ont:     <http://ontologie#>\n" +

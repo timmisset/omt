@@ -13,6 +13,7 @@ import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.intentions.variables.RenameVariableIntention;
 import com.misset.opp.omt.psi.support.OMTCall;
+import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -190,6 +191,9 @@ public class VariableUtil {
         if (lookWith.getParent() instanceof OMTDeclareVariable) {
             return true;
         }
+        if (lookWith.getParent() instanceof OMTDefineParam) {
+            return true;
+        }
         // if part of an assignment: VAR $myVariable = 'test'; OR $myVariable = test (in the variables: block)
         if (lookWith.getParent() instanceof OMTVariableAssignment) {
             if (lookWith.getParent().getParent() instanceof OMTDeclareVariable) {
@@ -222,5 +226,20 @@ public class VariableUtil {
     private boolean partOfModelItemEntryLevel(PsiElement element, String entryLevelLabel) {
         String blockEntryLabel = modelUtil.getModelItemEntryLabel(element);
         return blockEntryLabel != null && blockEntryLabel.equals(entryLevelLabel);
+    }
+
+    public void annotateDefineParameter(OMTDefineParam defineParam, AnnotationHolder holder) {
+        defineParam.getVariableList().forEach(omtVariable -> {
+            final List<Resource> type = omtVariable.getType();
+            if (type.isEmpty()) {
+                holder.newAnnotation(HighlightSeverity.WEAK_WARNING, "Annotate parameter with type")
+                        .tooltip(String.format("Annotate parameter %s with a type, this help to resolve the query path%n%n" +
+                                "/**" +
+                                "%n* @param %s (pol:Classname)%n" +
+                                "*/", omtVariable.getName(), omtVariable.getName()))
+                        .range(omtVariable)
+                        .create();
+            }
+        });
     }
 }

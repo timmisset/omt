@@ -222,6 +222,10 @@ public class RDFModelUtil {
         return model.createResource(String.format("%s%s", XSD, name));
     }
 
+    public Resource createResource(String iri) {
+        return model.createResource(iri);
+    }
+
     private Resource getPropertyFromSubjectPredicate(Resource subject, Resource predicate, Property property) {
         if (isTypePredicate(predicate)) {
             return subject;
