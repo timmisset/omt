@@ -1,11 +1,17 @@
 package com.misset.opp.omt.psi.impl;
 
 import com.intellij.psi.PsiElement;
+import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.OMTDefineCommandStatement;
 import com.misset.opp.omt.psi.OMTDefineQueryStatement;
 import com.misset.opp.omt.psi.OMTModelItemBlock;
+import com.misset.opp.omt.psi.OMTQueryPath;
 import com.misset.opp.omt.psi.support.ExportMemberType;
 import com.misset.opp.omt.psi.support.OMTExportMember;
+import com.misset.opp.omt.psi.util.ProjectUtil;
+import org.apache.jena.rdf.model.Resource;
+
+import java.util.List;
 
 /**
  * An exported member can be a wide variety of items, a Query or StandAlone query, both are considered Operator
@@ -15,6 +21,16 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
 
     private final PsiElement element;
     private final ExportMemberType type;
+
+    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+    private RDFModelUtil rdfModelUtil;
+
+    private RDFModelUtil getRdfModelUtil() {
+        if (rdfModelUtil == null || !rdfModelUtil.isLoaded()) {
+            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
+        }
+        return rdfModelUtil;
+    }
 
     public OMTExportMemberImpl(PsiElement exportMemberPsi, ExportMemberType type) {
         super(type.name(), type == ExportMemberType.Command || type == ExportMemberType.Procedure || type == ExportMemberType.Activity);
@@ -58,6 +74,37 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
                 return ((OMTDefineQueryStatement) element).getDefineName();
             default:
                 return element;
+        }
+    }
+
+    @Override
+    public boolean returnsAny() {
+        switch (type) {
+            case Activity:
+            case StandaloneQuery:
+            case Procedure:
+            case Command:
+            default:
+                return true;
+
+            case Query:
+                return !getRdfModelUtil().isPrimitiveType(getReturnType().get(0));
+        }
+    }
+
+    @Override
+    public List<Resource> getReturnType() {
+        switch (type) {
+            case Activity:
+            case StandaloneQuery:
+            case Procedure:
+            case Command:
+            default:
+                return super.getReturnType();
+
+            case Query:
+                final OMTQueryPath queryPath = ((OMTDefineQueryStatement) element).getQueryPath();
+                return queryPath.resolveToResource();
         }
     }
 

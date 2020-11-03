@@ -5,6 +5,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.ExampleFiles;
+import com.misset.opp.omt.psi.OMTDefineQueryStatement;
 import com.misset.opp.omt.psi.OMTParameterWithType;
 import com.misset.opp.omt.psi.OMTQueryPath;
 import org.apache.jena.rdf.model.Resource;
@@ -25,6 +26,7 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
         super.setName("OMTPsiImplUtilTest");
         super.setUp();
 
+        myFixture.copyFileToProject(new File("src/test/resources/builtinOperators.ts").getAbsolutePath(), "builtinOperators.ts");
         myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
 
         ApplicationManager.getApplication().runReadAction(() -> ProjectUtil.SINGLETON.loadOntologyModel(getProject()));
@@ -293,6 +295,57 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
                     , "ClassA");
         });
     }
+
+    @Test
+    void queryPathResolveToResource_ResolvesFromBuiltInOperator() {
+        String content = "queries: |\n" +
+                "    DEFINE QUERY myQuery($mijnParameter) => $mijnParameter / CEIL;";
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement rootBlock = exampleFiles.fromContent(content);
+            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
+            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
+            assertEquals(1, resources.size());
+            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
+                    , "decimal");
+        });
+    }
+
+    @Test
+    void queryPathResolveToResource_ResolvesFromBuiltInOperatorReturnsCurrent() {
+        String content = "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "queries: |\n" +
+                "    /**\n" +
+                "    * @param $mijnParameter (ont:ClassA)\n" +
+                "    */\n" +
+                "    DEFINE QUERY myQuery($mijnParameter) => $mijnParameter / FIRST;";
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement rootBlock = exampleFiles.fromContent(content);
+            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
+            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
+            assertEquals(1, resources.size());
+            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
+                    , "ClassA");
+        });
+    }
+
+    @Test
+    void queryPathResolveToResource_ResolvesFromQuery() {
+        String content = "queries: |\n" +
+                "    DEFINE QUERY myQuery($mijnParameter) => $mijnParameter / CEIL;\n" +
+                "    DEFINE QUERY myQuery2() => myQuery;";
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiElement rootBlock = exampleFiles.fromContent(content);
+            OMTDefineQueryStatement queryStatement = exampleFiles.getPsiElementFromRootDocument(OMTDefineQueryStatement.class,
+                    rootBlock, statement -> statement.getDefineName().getName().equals("myQuery2"));
+            List<Resource> resources = PsiImplUtil.resolveToResource(queryStatement.getQueryPath());
+            assertEquals(1, resources.size());
+            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
+                    , "decimal");
+        });
+    }
+
 
     @Test
     void getType_ParameterWithTypeFromCurie() {

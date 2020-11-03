@@ -4,12 +4,14 @@ import com.google.gson.JsonObject;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
+import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
 import com.misset.opp.omt.psi.util.ModelUtil;
 import com.misset.opp.omt.psi.util.ProjectUtil;
+import org.apache.jena.rdf.model.Resource;
 
 import java.util.*;
 
@@ -19,6 +21,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
     private final List<OMTParameter> parameterList = new ArrayList<>();
     private final List<String> localVariables = new ArrayList<>();
     private final List<String> flags = new ArrayList<>();
+    private final String returnType;
     private String name;
     private final String type;
     private final boolean isCommand;
@@ -27,7 +30,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     private ModelUtil modelUtil = ModelUtil.SINGLETON;
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-
+    private RDFModelUtil rdfModelUtil;
     public OMTCallableImpl(String type, boolean isCommand) {
         this.type = type;
         this.isCommand = isCommand;
@@ -40,6 +43,11 @@ public abstract class OMTCallableImpl implements OMTCallable {
                 );
             }
         }
+        returnType = "any";
+    }
+
+    public OMTCallableImpl(String type, String name, List<OMTParameter> parameterList, boolean isCommand, List<String> localVariables, List<String> flags) {
+        this(type, name, parameterList, isCommand, localVariables, flags, "any");
     }
 
     public OMTCallableImpl(String type, String name, List<OMTParameter> parameterList, boolean isCommand) {
@@ -50,13 +58,28 @@ public abstract class OMTCallableImpl implements OMTCallable {
         this(type, name, parameterList, isCommand, localVariables, new ArrayList<>());
     }
 
-    public OMTCallableImpl(String type, String name, List<OMTParameter> parameterList, boolean isCommand, List<String> localVariables, List<String> flags) {
+    public OMTCallableImpl(String type,
+                           String name,
+                           List<OMTParameter> parameterList,
+                           boolean isCommand,
+                           List<String> localVariables,
+                           List<String> flags,
+                           String returnType
+    ) {
         this.type = type;
         this.name = name;
         this.isCommand = isCommand;
         parameterList.forEach(this::addParameter);
         this.localVariables.addAll(localVariables);
         this.flags.addAll(flags);
+        this.returnType = returnType;
+    }
+
+    private RDFModelUtil getModelUtil() {
+        if (rdfModelUtil == null || !rdfModelUtil.isLoaded()) {
+            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
+        }
+        return rdfModelUtil;
     }
 
     @Override
@@ -212,5 +235,15 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     public void setName(String name) {
         this.name = name.endsWith(":") ? name.substring(0, name.length() - 1) : name;
+    }
+
+    @Override
+    public List<Resource> getReturnType() {
+        return Collections.singletonList(getModelUtil().getPrimitiveTypeAsResource(returnType));
+    }
+
+    @Override
+    public boolean returnsAny() {
+        return returnType.equals("any");
     }
 }

@@ -222,6 +222,10 @@ public class RDFModelUtil {
         return model.createResource(String.format("%s%s", XSD, name));
     }
 
+    public boolean isPrimitiveType(Resource resource) {
+        return resource.toString().startsWith(XSD) && !resource.toString().endsWith("#any");
+    }
+
     public Resource createResource(String iri) {
         return model.createResource(iri);
     }
