@@ -160,9 +160,9 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
             PsiElement rootBlock = exampleFiles.fromContent(content);
             OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
             List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(2, resources.size());
+            assertEquals(3, resources.size());
             assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "ClassB", "ClassC");
+                    , "ClassA", "ClassB", "ClassC");
         });
     }
 
@@ -213,7 +213,9 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
             PsiElement rootBlock = exampleFiles.fromContent(content);
             OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
             List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(0, resources.size());
+            assertEquals(1, resources.size());
+            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
+                    , "ClassA");
         });
     }
 
@@ -248,9 +250,9 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
             PsiElement rootBlock = exampleFiles.fromContent(content);
             OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
             List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(2, resources.size());
+            assertEquals(3, resources.size());
             assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "ClassB", "ClassC");
+                    , "ClassA", "ClassB", "ClassC");
 
         });
     }
