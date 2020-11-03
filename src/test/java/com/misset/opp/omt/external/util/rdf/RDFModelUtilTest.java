@@ -69,7 +69,7 @@ class RDFModelUtilTest {
         Resource object = resourceFor("ClassC");
         List<Resource> resources = modelUtil.listSubjectsWithPredicateObjectClass(predicate, Collections.singletonList(object));
         assertContainsElements(resources, resourceFor("ClassA"));
-        assertEquals(2, resources.size());
+        assertEquals(1, resources.size());
     }
 
     @Test
