@@ -237,6 +237,18 @@ public class MemberUtil {
         return false;
     }
 
+    public OMTCallable getCallable(OMTCall call) {
+        BuiltInMember builtInMember = builtInUtil.getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
+        if (builtInMember != null) {
+            return builtInMember;
+        }
+
+        if (call.getReference() != null) {
+            return memberToExportMember(call.getReference().resolve());
+        }
+        return null;
+    }
+
     private boolean annotateAsBuiltInMember(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {
         BuiltInMember builtInMember = builtInUtil.getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
         if (builtInMember != null) {

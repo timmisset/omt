@@ -5,6 +5,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -22,6 +23,7 @@ public class PsiImplUtil {
     private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
     private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private static final TokenUtil tokenUtil = TokenUtil.SINGLETON;
+    private static final MemberUtil memberUtil = MemberUtil.SINGLETON;
     private static RDFModelUtil rdfModelUtil;
 
     private static RDFModelUtil getRdfModelUtil() {
@@ -384,6 +386,15 @@ public class PsiImplUtil {
         if (step.getQueryFilter() != null) {
             return step.getQueryFilter().getQueryPath().filter(previousStep);
         }
+        if (step.getOperatorCall() != null) {
+            final OMTCallable callable = memberUtil.getCallable(step.getOperatorCall());
+            if (callable.returnsAny()) {
+                return previousStep;
+            } // return the existing types from the previous step
+            else {
+                return callable.getReturnType();
+            }
+        }
         return new ArrayList<>();
     }
 
@@ -450,8 +461,8 @@ public class PsiImplUtil {
             if (variable.isIgnoredVariable()) {
                 return new ArrayList<>();
             }
-            OMTVariable declaredByVariable = variableUtil.getDeclaredByVariable(variable).get();
-            return declaredByVariable.isDeclaredVariable() ? declaredByVariable.getType() : new ArrayList<>();
+            OMTVariable declaredByVariable = variableUtil.getDeclaredByVariable(variable).orElse(null);
+            return declaredByVariable != null && declaredByVariable.isDeclaredVariable() ? declaredByVariable.getType() : new ArrayList<>();
         }
         return new ArrayList<>();
     }

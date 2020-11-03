@@ -169,6 +169,7 @@ public class BuiltInUtil {
             JsonElement link = operator.get("link");
             JsonElement doc = operator.get("doc");
             JsonElement flags = operator.get("flags");
+            JsonElement returns = operator.get("returns");
             List<String> localVariables = new ArrayList<>();
             if (link != null) {
                 String linkVariables = link.getAsString();
@@ -192,8 +193,27 @@ public class BuiltInUtil {
                     }
                 });
             }
+            String dataType = "any";
+            if (returns != null) {
+                switch (returns.getAsString()) {
+                    case "ResultType.Boolean":
+                        dataType = "boolean";
+                        break;
+                    case "ResultType.String":
+                        dataType = "string";
+                        break;
+                    case "ResultType.DateLike":
+                        dataType = "dateTime";
+                        break;
+                    case "ResultType.Number":
+                        dataType = "decimal";
+                        break;
+                    default:
+                        dataType = "any";
+                }
+            }
 
-            BuiltInMember builtInMember = new BuiltInMember(name, inputParameters, type, localVariables, flagsAsList);
+            BuiltInMember builtInMember = new BuiltInMember(name, inputParameters, type, localVariables, flagsAsList, dataType);
 
             if (doc != null && !doc.isJsonNull()) {
                 String docAsString = doc.getAsString();

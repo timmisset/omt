@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
+import org.apache.jena.rdf.model.Resource;
 
 import java.util.List;
 
@@ -44,4 +45,8 @@ public interface OMTCallable {
     String shortDescription();
 
     String asSuggestion();
+
+    List<Resource> getReturnType();
+
+    boolean returnsAny();
 }
