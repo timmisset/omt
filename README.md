@@ -1,8 +1,6 @@
 
 **OMT / ODT Language Plugin voor IntelliJ**
 
-Deze plugin is nog in ontwikkel-fase. De huidige release op develop is stabiel genoeg om te gebruiken.
-
 # Features
 
 ## Referenties
