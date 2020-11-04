@@ -26,7 +26,7 @@ De ODT Commands en Operators worden uitgelezen uit de index files en geannoteerd
 > Sommige commands bevatten lokale variabelen ($value bij FOREACH). Indien de gebruiker er overheen beweegt zal getoond worden dat ze op die plek beschikbaar zijn als local variabel
 
 ## Ontologie model
-Op dit moment wordt er in een aparte branch (data-model) gewerkt aan het gebruiken van informatie uit het ontologie model om verdere informatie te tonen in de OMT files. Deze is al in te zetten voor experimenteel gebruik.
+Op dit moment wordt in de development branch aan de integratie met het data-model gewerkt. Deze is nog niet gereleased. Experimenteren ermee kan al wel door de plugin te bouwen vanuit de huidige development branch
 
 ## Annotaties
 Annotaties worden door IntelliJ gebruikt om aan te geven of er iets mis in de code (errors, warnings) of om meer informatie te tonen. Op dit moment wordt het volgende geannoteerd:
