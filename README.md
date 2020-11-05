@@ -1,8 +1,6 @@
 
 **OMT / ODT Language Plugin voor IntelliJ**
 
-Deze plugin is nog in ontwikkel-fase. De huidige release op develop is stabiel genoeg om te gebruiken.
-
 # Features
 
 ## Referenties
@@ -28,7 +26,7 @@ De ODT Commands en Operators worden uitgelezen uit de index files en geannoteerd
 > Sommige commands bevatten lokale variabelen ($value bij FOREACH). Indien de gebruiker er overheen beweegt zal getoond worden dat ze op die plek beschikbaar zijn als local variabel
 
 ## Ontologie model
-Op dit moment wordt er in een aparte branch (data-model) gewerkt aan het gebruiken van informatie uit het ontologie model om verdere informatie te tonen in de OMT files. Deze is al in te zetten voor experimenteel gebruik.
+Op dit moment wordt in de development branch aan de integratie met het data-model gewerkt. Deze is nog niet gereleased. Experimenteren ermee kan al wel door de plugin te bouwen vanuit de huidige development branch
 
 ## Annotaties
 Annotaties worden door IntelliJ gebruikt om aan te geven of er iets mis in de code (errors, warnings) of om meer informatie te tonen. Op dit moment wordt het volgende geannoteerd:
@@ -54,4 +52,4 @@ De color scheme voor de OMT / ODT elementen kan worden ingesteld bij Preferences
 
 
 ## Installatie
-Op dit moment is er nog geen officiele release versie beschikbaar. Deze kan echter eenvoudig gebouwd worden door development branch binnen te trekken en te bouwen. Eerst de flex file bouwen -> dit wordt de Lexer, daarna de bnf -> die wordt de Grammar parser. Als laatste via Gradle Task -> Build plugin. Vervolgens de zip file selecteren in de Preferences | Plugins | Install plugin from disk (het tandwieltje naast Installed) 
+De plugin is beschikbaar via de IntelliJ Marketplace
