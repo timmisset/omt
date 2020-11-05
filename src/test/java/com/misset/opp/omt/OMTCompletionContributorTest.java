@@ -225,6 +225,16 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void completionProvider_addsSuggestionsForQueryPathFromModelForwardForClassWhenPathIsNotClosed() {
+        List<String> suggestions = getSuggestions("" +
+                "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY myFirstQuery() => /ont:ClassA / <caret>\n");
+        assertContainsElements(suggestions, "ont:stringProperty", "ont:classProperty", "ont:booleanProperty");
+    }
+
+    @Test
     void completionProviders_addsSuggestionsForImport() {
         String exportData = "queries: |\n" +
                 "   DEFINE QUERY myQuery() => 'hello';\n" +

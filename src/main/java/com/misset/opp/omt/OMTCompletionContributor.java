@@ -416,16 +416,19 @@ public class OMTCompletionContributor extends CompletionContributor {
             setDummyPlaceHolder(DUMMY_ENTRY, context);
             return;
         }
-        if (expectedTypes.contains("query step") || expectedTypes.contains("scalar")) {
+        if (expectedTypes.contains("scalar")) {
             setDummyPlaceHolder(DUMMY_SCALAR, context);
+            return;
         }
 
         // indicates that the current line isn't properly closed with a semicolon.
-        if (expectedTypes.contains("SEMICOLON") || expectedTypes.contains("query path")) {
+        if (expectedTypes.contains("SEMICOLON") || expectedTypes.contains("query path") || expectedTypes.contains("query step")) {
             setDummyPlaceHolder(String.format("%s%s", DUMMY_SCALAR, SEMICOLON), context);
+            return;
         }
         if (expectedTypes.contains("import $")) {
             setDummyPlaceHolder(DUMMY_IMPORT, context);
+            return;
         }
     }
 
