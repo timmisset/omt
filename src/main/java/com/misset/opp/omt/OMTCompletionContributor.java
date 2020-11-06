@@ -422,7 +422,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         }
 
         // indicates that the current line isn't properly closed with a semicolon.
-        if (expectedTypes.contains("SEMICOLON") || expectedTypes.contains("query path") || expectedTypes.contains("query step")) {
+        if (expectedTypes.contains("SEMICOLON") || expectedTypes.contains("query") || expectedTypes.contains("query step")) {
             setDummyPlaceHolder(String.format("%s%s", DUMMY_SCALAR, SEMICOLON), context);
             return;
         }

@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
@@ -9,10 +10,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -102,15 +101,15 @@ public class ExampleFiles {
     }
 
     public <T> List<T> getPsiElementsFromRootDocument(Class<? extends PsiElement> elementClass, PsiElement rootBlock, Predicate<T> condition) {
-        Collection<T> childrenOfType =
-                PsiTreeUtil.findChildrenOfType(rootBlock, elementClass).stream()
+        final List<T> arrayList = new ArrayList<>();
+        ApplicationManager.getApplication().runReadAction(
+                () -> PsiTreeUtil.findChildrenOfType(rootBlock, elementClass).stream()
                         .map(item -> (T) item)
                         .filter(condition::test)
-                        .collect(Collectors.toList());
+                        .forEach(arrayList::add)
+        );
 
-        assertTrue(childrenOfType.size() > 0);
-
-
-        return new ArrayList(childrenOfType);
+        assertTrue(arrayList.size() > 0);
+        return arrayList;
     }
 }
