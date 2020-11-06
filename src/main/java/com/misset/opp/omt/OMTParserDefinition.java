@@ -1,14 +1,22 @@
 package com.misset.opp.omt;
 
-import com.intellij.lang.*;
+import com.intellij.lang.ASTNode;
+import com.intellij.lang.ParserDefinition;
+import com.intellij.lang.PsiParser;
 import com.intellij.lexer.Lexer;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
-import com.intellij.psi.tree.*;
+import com.intellij.psi.FileViewProvider;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.TokenType;
+import com.intellij.psi.tree.IFileElementType;
+import com.intellij.psi.tree.TokenSet;
 import com.misset.opp.omt.psi.OMTFile;
-import com.misset.opp.omt.psi.OMTTypes;
 import org.intellij.sdk.language.parser.OMTParser;
 import org.jetbrains.annotations.NotNull;
+
+import static com.misset.opp.omt.psi.OMTTypes.Factory;
+import static com.misset.opp.omt.psi.OMTTypes.STRING;
 
 public class OMTParserDefinition implements ParserDefinition {
     public static final TokenSet WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE);
@@ -36,7 +44,9 @@ public class OMTParserDefinition implements ParserDefinition {
     @NotNull
     @Override
     public TokenSet getStringLiteralElements() {
-        return TokenSet.EMPTY;
+        return TokenSet.create(
+                STRING
+        );
     }
 
     @NotNull
@@ -63,6 +73,6 @@ public class OMTParserDefinition implements ParserDefinition {
     @NotNull
     @Override
     public PsiElement createElement(ASTNode node) {
-        return OMTTypes.Factory.createElement(node);
+        return Factory.createElement(node);
     }
 }

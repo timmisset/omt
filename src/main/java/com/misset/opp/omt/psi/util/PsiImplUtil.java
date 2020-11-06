@@ -268,7 +268,7 @@ public class PsiImplUtil {
     // ////////////////////////////////////////////////////////////////////////////
     public static int numberOfParameters(OMTSignature signature) {
         return signature.getCommandBlockList().size() +
-                signature.getQueryPathList().size() +
+                signature.getQueryList().size() +
                 signature.getCommandCallList().size() +
                 signature.getOperatorCallList().size();
     }
@@ -323,33 +323,74 @@ public class PsiImplUtil {
     // ////////////////////////////////////////////////////////////////////////////
     // Query paths
     // ////////////////////////////////////////////////////////////////////////////
+    public static OMTQueryPath getValidQueryPath(OMTQuery query) {
+        if (query.getQueryPath() != null) {
+            return query.getQueryPath();
+        }
+        if (query.getBooleanStatement() != null) {
+            if (query.getBooleanStatement().getEquationStatementList().size() == 1 &&
+                    query.getBooleanStatement().getEquationStatementList().get(0).getQueryPathList().size() == 1) {
+                return query.getBooleanStatement().getEquationStatementList().get(0).getQueryPathList().get(0);
+            }
+        }
+        return null;
+    }
+
+    public static OMTBooleanStatement getValidBooleanStatement(OMTQuery query) {
+        if (query.getValidQueryPath() != null) {
+            return null;
+        }
+        return query.getBooleanStatement();
+    }
+
+
     public static List<Resource> resolveToResource(OMTQueryPath path) {
         return resolvePathPart(path.getLastChild());
+    }
+
+    public static List<Resource> resolveToResource(OMTQuery query) {
+        if (query.getValidBooleanStatement() != null) {
+            return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource("boolean"));
+        }
+        if (query.getValidQueryPath() != null) {
+            return query.getValidQueryPath().resolveToResource();
+        }
+        return new ArrayList();
+    }
+
+    public static List<Resource> filter(OMTBooleanStatement statement, List<Resource> resources) {
+        return resources;
+    }
+
+    public static List<Resource> filter(OMTQuery statement, List<Resource> resources) {
+        return resources;
     }
 
     public static List<Resource> filter(OMTQueryPath path, List<Resource> resources) {
         return filter((OMTQueryStep) path.getLastChild(), resources);
     }
 
+
     public static List<Resource> filter(OMTQueryStep step, List<Resource> resources) {
-        List<Resource> previousStep = getPreviousStep(step);
-        if (step.getEquationStatement() == null || previousStep.stream().noneMatch(resource -> getRdfModelUtil().isTypePredicate(resource))) {
-            // no type filter, return all:
-            return resources;
-        }
-        List<Resource> acceptableResources = resolvePathPart(step.getEquationStatement().getLastChild());
-        if (acceptableResources.isEmpty()) {
-            // cannot resolve filter, return all:
-            return resources;
-        }
-        boolean negativeAssertion = step.getEquationStatement().getText().contains("NOT");
-        return negativeAssertion ?
-                // negative assertions are to complex to process for now, only support simple filter statement
-                // like [rdf:type == /ont:Something]
-                resources :
-                resources.stream().filter(resource -> acceptableResources.stream().anyMatch(
-                        matchingResource -> matchingResource.toString().equals(resource.toString())
-                )).collect(Collectors.toList());
+//        List<Resource> previousStep = getPreviousStep(step);
+//        if (step.getEquationStatement() == null || previousStep.stream().noneMatch(resource -> getRdfModelUtil().isTypePredicate(resource))) {
+//            // no type filter, return all:
+//            return resources;
+//        }
+//        List<Resource> acceptableResources = resolvePathPart(step.getEquationStatement().getLastChild());
+//        if (acceptableResources.isEmpty()) {
+//            // cannot resolve filter, return all:
+//            return resources;
+//        }
+//        boolean negativeAssertion = step.getEquationStatement().getText().contains("NOT");
+//        return negativeAssertion ?
+//                // negative assertions are to complex to process for now, only support simple filter statement
+//                // like [rdf:type == /ont:Something]
+//                resources :
+//                resources.stream().filter(resource -> acceptableResources.stream().anyMatch(
+//                        matchingResource -> matchingResource.toString().equals(resource.toString())
+//                )).collect(Collectors.toList());
+        return resources;
     }
 
     public static List<Resource> resolveToResource(OMTQueryStep step) {
@@ -381,10 +422,10 @@ public class PsiImplUtil {
             return Collections.singletonList(step.getCurieElement().getAsResource());
         }
         if (step.getSubQuery() != null) {
-            return step.getSubQuery().getQueryPath().resolveToResource();
+            return step.getSubQuery().getQuery().resolveToResource();
         }
         if (step.getQueryFilter() != null) {
-            return step.getQueryFilter().getQueryPath().filter(previousStep);
+            return step.getQueryFilter().getQuery().filter(previousStep);
         }
         if (step.getOperatorCall() != null) {
             final OMTCallable callable = memberUtil.getCallable(step.getOperatorCall());
@@ -401,6 +442,10 @@ public class PsiImplUtil {
     public static List<Resource> resolveToResource(OMTQueryReverseStep step) {
         List<Resource> resources = getPreviousStep(step);
         return getRdfModelUtil().listSubjectsWithPredicateObjectClass(step.getQueryStep().getCurieElement().getAsResource(), resources);
+    }
+
+    public static List<Resource> resolveToResource(OMTEquationStatement step) {
+        return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource("boolean"));
     }
 
     public static List<Resource> getPreviousStep(PsiElement step) {
@@ -433,6 +478,9 @@ public class PsiImplUtil {
             }
             if (part instanceof OMTQueryReverseStep) {
                 return ((OMTQueryReverseStep) part).resolveToResource();
+            }
+            if (part instanceof OMTEquationStatement) {
+                return ((OMTEquationStatement) part).resolveToResource();
             }
         }
         return new ArrayList<>();

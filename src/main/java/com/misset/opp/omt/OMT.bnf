@@ -37,7 +37,7 @@ propertyLabel ::=                           PROPERTY { methods=[getPropertyLabel
 
 // a scalar single statement (multiline optional) following a property label
 scalar ::=                                  comment? scalarValue
-scalarValue ::=                             (start (parameterWithType | variableAssignment | block | queryPath | script) end) | nakedString | EMPTY_ENTRY
+scalarValue ::=                             (start (parameterWithType | variableAssignment | block | query | script) end) | nakedString | EMPTY_ENTRY
 
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indentToken, it must 
@@ -125,7 +125,7 @@ declareVariable ::=                         DECLARE_VAR (variableAssignment | va
 // a variable assignment is $var = 1234
 variableAssignment::=                       variable (COMMA variable)* EQUALS variableValue
 // a variable can be assigned with anything
-variableValue ::=                           queryPath | commandCall | constant_value
+variableValue ::=                           query | commandCall | constant_value
 
 // a parameter type is used to typecast input parameters in OMT model items
 variable ::=                                VARIABLE_NAME | ignoredVariable | globalVariable {
@@ -146,13 +146,13 @@ parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEM
 // an ODT (script) block is always started by a Yaml scalar node
 // it can start on the same line and be restricted to that line (not required) or it can be started by the
 // literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and and 
-script ::=                                  PIPE trailing? (scriptLine+ | queryPath)?
+script ::=                                  PIPE trailing? (scriptLine+ | query)?
 commandBlock ::=                            CURLY_OPEN trailing? (script | scriptLine+)? CURLY_CLOSED
 // a scriptline is contained by the addition of the semicolon at the end
 scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) trailing?
 // the contents of a script, contained by a scriptLine or Scalar
 scriptContent ::=                           declareVariable | variableAssignment | definePrefix | commandCall | assignmentStatement |
-                                            addToCollection | removeFromCollection | logicalBlock | returnStatement | queryPath
+                                            addToCollection | removeFromCollection | logicalBlock | returnStatement | query
 
 // DEFINED MEMBERS
 // ODT Members are Operator and Commands, both can be created by a DEFINE statement
@@ -164,7 +164,7 @@ defineName ::=                              NAME | OPERATOR    {
                                                            implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                            methods=[getName setName getNameIdentifier]
                                                          }
-defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA queryPath SEMICOLON trailing? {
+defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA query SEMICOLON trailing? {
                                                             implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
                                                             extends="com.misset.opp.omt.psi.impl.OMTDefinedStatementImpl"
                                             }
@@ -188,47 +188,54 @@ commandCall ::=                             COMMAND flagSignature? signature?
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
                                                              methods=[getName setName getNameIdentifier canCallOperator canCallCommand]
                                                            }
-signature ::=                               PARENTHESES_OPEN ((queryPath | commandBlock | commandCall | operatorCall) (COMMA (queryPath | commandBlock | commandCall | operatorCall))*)? PARENTHESES_CLOSE {
+signature ::=                               PARENTHESES_OPEN ((query | commandBlock | commandCall | operatorCall) (COMMA (query | commandBlock | commandCall | operatorCall))*)? PARENTHESES_CLOSE {
                                                              methods=[numberOfParameters]
 }
 flagSignature ::=                           FLAG
 
 logicalBlock ::=                            ifBlock commandBlock trailing? (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
-ifBlock ::=                                 IF_OPERATOR (queryPath | (PARENTHESES_OPEN queryPath PARENTHESES_CLOSE))
+ifBlock ::=                                 IF_OPERATOR (query | (PARENTHESES_OPEN query PARENTHESES_CLOSE))
 elseBlock ::=                               ELSE_OPERATOR commandBlock
-returnStatement ::=                         RETURN_OPERATOR (queryPath | commandCall)?
+returnStatement ::=                         RETURN_OPERATOR (query | commandCall)?
 chooseBlock ::=                             CHOOSE_OPERATOR trailing?
-                                                leading? (WHEN_OPERATOR queryPath LAMBDA queryPath)+
-                                                leading? (OTHERWISE_OPERATOR LAMBDA queryPath)?
+                                                leading? (WHEN_OPERATOR booleanStatement LAMBDA query)+
+                                                leading? (OTHERWISE_OPERATOR LAMBDA query)?
                                                 END_OPERATOR trailing?
 
 // an equation statement should contain a left hand value and 1+ condition operators + right hand values:
 // $value == $value == $value etc...
-equationStatement ::=                       (CONDITIONAL_OPERATOR queryStep)+
-assignmentStatement ::=                     queryPath trailing? EQUALS trailing? (queryPath | commandCall)
-addToCollection ::=                         queryPath trailing? ADD trailing? (queryPath | commandCall)
-removeFromCollection ::=                    queryPath trailing? REMOVE trailing? (queryPath | commandCall)
+equationStatement ::=                       queryPath trailing? (CONDITIONAL_OPERATOR trailing? queryPath)? { methods = [ resolveToResource ]}
+booleanStatement ::=                        equationStatement trailing? (BOOLEAN_OPERATOR trailing? equationStatement)* { methods = [ resolveToResource filter ]}
+negatedStatement ::=                        (NOT_OPERATOR trailing? query)
+assignmentStatement ::=                     query trailing? EQUALS trailing? (query | commandCall)
+addToCollection ::=                         query trailing? ADD trailing? (query | commandCall)
+removeFromCollection ::=                    query trailing? REMOVE trailing? (query | commandCall)
 
 // QUERIES
 // A queryPath consists of one or more querySteps. A queryStep can be considered forward or reverse (indicated by ^)
 // to reduce the complexity of parsing, slashes will be captured but are not required
-queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+ (PIPE queryPath)?
+query     ::=                               (booleanStatement | queryPath)  { methods = [ resolveToResource filter getValidBooleanStatement getValidQueryPath ]  }
+queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+ (PIPE query)?
                                             { methods = [ resolveToResource filter ]}
-queryStep ::=                               equationStatement | constant_value | variable | curieConstantElement | curieElement |
-                                            operatorCall | IRI | DOT | OWLPROPERTY | subQuery | CONDITIONAL_OPERATOR |
-                                            queryFilter | trailing | leading | chooseBlock | interpolatedString | PLUS | ASTERIX
+queryStep ::=                               constant_value | variable | curieConstantElement | curieElement |
+                                            operatorCall | IRI | DOT | OWLPROPERTY | interpolatedString |
+                                            queryFilter | chooseBlock |
+                                            oneManyQuery | zeroManyQuery | subQuery | negatedStatement | NOT_OPERATOR |
+                                            trailing | leading
                                             { methods = [ resolveToResource filter ]}
 queryReverseStep ::=                        CARET queryStep { methods = [ resolveToResource ]}
 
 // a query filter is contained by brackets [] and should resolve to boolean
-queryFilter ::=                             BRACKET_OPEN queryPath BRACKET_CLOSED
+queryFilter ::=                             BRACKET_OPEN trailing? query trailing? BRACKET_CLOSED
 
 // a recursion will continuously collect items based on the outcome of the previous recursion and the path described in the recursion
 // this makes it easy to traverse a graph for nested elements of identical/similar design
-subQuery ::=                                PARENTHESES_OPEN queryPath PARENTHESES_CLOSE
+subQuery ::=                                PARENTHESES_OPEN trailing? query trailing? PARENTHESES_CLOSE
+zeroManyQuery ::=                           subQuery ASTERIX
+oneManyQuery ::=                            subQuery PLUS
 
 // interpolation
-interpolationTemplate ::=                   TEMPLATE_OPEN queryPath TEMPLATE_CLOSED
+interpolationTemplate ::=                   TEMPLATE_OPEN query TEMPLATE_CLOSED
 interpolatedString ::=                      BACKTICK (interpolationTemplate | STRING)* BACKTICK
 
 // string / interpolated string without encapsulation of ' or `

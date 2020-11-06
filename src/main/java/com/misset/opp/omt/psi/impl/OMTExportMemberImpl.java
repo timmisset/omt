@@ -5,7 +5,7 @@ import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.OMTDefineCommandStatement;
 import com.misset.opp.omt.psi.OMTDefineQueryStatement;
 import com.misset.opp.omt.psi.OMTModelItemBlock;
-import com.misset.opp.omt.psi.OMTQueryPath;
+import com.misset.opp.omt.psi.OMTQuery;
 import com.misset.opp.omt.psi.support.ExportMemberType;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.ProjectUtil;
@@ -103,8 +103,8 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
                 return super.getReturnType();
 
             case Query:
-                final OMTQueryPath queryPath = ((OMTDefineQueryStatement) element).getQueryPath();
-                return queryPath.resolveToResource();
+                final OMTQuery query = ((OMTDefineQueryStatement) element).getQuery();
+                return query.resolveToResource();
         }
     }
 
