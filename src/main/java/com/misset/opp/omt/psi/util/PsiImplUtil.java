@@ -12,6 +12,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -321,75 +322,62 @@ public class PsiImplUtil {
     }
 
     // ////////////////////////////////////////////////////////////////////////////
-    // Query paths
+    // Queries
     // ////////////////////////////////////////////////////////////////////////////
-    public static OMTQueryPath getValidQueryPath(OMTQuery query) {
-        if (query.getQueryPath() != null) {
-            return query.getQueryPath();
-        }
-        if (query.getBooleanStatement() != null) {
-            if (query.getBooleanStatement().getEquationStatementList().size() == 1 &&
-                    query.getBooleanStatement().getEquationStatementList().get(0).getQueryPathList().size() == 1) {
-                return query.getBooleanStatement().getEquationStatementList().get(0).getQueryPathList().get(0);
+    public static boolean isQueryArray(OMTQuery query) {
+        return query instanceof OMTQueryArray;
+    }
+
+    public static boolean isQueryPath(OMTQuery query) {
+        return query instanceof OMTQueryPath;
+    }
+
+    public static boolean isBooleanStatement(OMTQuery query) {
+        return query instanceof OMTBooleanStatement;
+    }
+
+    public static boolean isEquationStatement(OMTQuery query) {
+        return query instanceof OMTEquationStatement;
+    }
+
+    public static boolean isBooleanType(OMTQuery query) {
+        if (query instanceof OMTQueryPath) {
+            final OMTQueryPath queryPath = (OMTQueryPath) query;
+            if (queryPath.getQueryStepList().size() == 1) {
+                return queryPath.getQueryStepList().get(0).getNegatedStep() != null;
+            } else {
+                return tokenUtil.isNotOperator(query.getLastChild().getFirstChild());
             }
         }
-        return null;
+        return query.isBooleanStatement() || query.isEquationStatement();
     }
-
-    public static OMTBooleanStatement getValidBooleanStatement(OMTQuery query) {
-        if (query.getValidQueryPath() != null) {
-            return null;
-        }
-        return query.getBooleanStatement();
-    }
-
 
     public static List<Resource> resolveToResource(OMTQueryPath path) {
         return resolvePathPart(path.getLastChild());
     }
 
     public static List<Resource> resolveToResource(OMTQuery query) {
-        if (query.getValidBooleanStatement() != null) {
+        if (query.isBooleanType()) {
             return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource("boolean"));
         }
-        if (query.getValidQueryPath() != null) {
-            return query.getValidQueryPath().resolveToResource();
+        if (query.isQueryArray()) {
+            // combine the resolved types:
+            final OMTQueryArray queryArray = (OMTQueryArray) query;
+            return queryArray.getQueryList().stream().map(OMTQuery::resolveToResource).flatMap(Collection::stream).collect(Collectors.toList());
         }
-        return new ArrayList();
+        if (query.isQueryPath()) {
+            final List<OMTQueryStep> queryStepList = ((OMTQueryPath) query).getQueryStepList();
+            return queryStepList.get(queryStepList.size() - 1).resolveToResource();
+        }
+        return new ArrayList<>();
     }
 
-    public static List<Resource> filter(OMTBooleanStatement statement, List<Resource> resources) {
+    public static List<Resource> filter(OMTBooleanStatement booleanStatement, List<Resource> resources) {
+
         return resources;
     }
 
-    public static List<Resource> filter(OMTQuery statement, List<Resource> resources) {
-        return resources;
-    }
-
-    public static List<Resource> filter(OMTQueryPath path, List<Resource> resources) {
-        return filter((OMTQueryStep) path.getLastChild(), resources);
-    }
-
-
-    public static List<Resource> filter(OMTQueryStep step, List<Resource> resources) {
-//        List<Resource> previousStep = getPreviousStep(step);
-//        if (step.getEquationStatement() == null || previousStep.stream().noneMatch(resource -> getRdfModelUtil().isTypePredicate(resource))) {
-//            // no type filter, return all:
-//            return resources;
-//        }
-//        List<Resource> acceptableResources = resolvePathPart(step.getEquationStatement().getLastChild());
-//        if (acceptableResources.isEmpty()) {
-//            // cannot resolve filter, return all:
-//            return resources;
-//        }
-//        boolean negativeAssertion = step.getEquationStatement().getText().contains("NOT");
-//        return negativeAssertion ?
-//                // negative assertions are to complex to process for now, only support simple filter statement
-//                // like [rdf:type == /ont:Something]
-//                resources :
-//                resources.stream().filter(resource -> acceptableResources.stream().anyMatch(
-//                        matchingResource -> matchingResource.toString().equals(resource.toString())
-//                )).collect(Collectors.toList());
+    public static List<Resource> filter(OMTQuery query, List<Resource> resources) {
         return resources;
     }
 
@@ -421,11 +409,11 @@ public class PsiImplUtil {
             // only resolve the curie at the current location, for example [ rdf:type == /ont:ClassA ]
             return Collections.singletonList(step.getCurieElement().getAsResource());
         }
-        if (step.getSubQuery() != null) {
-            return step.getSubQuery().getQuery().resolveToResource();
+        if (step instanceof OMTSubQuery) {
+            return ((OMTSubQuery) step).getQuery().resolveToResource();
         }
-        if (step.getQueryFilter() != null) {
-            return step.getQueryFilter().getQuery().filter(previousStep);
+        if (step instanceof OMTQueryFilter) {
+            return ((OMTQueryFilter) step).getQuery().filter(previousStep);
         }
         if (step.getOperatorCall() != null) {
             final OMTCallable callable = memberUtil.getCallable(step.getOperatorCall());

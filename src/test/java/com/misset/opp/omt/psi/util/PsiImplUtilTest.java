@@ -387,4 +387,14 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
             assertEquals("string", type.get(0).getLocalName());
         });
     }
+
+    @Test
+    void filter() {
+        String content = "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "queries: |\n" +
+                "   DEFINE QUERY myQuery() => /ont:ClassA";
+    }
+
 }
