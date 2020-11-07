@@ -13,6 +13,7 @@
   tokenTypeClass="com.misset.opp.omt.psi.OMTTokenType"
 
   psiImplUtilClass="com.misset.opp.omt.psi.util.PsiImplUtil"
+
 }
 
 // the end of the file (or the entire file) can be a (set of) comment(s)
@@ -202,41 +203,74 @@ chooseBlock ::=                             CHOOSE_OPERATOR trailing?
                                                 leading? (OTHERWISE_OPERATOR LAMBDA query)?
                                                 END_OPERATOR trailing?
 
-// an equation statement should contain a left hand value and 1+ condition operators + right hand values:
-// $value == $value == $value etc...
-equationStatement ::=                       queryPath trailing? (CONDITIONAL_OPERATOR trailing? queryPath)? { methods = [ resolveToResource ]}
-booleanStatement ::=                        equationStatement trailing? (BOOLEAN_OPERATOR trailing? equationStatement)* { methods = [ resolveToResource filter ]}
-negatedStatement ::=                        (NOT_OPERATOR trailing? query)
+// QUERIES
+// A query is the superclass of different variants of a query.
+// it is used to break the array into meaningful subsections based on detected tokens
+// for example, the queryArray will break the array into subsections by the delimiter '|' for the array
+//
+// with regular bnf -> psi generation, the query would encapsulate the queryPath, ... items
+// by using the extension mechanism, it only becomes their superclass
+query     ::=                               queryPath | queryArray | booleanStatement | equationStatement
+                                            { methods = [
+                                            resolveToResource
+                                            filter
+                                            isQueryArray
+                                            isQueryPath
+                                            isBooleanStatement
+                                            isEquationStatement
+                                            isBooleanType ]  }
+// The queryPath is the base, eventually all queries will descent into a queryPath even for single steps
+// For example, a queryArray can consist of 'a' | 'b' in which both 'a' and 'b' are encapsulated
+// into a queryPath and subsequently a queryStep
+// The queryPath is constructed using the Forward slash as delimiter a contains as many steps as possible
+queryPath ::=                               (FORWARD_SLASH? queryStep)+ { extends=query }
+// The queryArray uses the PIPE symbol to split the array where both can be resolved separately
+queryArray ::=                              query trailing? (PIPE trailing? query)+ { extends=query }
+// A booleanStatement works the same as the queryArray but using a BOOLEAN_OPERATOR
+// When resolving, it should be checked that all parts of the query are resolved to boolean types
+booleanStatement ::=                        query trailing? (BOOLEAN_OPERATOR trailing? query)+ { extends=query }
+// The equationStatement uses a conditional operator (like ==, >=, <=) to split the statement
+// it only allows a left-hand and right-hand query, both should be resolved to boolean type
+equationStatement ::=                       query trailing? CONDITIONAL_OPERATOR trailing? query { extends=query }
+// The negated statement detects the usage of the NOT operator
+// This can be used as '.. / NOT IN (...)' OR '.. / NOT'. In the former the negation is based on the subsequent
+// query whereas the latter it's based on the preceding query
+// NOTE: for some reason the 2 options need to be stated separately for the compiler to make sense of it
+// creation of a single negatedStatement with both options is not working
+// the leading statement is preferred
+negatedStep ::=                             NOT_OPERATOR trailing? query { extends=query }
+
+// a queryStep is anything that is acceptable between the / ... / FORWARD_SLASH delimiters in the query or
+// that add some additional behavior to the step (like a filter)
+// TODO: it might be worthwhile to consider appending the filter to the queryStep instead of making it a separate step
+queryStep ::=                               queryReverseStep |
+                                            constant_value | variable | curieConstantElement | curieElement |
+                                            operatorCall | IRI | DOT | OWLPROPERTY | interpolatedString |
+                                            queryFilter | chooseBlock | negatedStep | NOT_OPERATOR |
+                                            oneManyQuery | zeroManyQuery | subQuery |
+                                            trailing | leading
+                                            { methods = [ resolveToResource ]}
+queryReverseStep ::=                        CARET queryStep { methods = [ resolveToResource ] extends=queryStep}
+
+// a query filter is contained by brackets [] and should resolve to boolean
+queryFilter ::=                             BRACKET_OPEN trailing? query trailing? BRACKET_CLOSED { extends=queryStep }
+
+// the subQuery encapsulated a query by PARENTHESES, it can be resolved as-is, for example in an equation
+// or be cast to a traverse-like behavior using the ASTERIX and PLUS appendixes
+subQuery ::=                                PARENTHESES_OPEN trailing? query trailing? PARENTHESES_CLOSE { extends=queryStep }
+zeroManyQuery ::=                           subQuery ASTERIX { extends=subQuery }
+oneManyQuery ::=                            subQuery PLUS { extends=subQuery }
+
+// the assignment statement is used to assign a value to a left-hand target, like a variable or a resolved resource iri
+// addTo and removeFrom are similar which will add/remove the item to/from the collection
+// these are not used defined query statement but in command blocks
 assignmentStatement ::=                     query trailing? EQUALS trailing? (query | commandCall)
 addToCollection ::=                         query trailing? ADD trailing? (query | commandCall)
 removeFromCollection ::=                    query trailing? REMOVE trailing? (query | commandCall)
 
-// QUERIES
-// A queryPath consists of one or more querySteps. A queryStep can be considered forward or reverse (indicated by ^)
-// to reduce the complexity of parsing, slashes will be captured but are not required
-query     ::=                               (booleanStatement | queryPath)  { methods = [ resolveToResource filter getValidBooleanStatement getValidQueryPath ]  }
-queryPath ::=                               (FORWARD_SLASH? (queryStep | queryReverseStep))+ (PIPE query)?
-                                            { methods = [ resolveToResource filter ]}
-queryStep ::=                               constant_value | variable | curieConstantElement | curieElement |
-                                            operatorCall | IRI | DOT | OWLPROPERTY | interpolatedString |
-                                            queryFilter | chooseBlock |
-                                            oneManyQuery | zeroManyQuery | subQuery | negatedStatement | NOT_OPERATOR |
-                                            trailing | leading
-                                            { methods = [ resolveToResource filter ]}
-queryReverseStep ::=                        CARET queryStep { methods = [ resolveToResource ]}
-
-// a query filter is contained by brackets [] and should resolve to boolean
-queryFilter ::=                             BRACKET_OPEN trailing? query trailing? BRACKET_CLOSED
-
-// a recursion will continuously collect items based on the outcome of the previous recursion and the path described in the recursion
-// this makes it easy to traverse a graph for nested elements of identical/similar design
-subQuery ::=                                PARENTHESES_OPEN trailing? query trailing? PARENTHESES_CLOSE
-zeroManyQuery ::=                           subQuery ASTERIX
-oneManyQuery ::=                            subQuery PLUS
-
 // interpolation
 interpolationTemplate ::=                   TEMPLATE_OPEN query TEMPLATE_CLOSED
-interpolatedString ::=                      BACKTICK (interpolationTemplate | STRING)* BACKTICK
+interpolatedString ::=                      BACKTICK (interpolationTemplate | STRING)* BACKTICK { extends=queryStep }
 
 // string / interpolated string without encapsulation of ' or `
 nakedString ::=                             start (queryStep | COMMA | EQUALS | SEQUENCE_BULLET | interpolationTemplate)+ end

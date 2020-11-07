@@ -1,7 +1,6 @@
 package com.misset.opp.omt;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.psi.*;
 import org.junit.jupiter.api.AfterEach;
@@ -31,100 +30,94 @@ class OMTParserDefinitionTest extends LightJavaCodeInsightFixtureTestCase {
     void testQueryParserAsQueryPath() {
         OMTFile file = parseQuery("/pol:ClassA");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
-        assertNotNull(query);
-        assertNotNull(query.getValidQueryPath());
-        assertNull(query.getValidBooleanStatement());
+        assertTrue(query.isQueryPath());
     }
 
     @Test
     void testQueryParserAsBooleanStatement() {
         OMTFile file = parseQuery("/pol:ClassA == /pol:ClassA");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
-        assertNotNull(query);
-        assertNull(query.getValidQueryPath());
-        assertNotNull(query.getValidBooleanStatement());
+        assertTrue(query.isEquationStatement());
     }
 
     @Test
     void testQueryParserAND() {
         OMTFile file = parseQuery("/pol:ClassA == /pol:ClassA AND /pol:ClassB == /pol:ClassB");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
-        assertNotNull(query);
-        assertNull(query.getValidQueryPath());
-        assertNotNull(query.getValidBooleanStatement());
+        assertTrue(query.isBooleanStatement());
     }
 
     @Test
     void testQueryParserOR() {
         OMTFile file = parseQuery("/pol:ClassA == /pol:ClassA OR /pol:ClassB == /pol:ClassB");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
-        assertNotNull(query);
-        assertNull(query.getValidQueryPath());
-        assertNotNull(query.getValidBooleanStatement());
+        assertTrue(query.isBooleanStatement());
     }
 
     @Test
-    void testQueryParserFilter() {
+    void testQueryParserFilterIsBooleanType() {
         OMTFile file = parseQuery("/pol:ClassA [rdf:type == /pol:ClassA]");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
 
-        ApplicationManager.getApplication().runReadAction(() -> {
-            assertNotNull(query);
-        });
-        // parsed as a queryPath, with the filter as nested boolean statement
-        assertNotNull(query.getValidQueryPath());
-        assertNull(query.getValidBooleanStatement());
+        assertTrue(query.isQueryPath());
+        OMTQueryPath queryPath = (OMTQueryPath) query;
+        assertEquals(2, queryPath.getQueryStepList().size());
 
-        assertEquals(2, query.getValidQueryPath().getChildren().length);
-
-        OMTQueryStep step = (OMTQueryStep) query.getValidQueryPath().getChildren()[1];
-        assertNotNull(step.getQueryFilter());
-        assertNotNull(step.getQueryFilter().getQuery().getValidBooleanStatement());
+        OMTQueryStep step = queryPath.getQueryStepList().get(1);
+        assertTrue(step instanceof OMTQueryFilter);
+        assertTrue(((OMTQueryFilter) step).getQuery().isBooleanType());
 
     }
 
     @Test
-    void testQueryParserFilterWithAND() {
+    void testQueryParserFilterWithANDIsBooleanType() {
         OMTFile file = parseQuery("/pol:ClassA [rdf:type == /pol:ClassA AND pol:titel == 'test']");
-        final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
-        assertNotNull(query);
-        // parsed as a queryPath, with the filter as nested boolean statement
-        assertNotNull(query.getValidQueryPath());
-        assertNull(query.getValidBooleanStatement());
-
-        assertEquals(2, query.getValidQueryPath().getChildren().length);
-
-        OMTQueryStep step = (OMTQueryStep) query.getValidQueryPath().getChildren()[1];
-        assertNotNull(step.getQueryFilter());
-        assertNotNull(step.getQueryFilter().getQuery().getValidBooleanStatement());
-
+        final OMTQueryFilter filter = exampleFiles.getPsiElementFromRootDocument(OMTQueryFilter.class, file);
+        assertTrue(filter.getQuery().isBooleanType());
     }
 
     @Test
     void testQueryParserFilterWithANDasOperator() {
         OMTFile file = parseQuery("/pol:ClassA [AND(rdf:type == /pol:ClassA, pol:titel == 'test')]");
-        final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
-        assertNotNull(query);
-        // parsed as a queryPath, with the filter as nested boolean statement
-        assertNotNull(query.getValidQueryPath());
-        assertNull(query.getValidBooleanStatement());
-
-        assertEquals(2, query.getValidQueryPath().getChildren().length);
-
-        OMTQueryStep step = (OMTQueryStep) query.getValidQueryPath().getChildren()[1];
-        assertNotNull(step.getQueryFilter());
-        assertNotNull(step.getQueryFilter().getQuery().getValidQueryPath());
+        final OMTQueryFilter filter = exampleFiles.getPsiElementFromRootDocument(OMTQueryFilter.class, file);
+        assertTrue(filter.getQuery().isQueryPath());
+        // TODO: when the isBooleanType includes resolving the queryPath to a type, validate that it is booleanType
     }
 
     @Test
-    void testQueryParserFilterWithNOT() {
+    void testQueryParserFilterWithNOTLeading() {
         OMTFile file = parseQuery("/pol:ClassA [NOT rdf:type == /pol:ClassA]");
         final OMTQueryFilter filter = exampleFiles.getPsiElementFromRootDocument(OMTQueryFilter.class, file);
+        assertTrue(filter.getQuery().isBooleanType());
+    }
+
+    @Test
+    void testQueryParserFilterWithNOTTrailing() {
+        OMTFile file = parseQuery("/pol:ClassA / someMethod() / NOT");
         ApplicationManager.getApplication().runReadAction(() -> {
-            final OMTNegatedStatement negatedStatement = PsiTreeUtil.findChildOfType(filter, OMTNegatedStatement.class);
-            assertNotNull(negatedStatement);
-            assertEquals("rdf:type == /pol:ClassA", negatedStatement.getQuery().getText());
+            final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
+            assertTrue(query.isBooleanType());
         });
+    }
+
+    @Test
+    void testQueryParserArray() {
+        // the left-side of the array token is considered a regular path that is resolved directly in the query as steps
+        // the right-side of the array and all subsequent array delimiters are new OMTQuery instances
+        OMTFile file = parseQuery("/pol:ClassA | /pol:ClassB");
+        final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
+        assertTrue(query.isQueryArray());
+        assertEquals(2, ((OMTQueryArray) query).getQueryList().size());
+    }
+
+    @Test
+    void testQueryParserArrayWith3Parts() {
+        // the left-side of the array token is considered a regular path that is resolved directly in the query as steps
+        // the right-side of the array and all subsequent array delimiters are new OMTQuery instances
+        OMTFile file = parseQuery("/pol:ClassA | /pol:ClassB | /pol:ClassC");
+        final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
+        assertTrue(query.isQueryArray());
+        assertEquals(2, ((OMTQueryArray) query).getQueryList().size());
     }
 
 

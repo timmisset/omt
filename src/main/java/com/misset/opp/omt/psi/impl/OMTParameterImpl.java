@@ -52,7 +52,7 @@ public class OMTParameterImpl implements OMTParameter {
     }
 
     public OMTParameterImpl(OMTQuery query) {
-        this(query.getValidQueryPath());
+        this(query.isQueryPath() ? (OMTQueryPath) query : null);
     }
 
     public OMTParameterImpl(OMTQueryPath queryPath) {

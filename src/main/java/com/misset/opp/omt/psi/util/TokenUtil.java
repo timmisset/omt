@@ -45,6 +45,10 @@ public class TokenUtil {
         return isToken(element, "OMTTokenType.SEQUENCE_BULLET");
     }
 
+    public boolean isNotOperator(PsiElement element) {
+        return isToken(element, "OMTTokenType.NOT_OPERATOR");
+    }
+
     public Object parseToTypedLiteral(OMTConstantValue constantValue) {
         if (isToken(constantValue.getFirstChild(), "OMTTokenType.STRING")) {
             return constantValue.getText().substring(1, constantValue.getTextLength() - 1);
