@@ -167,7 +167,7 @@ public class RDFModelUtil {
                 resources.addAll(getClassDescendants(resource));
             }
         }
-        return distinctResources(resources);
+        return getDistinctResources(resources);
     }
 
     public List<Resource> listSubjectsWithPredicateObjectClass(Resource predicate, List<Resource> targetClass) {
@@ -188,7 +188,7 @@ public class RDFModelUtil {
                 resources.add(shacl.getProperty(SHACL_PATH).getObject().asResource());
             }
         });
-        return distinctResources(resources);
+        return getDistinctResources(resources);
     }
 
     public List<Resource> listPredicatesForSubjectClass(List<Resource> subjectClasses) {
@@ -196,10 +196,10 @@ public class RDFModelUtil {
         subjectClasses.forEach(subject ->
                 getShaclProperties(subject).keySet().forEach(statement ->
                         resources.add(statement.getProperty(SHACL_PATH).getObject().asResource())));
-        return distinctResources(resources);
+        return getDistinctResources(resources);
     }
 
-    private List<Resource> distinctResources(List<Resource> resources) {
+    public List<Resource> getDistinctResources(List<Resource> resources) {
         return resources.stream().map(Resource::toString).distinct().map(value -> model.createResource(value)).collect(Collectors.toList());
     }
 
@@ -211,7 +211,7 @@ public class RDFModelUtil {
         resources.addAll(subjects.stream().map(subject -> getDataTypeSubjectPredicate(subject, predicate))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList()));
-        return distinctResources(resources);
+        return getDistinctResources(resources);
     }
 
     public boolean isTypePredicate(Resource resource) {

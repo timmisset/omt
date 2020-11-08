@@ -92,7 +92,7 @@ namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)        
                                                                                    }
 namespaceIri ::=                            start IRI end                          { methods = [getName getNamespace] }
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix getAsResource getPrefixName]}
-curieConstantElement ::=                    CURIE_CONSTANT_ELEMENT_PREFIX curieElement
+curieConstantElement ::=                    CURIE_CONSTANT_ELEMENT_PREFIX curieElement { extends=queryStep methods=[resolveToResource ]}
 
 modelBlock::=                               MODEL_BLOCK_START trailing? (indentToken modelItemBlock* dedentToken)?
 modelItemBlock::=                           leading? modelItemLabel trailing? block?
@@ -214,24 +214,21 @@ query     ::=                               queryPath | queryArray | booleanStat
                                             { methods = [
                                             resolveToResource
                                             filter
-                                            isQueryArray
-                                            isQueryPath
-                                            isBooleanStatement
-                                            isEquationStatement
-                                            isBooleanType ]  }
+                                            isBooleanType
+                                            getDefinedName ]  }
 // The queryPath is the base, eventually all queries will descent into a queryPath even for single steps
 // For example, a queryArray can consist of 'a' | 'b' in which both 'a' and 'b' are encapsulated
 // into a queryPath and subsequently a queryStep
 // The queryPath is constructed using the Forward slash as delimiter a contains as many steps as possible
-queryPath ::=                               (FORWARD_SLASH? queryStep)+ { extends=query }
+queryPath ::=                               (FORWARD_SLASH? queryStep)+ { extends=query methods=[resolveToResource] }
 // The queryArray uses the PIPE symbol to split the array where both can be resolved separately
-queryArray ::=                              query trailing? (PIPE trailing? query)+ { extends=query }
+queryArray ::=                              query trailing? (PIPE trailing? query)+ { extends=query methods=[resolveToResource] }
 // A booleanStatement works the same as the queryArray but using a BOOLEAN_OPERATOR
 // When resolving, it should be checked that all parts of the query are resolved to boolean types
-booleanStatement ::=                        query trailing? (BOOLEAN_OPERATOR trailing? query)+ { extends=query }
+booleanStatement ::=                        query trailing? (BOOLEAN_OPERATOR trailing? query)+ { extends=query methods=[resolveToResource] }
 // The equationStatement uses a conditional operator (like ==, >=, <=) to split the statement
 // it only allows a left-hand and right-hand query, both should be resolved to boolean type
-equationStatement ::=                       query trailing? CONDITIONAL_OPERATOR trailing? query { extends=query }
+equationStatement ::=                       query trailing? CONDITIONAL_OPERATOR trailing? query { extends=query methods=[resolveToResource] }
 // The negated statement detects the usage of the NOT operator
 // This can be used as '.. / NOT IN (...)' OR '.. / NOT'. In the former the negation is based on the subsequent
 // query whereas the latter it's based on the preceding query
@@ -257,7 +254,7 @@ queryFilter ::=                             BRACKET_OPEN trailing? query trailin
 
 // the subQuery encapsulated a query by PARENTHESES, it can be resolved as-is, for example in an equation
 // or be cast to a traverse-like behavior using the ASTERIX and PLUS appendixes
-subQuery ::=                                PARENTHESES_OPEN trailing? query trailing? PARENTHESES_CLOSE { extends=queryStep }
+subQuery ::=                                PARENTHESES_OPEN trailing? query trailing? PARENTHESES_CLOSE { extends=queryStep methods=[resolveToResource] }
 zeroManyQuery ::=                           subQuery ASTERIX { extends=subQuery }
 oneManyQuery ::=                            subQuery PLUS { extends=subQuery }
 

@@ -88,7 +88,8 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
                 return true;
 
             case Query:
-                return !getRdfModelUtil().isPrimitiveType(getReturnType().get(0));
+                return
+                        getReturnType().isEmpty() || !getRdfModelUtil().isPrimitiveType(getReturnType().get(0));
         }
     }
 
