@@ -2,6 +2,7 @@ package com.misset.opp.omt.psi.util;
 
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
@@ -11,10 +12,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -432,16 +430,13 @@ public class PsiImplUtil {
 
     public static List<Resource> getPreviousStep(PsiElement step) {
         PsiElement previous = step.getPrevSibling();
-        while (previous != null
-                && !(previous instanceof OMTQueryPath)
-                && !(previous instanceof OMTQueryStep)
-                && !(previous instanceof OMTQueryReverseStep)) {
+        while (previous != null && !(previous instanceof OMTQueryPath) && !(previous instanceof OMTQueryStep)) {
             previous = previous.getPrevSibling();
         }
         if (previous == null) {
             // retrieve the previous value via the parent
             final PsiElement containingQueryStep = PsiTreeUtil.findFirstParent(step, parent -> parent != step &&
-                    (parent instanceof OMTQueryStep || parent instanceof OMTQueryFilter));
+                    parent instanceof OMTQueryFilter);
             // if the first container is also a query step. If this is a filter, ignore it
             if (containingQueryStep instanceof OMTQueryStep) {
                 return getPreviousStep(containingQueryStep);
@@ -458,9 +453,6 @@ public class PsiImplUtil {
             if (part instanceof OMTQueryPath) {
                 return ((OMTQueryPath) part).resolveToResource();
             }
-            if (part instanceof OMTQueryReverseStep) {
-                return ((OMTQueryReverseStep) part).resolveToResource();
-            }
             if (part instanceof OMTEquationStatement) {
                 return ((OMTEquationStatement) part).resolveToResource();
             }
@@ -475,13 +467,18 @@ public class PsiImplUtil {
                 return getType((OMTParameterWithType) variable.getParent());
             } else if (variable.getParent() instanceof OMTDefineParam) {
                 // query or command statement
-                OMTDefinedStatement statement = (OMTDefinedStatement) variable.getParent().getParent();
-                Pattern pattern = Pattern.compile(String.format("@param \\%s \\((.*)\\)", variable.getName()));
-                Matcher matcher = pattern.matcher(
-                        statement.getLeading() != null ?
-                                statement.getLeading().getText() : "");
-                if (matcher.find()) {
-                    return Collections.singletonList(getTypeAsResource(matcher.group(1), variable));
+                // check if there is @param annotation
+                final OMTDefineParam defineParam = (OMTDefineParam) variable.getParent();
+                // retrieve the parameter annotations
+                final Collection<OMTParameterAnnotation> parameterAnnotations = PsiTreeUtil.findChildrenOfType(defineParam.getParent(), OMTParameterAnnotation.class);
+                final Optional<OMTParameterAnnotation> parameterAnnotation = parameterAnnotations.stream().filter(omtParameterAnnotation -> {
+                    final OMTParameterWithType parameterWithType = omtParameterAnnotation.getParameterWithType();
+                    final PsiReference reference = parameterWithType.getVariable().getReference();
+                    return reference != null && reference.isReferenceTo(variable);
+                })
+                        .findFirst();
+                if (parameterAnnotation.isPresent()) {
+                    return parameterAnnotation.get().getParameterWithType().getType();
                 }
             }
         } else {
