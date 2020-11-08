@@ -3,8 +3,8 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
-import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.AfterEach;
@@ -154,9 +154,7 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 "           DEFINE QUERY test() => $mijnParam;\n";
 
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> {
-            validateResources(query.resolveToResource(), "http://ontologie#ClassA");
-        });
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA"));
 
     }
 
@@ -172,9 +170,7 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 "    DEFINE QUERY myQuery($mijnParameter) => $mijnParameter;";
 
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> {
-            validateResources(query.resolveToResource(), "http://ontologie#ClassA");
-        });
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA"));
     }
 
     @Test
@@ -184,9 +180,7 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 "    DEFINE QUERY myQuery2() => myQuery;";
 
         OMTQuery query = parseQueryFromContent(content, omtQuery -> omtQuery.getDefinedName().equals("myQuery2"));
-        ApplicationManager.getApplication().runReadAction(() -> {
-            validateResources(query.resolveToResource(), "http://www.w3.org/2001/XMLSchema#decimal");
-        });
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://www.w3.org/2001/XMLSchema#decimal"));
     }
 
 
@@ -199,14 +193,10 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 "   activity: !Activity\n" +
                 "       params:\n" +
                 "           -   $mijnParam (ont:ClassA)\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTParameterWithType parameterWithType = exampleFiles.getPsiElementFromRootDocument(OMTParameterWithType.class, rootBlock);
 
-            List<Resource> type = parameterWithType.getType();
-            assertEquals(1, type.size());
-            assertEquals("ClassA", type.get(0).getLocalName());
-        });
+        final PsiFile psiFile = myFixture.configureByText("test.omt", content);
+        OMTParameterWithType parameterWithType = exampleFiles.getPsiElementFromRootDocument(OMTParameterWithType.class, psiFile);
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(parameterWithType.getType(), "http://ontologie#ClassA"));
     }
 
     @Test
@@ -218,15 +208,9 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 "   activity: !Activity\n" +
                 "       params:\n" +
                 "           -   $mijnParam (string)\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTParameterWithType parameterWithType = exampleFiles.getPsiElementFromRootDocument(OMTParameterWithType.class, rootBlock);
-
-            List<Resource> type = parameterWithType.getType();
-            assertEquals(1, type.size());
-            assertEquals(RDFModelUtil.XSD, type.get(0).getNameSpace());
-            assertEquals("string", type.get(0).getLocalName());
-        });
+        final PsiFile psiFile = myFixture.configureByText("test.omt", content);
+        OMTParameterWithType parameterWithType = exampleFiles.getPsiElementFromRootDocument(OMTParameterWithType.class, psiFile);
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(parameterWithType.getType(), "http://www.w3.org/2001/XMLSchema#string"));
     }
 
 }
