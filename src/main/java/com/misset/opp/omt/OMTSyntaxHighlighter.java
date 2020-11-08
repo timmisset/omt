@@ -64,7 +64,9 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
         switch (tokenType.toString()) {
             case "OMTTokenType.END_OF_LINE_COMMENT":
                 return COMMENTLINE_KEYS;
-            case "OMTTokenType.JAVA_DOCS":
+            case "OMTTokenType.JAVADOCS_START":
+            case "OMTTokenType.JAVADOCS_END":
+            case "OMTTokenType.JAVADOCS_CONTENT":
                 return COMMENTBLOCK_KEYS;
             case "BAD_CHARACTER":
                 return BAD_CHAR_KEYS;

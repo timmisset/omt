@@ -6,10 +6,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.OMTFile;
-import com.misset.opp.omt.psi.OMTImport;
-import com.misset.opp.omt.psi.OMTMemberListItem;
-import com.misset.opp.omt.psi.OMTSequence;
+import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.util.TokenUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,6 +27,11 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
         }
         caretOffset = editor.getCaretModel().getOffset();
 
+        if (PsiTreeUtil.findFirstParent(elementAt, parent -> parent instanceof OMTJdComment) != null) {
+            insert(editor, "*", 1, caretOffset);
+            return Result.Stop;
+        }
+
         PsiElement sibling = elementAt;
         while (sibling != null && tokenUtil.isWhiteSpace(sibling)) {
             sibling = sibling.getPrevSibling();
@@ -38,6 +40,7 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
             insert(editor, "-", getSequenceBulletTrailingSpace(sibling), caretOffset);
             return Result.Stop;
         }
+
         if (tokenUtil.isOperator(sibling)) {
             final PsiElement firstNonWhiteTokenSibling = getFirstNonWhiteTokenSibling(sibling.getPrevSibling());
             if (tokenUtil.isSequenceBullet(firstNonWhiteTokenSibling)) {
