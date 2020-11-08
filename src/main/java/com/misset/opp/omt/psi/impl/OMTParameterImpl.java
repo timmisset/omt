@@ -51,10 +51,6 @@ public class OMTParameterImpl implements OMTParameter {
         required = true;
     }
 
-    public OMTParameterImpl(OMTQuery query) {
-        this(query.isQueryPath() ? (OMTQueryPath) query : null);
-    }
-
     public OMTParameterImpl(OMTQueryPath queryPath) {
         if (queryPath == null || !(queryPath.getFirstChild().getFirstChild() instanceof OMTVariable)) {
             return;

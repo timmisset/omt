@@ -1,21 +1,25 @@
 package com.misset.opp.omt.psi.util;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
-import com.misset.opp.omt.psi.ExampleFiles;
-import com.misset.opp.omt.psi.OMTDefineQueryStatement;
-import com.misset.opp.omt.psi.OMTParameterWithType;
-import com.misset.opp.omt.psi.OMTQueryPath;
+import com.misset.opp.omt.psi.*;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
@@ -37,168 +41,67 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
         super.tearDown();
     }
 
-    @Test
-    void queryPathResolveToResource_ResolvesConstant() {
-        String content = "prefixes:\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "    DEFINE QUERY test() => /ont:ClassA;\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertEquals("http://ontologie#ClassA", resources.get(0).toString());
-        });
+    // parse first argument and expect the resourceList
+    static Stream<Arguments> basicScenarios() {
+        return Stream.of(
+                Arguments.of("/ont:ClassA", new String[]{"http://ontologie#ClassA"}),
+                Arguments.of("'test'", new String[]{"http://www.w3.org/2001/XMLSchema#string"}),
+                Arguments.of("10", new String[]{"http://www.w3.org/2001/XMLSchema#int"}),
+                Arguments.of("10.0", new String[]{"http://www.w3.org/2001/XMLSchema#double"}),
+                Arguments.of("false", new String[]{"http://www.w3.org/2001/XMLSchema#boolean"}),
+                Arguments.of("true", new String[]{"http://www.w3.org/2001/XMLSchema#boolean"}),
+                Arguments.of("10 | 'test'", new String[]{"http://www.w3.org/2001/XMLSchema#int", "http://www.w3.org/2001/XMLSchema#string"}),
+                Arguments.of("true | false", new String[]{"http://www.w3.org/2001/XMLSchema#boolean"}),
+                Arguments.of("/ont:ClassA / ont:classProperty", new String[]{"http://ontologie#ClassC"}),
+                Arguments.of("'test' / ^ont:stringProperty", new String[]{"http://ontologie#ClassA", "http://ontologie#ClassB", "http://ontologie#ClassC"}),
+                Arguments.of("'test' / (^ont:stringProperty)", new String[]{"http://ontologie#ClassA", "http://ontologie#ClassB", "http://ontologie#ClassC"}),
+                Arguments.of("true / ^ont:booleanProperty", new String[]{"http://ontologie#ClassA"}),
+                Arguments.of("/ont:ClassA / rdf:type", new String[]{"http://ontologie#ClassA"}),
+                Arguments.of("$mijnParameter / CEIL", new String[]{"http://www.w3.org/2001/XMLSchema#decimal"}), // return decimal type from builtInOperator
+                Arguments.of("/ont:ClassA / rdf:type / FIRST", new String[]{"http://ontologie#ClassA"}) // no returnType, return input
+        );
     }
 
-    @Test
-    void queryPathResolveToResource_ResolvesConstantValueToString() {
-        String content = "prefixes:\n" +
+    private OMTQuery parseQuery(String query) {
+        String parsed = String.format("prefixes:\n" +
                 "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "    DEFINE QUERY test() => 'test';\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertEquals("http://www.w3.org/2001/XMLSchema#string", resources.get(0).toString());
-        });
-    }
-
-    @Test
-    void queryPathResolveToResource_ResolvesConstantValueToInteger() {
-        String content = "prefixes:\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "    DEFINE QUERY test() => 10;\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertEquals("http://www.w3.org/2001/XMLSchema#int", resources.get(0).toString());
-        });
-    }
-
-    @Test
-    void queryPathResolveToResource_ResolvesConstantValueToDouble() {
-        String content = "prefixes:\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "    DEFINE QUERY test() => 10.0;\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertEquals("http://www.w3.org/2001/XMLSchema#double", resources.get(0).toString());
-        });
-    }
-
-    @Test
-    void queryPathResolveToResource_ResolvesConstantValueToBooleanTrue() {
-        String content = "prefixes:\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "    DEFINE QUERY test() => true;\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertEquals("http://www.w3.org/2001/XMLSchema#boolean", resources.get(0).toString());
-        });
-    }
-
-    @Test
-    void queryPathResolveToResource_ResolvesConstantValueToBooleanFalse() {
-        String content = "prefixes:\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "    DEFINE QUERY test() => false;\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertEquals("http://www.w3.org/2001/XMLSchema#boolean", resources.get(0).toString());
-        });
-    }
-
-    @Test
-    void queryPathResolveToResource_ResolvesPredicateObject() {
-        String content = "prefixes:\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "    DEFINE QUERY test() => /ont:ClassA / ont:classProperty;\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertEquals("http://ontologie#ClassC", resources.get(0).toString());
-        });
-    }
-
-    @Test
-    void queryPathResolveToResource_ResolvesConstantStringReversePathToClass() {
-        String content = "prefixes:\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "    DEFINE QUERY test() => 'test' / ^ont:stringProperty;\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(3, resources.size());
-            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "ClassA", "ClassB", "ClassC");
-        });
-    }
-
-    @Test
-    void queryPathResolveToResource_ResolvesConstantBooleanReversePathToClass() {
-        String content = "prefixes:\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "    DEFINE QUERY test() => true / ^ont:booleanProperty;\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "ClassA");
-        });
-    }
-
-    @Test
-    void queryPathResolveToResource_ResolvesType() {
-        String content = "prefixes:\n" +
                 "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-                "    ont:     <http://ontologie#>\n" +
                 "\n" +
                 "queries: |\n" +
-                "    DEFINE QUERY test() => /ont:ClassA / rdf:type;\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "ClassA");
-        });
+                "    DEFINE QUERY test() => %s;\n", query);
+        final OMTFile omtFile = (OMTFile) myFixture.configureByText("test.omt", parsed);
+        return exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, omtFile);
+    }
+
+    private OMTQuery parseQueryFromContent(String content) {
+        final OMTFile omtFile = (OMTFile) myFixture.configureByText("test.omt", content);
+        return exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, omtFile);
+    }
+
+    private <T> T parseQueryFromContent(String content, Predicate<T> condition) {
+        final OMTFile omtFile = (OMTFile) myFixture.configureByText("test.omt", content);
+        return exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, omtFile, condition);
+    }
+
+    private void validateResources(List<Resource> resources, String... expected) {
+        assertEquals(expected.length, resources.size());
+        resources.forEach(
+                resource -> assertTrue(Arrays.stream(expected).anyMatch(expectedValue ->
+                        expectedValue.equals(resource.toString())
+                ))
+        );
+    }
+
+    private List<Resource> resolve(OMTQuery query) {
+        return ApplicationManager.getApplication().runReadAction((Computable<List<Resource>>) query::resolveToResource);
+    }
+
+    @ParameterizedTest
+    @MethodSource("basicScenarios")
+    void testResolveBasicQueriesToResourceTypes(String parse, String... expectedClasses) {
+        final OMTQuery query = parseQuery(parse);
+        final List<Resource> resources = resolve(query);
+        validateResources(resources, expectedClasses);
     }
 
     // @Test
@@ -239,25 +142,6 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
-    void queryPathResolveToResource_ResolvesSubQuery() {
-        String content = "prefixes:\n" +
-                "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "    DEFINE QUERY test() => 'test' / (^ont:stringProperty);\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(3, resources.size());
-            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "ClassA", "ClassB", "ClassC");
-
-        });
-    }
-
-    @Test
     void queryPathResolveToResource_ResolvesParameterType() {
         String content = "prefixes:\n" +
                 "    ont:     <http://ontologie#>\n" +
@@ -268,14 +152,12 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 "           -   $mijnParam (ont:ClassA)\n" +
                 "       queries: |\n" +
                 "           DEFINE QUERY test() => $mijnParam;\n";
+
+        OMTQuery query = parseQueryFromContent(content);
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "ClassA");
+            validateResources(query.resolveToResource(), "http://ontologie#ClassA");
         });
+
     }
 
     @Test
@@ -288,47 +170,10 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 "    * @param $mijnParameter (ont:ClassA)\n" +
                 "    */\n" +
                 "    DEFINE QUERY myQuery($mijnParameter) => $mijnParameter;";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "ClassA");
-        });
-    }
 
-    @Test
-    void queryPathResolveToResource_ResolvesFromBuiltInOperator() {
-        String content = "queries: |\n" +
-                "    DEFINE QUERY myQuery($mijnParameter) => $mijnParameter / CEIL;";
+        OMTQuery query = parseQueryFromContent(content);
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "decimal");
-        });
-    }
-
-    @Test
-    void queryPathResolveToResource_ResolvesFromBuiltInOperatorReturnsCurrent() {
-        String content = "prefixes:\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "    /**\n" +
-                "    * @param $mijnParameter (ont:ClassA)\n" +
-                "    */\n" +
-                "    DEFINE QUERY myQuery($mijnParameter) => $mijnParameter / FIRST;";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "ClassA");
+            validateResources(query.resolveToResource(), "http://ontologie#ClassA");
         });
     }
 
@@ -337,14 +182,10 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
         String content = "queries: |\n" +
                 "    DEFINE QUERY myQuery($mijnParameter) => $mijnParameter / CEIL;\n" +
                 "    DEFINE QUERY myQuery2() => myQuery;";
+
+        OMTQuery query = parseQueryFromContent(content, omtQuery -> omtQuery.getDefinedName().equals("myQuery2"));
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTDefineQueryStatement queryStatement = exampleFiles.getPsiElementFromRootDocument(OMTDefineQueryStatement.class,
-                    rootBlock, statement -> statement.getDefineName().getName().equals("myQuery2"));
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryStatement.getQuery());
-            assertEquals(1, resources.size());
-            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "decimal");
+            validateResources(query.resolveToResource(), "http://www.w3.org/2001/XMLSchema#decimal");
         });
     }
 
@@ -386,15 +227,6 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
             assertEquals(RDFModelUtil.XSD, type.get(0).getNameSpace());
             assertEquals("string", type.get(0).getLocalName());
         });
-    }
-
-    @Test
-    void filter() {
-        String content = "prefixes:\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "queries: |\n" +
-                "   DEFINE QUERY myQuery() => /ont:ClassA";
     }
 
 }

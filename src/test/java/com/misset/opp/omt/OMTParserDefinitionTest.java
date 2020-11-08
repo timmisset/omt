@@ -30,28 +30,28 @@ class OMTParserDefinitionTest extends LightJavaCodeInsightFixtureTestCase {
     void testQueryParserAsQueryPath() {
         OMTFile file = parseQuery("/pol:ClassA");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
-        assertTrue(query.isQueryPath());
+        assertTrue(query instanceof OMTQueryPath);
     }
 
     @Test
     void testQueryParserAsBooleanStatement() {
         OMTFile file = parseQuery("/pol:ClassA == /pol:ClassA");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
-        assertTrue(query.isEquationStatement());
+        assertTrue(query instanceof OMTEquationStatement);
     }
 
     @Test
     void testQueryParserAND() {
         OMTFile file = parseQuery("/pol:ClassA == /pol:ClassA AND /pol:ClassB == /pol:ClassB");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
-        assertTrue(query.isBooleanStatement());
+        assertTrue(query instanceof OMTBooleanStatement);
     }
 
     @Test
     void testQueryParserOR() {
         OMTFile file = parseQuery("/pol:ClassA == /pol:ClassA OR /pol:ClassB == /pol:ClassB");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
-        assertTrue(query.isBooleanStatement());
+        assertTrue(query instanceof OMTBooleanStatement);
     }
 
     @Test
@@ -59,7 +59,7 @@ class OMTParserDefinitionTest extends LightJavaCodeInsightFixtureTestCase {
         OMTFile file = parseQuery("/pol:ClassA [rdf:type == /pol:ClassA]");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
 
-        assertTrue(query.isQueryPath());
+        assertTrue(query instanceof OMTQueryPath);
         OMTQueryPath queryPath = (OMTQueryPath) query;
         assertEquals(2, queryPath.getQueryStepList().size());
 
@@ -80,7 +80,7 @@ class OMTParserDefinitionTest extends LightJavaCodeInsightFixtureTestCase {
     void testQueryParserFilterWithANDasOperator() {
         OMTFile file = parseQuery("/pol:ClassA [AND(rdf:type == /pol:ClassA, pol:titel == 'test')]");
         final OMTQueryFilter filter = exampleFiles.getPsiElementFromRootDocument(OMTQueryFilter.class, file);
-        assertTrue(filter.getQuery().isQueryPath());
+        assertTrue(filter.getQuery() instanceof OMTQueryPath);
         // TODO: when the isBooleanType includes resolving the queryPath to a type, validate that it is booleanType
     }
 
@@ -106,7 +106,7 @@ class OMTParserDefinitionTest extends LightJavaCodeInsightFixtureTestCase {
         // the right-side of the array and all subsequent array delimiters are new OMTQuery instances
         OMTFile file = parseQuery("/pol:ClassA | /pol:ClassB");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
-        assertTrue(query.isQueryArray());
+        assertTrue(query instanceof OMTQueryArray);
         assertEquals(2, ((OMTQueryArray) query).getQueryList().size());
     }
 
@@ -116,7 +116,7 @@ class OMTParserDefinitionTest extends LightJavaCodeInsightFixtureTestCase {
         // the right-side of the array and all subsequent array delimiters are new OMTQuery instances
         OMTFile file = parseQuery("/pol:ClassA | /pol:ClassB | /pol:ClassC");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
-        assertTrue(query.isQueryArray());
+        assertTrue(query instanceof OMTQueryArray);
         assertEquals(2, ((OMTQueryArray) query).getQueryList().size());
     }
 

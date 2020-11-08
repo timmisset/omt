@@ -324,20 +324,9 @@ public class PsiImplUtil {
     // ////////////////////////////////////////////////////////////////////////////
     // Queries
     // ////////////////////////////////////////////////////////////////////////////
-    public static boolean isQueryArray(OMTQuery query) {
-        return query instanceof OMTQueryArray;
-    }
-
-    public static boolean isQueryPath(OMTQuery query) {
-        return query instanceof OMTQueryPath;
-    }
-
-    public static boolean isBooleanStatement(OMTQuery query) {
-        return query instanceof OMTBooleanStatement;
-    }
-
-    public static boolean isEquationStatement(OMTQuery query) {
-        return query instanceof OMTEquationStatement;
+    public static String getDefinedName(OMTQuery query) {
+        final OMTDefineQueryStatement definedQueryStatement = (OMTDefineQueryStatement) PsiTreeUtil.findFirstParent(query, parent -> parent instanceof OMTDefineQueryStatement);
+        return definedQueryStatement != null ? definedQueryStatement.getDefineName().getName() : "";
     }
 
     public static boolean isBooleanType(OMTQuery query) {
@@ -349,27 +338,35 @@ public class PsiImplUtil {
                 return tokenUtil.isNotOperator(query.getLastChild().getFirstChild());
             }
         }
-        return query.isBooleanStatement() || query.isEquationStatement();
-    }
-
-    public static List<Resource> resolveToResource(OMTQueryPath path) {
-        return resolvePathPart(path.getLastChild());
+        return query instanceof OMTBooleanStatement || query instanceof OMTEquationStatement;
     }
 
     public static List<Resource> resolveToResource(OMTQuery query) {
         if (query.isBooleanType()) {
             return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource("boolean"));
         }
-        if (query.isQueryArray()) {
-            // combine the resolved types:
-            final OMTQueryArray queryArray = (OMTQueryArray) query;
-            return queryArray.getQueryList().stream().map(OMTQuery::resolveToResource).flatMap(Collection::stream).collect(Collectors.toList());
-        }
-        if (query.isQueryPath()) {
-            final List<OMTQueryStep> queryStepList = ((OMTQueryPath) query).getQueryStepList();
-            return queryStepList.get(queryStepList.size() - 1).resolveToResource();
-        }
         return new ArrayList<>();
+    }
+
+    public static List<Resource> resolveToResource(OMTBooleanStatement ignored) {
+        return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource("boolean"));
+    }
+
+    public static List<Resource> resolveToResource(OMTEquationStatement ignored) {
+        return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource("boolean"));
+    }
+
+    public static List<Resource> resolveToResource(OMTQueryPath query) {
+        final List<OMTQueryStep> queryStepList = query.getQueryStepList();
+        return queryStepList.get(queryStepList.size() - 1).resolveToResource();
+    }
+
+    public static List<Resource> resolveToResource(OMTQueryArray query) {
+        final List<Resource> resources = query.getQueryList().stream()
+                .map(OMTQuery::resolveToResource)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        return getRdfModelUtil().getDistinctResources(resources);
     }
 
     public static List<Resource> filter(OMTBooleanStatement booleanStatement, List<Resource> resources) {
@@ -383,10 +380,6 @@ public class PsiImplUtil {
 
     public static List<Resource> resolveToResource(OMTQueryStep step) {
         // steps that do not include preceeding info
-        if (step.getCurieConstantElement() != null) {
-            // a curie constant is a fixed value and is indifferent to previous steps
-            return Collections.singletonList(step.getCurieConstantElement().getCurieElement().getAsResource());
-        }
         if (step.getConstantValue() != null) {
             Model ontologyModel = projectUtil.getOntologyModel();
             return Collections.singletonList(
@@ -409,9 +402,6 @@ public class PsiImplUtil {
             // only resolve the curie at the current location, for example [ rdf:type == /ont:ClassA ]
             return Collections.singletonList(step.getCurieElement().getAsResource());
         }
-        if (step instanceof OMTSubQuery) {
-            return ((OMTSubQuery) step).getQuery().resolveToResource();
-        }
         if (step instanceof OMTQueryFilter) {
             return ((OMTQueryFilter) step).getQuery().filter(previousStep);
         }
@@ -427,13 +417,17 @@ public class PsiImplUtil {
         return new ArrayList<>();
     }
 
+    public static List<Resource> resolveToResource(OMTCurieConstantElement step) {
+        return Collections.singletonList(step.getCurieElement().getAsResource());
+    }
+
+    public static List<Resource> resolveToResource(OMTSubQuery step) {
+        return step.getQuery().resolveToResource();
+    }
+
     public static List<Resource> resolveToResource(OMTQueryReverseStep step) {
         List<Resource> resources = getPreviousStep(step);
         return getRdfModelUtil().listSubjectsWithPredicateObjectClass(step.getQueryStep().getCurieElement().getAsResource(), resources);
-    }
-
-    public static List<Resource> resolveToResource(OMTEquationStatement step) {
-        return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource("boolean"));
     }
 
     public static List<Resource> getPreviousStep(PsiElement step) {

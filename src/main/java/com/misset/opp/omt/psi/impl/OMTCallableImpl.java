@@ -169,8 +169,8 @@ public abstract class OMTCallableImpl implements OMTCallable {
                                 new OMTParameterImpl(sequenceItemValue.getParameterWithType())
                         );
                     }
-                    if (sequenceItemValue.getQuery() != null) {
-                        addParameter(new OMTParameterImpl(sequenceItemValue.getQuery()));
+                    if (sequenceItemValue.getQuery() instanceof OMTQueryPath) {
+                        addParameter(new OMTParameterImpl((OMTQueryPath) sequenceItemValue.getQuery()));
                     }
                     if (sequenceItemValue.getVariableAssignment() != null) {
                         addParameter(new OMTParameterImpl(sequenceItemValue.getVariableAssignment()));
