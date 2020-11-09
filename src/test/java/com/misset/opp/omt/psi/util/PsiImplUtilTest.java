@@ -2,10 +2,12 @@ package com.misset.opp.omt.psi.util;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Computable;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.ExampleFiles;
+import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTParameterWithType;
+import com.misset.opp.omt.psi.OMTQuery;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +20,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
@@ -104,41 +105,64 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
         validateResources(resources, expectedClasses);
     }
 
-    // @Test
-    void queryPathResolveToResource_ResolvesFilterWithTypeAllFilteredOut() {
+    @Test
+    void queryPathResolveToResourceResolvesFilterWithTypeAllFilteredOut() {
         String content = "prefixes:\n" +
                 "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
                 "    ont:     <http://ontologie#>\n" +
                 "\n" +
                 "queries: |\n" +
                 "    DEFINE QUERY test() => 'test' / ^ont:stringProperty [rdf:type == /ont:ClassA];\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "ClassA");
-        });
+        OMTQuery query = parseQueryFromContent(content);
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA"));
     }
 
-    // @Test
-    void queryPathResolveToResource_ResolvesFilterWithType() {
+    @Test
+    void queryPathResolveToResourceResolvesFilterWithType() {
         String content = "prefixes:\n" +
                 "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
                 "    ont:     <http://ontologie#>\n" +
                 "\n" +
                 "queries: |\n" +
                 "    DEFINE QUERY test() => 'test' / ^ont:stringProperty [rdf:type == /ont:ClassB];\n";
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement rootBlock = exampleFiles.fromContent(content);
-            OMTQueryPath queryPath = exampleFiles.getPsiElementFromRootDocument(OMTQueryPath.class, rootBlock);
-            List<Resource> resources = PsiImplUtil.resolveToResource(queryPath);
-            assertEquals(1, resources.size());
-            assertContainsElements(resources.stream().map(Resource::getLocalName).collect(Collectors.toList())
-                    , "ClassB");
+        OMTQuery query = parseQueryFromContent(content);
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
+    }
 
-        });
+    @Test
+    void queryPathResolveToResourceResolvesNOTFilterWithType() {
+        String content = "prefixes:\n" +
+                "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY test() => 'test' / ^ont:stringProperty [NOT rdf:type == /ont:ClassB];\n";
+        OMTQuery query = parseQueryFromContent(content);
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA", "http://ontologie#ClassC"));
+    }
+
+    @Test
+    void queryPathResolveToResourceResolvesANDFilterWithType() {
+        String content = "prefixes:\n" +
+                "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY test() => 'test' / ^ont:stringProperty ['a' == 'b' AND rdf:type == /ont:ClassB];\n";
+        OMTQuery query = parseQueryFromContent(content);
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
+    }
+
+    @Test
+    void queryPathResolveToResourceResolvesANDNOTFilterWithType() {
+        String content = "prefixes:\n" +
+                "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY test() => 'test' / ^ont:stringProperty ['a' == 'b' AND NOT rdf:type == /ont:ClassB];\n";
+        OMTQuery query = parseQueryFromContent(content);
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA", "http://ontologie#ClassC"));
     }
 
     @Test

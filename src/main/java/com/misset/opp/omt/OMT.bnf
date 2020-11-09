@@ -227,10 +227,10 @@ queryPath ::=                               (FORWARD_SLASH? queryStep)+ { extend
 queryArray ::=                              query trailing? (PIPE trailing? query)+ { extends=query methods=[resolveToResource] }
 // A booleanStatement works the same as the queryArray but using a BOOLEAN_OPERATOR
 // When resolving, it should be checked that all parts of the query are resolved to boolean types
-booleanStatement ::=                        query trailing? (BOOLEAN_OPERATOR trailing? query)+ { extends=query methods=[resolveToResource] }
+booleanStatement ::=                        query trailing? (BOOLEAN_OPERATOR trailing? query)+ { extends=query methods=[resolveToResource filter] }
 // The equationStatement uses a conditional operator (like ==, >=, <=) to split the statement
 // it only allows a left-hand and right-hand query, both should be resolved to boolean type
-equationStatement ::=                       query trailing? CONDITIONAL_OPERATOR trailing? query { extends=query methods=[resolveToResource] }
+equationStatement ::=                       query trailing? CONDITIONAL_OPERATOR trailing? query { extends=query methods=[resolveToResource filter] }
 // The negated statement detects the usage of the NOT operator
 // This can be used as '.. / NOT IN (...)' OR '.. / NOT'. In the former the negation is based on the subsequent
 // query whereas the latter it's based on the preceding query

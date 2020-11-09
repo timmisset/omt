@@ -355,8 +355,22 @@ public class PsiImplUtil {
     }
 
     public static List<Resource> resolveToResource(OMTQueryPath query) {
+        return resolveToResource(query, true);
+    }
+
+    public static List<Resource> resolveToResource(OMTQueryPath query, boolean lookBack) {
         final List<OMTQueryStep> queryStepList = query.getQueryStepList();
-        return queryStepList.get(queryStepList.size() - 1).resolveToResource();
+        final OMTQueryStep queryStep = queryStepList.get(queryStepList.size() - 1);
+        if (queryStep instanceof OMTCurieConstantElement) {
+            return resolveToResource((OMTCurieConstantElement) queryStep);
+        }
+        if (queryStep instanceof OMTQueryReverseStep) {
+            return resolveToResource((OMTQueryReverseStep) queryStep);
+        }
+        if (queryStep instanceof OMTSubQuery) {
+            return resolveToResource((OMTSubQuery) queryStep);
+        }
+        return queryStep.resolveToResource(lookBack);
     }
 
     public static List<Resource> resolveToResource(OMTQueryArray query) {
@@ -368,15 +382,48 @@ public class PsiImplUtil {
     }
 
     public static List<Resource> filter(OMTBooleanStatement booleanStatement, List<Resource> resources) {
-
-        return resources;
+        return booleanStatement.getQueryList().stream().map(
+                query -> query.filter(resources)
+        ).min(Comparator.comparingInt(List::size))
+                .orElse(resources);
     }
 
     public static List<Resource> filter(OMTQuery query, List<Resource> resources) {
+        if (!query.isBooleanType()) {
+            return resources;
+        }
+        if (query instanceof OMTQueryPath) {
+            final OMTQueryStep queryStep = ((OMTQueryPath) query).getQueryStepList().get(0);
+            if (queryStep.getNegatedStep() != null) {
+                return queryStep.getNegatedStep().getQuery().filter(resources);
+            }
+        }
+        return resources;
+    }
+
+    public static List<Resource> filter(OMTEquationStatement equationStatement, List<Resource> resources) {
+        final OMTQuery query = equationStatement.getQueryList().get(0);
+        final List<Resource> leftHand = query instanceof OMTQueryPath ? ((OMTQueryPath) query).resolveToResource(false) : query.resolveToResource();
+
+        if (rdfModelUtil.isTypePredicate(leftHand.get(0))) {
+            // [rdf:type == ...]
+            // now filter the resources based on the type
+            PsiElement parent = equationStatement.getParent();
+            boolean isNegated = parent instanceof OMTNegatedStep;
+            List<Resource> rightHand = equationStatement.getQueryList().get(1).resolveToResource();
+            final List<String> resourcesToCheck = rightHand.stream().map(Resource::toString).collect(Collectors.toList());
+            return resources.stream().filter(
+                    resource -> isNegated != resourcesToCheck.contains(resource.toString())
+            ).collect(Collectors.toList());
+        }
         return resources;
     }
 
     public static List<Resource> resolveToResource(OMTQueryStep step) {
+        return resolveToResource(step, true);
+    }
+
+    public static List<Resource> resolveToResource(OMTQueryStep step, boolean lookBack) {
         // steps that do not include preceeding info
         if (step.getConstantValue() != null) {
             Model ontologyModel = projectUtil.getOntologyModel();
@@ -394,7 +441,7 @@ public class PsiImplUtil {
         List<Resource> previousStep = getPreviousStep(step);
         if (step.getCurieElement() != null) {
             // list based on the preceeding data
-            if (!previousStep.isEmpty()) {
+            if (lookBack && !previousStep.isEmpty()) {
                 return getRdfModelUtil().listObjectsWithSubjectPredicate(previousStep, step.getCurieElement().getAsResource());
             }
             // only resolve the curie at the current location, for example [ rdf:type == /ont:ClassA ]
@@ -435,14 +482,12 @@ public class PsiImplUtil {
         }
         if (previous == null) {
             // retrieve the previous value via the parent
-            final PsiElement containingQueryStep = PsiTreeUtil.findFirstParent(step, parent -> parent != step &&
-                    parent instanceof OMTQueryFilter);
-            // if the first container is also a query step. If this is a filter, ignore it
-            if (containingQueryStep instanceof OMTQueryStep) {
-                return getPreviousStep(containingQueryStep);
-            }
+            final PsiElement containingQueryStep = PsiTreeUtil.findFirstParent(
+                    step, parent -> parent != step && (parent instanceof OMTSubQuery || parent instanceof OMTQueryFilter));
+            // retrieve via the subQuery:
+            return containingQueryStep != null ? getPreviousStep(containingQueryStep) : new ArrayList<>();
         }
-        return previous == null ? new ArrayList<>() : resolvePathPart(previous);
+        return resolvePathPart(previous);
     }
 
     private static List<Resource> resolvePathPart(PsiElement part) {
