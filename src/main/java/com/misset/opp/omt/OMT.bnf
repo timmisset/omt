@@ -106,7 +106,7 @@ modelItemTypeElement ::=                    MODEL_ITEM_TYPE
 // COMMENTS
 // Can occur on empty lines (JavaDocs and End Of Line Comments) or at the end of lines (End of Line Comments)
 jdComment ::=                               JAVADOCS_START jdContent* JAVADOCS_END
-jdContent ::=                               JAVADOCS_CONTENT+ | parameterAnnotation
+jdContent ::=                               JAVADOCS_CONTENT+ | START_TOKEN | END_TOKEN | parameterAnnotation
 parameterAnnotation ::=                     ANNOTATE_PARAMETER parameterWithType
 comment ::=                                 END_OF_LINE_COMMENT | jdComment
 eolComment ::=                              END_OF_LINE_COMMENT

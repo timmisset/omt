@@ -41,9 +41,9 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
             return Result.Stop;
         }
 
-        if (tokenUtil.isOperator(sibling)) {
+        if (sibling != null && tokenUtil.isOperator(sibling)) {
             final PsiElement firstNonWhiteTokenSibling = getFirstNonWhiteTokenSibling(sibling.getPrevSibling());
-            if (tokenUtil.isSequenceBullet(firstNonWhiteTokenSibling)) {
+            if (firstNonWhiteTokenSibling != null && tokenUtil.isSequenceBullet(firstNonWhiteTokenSibling)) {
                 insert(editor, "-", getSequenceBulletTrailingSpace(firstNonWhiteTokenSibling.getParent()), caretOffset);
                 return Result.Stop;
             }

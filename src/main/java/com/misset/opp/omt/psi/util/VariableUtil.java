@@ -11,6 +11,7 @@ import com.misset.opp.omt.external.util.builtIn.BuiltInMember;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.intentions.variables.AnnotateParameterIntention;
 import com.misset.opp.omt.psi.intentions.variables.RenameVariableIntention;
 import com.misset.opp.omt.psi.support.OMTCall;
 import org.apache.jena.rdf.model.Resource;
@@ -238,6 +239,7 @@ public class VariableUtil {
                                 "%n* @param %s (pol:Classname)%n" +
                                 "*/", omtVariable.getName(), omtVariable.getName()))
                         .range(omtVariable)
+                        .withFix(AnnotateParameterIntention.SINGLETON.getAnnotateParameterIntention(defineParam, omtVariable.getName()))
                         .create();
             }
         });
