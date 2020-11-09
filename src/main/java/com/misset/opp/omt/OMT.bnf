@@ -242,12 +242,12 @@ negatedStep ::=                             NOT_OPERATOR trailing? query { exten
 // a queryStep is anything that is acceptable between the / ... / FORWARD_SLASH delimiters in the query or
 // that add some additional behavior to the step (like a filter)
 // TODO: it might be worthwhile to consider appending the filter to the queryStep instead of making it a separate step
-queryStep ::=                               queryReverseStep |
+queryStep ::=                               (queryReverseStep |
                                             constant_value | variable | curieConstantElement | curieElement |
                                             operatorCall | IRI | DOT | OWLPROPERTY | interpolatedString |
                                             queryFilter | chooseBlock | negatedStep | NOT_OPERATOR |
-                                            oneManyQuery | zeroManyQuery | subQuery |
-                                            trailing | leading
+                                            subQuery |
+                                            trailing | leading) (ASTERIX | PLUS)?
                                             { methods = [ resolveToResource ]}
 queryReverseStep ::=                        CARET queryStep { methods = [ resolveToResource ] extends=queryStep}
 
@@ -257,8 +257,6 @@ queryFilter ::=                             BRACKET_OPEN trailing? query trailin
 // the subQuery encapsulated a query by PARENTHESES, it can be resolved as-is, for example in an equation
 // or be cast to a traverse-like behavior using the ASTERIX and PLUS appendixes
 subQuery ::=                                PARENTHESES_OPEN trailing? query trailing? PARENTHESES_CLOSE { extends=queryStep methods=[resolveToResource] }
-zeroManyQuery ::=                           subQuery ASTERIX { extends=subQuery }
-oneManyQuery ::=                            subQuery PLUS { extends=subQuery }
 
 // the assignment statement is used to assign a value to a left-hand target, like a variable or a resolved resource iri
 // addTo and removeFrom are similar which will add/remove the item to/from the collection
