@@ -2,7 +2,6 @@ package com.misset.opp.omt;
 
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
-import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.named.NamedMemberType;
@@ -17,6 +16,7 @@ public class OMTAnnotator implements Annotator {
     private static final ImportUtil importUtil = ImportUtil.SINGLETON;
     private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
     private static final ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
+    private static final QueryUtil queryUtil = QueryUtil.SINGLETON;
 
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
@@ -62,10 +62,7 @@ public class OMTAnnotator implements Annotator {
             curieUtil.annotateParameterType((OMTParameterType) element, holder);
         }
         if (element instanceof OMTQueryStep) {
-            holder.newAnnotation(HighlightSeverity.INFORMATION, ((OMTQueryStep) element).resolveToResource().toString()).create();
-        }
-        if (element instanceof OMTQueryReverseStep) {
-            holder.newAnnotation(HighlightSeverity.INFORMATION, ((OMTQueryReverseStep) element).resolveToResource().toString()).create();
+            queryUtil.annotateQueryStep((OMTQueryStep) element, holder);
         }
     }
 

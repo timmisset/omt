@@ -93,11 +93,27 @@ public class RDFModelUtil {
         lineage.add(resource);
         if (resource.getProperty(RDFS_SUBCLASS) != null && resource.getProperty(RDFS_SUBCLASS).getObject() != null) {
             final Resource subClass = resource.getProperty(RDFS_SUBCLASS).getObject().asResource();
-            if (subClass.toString().equals(resource.toString())) {
+            if (!subClass.toString().equals(resource.toString())) {
                 lineage.addAll(getClassLineage(subClass));
             }
         }
         return lineage;
+    }
+
+    public boolean isClassOrType(Resource resource) {
+        final List<Statement> statementList = resource.listProperties(RDF_TYPE).toList();
+        for (Statement statement : statementList) {
+            if (statement.getObject().asResource().toString().equals(OWL_CLASS.get().toString())) {
+                return true;
+            }
+        }
+        return isPrimitiveType(resource);
+    }
+
+    public List<Resource> allSuperClasses(List<Resource> resources) {
+        return getDistinctResources(resources.stream().map(
+                this::getClassLineage
+        ).flatMap(Collection::stream).collect(Collectors.toList()));
     }
 
     public List<Resource> getClassDescendants(Resource resource) {
@@ -167,6 +183,7 @@ public class RDFModelUtil {
                 resources.addAll(getClassDescendants(resource));
             }
         }
+        resources.add(RDF_TYPE.asResource());
         return getDistinctResources(resources);
     }
 
@@ -188,6 +205,7 @@ public class RDFModelUtil {
                 resources.add(shacl.getProperty(SHACL_PATH).getObject().asResource());
             }
         });
+        resources.add(RDF_TYPE.asResource());
         return getDistinctResources(resources);
     }
 
