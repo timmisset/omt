@@ -135,6 +135,15 @@ class OMTLexerTest {
         assertThat(elements, hasItem("BAD_CHARACTER"));
     }
 
+    @Test
+    public void testJdComment() throws IOException {
+        String contentToTest = "/**\n" +
+                "* @param $myQuery (prefix:Type)\n" +
+                "*/\n";
+        List<String> elements = getElements(contentToTest);
+        assertThat(elements, not(hasItem("BAD_CHARACTER")));
+    }
+
     private void testOMTFile(String name) throws IOException {
         // This method will test an entire OMT file for identical contents with the expected outcome
         // the expected content is based on the output after parsing was finally successful. Therefore, this method is to make

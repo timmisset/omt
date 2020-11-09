@@ -104,23 +104,6 @@ public class OMTElementFactory {
         return createFile(project, "\n").getFirstChild();
     }
 
-    public static PsiElement createIdent(Project project) {
-        return createFile(project, "\n    a").getChildren()[1];
-    }
-
-
-    public static PsiElement addMemberToImport(Project project, OMTImport omtImport, String member) {
-        boolean isLastImportOfImportBlock = PsiTreeUtil.getNextSiblingOfType(omtImport, OMTImport.class) == null;
-        OMTFile file = createFile(project, String.format("import:\n" +
-                "    %s\n" +
-                "        -   %s\n" +
-                "%s", omtImport.getText().replaceAll("\\s+$", ""), member, isLastImportOfImportBlock ? "\n" : "    "));
-        PsiElement firstChild = file.getFirstChild();
-        omtImport = PsiTreeUtil.findChildOfType(firstChild, OMTImport.class);
-        return omtImport;
-
-    }
-
     public static OMTBlock addEntryToBlock(Project project, OMTBlock block, String propertyLabel) {
         return addEntryToBlock(project, block, propertyLabel, "DUMMYVALUE");
     }
@@ -132,7 +115,7 @@ public class OMTElementFactory {
         if (blockEntry == null) {
             return block;
         }
-        blockEntry.add(getWhiteSpace(project, 1, "\n"));
+        blockEntry.add(getWhiteSpaceElement(project, 1, "\n"));
 
         if (block.getDedentToken() != null) {
             block.addBefore(blockEntry, block.getDedentToken());
@@ -143,9 +126,12 @@ public class OMTElementFactory {
         return block;
     }
 
-    private static PsiElement getWhiteSpace(Project project, int length, String character) {
-        String spaces = new String(new char[length]).replace("\0", character);
-        return PsiParserFacade.SERVICE.getInstance(project).createWhiteSpaceFromText(spaces);
+    public static PsiElement getWhiteSpaceElement(Project project, int length, String character) {
+        return PsiParserFacade.SERVICE.getInstance(project).createWhiteSpaceFromText(getWhiteSpace(length, character));
+    }
+
+    public static String getWhiteSpace(int length, String character) {
+        return new String(new char[length]).replace("\0", character);
     }
 
     public static String getIndentSpace(int indents) {

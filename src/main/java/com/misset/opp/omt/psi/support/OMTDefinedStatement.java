@@ -16,4 +16,5 @@ public interface OMTDefinedStatement extends PsiElement {
 
     OMTLeading getLeading();
 
+    PsiElement getDefineLabel();
 }
