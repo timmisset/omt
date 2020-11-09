@@ -19,6 +19,8 @@ import java.util.stream.Collectors;
 
 public class PsiImplUtil {
 
+    private static final String BOOLEAN = "boolean";
+
     private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
     private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private static final TokenUtil tokenUtil = TokenUtil.SINGLETON;
@@ -341,17 +343,17 @@ public class PsiImplUtil {
 
     public static List<Resource> resolveToResource(OMTQuery query) {
         if (query.isBooleanType()) {
-            return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource("boolean"));
+            return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
         }
         return new ArrayList<>();
     }
 
     public static List<Resource> resolveToResource(OMTBooleanStatement ignored) {
-        return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource("boolean"));
+        return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
     }
 
     public static List<Resource> resolveToResource(OMTEquationStatement ignored) {
-        return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource("boolean"));
+        return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
     }
 
     public static List<Resource> resolveToResource(OMTQueryPath query) {
@@ -405,7 +407,7 @@ public class PsiImplUtil {
         final OMTQuery query = equationStatement.getQueryList().get(0);
         final List<Resource> leftHand = query instanceof OMTQueryPath ? ((OMTQueryPath) query).resolveToResource(false) : query.resolveToResource();
 
-        if (rdfModelUtil.isTypePredicate(leftHand.get(0))) {
+        if (!leftHand.isEmpty() && rdfModelUtil.isTypePredicate(leftHand.get(0))) {
             // [rdf:type == ...]
             // now filter the resources based on the type
             PsiElement parent = equationStatement.getParent();
@@ -452,10 +454,7 @@ public class PsiImplUtil {
         }
         if (step.getOperatorCall() != null) {
             final OMTCallable callable = memberUtil.getCallable(step.getOperatorCall());
-            if (callable.returnsAny()) {
-                return previousStep;
-            } // return the existing types from the previous step
-            else {
+            if (callable != null) {
                 return callable.getReturnType();
             }
         }
@@ -487,7 +486,7 @@ public class PsiImplUtil {
             // retrieve via the subQuery:
             return containingQueryStep != null ? getPreviousStep(containingQueryStep) : new ArrayList<>();
         }
-        return resolvePathPart(previous);
+        return getRdfModelUtil().allSuperClasses(resolvePathPart(previous));
     }
 
     private static List<Resource> resolvePathPart(PsiElement part) {
