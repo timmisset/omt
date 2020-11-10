@@ -25,7 +25,7 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private RDFModelUtil rdfModelUtil;
 
-    private RDFModelUtil getRdfModelUtil() {
+    private RDFModelUtil getRDFModelUtil() {
         if (rdfModelUtil == null || !rdfModelUtil.isLoaded()) {
             rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
         }
@@ -89,7 +89,9 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
 
             case Query:
                 return
-                        getReturnType().isEmpty() || !getRdfModelUtil().isPrimitiveType(getReturnType().get(0));
+                        getReturnType().isEmpty() || getReturnType().get(0).getURI().equals(
+                                getRDFModelUtil().getPrimitiveTypeAsResource("any").toString()
+                        );
         }
     }
 

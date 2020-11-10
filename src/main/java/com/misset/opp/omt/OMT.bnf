@@ -191,9 +191,10 @@ commandCall ::=                             COMMAND flagSignature? signature?
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
                                                              methods=[getName setName getNameIdentifier canCallOperator canCallCommand]
                                                            }
-signature ::=                               PARENTHESES_OPEN ((query | commandBlock | commandCall | operatorCall) (COMMA (query | commandBlock | commandCall | operatorCall))*)? PARENTHESES_CLOSE {
+signature ::=                               PARENTHESES_OPEN (signatureArgument (COMMA signatureArgument)*)? PARENTHESES_CLOSE {
                                                              methods=[numberOfParameters]
 }
+signatureArgument ::=                       (query | commandBlock | commandCall | operatorCall)
 flagSignature ::=                           FLAG
 
 logicalBlock ::=                            ifBlock commandBlock trailing? (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?

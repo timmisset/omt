@@ -268,10 +268,7 @@ public class PsiImplUtil {
     // Signature
     // ////////////////////////////////////////////////////////////////////////////
     public static int numberOfParameters(OMTSignature signature) {
-        return signature.getCommandBlockList().size() +
-                signature.getQueryList().size() +
-                signature.getCommandCallList().size() +
-                signature.getOperatorCallList().size();
+        return signature.getSignatureArgumentList().size();
     }
 
     // ////////////////////////////////////////////////////////////////////////////
@@ -531,6 +528,17 @@ public class PsiImplUtil {
                 if (parameterAnnotation.isPresent()) {
                     return parameterAnnotation.get().getParameterWithType().getType();
                 }
+            } else {
+                if (variable.getParent() instanceof OMTVariableAssignment) {
+                    final OMTVariableAssignment variableAssignment = (OMTVariableAssignment) variable.getParent();
+                    final OMTVariableValue variableValue = variableAssignment.getVariableValue();
+                    if (variableValue.getCommandCall() != null && variableValue.getCommandCall().getName().equals("NEW")) {
+                        final List<OMTSignatureArgument> signatureArgumentList = variableValue.getCommandCall().getSignature().getSignatureArgumentList();
+                        if (signatureArgumentList.size() == 2 && signatureArgumentList.get(0).getQuery() != null) {
+                            return signatureArgumentList.get(0).getQuery().resolveToResource();
+                        }
+                    }
+                }
             }
         } else {
             if (variable.isGlobalVariable()) {
@@ -562,8 +570,7 @@ public class PsiImplUtil {
             // defined as 'operator', which means a shortname like 'string':
             Pattern pattern = Pattern.compile("\\(([a-z]*)\\)");
             Matcher matcher = pattern.matcher(parameterWithType.getText());
-            matcher.find();
-            if (matcher.group(1) != null) {
+            if (matcher.find() && matcher.group(1) != null) {
                 return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource(matcher.group(1)));
             } else {
                 return new ArrayList<>();
