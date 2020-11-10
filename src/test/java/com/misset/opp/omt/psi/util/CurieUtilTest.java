@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -287,19 +286,6 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 "        ");
         assertEquals(2, highlighting.size());
         assertEquals("http://ontologie#Something", highlighting.get(1).getDescription());
-    }
-
-    @Test
-    void annotateCurieAsResource() {
-        List<HighlightInfo> highlighting = getHighlighting("prefixes:\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "model:\n" +
-                "    MijnActiviteit: !Activity\n" +
-                "        onStart: |\n" +
-                "           'test' / ont:Something\n" +
-                "        ");
-        assertContainsElements(highlighting.stream().map(HighlightInfo::getDescription).collect(Collectors.toList()), "http://ontologie#Something");
     }
 
     List<HighlightInfo> getHighlighting(String content) {

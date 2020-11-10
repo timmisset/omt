@@ -183,7 +183,6 @@ public class RDFModelUtil {
                 resources.addAll(getClassDescendants(resource));
             }
         }
-        resources.add(RDF_TYPE.asResource());
         return getDistinctResources(resources);
     }
 
@@ -205,7 +204,9 @@ public class RDFModelUtil {
                 resources.add(shacl.getProperty(SHACL_PATH).getObject().asResource());
             }
         });
-        resources.add(RDF_TYPE.asResource());
+        if (!resources.isEmpty()) {
+            resources.add(RDF_TYPE.asResource());
+        }
         return getDistinctResources(resources);
     }
 
@@ -214,6 +215,9 @@ public class RDFModelUtil {
         subjectClasses.forEach(subject ->
                 getShaclProperties(subject).keySet().forEach(statement ->
                         resources.add(statement.getProperty(SHACL_PATH).getObject().asResource())));
+        if (!resources.isEmpty()) {
+            resources.add(RDF_TYPE.asResource());
+        }
         return getDistinctResources(resources);
     }
 
