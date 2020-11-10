@@ -455,7 +455,7 @@ public class PsiImplUtil {
         if (step.getOperatorCall() != null) {
             final OMTCallable callable = memberUtil.getCallable(step.getOperatorCall());
             if (callable != null) {
-                return callable.getReturnType();
+                return callable.returnsAny() ? previousStep : callable.getReturnType();
             }
         }
         return new ArrayList<>();
@@ -471,7 +471,11 @@ public class PsiImplUtil {
 
     public static List<Resource> resolveToResource(OMTQueryReverseStep step) {
         List<Resource> resources = getPreviousStep(step);
-        return getRdfModelUtil().listSubjectsWithPredicateObjectClass(step.getQueryStep().getCurieElement().getAsResource(), resources);
+        final OMTCurieElement curieElement = step.getQueryStep().getCurieElement();
+        if (curieElement != null && !getRdfModelUtil().isTypePredicate(curieElement.getAsResource())) {
+            return getRdfModelUtil().listSubjectsWithPredicateObjectClass(curieElement.getAsResource(), resources);
+        }
+        return resources;
     }
 
     public static List<Resource> getPreviousStep(PsiElement step) {

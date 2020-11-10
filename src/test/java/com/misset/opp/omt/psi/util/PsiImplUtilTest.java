@@ -57,9 +57,9 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 Arguments.of("'test' / ^ont:stringProperty", new String[]{"http://ontologie#ClassA", "http://ontologie#ClassB", "http://ontologie#ClassC"}),
                 Arguments.of("'test' / (^ont:stringProperty)", new String[]{"http://ontologie#ClassA", "http://ontologie#ClassB", "http://ontologie#ClassC"}),
                 Arguments.of("true / ^ont:booleanProperty", new String[]{"http://ontologie#ClassA"}),
-                Arguments.of("/ont:ClassA / rdf:type", new String[]{"http://ontologie#ClassA"}),
+                Arguments.of("/ont:ClassA / ^rdf:type", new String[]{"http://ontologie#ClassA", "http://ontologie#ClassB"}),
                 Arguments.of("$mijnParameter / CEIL", new String[]{"http://www.w3.org/2001/XMLSchema#decimal"}), // return decimal type from builtInOperator
-                Arguments.of("/ont:ClassA / rdf:type / FIRST", new String[]{"http://ontologie#ClassA"}) // no returnType, return input
+                Arguments.of("/ont:ClassA / ^rdf:type / FIRST", new String[]{"http://ontologie#ClassA", "http://ontologie#ClassB"}) // no returnType, return input
         );
     }
 
@@ -125,6 +125,18 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 "\n" +
                 "queries: |\n" +
                 "    DEFINE QUERY test() => 'test' / ^ont:stringProperty [rdf:type == /ont:ClassB];\n";
+        OMTQuery query = parseQueryFromContent(content);
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
+    }
+
+    @Test
+    void queryPathResolveToResourceResolvesReverseRDFType() {
+        String content = "prefixes:\n" +
+                "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY test() => /ont:ClassB / ^rdf:type;\n";
         OMTQuery query = parseQueryFromContent(content);
         ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
     }
