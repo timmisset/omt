@@ -116,6 +116,12 @@ public class RDFModelUtil {
         ).flatMap(Collection::stream).collect(Collectors.toList()));
     }
 
+    public List<Resource> allSubClasses(List<Resource> resources) {
+        return getDistinctResources(resources.stream().map(
+                this::getClassDescendants
+        ).flatMap(Collection::stream).collect(Collectors.toList()));
+    }
+
     public List<Resource> getClassDescendants(Resource resource) {
         List<Resource> descendants = new ArrayList<>();
         final ResIterator resIterator = model.listSubjectsWithProperty(RDFS_SUBCLASS, resource);
