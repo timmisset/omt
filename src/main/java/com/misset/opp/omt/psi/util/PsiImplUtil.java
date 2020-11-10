@@ -490,7 +490,10 @@ public class PsiImplUtil {
             // retrieve via the subQuery:
             return containingQueryStep != null ? getPreviousStep(containingQueryStep) : new ArrayList<>();
         }
-        return getRdfModelUtil().allSuperClasses(resolvePathPart(previous));
+        List<Resource> typesForStep = new ArrayList<>(resolvePathPart(previous));
+        typesForStep.addAll(getRdfModelUtil().allSubClasses(typesForStep));
+        typesForStep = getRdfModelUtil().getDistinctResources(typesForStep);
+        return typesForStep;
     }
 
     private static List<Resource> resolvePathPart(PsiElement part) {
