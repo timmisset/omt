@@ -181,6 +181,59 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void completionProvider_addsSuggestionForParameterWithTypeWithoutKnownPrefix() {
+        List<String> suggestions = getSuggestions("model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        params:\n" +
+                "            - $mijnParam (<caret>)\n" +
+                "\n");
+
+        assertContainsElements(suggestions, "http://ontologie#ClassA", "http://ontologie#ClassB", "http://ontologie#ClassC");
+    }
+
+    @Test
+    void completionProvider_addsSuggestionForParameterWithTypeWithKnownPrefix() {
+        List<String> suggestions = getSuggestions("" +
+                "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        params:\n" +
+                "            - $mijnParam (<caret>)\n" +
+                "\n");
+
+        assertContainsElements(suggestions, "ont:ClassA", "ont:ClassB", "ont:ClassC");
+    }
+
+    @Test
+    void completionProvider_addsSuggestionForParameterWithTypeWithKnownPrefixPartial() {
+        List<String> suggestions = getSuggestions("" +
+                "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        params:\n" +
+                "            - $mijnParam (Cla<caret>)\n" +
+                "\n");
+
+        assertContainsElements(suggestions, "ont:ClassA", "ont:ClassB", "ont:ClassC");
+    }
+
+    @Test
+    void completionProvider_addsSuggestionForParameterWithTypeWithKnownPrefixAfterPrefix() {
+        List<String> suggestions = getSuggestions("" +
+                "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        params:\n" +
+                "            - $mijnParam (ont:<caret>)\n" +
+                "\n");
+
+        assertContainsElements(suggestions, "ont:ClassA", "ont:ClassB", "ont:ClassC");
+    }
+
+    @Test
     void completionProvider_addsSuggestionsForQueryStep() {
         List<String> suggestions = getSuggestions("model:\n" +
                 "    MijnActiviteit: !Activity\n" +

@@ -470,7 +470,8 @@ public class PsiImplUtil {
         List<Resource> resources = getPreviousStep(step);
         final OMTCurieElement curieElement = step.getQueryStep().getCurieElement();
         if (curieElement != null && !getRdfModelUtil().isTypePredicate(curieElement.getAsResource())) {
-            return getRdfModelUtil().listSubjectsWithPredicateObjectClass(curieElement.getAsResource(), resources);
+            return getRdfModelUtil().listSubjectsWithPredicateObjectClass(curieElement.getAsResource(),
+                    getRdfModelUtil().allSuperClasses(resources));
         }
         return resources;
     }

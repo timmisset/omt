@@ -110,6 +110,10 @@ public class RDFModelUtil {
         return isPrimitiveType(resource);
     }
 
+    public List<Resource> getAllClasses() {
+        return model.listSubjectsWithProperty(RDF_TYPE).toList();
+    }
+
     public List<Resource> allSuperClasses(List<Resource> resources) {
         return getDistinctResources(resources.stream().map(
                 this::getClassLineage
@@ -198,33 +202,37 @@ public class RDFModelUtil {
         return resources;
     }
 
-    public List<Resource> listPredicatesForObjectClass(List<Resource> objectClasses) {
-        List<Resource> resources = new ArrayList<>();
-        objectClasses.forEach(object -> {
+    public Map<Resource, Resource> listPredicatesForObjectClass(List<Resource> objectClasses) {
+        Map<Resource, Resource> resources = new HashMap<>();
+        superClassesSortedByLevel(objectClasses).forEach(object -> {
             ResIterator shaclsPointingToTargetClass = object.getNameSpace().equals(XSD) ?
                     model.listSubjectsWithProperty(SHACL_DATATYPE, object) :
                     model.listSubjectsWithProperty(SHACL_CLASS, object);
 
             while (shaclsPointingToTargetClass.hasNext()) {
                 Resource shacl = shaclsPointingToTargetClass.next();
-                resources.add(shacl.getProperty(SHACL_PATH).getObject().asResource());
+                resources.put(shacl.getProperty(SHACL_PATH).getObject().asResource(), object);
             }
         });
         if (!resources.isEmpty()) {
-            resources.add(RDF_TYPE.asResource());
+            resources.put(RDF_TYPE.asResource(), null);
         }
-        return getDistinctResources(resources);
+        return resources;
     }
 
-    public List<Resource> listPredicatesForSubjectClass(List<Resource> subjectClasses) {
-        List<Resource> resources = new ArrayList<>();
-        subjectClasses.forEach(subject ->
+    public Map<Resource, Resource> listPredicatesForSubjectClass(List<Resource> subjectClasses) {
+        Map<Resource, Resource> resources = new HashMap<>();
+        superClassesSortedByLevel(subjectClasses).forEach(subject ->
                 getShaclProperties(subject).keySet().forEach(statement ->
-                        resources.add(statement.getProperty(SHACL_PATH).getObject().asResource())));
+                        resources.put(statement.getProperty(SHACL_PATH).getObject().asResource(), subject)));
         if (!resources.isEmpty()) {
-            resources.add(RDF_TYPE.asResource());
+            resources.put(RDF_TYPE.asResource(), null);
         }
-        return getDistinctResources(resources);
+        return resources;
+    }
+
+    private List<Resource> superClassesSortedByLevel(List<Resource> classes) {
+        return allSuperClasses(classes).stream().sorted((o1, o2) -> getClassLineage(o2).size() - getClassLineage(o1).size()).collect(Collectors.toList());
     }
 
     public List<Resource> getDistinctResources(List<Resource> resources) {

@@ -60,6 +60,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     private ImportUtil importUtil = ImportUtil.SINGLETON;
     private RDFModelUtil rdfModelUtil;
 
+    private PsiElement originalElement;
 
     public OMTCompletionContributor() {
         /**
@@ -85,6 +86,8 @@ public class OMTCompletionContributor extends CompletionContributor {
                 }
 
                 PsiElement element = parameters.getPosition();
+                originalElement = parameters.getOriginalPosition();
+
                 while (tokenUtil.isWhiteSpace(element) && element != null) {
                     element = element.getParent();
                 }
@@ -109,8 +112,20 @@ public class OMTCompletionContributor extends CompletionContributor {
                         result.addAllElements(resolvedElements);
                         return;
                     }
+                    if (element != null && element.getParent() instanceof OMTParameterWithType) {
+                        setResolvedElementsForClasses(element);
+                        result.addAllElements(resolvedElements);
+                        return;
+                    }
                     setResolvedElementsForOperator(element);
                     resolvedElements.forEach(result::addElement);
+                }
+                if (tokenUtil.isNamespaceMember(element)) {
+                    if (element != null && tokenUtil.isParameterType(element.getParent())) {
+                        setResolvedElementsForClasses(element);
+                        result.addAllElements(resolvedElements);
+                        return;
+                    }
                 }
             }
         };
@@ -221,7 +236,6 @@ public class OMTCompletionContributor extends CompletionContributor {
             // get the import itself:
             setResolvedElementsForImport(elementAtCaret, true, elementAtCaret);
             isResolved = true;
-            return;
         }
     }
 
@@ -230,8 +244,8 @@ public class OMTCompletionContributor extends CompletionContributor {
         OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(elementAt, parent -> parent instanceof OMTQueryStep);
         if (queryStep != null) {
             List<Resource> previousStep = PsiImplUtil.getPreviousStep(queryStep);
-            getRDFModel().listPredicatesForSubjectClass(previousStep).forEach(resource -> setCurieSuggestion(elementAt, resource, false, 9));
-            getRDFModel().listPredicatesForObjectClass(previousStep).forEach(resource -> setCurieSuggestion(elementAt, resource, true, 8));
+            getRDFModel().listPredicatesForSubjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, relation, false, 9));
+            getRDFModel().listPredicatesForObjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, relation, true, 8));
         }
 
         // check if there are local variables available, they also have the highest suggestion priority
@@ -262,7 +276,9 @@ public class OMTCompletionContributor extends CompletionContributor {
             );
         }
         builtInUtil.getBuiltInSuggestions(builtInType)
-                .forEach(suggestion -> addPriorityElement(suggestion, 2));
+                .forEach(suggestion -> addPriorityElement(suggestion, 2, suggestion, (context, item) -> {
+                        },
+                        "", builtInType.name()));
         projectUtil.getExportedMembers(builtInType == BuiltInType.Command).forEach(
                 omtExportMember -> setImportMemberSuggestion(omtExportMember, 1)
         );
@@ -284,23 +300,13 @@ public class OMTCompletionContributor extends CompletionContributor {
             return;
         }
 
-        String title = String.format("%s from %s/%s",
-                exportMember.asSuggestion(),
-                containingFile.getContainingDirectory() != null ?
-                        containingFile.getContainingDirectory().getName() :
-                        "<root>",
-                containingFile.getName()
-        );
+        String path = String.format("%s/%s", containingFile.getContainingDirectory() != null ?
+                containingFile.getContainingDirectory().getName() :
+                "<root>", containingFile.getName());
+        String title = exportMember.asSuggestion();
         addPriorityElement(title, priority, title,
                 (context, item) -> {
                     OMTFile omtFile = (OMTFile) context.getFile();
-                    // we need to replace the full text with the exportMember asSuggestion only
-                    // this is required because the completion list filteres for distinct completions meanings that multiple usages
-                    // of the same query name are not all listed unless fully specified
-                    int startOffset = context.getStartOffset();
-                    int endOffset = context.getTailOffset();
-                    context.getDocument().replaceString(startOffset, endOffset, exportMember.asSuggestion());
-                    context.commitDocument();
                     if (!omtFile.hasImportFor(exportMember)) {
                         List<String> importPaths = importUtil.getImportPaths(exportMember, omtFile);
                         if (!importPaths.isEmpty()) {
@@ -308,7 +314,7 @@ public class OMTCompletionContributor extends CompletionContributor {
                             importUtil.addImportMemberToBlock(context.getFile(), importPath, exportMember.getName());
                         }
                     }
-                });
+                }, path, exportMember.getCallableType());
     }
 
     private void setResolvedElementsForImport(PsiElement elementAtCaret, boolean includeLeadingBullet, PsiElement originalElement) {
@@ -338,7 +344,13 @@ public class OMTCompletionContributor extends CompletionContributor {
         }
     }
 
-    private void setCurieSuggestion(PsiElement elementAt, Resource resource, boolean reverse, int priority) {
+    private void setResolvedElementsForClasses(PsiElement element) {
+        getRDFModel().getAllClasses().stream().filter(resource -> resource.getURI() != null).forEach(
+                resource -> setCurieSuggestion(element, resource, null, false, 1)
+        );
+    }
+
+    private void setCurieSuggestion(PsiElement elementAt, Resource resource, Resource relation, boolean reverse, int priority) {
         OMTFile omtFile = (OMTFile) elementAt.getContainingFile();
         String curieElement = omtFile.resourceToCurie(resource);
         String title = curieElement;
@@ -355,20 +367,30 @@ public class OMTCompletionContributor extends CompletionContributor {
         addPriorityElement(curieElement, priority, title, (context, item) ->
                 // if the iri is not registered in the page, do it
                 ApplicationManager.getApplication().runWriteAction(() -> {
+                    if (originalElement.getPrevSibling() instanceof OMTNamespacePrefix) {
+                        // remove the existing prefix
+                        int startOffset = originalElement.getPrevSibling().getTextOffset();
+                        int endOffset = startOffset + originalElement.getPrevSibling().getTextLength();
+                        context.getDocument().replaceString(startOffset, endOffset, "");
+                        context.commitDocument();
+                    }
                     if (registerPrefix.get()) {
                         curieUtil.addPrefixToBlock(context.getFile(),
                                 item.getLookupString().split(":")[0].substring(reverse ? 1 : 0),
                                 resource.getNameSpace());
                     }
-                }));
+                }), null, relation != null ? omtFile.resourceToCurie(relation) : null);
     }
 
     private String getPrefixSuggestion(Resource resource) {
+        if (resource.getNameSpace() == null) {
+            return resource.getURI();
+        }
         List<OMTPrefix> knownPrefixes = projectUtil.getKnownPrefixes(resource.getNameSpace());
         if (!knownPrefixes.isEmpty()) {
             return knownPrefixes.get(0).getNamespacePrefix().getName() + ":" + resource.getLocalName();
         }
-        return "test:" + resource.getLocalName();
+        return resource.getURI();
     }
 
     // all suggestions for a command statement
@@ -385,19 +407,20 @@ public class OMTCompletionContributor extends CompletionContributor {
 
     private void addPriorityElement(String text, int priority) {
         addPriorityElement(text, priority, text, (context, item) -> {
-        });
+        }, null, null);
     }
 
     private void addPriorityElement(String text, int priority, String title) {
         addPriorityElement(text, priority, title, (context, item) -> {
-        });
+        }, null, null);
     }
 
     private void addPriorityElement(String text, int priority, InsertHandler insertHandler) {
-        addPriorityElement(text, priority, text, insertHandler);
+        addPriorityElement(text, priority, text, insertHandler, null, null);
     }
 
-    private void addPriorityElement(String text, int priority, String title, InsertHandler insertHandler) {
+    private void addPriorityElement(String text, int priority, String title, InsertHandler insertHandler,
+                                    String tailText, String typeText) {
         if (resolvedSuggestions.contains(title)) {
             return;
         }
@@ -405,6 +428,16 @@ public class OMTCompletionContributor extends CompletionContributor {
                 .create(text)
                 .withPresentableText(title)
                 .withInsertHandler(insertHandler);
+        if (text.contains(":")) {
+            lookupElementBuilder = lookupElementBuilder.withLookupStrings(
+                    Arrays.asList(text.split(":")));
+        }
+        if (tailText != null) {
+            lookupElementBuilder = lookupElementBuilder.withTailText(tailText);
+        }
+        if (typeText != null) {
+            lookupElementBuilder = lookupElementBuilder.withTypeText(typeText, true);
+        }
         resolvedElements.add(PrioritizedLookupElement.withPriority(
                 lookupElementBuilder, priority
         ));
@@ -416,7 +449,7 @@ public class OMTCompletionContributor extends CompletionContributor {
             setDummyPlaceHolder(DUMMY_ENTRY, context);
             return;
         }
-        if (expectedTypes.contains("scalar")) {
+        if (expectedTypes.contains("scalar") || expectedTypes.contains("parameter type")) {
             setDummyPlaceHolder(DUMMY_SCALAR, context);
             return;
         }

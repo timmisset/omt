@@ -246,4 +246,9 @@ public abstract class OMTCallableImpl implements OMTCallable {
     public boolean returnsAny() {
         return returnType.equals("any");
     }
+
+    @Override
+    public String getCallableType() {
+        return type;
+    }
 }

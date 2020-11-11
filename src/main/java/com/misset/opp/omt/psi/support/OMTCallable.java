@@ -48,5 +48,7 @@ public interface OMTCallable {
 
     List<Resource> getReturnType();
 
+    String getCallableType();
+
     boolean returnsAny();
 }

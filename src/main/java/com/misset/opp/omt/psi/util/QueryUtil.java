@@ -6,6 +6,7 @@ import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
 import org.apache.jena.rdf.model.Resource;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,13 +52,13 @@ public class QueryUtil {
             final OMTQueryReverseStep reverseStep = (OMTQueryReverseStep) step;
             final OMTCurieElement curieElement = reverseStep.getQueryStep().getCurieElement();
             if (curieElement != null) {
-                final List<Resource> resources = getRDFModel().listPredicatesForObjectClass(previousStep);
+                final List<Resource> resources = new ArrayList<>(getRDFModel().listPredicatesForObjectClass(previousStep).keySet());
                 validatePredicates(resources, curieElement, previousStep, holder, "REVERSE");
             }
         } else {
             final OMTCurieElement curieElement = step.getCurieElement();
             if (!(step.getParent() instanceof OMTQueryReverseStep)) {
-                final List<Resource> resources = getRDFModel().listPredicatesForSubjectClass(previousStep);
+                final List<Resource> resources = new ArrayList<>(getRDFModel().listPredicatesForSubjectClass(previousStep).keySet());
                 validatePredicates(resources, curieElement, previousStep, holder, "FORWARD");
             }
         }
