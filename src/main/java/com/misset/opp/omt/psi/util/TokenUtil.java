@@ -5,6 +5,8 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.misset.opp.omt.psi.OMTConstantValue;
 import com.misset.opp.omt.psi.OMTMember;
+import com.misset.opp.omt.psi.OMTParameterType;
+import com.misset.opp.omt.psi.OMTParameterWithType;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 
 public class TokenUtil {
@@ -47,6 +49,15 @@ public class TokenUtil {
 
     public boolean isNotOperator(PsiElement element) {
         return isToken(element, "OMTTokenType.NOT_OPERATOR");
+    }
+
+    public boolean isNamespaceMember(PsiElement element) {
+        return isToken(element, "OMTTokenType.NAMESPACE_MEMBER");
+    }
+
+    public boolean isParameterType(PsiElement element) {
+        return element instanceof OMTParameterWithType
+                || element instanceof OMTParameterType;
     }
 
     public Object parseToTypedLiteral(OMTConstantValue constantValue) {
