@@ -2,6 +2,7 @@ package com.misset.opp.omt.psi.util;
 
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
 import org.apache.jena.rdf.model.Resource;
@@ -31,11 +32,68 @@ public class QueryUtil {
         if (resources.isEmpty()) {
             validateQueryCurieElement(step, holder);
         }
+        // annotate the subquery
+        if (step instanceof OMTSubQuery) {
+            annotateSubQuery((OMTSubQuery) step, holder);
+        }
+
+        // if the step is decorated with an asterix or plus, check if this is acceptable
+        if (step.getStepDecorator() != null && step.getChildren()[0] instanceof OMTSubQuery) {
+            final OMTSubQuery subQuery = (OMTSubQuery) step.getChildren()[0];
+            if (!isDecoratable(subQuery.getQuery())) {
+                holder.newAnnotation(HighlightSeverity.ERROR,
+                        "Invalid decorator")
+                        .range(step.getStepDecorator())
+                        .create();
+            }
+        }
 
         holder.newAnnotation(
                 HighlightSeverity.INFORMATION,
                 String.format("Type(s): %s", resourcesAsTypes(resources, (OMTFile) step.getContainingFile()))
         ).create();
+    }
+
+    public void annotateSubQuery(OMTSubQuery subQuery, AnnotationHolder holder) {
+        if (!wrappableStep(subQuery)) {
+            holder.newAnnotation(HighlightSeverity.WARNING,
+                    "Unnecessary wrapping of statement")
+                    .create();
+        }
+    }
+
+    private boolean wrappableStep(OMTSubQuery subQuery) {
+        if (isDecorated(subQuery)) {
+            return true;
+        }
+        if (subQuery.getQuery() instanceof OMTBooleanStatement) {
+            return true;
+        }
+        if (PsiTreeUtil.findFirstParent(subQuery, parent -> parent instanceof OMTIfBlock) != null) {
+            return true;
+        }
+        return subQuery.getParent() instanceof OMTQueryPath && subQuery.getParent().getParent() instanceof OMTNegatedStep;
+    }
+
+    private boolean isDecoratable(OMTQuery step) {
+        if (step instanceof OMTBooleanStatement) {
+            return false;
+        }
+        if (step instanceof OMTEquationStatement) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isDecorated(OMTQueryStep step) {
+        return getDecorator(step) != null;
+    }
+
+    private OMTStepDecorator getDecorator(OMTQueryStep step) {
+        if (step.getStepDecorator() != null) {
+            return step.getStepDecorator();
+        }
+        return step.getParent() instanceof OMTQueryStep ? ((OMTQueryStep) step.getParent()).getStepDecorator() : null;
     }
 
     public void validateQueryCurieElement(OMTQueryStep step, AnnotationHolder holder) {
@@ -67,10 +125,10 @@ public class QueryUtil {
     private void validatePredicates(List<Resource> resources, OMTCurieElement curieElement, List<Resource> previousStep, AnnotationHolder holder, String direction) {
 
         boolean validPredicate = resources.stream().anyMatch(
-                resource -> resource.getURI().equals(curieElement.getAsResource().toString())
+                resource -> curieElement != null && curieElement.getAsResource() != null && curieElement.getAsResource().equals(resource)
         );
         if (!validPredicate) {
-            setWrongPredicate(previousStep, curieElement, direction, holder);
+            annotateWrongPredicate(previousStep, curieElement, direction, holder);
         }
     }
 
@@ -80,7 +138,10 @@ public class QueryUtil {
                 .collect(Collectors.joining(", "));
     }
 
-    private void setWrongPredicate(List<Resource> types, OMTCurieElement curieElement, String direction, AnnotationHolder holder) {
+    private void annotateWrongPredicate(List<Resource> types, OMTCurieElement curieElement, String direction, AnnotationHolder holder) {
+        if (curieElement == null) {
+            return;
+        }
         holder.newAnnotation(
                 HighlightSeverity.ERROR,
                 String.format("%s is not a known %s-path predicate for type(s): %s",

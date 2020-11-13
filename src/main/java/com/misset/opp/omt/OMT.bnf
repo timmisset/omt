@@ -105,7 +105,7 @@ modelItemTypeElement ::=                    MODEL_ITEM_TYPE
 
 // COMMENTS
 // Can occur on empty lines (JavaDocs and End Of Line Comments) or at the end of lines (End of Line Comments)
-jdComment ::=                               JAVADOCS_START jdContent* JAVADOCS_END
+jdComment ::=                               JAVADOCS_START jdContent* JAVADOCS_END END_TOKEN?
 jdContent ::=                               JAVADOCS_CONTENT+ | START_TOKEN | END_TOKEN | parameterAnnotation
 parameterAnnotation ::=                     ANNOTATE_PARAMETER parameterWithType
 comment ::=                                 END_OF_LINE_COMMENT | jdComment
@@ -231,7 +231,7 @@ queryArray ::=                              query trailing? (PIPE trailing? quer
 booleanStatement ::=                        query trailing? (BOOLEAN_OPERATOR trailing? query)+ { extends=query methods=[resolveToResource filter] }
 // The equationStatement uses a conditional operator (like ==, >=, <=) to split the statement
 // it only allows a left-hand and right-hand query, both should be resolved to boolean type
-equationStatement ::=                       query trailing? CONDITIONAL_OPERATOR trailing? query { extends=query methods=[resolveToResource filter] }
+equationStatement ::=                       query trailing? CONDITIONAL_OPERATOR trailing? query { extends=query methods=[resolveToResource filter getOpposite] }
 // The negated statement detects the usage of the NOT operator
 // This can be used as '.. / NOT IN (...)' OR '.. / NOT'. In the former the negation is based on the subsequent
 // query whereas the latter it's based on the preceding query
@@ -248,10 +248,10 @@ queryStep ::=                               (queryReverseStep |
                                             operatorCall | IRI | DOT | OWLPROPERTY | interpolatedString |
                                             queryFilter | chooseBlock | negatedStep | NOT_OPERATOR |
                                             subQuery |
-                                            trailing | leading) (ASTERIX | PLUS)?
+                                            trailing | leading) stepDecorator?
                                             { methods = [ resolveToResource ]}
 queryReverseStep ::=                        CARET queryStep { methods = [ resolveToResource ] extends=queryStep}
-
+stepDecorator ::=                           ASTERIX | PLUS
 // a query filter is contained by brackets [] and should resolve to boolean
 queryFilter ::=                             BRACKET_OPEN trailing? query trailing? BRACKET_CLOSED { extends=queryStep }
 

@@ -25,6 +25,39 @@ class RDFModelUtilTest {
     }
 
     @Test
+    void getPredicateType() {
+        final List<Resource> predicateObjects = modelUtil.getPredicateObjects(resourceFor("booleanProperty"));
+        assertContainsElements(predicateObjects, resourceFor("http://www.w3.org/2001/XMLSchema#", "boolean"));
+    }
+
+    @Test
+    void getPredicateClass() {
+        final List<Resource> predicateObjects = modelUtil.getPredicateObjects(resourceFor("classProperty"));
+        assertContainsElements(predicateObjects, resourceFor("ClassC"));
+    }
+
+    @Test
+    void getPredicateSubjectClass() {
+        final List<Resource> predicateSubjects = modelUtil.getPredicateSubjects(resourceFor("classProperty"));
+        assertContainsElements(predicateSubjects, resourceFor("ClassA"));
+    }
+
+    @Test
+    void getPredicateSubjectClasses() {
+        final List<Resource> predicateSubjects = modelUtil.getPredicateSubjects(resourceFor("stringProperty"));
+        assertContainsElements(predicateSubjects, resourceFor("ClassA"));
+        assertContainsElements(predicateSubjects, resourceFor("ClassB"));
+        assertContainsElements(predicateSubjects, resourceFor("ClassC"));
+    }
+
+    @Test
+    void getPredicateSubjectClassesNoSubclasses() {
+        final List<Resource> predicateSubjects = modelUtil.getPredicateSubjects(resourceFor("stringProperty"), false);
+        assertContainsElements(predicateSubjects, resourceFor("ClassB"));
+        assertContainsElements(predicateSubjects, resourceFor("ClassC"));
+    }
+
+    @Test
     void hasResourcesOfClass() {
         Resource resource = resourceFor("ClassA");
         assertTrue(modelUtil.hasPredicate(resource, resourceFor("booleanProperty")));
