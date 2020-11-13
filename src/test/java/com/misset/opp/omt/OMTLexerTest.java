@@ -209,17 +209,31 @@ class OMTLexerTest {
     @Test
     public void testSpecificContent() throws IOException {
         printLexerLog = true;
-        String contentToTest = "model:\n" +
-                "    test: !Activity\n" +
-                "        queries: |\n" +
-                "            DEFINE QUERY myQuery() => 'dsdf worsdf';\n" +
+        String contentToTest = "import:\n" +
+                "    '@client/locatie/src/util/locatie-upsert.omt':\n" +
+                "    -   upsertOngevalideerdAdres\n" +
+                "    '@client/test/src/test.activity.omt':\n" +
+                "    -   TestActivity\n" +
                 "\n" +
+                "prefixes:\n" +
+                "    pol:    <http://ontologie.politie.nl/def/politie#>\n" +
+                "    rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "\n" +
+                "model:\n" +
+                "    test: !Activity\n" +
+                "        /**\n" +
+                "        * @param $test (pol:Signaal)\n" +
+                "        */\n" +
+                "        variables:\n" +
+                "        -   $test\n" +
                 "\n" +
                 "        params:\n" +
-                "            -   $mijnParameter";
+                "            - $param (pol:SignaalDossier)\n" +
+                "        queries: |\n" +
+                "            DEFINE QUERY mySecondQuery() => $param / ^pol:inContextVan;\n";
 
         System.out.println(
-                String.join("\n", getElements(contentToTest, 44, 146))
+                String.join("\n", getElements(contentToTest))
         );
     }
 

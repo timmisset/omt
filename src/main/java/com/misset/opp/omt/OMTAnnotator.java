@@ -62,6 +62,9 @@ public class OMTAnnotator implements Annotator {
             curieUtil.annotateParameterType((OMTParameterType) element, holder);
         }
         if (element instanceof OMTQueryStep) {
+            if (element.getParent() instanceof OMTQueryReverseStep) {
+                return;
+            }
             queryUtil.annotateQueryStep((OMTQueryStep) element, holder);
         }
     }

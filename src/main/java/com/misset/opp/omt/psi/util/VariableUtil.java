@@ -6,11 +6,14 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.external.util.builtIn.BuiltInMember;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
+import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.impl.OMTQueryReverseStepImpl;
 import com.misset.opp.omt.psi.intentions.variables.AnnotateParameterIntention;
 import com.misset.opp.omt.psi.intentions.variables.RenameVariableIntention;
 import com.misset.opp.omt.psi.support.OMTCall;
@@ -18,6 +21,8 @@ import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class VariableUtil {
@@ -27,11 +32,24 @@ public class VariableUtil {
     private ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
     private AnnotationUtil annotationUtil = AnnotationUtil.SINGLETON;
     private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
+    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
 
     public Optional<OMTVariable> getFirstAppearance(OMTVariable variable, PsiElement container) {
         return PsiTreeUtil.findChildrenOfType(container, OMTVariable.class).stream()
                 .filter(scriptVariable -> scriptVariable.getText().equals(variable.getText()))
                 .findFirst();
+    }
+
+    private RDFModelUtil rdfModelUtil;
+
+    private RDFModelUtil getRdfModelUtil() {
+        if (rdfModelUtil == null) {
+            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
+        }
+        if (!rdfModelUtil.isLoaded()) {
+            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
+        }
+        return rdfModelUtil;
     }
 
     /**
@@ -233,15 +251,143 @@ public class VariableUtil {
         defineParam.getVariableList().forEach(omtVariable -> {
             final List<Resource> type = omtVariable.getType();
             if (type.isEmpty()) {
-                holder.newAnnotation(HighlightSeverity.WEAK_WARNING, "Annotate parameter with type")
+                final List<Resource> typeSuggestions = getTypeSuggestions(defineParam, omtVariable);
+                AnnotationBuilder annotate_parameter_with_type = holder.newAnnotation(HighlightSeverity.WEAK_WARNING, "Annotate parameter with type")
                         .tooltip(String.format("Annotate parameter %s with a type, this help to resolve the query path%n%n" +
                                 "/**" +
                                 "%n* @param %s (pol:Classname)%n" +
                                 "*/", omtVariable.getName(), omtVariable.getName()))
-                        .range(omtVariable)
-                        .withFix(AnnotateParameterIntention.SINGLETON.getAnnotateParameterIntention(defineParam, omtVariable.getName()))
-                        .create();
+                        .range(omtVariable);
+                final List<String> suggetions = typeSuggestions.stream().map(resource -> ((OMTFile) omtVariable.getContainingFile()).resourceToCurie(resource)).collect(Collectors.toList());
+                if (typeSuggestions.isEmpty()) {
+                    suggetions.add("prefix:Class");
+                }
+                suggetions.forEach(suggestion -> annotate_parameter_with_type
+                        .withFix(AnnotateParameterIntention.SINGLETON.getAnnotateParameterIntention(
+                                defineParam, omtVariable.getName(), suggestion)));
+                annotate_parameter_with_type.create();
             }
         });
+    }
+
+    private List<Resource> getTypeSuggestions(OMTDefineParam defineParam, OMTVariable variableToAnnotate) {
+        List<Resource> types = new ArrayList<>();
+        PsiTreeUtil.findChildrenOfType(defineParam.getParent(), OMTVariable.class).stream().filter(
+                variable -> variable.getReference() != null &&
+                        variable != variableToAnnotate &&
+                        variable.getReference().isReferenceTo(variableToAnnotate)
+        ).forEach(
+                variable -> {
+                    final OMTQuery query = (OMTQuery) PsiTreeUtil.findFirstParent(variable, parent -> parent instanceof OMTQuery);
+                    if (query.getParent() instanceof OMTEquationStatement) {
+                        final OMTEquationStatement equationStatement = (OMTEquationStatement) query.getParent();
+                        final OMTQuery opposite = equationStatement.getOpposite(query);
+                        types.addAll(new OMTQueryReverseStepImpl(opposite.getNode()).resolveToResource());
+                    } else {
+                        if (query instanceof OMTQueryPath) {
+                            final OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(variable, parent -> parent instanceof OMTQueryStep);
+                            final OMTQueryPath queryPath = (OMTQueryPath) query;
+                            final int stepIndex = queryPath.getQueryStepList().indexOf(queryStep);
+                            if (stepIndex >= 0 && queryPath.getQueryStepList().size() > stepIndex + 1) {
+                                // take the next step and try to resolve it:
+                                final OMTQueryStep omtQueryStep = queryPath.getQueryStepList().get(stepIndex + 1);
+                                if (omtQueryStep.getCurieElement() != null) {
+                                    final Resource predicate = omtQueryStep.getCurieElement().getAsResource();
+                                    types.addAll(getRdfModelUtil().getPredicateSubjects(predicate));
+                                }
+                                if (omtQueryStep instanceof OMTQueryReverseStep &&
+                                        ((OMTQueryReverseStep) omtQueryStep).getQueryStep().getCurieElement() != null) {
+                                    final Resource predicate = ((OMTQueryReverseStep) omtQueryStep).getQueryStep().getCurieElement().getAsResource();
+                                    types.addAll(getRdfModelUtil().getPredicateSubjects(predicate));
+                                }
+                            }
+                        }
+                    }
+                }
+        );
+        return getRdfModelUtil().getDistinctResources(types);
+    }
+
+    /**
+     * Retrieves the parameter type for the parameter define statement via the annotation (if available)
+     *
+     * @param defineParam
+     * @return
+     */
+    public List<Resource> getType(OMTDefineParam defineParam) {
+        final Optional<OMTParameterAnnotation> parameterAnnotation = getTypeFromAnnotation(defineParam.getVariableList().get(0), defineParam.getParent());
+        return parameterAnnotation.isPresent() ? parameterAnnotation.get().getParameterWithType().getType() : new ArrayList<>();
+    }
+
+    public List<Resource> getType(OMTVariable variable, String propertyLabel) {
+        final Optional<OMTBlockEntry> blockEntry = modelUtil.getModelItemBlockEntry(variable, propertyLabel);
+        if (!blockEntry.isPresent()) {
+            return new ArrayList<>();
+        }
+
+        final Optional<OMTParameterAnnotation> parameterAnnotation = getTypeFromAnnotation(variable, blockEntry.get());
+        return parameterAnnotation.isPresent() ? parameterAnnotation.get().getParameterWithType().getType() : new ArrayList<>();
+    }
+
+    private Optional<OMTParameterAnnotation> getTypeFromAnnotation(PsiElement target, PsiElement container) {
+        final Collection<OMTParameterAnnotation> parameterAnnotations = PsiTreeUtil.findChildrenOfType(container, OMTParameterAnnotation.class);
+        return parameterAnnotations.stream().filter(omtParameterAnnotation -> {
+            final OMTParameterWithType parameterWithType = omtParameterAnnotation.getParameterWithType();
+            final PsiReference reference = parameterWithType.getVariable().getReference();
+            return reference != null && reference.isReferenceTo(target);
+        }).findFirst();
+    }
+
+    public List<Resource> getType(OMTVariableAssignment variableAssignment) {
+        final OMTVariableValue variableValue = variableAssignment.getVariableValue();
+        // commands that return the type passed into the first argument
+        List<String> resolvableCommands = Arrays.asList("NEW", "COPYINGRAPH", "ASSIGN");
+        if (variableValue.getCommandCall() != null && resolvableCommands.contains(variableValue.getCommandCall().getName())) {
+            final List<OMTSignatureArgument> signatureArgumentList = variableValue.getCommandCall().getSignature().getSignatureArgumentList();
+            if (!signatureArgumentList.isEmpty() && signatureArgumentList.get(0).getQuery() != null) {
+                return Objects.requireNonNull(signatureArgumentList.get(0).getQuery()).resolveToResource();
+            }
+        }
+        return new ArrayList<>();
+    }
+
+    public List<Resource> getType(OMTVariable variable) {
+        if (variable.isDeclaredVariable()) {
+            // a declared variable
+            if (variable.getParent() instanceof OMTParameterWithType) {
+                return getType((OMTParameterWithType) variable.getParent());
+            } else if (variable.getParent() instanceof OMTDefineParam) {
+                return getType((OMTDefineParam) variable.getParent());
+            } else if (variable.getParent() instanceof OMTVariableAssignment) {
+                return getType((OMTVariableAssignment) variable.getParent());
+            } else if (Arrays.asList("variables", "params", "bindings").contains(modelUtil.getEntryBlockLabel(variable))) {
+                return getType(variable, modelUtil.getEntryBlockLabel(variable));
+            }
+        } else {
+            if (variable.isGlobalVariable()) {
+                return new ArrayList<>();
+            }
+            if (variable.isIgnoredVariable()) {
+                return new ArrayList<>();
+            }
+            OMTVariable declaredByVariable = getDeclaredByVariable(variable).orElse(null);
+            return declaredByVariable != null && declaredByVariable.isDeclaredVariable() ? declaredByVariable.getType() : new ArrayList<>();
+        }
+        return new ArrayList<>();
+    }
+
+    public List<Resource> getType(OMTParameterWithType parameterWithType) {
+        if (parameterWithType.getParameterType() != null) {
+            return Collections.singletonList(parameterWithType.getParameterType().getAsResource());
+        } else {
+            // defined as 'operator', which means a shortname like 'string':
+            Pattern pattern = Pattern.compile("\\(([a-z]*)\\)");
+            Matcher matcher = pattern.matcher(parameterWithType.getText());
+            if (matcher.find() && matcher.group(1) != null) {
+                return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource(matcher.group(1)));
+            } else {
+                return new ArrayList<>();
+            }
+        }
     }
 }

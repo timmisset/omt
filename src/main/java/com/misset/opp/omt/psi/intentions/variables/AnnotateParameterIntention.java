@@ -18,13 +18,13 @@ public class AnnotateParameterIntention {
 
     public static final AnnotateParameterIntention SINGLETON = new AnnotateParameterIntention();
 
-    public IntentionAction getAnnotateParameterIntention(OMTDefineParam defineParam, String variableName) {
+    public IntentionAction getAnnotateParameterIntention(OMTDefineParam defineParam, String variableName, String type) {
         return new IntentionAction() {
             @Override
             public @Nls(capitalization = Nls.Capitalization.Sentence)
             @NotNull
             String getText() {
-                return "Add annotation";
+                return String.format("Add annotation as %s", type);
             }
 
             @Override
@@ -49,8 +49,8 @@ public class AnnotateParameterIntention {
                 if (leading == null || PsiTreeUtil.findChildOfType(leading, OMTJdComment.class) == null) {
                     // no javadocs present:
                     String comment = String.format("/**%n" +
-                            "%s* @param %s (prefix:Type)%n" +
-                            "%s*/", whiteSpace, variableName, whiteSpace);
+                            "%s* @param %s (%s)%n" +
+                            "%s*/", whiteSpace, variableName, type, whiteSpace);
                     insertAnnotation(comment, statement, null, whiteSpace, editor.getDocument());
                 } else {
                     // add to existing block:

@@ -31,6 +31,9 @@ public class RDFModelUtil {
     Model model;
     public final Supplier<Resource> OWL_CLASS = () -> this.model.createResource("http://www.w3.org/2002/07/owl#Class");
 
+    private static HashMap<Resource, List<Resource>> predicateObjects = new HashMap<>();
+    private static HashMap<Resource, List<Resource>> predicateSubjects = new HashMap<>();
+
     public RDFModelUtil(String rootFolder) {
         this.rootFolder = rootFolder;
         this.model = null;
@@ -58,8 +61,64 @@ public class RDFModelUtil {
                 System.out.println(fileNotFoundException.getMessage());
             }
         }
+        setIndexes();
         return model;
     }
+
+    private void setIndexes() {
+        setPredicateIndexes();
+    }
+
+    private void setPredicateIndexes() {
+        model.listSubjectsWithProperty(SHACL_PATH).toList()
+                .forEach(shaclInstance -> {
+                    final ResIterator iterator = model.listSubjectsWithProperty(SHACL_PROPERTY, shaclInstance);
+                    if (iterator.hasNext()) {
+                        final Resource subject = iterator.next();
+                        final Resource predicate = shaclInstance.getPropertyResourceValue(SHACL_PATH);
+                        final Resource object = shaclInstance.hasProperty(SHACL_DATATYPE) ? shaclInstance.getPropertyResourceValue(SHACL_DATATYPE) : shaclInstance.getPropertyResourceValue(SHACL_CLASS);
+                        addToMap(predicateSubjects, predicate, subject);
+                        addToMap(predicateObjects, predicate, object);
+                    }
+                });
+    }
+
+    private void addToMap(Map<Resource, List<Resource>> map, Resource key, Resource value) {
+        List<Resource> values = map.getOrDefault(key, new ArrayList<>());
+        values.add(value);
+        map.put(key, values);
+    }
+
+    public List<Resource> getPredicateObjects(Resource predicate) {
+        return getPredicateObjects(predicate, true);
+    }
+
+    /**
+     * Returns the predicate types and all their subclasses
+     *
+     * @param predicate
+     * @return
+     */
+    public List<Resource> getPredicateObjects(Resource predicate, boolean includeSubclasses) {
+        final List<Resource> objects = new ArrayList<>(predicateObjects.getOrDefault(predicate, new ArrayList<>()));
+        if (includeSubclasses) {
+            objects.addAll(allSubClasses(objects));
+        }
+        return getDistinctResources(objects);
+    }
+
+    public List<Resource> getPredicateSubjects(Resource predicate) {
+        return getPredicateSubjects(predicate, true);
+    }
+
+    public List<Resource> getPredicateSubjects(Resource predicate, boolean includeSubclasses) {
+        final List<Resource> subjects = new ArrayList<>(predicateSubjects.getOrDefault(predicate, new ArrayList<>()));
+        if (includeSubclasses) {
+            subjects.addAll(allSubClasses(subjects));
+        }
+        return getDistinctResources(subjects);
+    }
+
 
     /**
      * Will return the sh:properties of this resource or its parent classes

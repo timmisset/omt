@@ -54,9 +54,11 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 Arguments.of("10 | 'test'", new String[]{"http://www.w3.org/2001/XMLSchema#int", "http://www.w3.org/2001/XMLSchema#string"}),
                 Arguments.of("true | false", new String[]{"http://www.w3.org/2001/XMLSchema#boolean"}),
                 Arguments.of("/ont:ClassA / ont:classProperty", new String[]{"http://ontologie#ClassC"}),
+                Arguments.of("$variable / ont:classProperty", new String[]{"http://ontologie#ClassC"}),
                 Arguments.of("'test' / ^ont:stringProperty", new String[]{"http://ontologie#ClassA", "http://ontologie#ClassB", "http://ontologie#ClassC"}),
                 Arguments.of("'test' / (^ont:stringProperty)", new String[]{"http://ontologie#ClassA", "http://ontologie#ClassB", "http://ontologie#ClassC"}),
                 Arguments.of("true / ^ont:booleanProperty", new String[]{"http://ontologie#ClassA"}),
+                Arguments.of("$variable / ^ont:booleanProperty", new String[]{"http://ontologie#ClassA"}),
                 Arguments.of("/ont:ClassA / ^rdf:type", new String[]{"http://ontologie#ClassA"}),
                 Arguments.of("$mijnParameter / CEIL", new String[]{"http://www.w3.org/2001/XMLSchema#decimal"}), // return decimal type from builtInOperator
                 Arguments.of("/ont:ClassA / ^rdf:type / FIRST", new String[]{"http://ontologie#ClassA"}) // no returnType, return input
