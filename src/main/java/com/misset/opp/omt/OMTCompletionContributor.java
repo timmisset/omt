@@ -112,7 +112,7 @@ public class OMTCompletionContributor extends CompletionContributor {
                         result.addAllElements(resolvedElements);
                         return;
                     }
-                    if (element != null && element.getParent() instanceof OMTParameterWithType) {
+                    if (element != null && tokenUtil.isParameterType(element.getParent())) {
                         setResolvedElementsForClasses(element);
                         result.addAllElements(resolvedElements);
                         return;
@@ -244,8 +244,8 @@ public class OMTCompletionContributor extends CompletionContributor {
         OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(elementAt, parent -> parent instanceof OMTQueryStep);
         if (queryStep != null) {
             List<Resource> previousStep = PsiImplUtil.getPreviousStep(queryStep);
-            getRDFModel().listPredicatesForSubjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, relation, false, 9));
-            getRDFModel().listPredicatesForObjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, relation, true, 8));
+            getRDFModel().listPredicatesForSubjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, false, 9));
+            getRDFModel().listPredicatesForObjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, true, 8));
         }
 
         // check if there are local variables available, they also have the highest suggestion priority
@@ -265,7 +265,7 @@ public class OMTCompletionContributor extends CompletionContributor {
                         .forEach(omtDefinedStatement -> {
                                     if (!PsiTreeUtil.isContextAncestor(omtDefinedStatement, elementAt, true)) {
                                         addPriorityElement(
-                                                memberUtil.parseDefinedToCallable(omtDefinedStatement.getDefineName()).asSuggestion(), 5);
+                                                memberUtil.parseDefinedToCallable(omtDefinedStatement.getDefineName()).getAsSuggestion(), 5);
                                     }
                                 }
                         ));
@@ -303,7 +303,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         String path = String.format("%s/%s", containingFile.getContainingDirectory() != null ?
                 containingFile.getContainingDirectory().getName() :
                 "<root>", containingFile.getName());
-        String title = exportMember.asSuggestion();
+        String title = exportMember.getAsSuggestion();
         addPriorityElement(title, priority, title,
                 (context, item) -> {
                     OMTFile omtFile = (OMTFile) context.getFile();
@@ -346,11 +346,11 @@ public class OMTCompletionContributor extends CompletionContributor {
 
     private void setResolvedElementsForClasses(PsiElement element) {
         getRDFModel().getAllClasses().stream().filter(resource -> resource.getURI() != null).forEach(
-                resource -> setCurieSuggestion(element, resource, null, false, 1)
+                resource -> setCurieSuggestion(element, resource, false, 1)
         );
     }
 
-    private void setCurieSuggestion(PsiElement elementAt, Resource resource, Resource relation, boolean reverse, int priority) {
+    private void setCurieSuggestion(PsiElement elementAt, Resource resource, boolean reverse, int priority) {
         OMTFile omtFile = (OMTFile) elementAt.getContainingFile();
         String curieElement = omtFile.resourceToCurie(resource);
         String title = curieElement;
@@ -360,10 +360,16 @@ public class OMTCompletionContributor extends CompletionContributor {
             title = resource.toString();
             registerPrefix.set(true);
         }
+        List<Resource> resolvesTo;
         if (reverse) {
             title = "^" + title;
             curieElement = "^" + curieElement;
+            resolvesTo = projectUtil.getRDFModelUtil().getPredicateSubjects(resource, false);
+        } else {
+            resolvesTo = projectUtil.getRDFModelUtil().getPredicateObjects(resource, false);
         }
+
+
         addPriorityElement(curieElement, priority, title, (context, item) ->
                 // if the iri is not registered in the page, do it
                 ApplicationManager.getApplication().runWriteAction(() -> {
@@ -379,7 +385,9 @@ public class OMTCompletionContributor extends CompletionContributor {
                                 item.getLookupString().split(":")[0].substring(reverse ? 1 : 0),
                                 resource.getNameSpace());
                     }
-                }), null, relation != null ? omtFile.resourceToCurie(relation) : null);
+                }),
+                null,
+                !resolvesTo.isEmpty() && !getRDFModel().isTypePredicate(resource) ? omtFile.resourceToCurie(resolvesTo.get(0)) : null);
     }
 
     private String getPrefixSuggestion(Resource resource) {

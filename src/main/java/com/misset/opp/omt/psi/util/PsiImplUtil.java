@@ -22,21 +22,11 @@ public class PsiImplUtil {
     private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private static final TokenUtil tokenUtil = TokenUtil.SINGLETON;
     private static final MemberUtil memberUtil = MemberUtil.SINGLETON;
-    private static RDFModelUtil rdfModelUtil;
-
-    private static RDFModelUtil getRdfModelUtil() {
-        if (rdfModelUtil == null) {
-            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
-        }
-        if (!rdfModelUtil.isLoaded()) {
-            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
-        }
-        return rdfModelUtil;
-    }
 
     // ////////////////////////////////////////////////////////////////////////////
     // Variable
     // ////////////////////////////////////////////////////////////////////////////
+    @NotNull
     public static String getName(OMTVariable variable) {
         return variable.getText();
     }
@@ -250,15 +240,13 @@ public class PsiImplUtil {
      * @return
      */
     public static Resource getAsResource(OMTParameterType parameterType) {
-        String fullIri = parameterType.getNamespacePrefix() == null ?
-                parameterType.getFirstChild().getText() :
-                String.format("%s%s",
-                        ((OMTFile) parameterType.getContainingFile()).getPrefixIri(parameterType.getNamespacePrefix().getName()),
-                        parameterType.getNamespacePrefix().getNextSibling().getText()
-                );
-
-        Model ontologyModel = projectUtil.getOntologyModel();
-        return ontologyModel != null ? ontologyModel.getResource(fullIri) : null;
+        if (parameterType.getNamespacePrefix() == null) {
+            final String type = parameterType.getFirstChild().getText().trim();
+            return projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(type);
+        } else {
+            final String iri = ((OMTFile) parameterType.getContainingFile()).curieToIri(parameterType.getText().trim());
+            return projectUtil.getRDFModelUtil().getResource(iri);
+        }
     }
 
     // ////////////////////////////////////////////////////////////////////////////
@@ -337,17 +325,17 @@ public class PsiImplUtil {
 
     public static List<Resource> resolveToResource(OMTQuery query) {
         if (query.isBooleanType()) {
-            return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
+            return Collections.singletonList(projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
         }
         return new ArrayList<>();
     }
 
     public static List<Resource> resolveToResource(OMTBooleanStatement ignored) {
-        return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
+        return Collections.singletonList(projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
     }
 
     public static List<Resource> resolveToResource(OMTEquationStatement ignored) {
-        return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
+        return Collections.singletonList(projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
     }
 
     public static OMTQuery getOpposite(OMTEquationStatement equationStatement, OMTQuery query) {
@@ -373,6 +361,9 @@ public class PsiImplUtil {
         if (queryStep instanceof OMTSubQuery) {
             return resolveToResource((OMTSubQuery) queryStep);
         }
+        if (queryStep instanceof OMTNegatedStep) {
+            return Collections.singletonList(projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
+        }
         return queryStep.resolveToResource(lookBack);
     }
 
@@ -381,7 +372,7 @@ public class PsiImplUtil {
                 .map(OMTQuery::resolveToResource)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
-        return getRdfModelUtil().getDistinctResources(resources);
+        return projectUtil.getRDFModelUtil().getDistinctResources(resources);
     }
 
     public static List<Resource> filter(OMTBooleanStatement booleanStatement, List<Resource> resources) {
@@ -408,7 +399,7 @@ public class PsiImplUtil {
         final OMTQuery query = equationStatement.getQueryList().get(0);
         final List<Resource> leftHand = query instanceof OMTQueryPath ? ((OMTQueryPath) query).resolveToResource(false) : query.resolveToResource();
 
-        if (!leftHand.isEmpty() && rdfModelUtil.isTypePredicate(leftHand.get(0))) {
+        if (!leftHand.isEmpty() && projectUtil.getRDFModelUtil().isTypePredicate(leftHand.get(0))) {
             // [rdf:type == ...]
             // now filter the resources based on the type
             PsiElement parent = equationStatement.getParent();
@@ -430,14 +421,21 @@ public class PsiImplUtil {
         // steps that do not include preceeding info
         if (step.getConstantValue() != null) {
             Model ontologyModel = projectUtil.getOntologyModel();
+            final Object typedLiteral = tokenUtil.parseToTypedLiteral(step.getConstantValue());
+            if (typedLiteral == null) {
+                return new ArrayList<>();
+            }
             return Collections.singletonList(
-                    ontologyModel.createResource(ontologyModel.createTypedLiteral(
-                            tokenUtil.parseToTypedLiteral(step.getConstantValue())
-                    ).getDatatypeURI())
+                    ontologyModel
+                            .createResource(ontologyModel.createTypedLiteral(typedLiteral)
+                                    .getDatatypeURI())
             );
         }
         if (step.getVariable() != null) {
             return step.getVariable().getType();
+        }
+        if (step.getNegatedStep() != null) {
+            return Collections.singletonList(projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
         }
 
         // steps that require preceeding info
@@ -445,13 +443,13 @@ public class PsiImplUtil {
         if (step.getCurieElement() != null) {
             // list based on the preceeding data
             if (lookBack && !previousStep.isEmpty()) {
-                return getRdfModelUtil().listObjectsWithSubjectPredicate(previousStep, step.getCurieElement().getAsResource());
+                return projectUtil.getRDFModelUtil().listObjectsWithSubjectPredicate(previousStep, step.getCurieElement().getAsResource());
             }
             // No initial information to use, continue from this position with the curie as it should be resolvable
             // to a predicate which can point to class or datatype
             return step.getParent().getFirstChild().equals(step) ?
                     Collections.singletonList(step.getCurieElement().getAsResource()) :
-                    getRdfModelUtil().getPredicateObjects(step.getCurieElement().getAsResource());
+                    projectUtil.getRDFModelUtil().getPredicateObjects(step.getCurieElement().getAsResource());
         }
         if (step instanceof OMTQueryFilter) {
             return ((OMTQueryFilter) step).getQuery().filter(previousStep);
@@ -476,11 +474,12 @@ public class PsiImplUtil {
     public static List<Resource> resolveToResource(OMTQueryReverseStep step) {
         List<Resource> resources = getPreviousStep(step);
         final OMTCurieElement curieElement = step.getQueryStep().getCurieElement();
-        if (curieElement != null && !getRdfModelUtil().isTypePredicate(curieElement.getAsResource()) && !resources.isEmpty()) {
-            return getRdfModelUtil().listSubjectsWithPredicateObjectClass(curieElement.getAsResource(),
-                    getRdfModelUtil().allSuperClasses(resources));
+        final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
+        if (curieElement != null && !rdfModelUtil.isTypePredicate(curieElement.getAsResource()) && !resources.isEmpty()) {
+            return rdfModelUtil.listSubjectsWithPredicateObjectClass(curieElement.getAsResource(),
+                    rdfModelUtil.allSuperClasses(resources));
         }
-        return resources.isEmpty() && curieElement != null ? getRdfModelUtil().getPredicateSubjects(curieElement.getAsResource()) : resources;
+        return resources.isEmpty() && curieElement != null ? rdfModelUtil.getPredicateSubjects(curieElement.getAsResource()) : resources;
     }
 
     public static List<Resource> getPreviousStep(PsiElement step) {
@@ -496,8 +495,8 @@ public class PsiImplUtil {
             return containingQueryStep != null ? getPreviousStep(containingQueryStep) : new ArrayList<>();
         }
         List<Resource> typesForStep = new ArrayList<>(resolvePathPart(previous));
-        typesForStep.addAll(getRdfModelUtil().allSubClasses(typesForStep));
-        typesForStep = getRdfModelUtil().getDistinctResources(typesForStep);
+        typesForStep.addAll(projectUtil.getRDFModelUtil().allSubClasses(typesForStep));
+        typesForStep = projectUtil.getRDFModelUtil().getDistinctResources(typesForStep);
         return typesForStep;
     }
 
@@ -520,9 +519,9 @@ public class PsiImplUtil {
         if (type.contains(":")) {
             final String prefixIri = ((OMTFile) element.getContainingFile()).getPrefixIri(type.split(":")[0]);
             final String iriAsString = String.format("%s%s", prefixIri, type.split(":")[1]);
-            return getRdfModelUtil().createResource(iriAsString);
+            return projectUtil.getRDFModelUtil().createResource(iriAsString);
         } else {
-            return getRdfModelUtil().getPrimitiveTypeAsResource(type);
+            return projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(type);
         }
     }
 
@@ -532,5 +531,29 @@ public class PsiImplUtil {
 
     public static List<Resource> getType(OMTParameterWithType parameterWithType) {
         return variableUtil.getType(parameterWithType);
+    }
+
+    public static OMTVariableValue getValue(OMTVariable variable) {
+        return variableUtil.getValue(variable);
+    }
+
+    public static List<OMTVariableAssignment> getAssignments(OMTVariable variable) {
+        return variableUtil.getAssignments(variable);
+    }
+
+    public static List<Resource> resolveToResource(OMTSignatureArgument signatureArgument) {
+        if (signatureArgument.getCommandCall() != null) {
+            final OMTCallable callable = memberUtil.getCallable(signatureArgument.getCommandCall());
+            return callable.getReturnType();
+        }
+        if (signatureArgument.getOperatorCall() != null) {
+            final OMTCallable callable = memberUtil.getCallable(signatureArgument.getOperatorCall());
+            return callable.getReturnType();
+        }
+        if (signatureArgument.getQuery() != null) {
+            return signatureArgument.getQuery().resolveToResource();
+        }
+        final Resource resource = projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource("any");
+        return Collections.singletonList(resource);
     }
 }

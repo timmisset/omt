@@ -11,18 +11,16 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.external.util.builtIn.BuiltInMember;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
 import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
-import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.impl.OMTQueryReverseStepImpl;
 import com.misset.opp.omt.psi.intentions.variables.AnnotateParameterIntention;
 import com.misset.opp.omt.psi.intentions.variables.RenameVariableIntention;
 import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.support.OMTCallable;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class VariableUtil {
@@ -33,6 +31,11 @@ public class VariableUtil {
     private AnnotationUtil annotationUtil = AnnotationUtil.SINGLETON;
     private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+    private static String PARAMS = "params";
+    private static String VARIABLES = "variables";
+    private static String BASE = "base";
+    private static String BINDINGS = "bindings";
+    private MemberUtil memberUtil = MemberUtil.SINGLETON;
 
     public Optional<OMTVariable> getFirstAppearance(OMTVariable variable, PsiElement container) {
         return PsiTreeUtil.findChildrenOfType(container, OMTVariable.class).stream()
@@ -40,47 +43,22 @@ public class VariableUtil {
                 .findFirst();
     }
 
-    private RDFModelUtil rdfModelUtil;
-
-    private RDFModelUtil getRdfModelUtil() {
-        if (rdfModelUtil == null) {
-            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
-        }
-        if (!rdfModelUtil.isLoaded()) {
-            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
-        }
-        return rdfModelUtil;
-    }
-
     /**
      * Returns the declared variables available at the position of this specific element
-     *
      * @param element
      * @return
      */
     public List<OMTVariable> getDeclaredVariables(PsiElement element) {
-        List<OMTVariable> variables = new ArrayList<>();
-        // a variable can be declared within a script block using the VAR
-        // this must happen before it's usage of course:
-        PsiElement topContainer = PsiTreeUtil.getTopmostParentOfType(element, OMTScript.class);
-        if (topContainer == null) {
-            topContainer = PsiTreeUtil.getTopmostParentOfType(element, OMTCommandBlock.class);
-        }
-        if (topContainer != null) {
-            // now check all the variable declarations that are part of this script or command block
-            variables.addAll(
-                    scriptUtil.getAccessibleElements(element, OMTVariable.class).stream()
-                            .map(omtVariable -> (OMTVariable) omtVariable)
-                            .filter(OMTVariable::isDeclaredVariable)
-                            .collect(Collectors.toList())
-            );
-        }
+        // Get the declared variable from the script
+        List<OMTVariable> variables = new ArrayList<>(scriptUtil.getAccessibleElements(element, OMTVariable.class).stream()
+                .filter(OMTVariable::isDeclaredVariable)
+                .collect(Collectors.toList()));
 
-        // or it can be declared by its containing method: DECLARE COMMAND($myVar) => $myVar
+        // OR from the DEFINE statement
         Optional<OMTDefineParam> definedParameters = getDefinedParameters(element);
         definedParameters.ifPresent(omtDefineParam -> variables.addAll(omtDefineParam.getVariableList()));
 
-        // and finally, by it's containing model item (!Activity, !Procedure etc)
+        // OR from the Model
         variables.addAll(getBlockEntryDeclaredVariables(element));
 
         return variables;
@@ -93,7 +71,7 @@ public class VariableUtil {
 
         List<OMTVariable> declaredVariables = getDeclaredVariables(variable);
         return declaredVariables.stream()
-                .filter(declaredVariable -> declaredVariable.getText().equals(variable.getText()))
+                .filter(declaredVariable -> declaredVariable.getName().equals(variable.getName()))
                 .findFirst();
     }
 
@@ -114,13 +92,16 @@ public class VariableUtil {
     }
 
     private List<OMTVariable> getBlockEntryDeclaredVariables(PsiElement element) {
-        List<OMTBlockEntry> connectedEntries = modelUtil.getConnectedEntries(element, Arrays.asList("params", "variables", "bindings", "base"));
+        Optional<OMTModelItemBlock> modelItemBlock = modelUtil.getModelItemBlock(element);
         List<OMTVariable> variables = new ArrayList<>();
-        connectedEntries.forEach(omtBlockEntry -> variables.addAll(
-                PsiTreeUtil.findChildrenOfType(omtBlockEntry, OMTVariable.class).stream()
-                        .filter(OMTVariable::isDeclaredVariable)
-                        .collect(Collectors.toList())
-        ));
+        final List<String> entryLabels = Arrays.asList(PARAMS, VARIABLES, BASE, BINDINGS);
+        modelItemBlock.ifPresent(omtModelItemBlock ->
+                variables.addAll(
+                        PsiTreeUtil.findChildrenOfType(omtModelItemBlock, OMTVariable.class).stream()
+                                .filter(variable -> variable.isDeclaredVariable() &&
+                                        entryLabels.contains(modelUtil.getEntryBlockLabel(variable)))
+                                .collect(Collectors.toList())
+                ));
         return variables;
     }
 
@@ -229,12 +210,12 @@ public class VariableUtil {
             return true;
         }
         // check if part of the bindings: property of a component
-        if (partOfModelItemEntryLevel(lookWith, "bindings")) {
+        if (partOfModelItemEntryLevel(lookWith, BINDINGS)) {
             return true;
         }
 
         OMTScalarValue asScalarValue = (OMTScalarValue) PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTScalarValue);
-        return partOfBlockEntryLevel(asScalarValue, "variables") || partOfBlockEntryLevel(asScalarValue, "params");
+        return partOfBlockEntryLevel(asScalarValue, VARIABLES) || partOfBlockEntryLevel(asScalarValue, PARAMS);
     }
 
     private boolean partOfBlockEntryLevel(PsiElement element, String entryLevelLabel) {
@@ -279,33 +260,53 @@ public class VariableUtil {
         ).forEach(
                 variable -> {
                     final OMTQuery query = (OMTQuery) PsiTreeUtil.findFirstParent(variable, parent -> parent instanceof OMTQuery);
-                    if (query.getParent() instanceof OMTEquationStatement) {
-                        final OMTEquationStatement equationStatement = (OMTEquationStatement) query.getParent();
-                        final OMTQuery opposite = equationStatement.getOpposite(query);
-                        types.addAll(new OMTQueryReverseStepImpl(opposite.getNode()).resolveToResource());
-                    } else {
-                        if (query instanceof OMTQueryPath) {
-                            final OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(variable, parent -> parent instanceof OMTQueryStep);
-                            final OMTQueryPath queryPath = (OMTQueryPath) query;
-                            final int stepIndex = queryPath.getQueryStepList().indexOf(queryStep);
-                            if (stepIndex >= 0 && queryPath.getQueryStepList().size() > stepIndex + 1) {
-                                // take the next step and try to resolve it:
-                                final OMTQueryStep omtQueryStep = queryPath.getQueryStepList().get(stepIndex + 1);
-                                if (omtQueryStep.getCurieElement() != null) {
-                                    final Resource predicate = omtQueryStep.getCurieElement().getAsResource();
-                                    types.addAll(getRdfModelUtil().getPredicateSubjects(predicate));
-                                }
-                                if (omtQueryStep instanceof OMTQueryReverseStep &&
-                                        ((OMTQueryReverseStep) omtQueryStep).getQueryStep().getCurieElement() != null) {
-                                    final Resource predicate = ((OMTQueryReverseStep) omtQueryStep).getQueryStep().getCurieElement().getAsResource();
-                                    types.addAll(getRdfModelUtil().getPredicateSubjects(predicate));
+                    if (query != null) {
+                        if (query.getParent() instanceof OMTEquationStatement) {
+                            final OMTEquationStatement equationStatement = (OMTEquationStatement) query.getParent();
+                            final OMTQuery opposite = equationStatement.getOpposite(query);
+                            types.addAll(new OMTQueryReverseStepImpl(opposite.getNode()).resolveToResource());
+                        } else {
+                            if (query instanceof OMTQueryPath) {
+                                final OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(variable, parent -> parent instanceof OMTQueryStep);
+                                boolean addedTypes = addTypeSuggestionsFromQueryStep((OMTQueryPath) query, queryStep, types);
+                                if (!addedTypes) {
+                                    // check if
                                 }
                             }
                         }
                     }
                 }
         );
-        return getRdfModelUtil().getDistinctResources(types);
+        return projectUtil.getRDFModelUtil().getDistinctResources(types);
+    }
+
+    private boolean addTypeSuggestionsFromQueryCall(OMTQueryPath queryPath, List<Resource> types) {
+        if (queryPath.getParent() instanceof OMTSignatureArgument) {
+            OMTOperatorCall call = (OMTOperatorCall) PsiTreeUtil.findFirstParent(queryPath, parent -> parent instanceof OMTCall);
+            final OMTCallable callable = memberUtil.getCallable(call);
+
+        }
+        return false;
+    }
+
+    private boolean addTypeSuggestionsFromQueryStep(OMTQueryPath queryPath, OMTQueryStep queryStep, List<Resource> types) {
+        final int stepIndex = queryPath.getQueryStepList().indexOf(queryStep);
+        if (stepIndex >= 0 && queryPath.getQueryStepList().size() > stepIndex + 1) {
+            // take the next step and try to resolve it:
+            final OMTQueryStep omtQueryStep = queryPath.getQueryStepList().get(stepIndex + 1);
+            if (omtQueryStep.getCurieElement() != null) {
+                final Resource predicate = omtQueryStep.getCurieElement().getAsResource();
+                types.addAll(projectUtil.getRDFModelUtil().getPredicateSubjects(predicate));
+                return true;
+            }
+            if (omtQueryStep instanceof OMTQueryReverseStep &&
+                    ((OMTQueryReverseStep) omtQueryStep).getQueryStep().getCurieElement() != null) {
+                final Resource predicate = ((OMTQueryReverseStep) omtQueryStep).getQueryStep().getCurieElement().getAsResource();
+                types.addAll(projectUtil.getRDFModelUtil().getPredicateObjects(predicate));
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -329,7 +330,7 @@ public class VariableUtil {
         return parameterAnnotation.isPresent() ? parameterAnnotation.get().getParameterWithType().getType() : new ArrayList<>();
     }
 
-    private Optional<OMTParameterAnnotation> getTypeFromAnnotation(PsiElement target, PsiElement container) {
+    public Optional<OMTParameterAnnotation> getTypeFromAnnotation(PsiElement target, PsiElement container) {
         final Collection<OMTParameterAnnotation> parameterAnnotations = PsiTreeUtil.findChildrenOfType(container, OMTParameterAnnotation.class);
         return parameterAnnotations.stream().filter(omtParameterAnnotation -> {
             final OMTParameterWithType parameterWithType = omtParameterAnnotation.getParameterWithType();
@@ -348,10 +349,19 @@ public class VariableUtil {
                 return Objects.requireNonNull(signatureArgumentList.get(0).getQuery()).resolveToResource();
             }
         }
+        if (variableValue.getQuery() != null) {
+            return variableValue.getQuery().resolveToResource();
+        }
         return new ArrayList<>();
     }
 
     public List<Resource> getType(OMTVariable variable) {
+        // first check if it can be resolved from an assigned value:
+        final OMTVariableValue value = variable.getValue();
+        if (value != null) {
+            return getType((OMTVariableAssignment) value.getParent());
+        }
+
         if (variable.isDeclaredVariable()) {
             // a declared variable
             if (variable.getParent() instanceof OMTParameterWithType) {
@@ -360,7 +370,7 @@ public class VariableUtil {
                 return getType((OMTDefineParam) variable.getParent());
             } else if (variable.getParent() instanceof OMTVariableAssignment) {
                 return getType((OMTVariableAssignment) variable.getParent());
-            } else if (Arrays.asList("variables", "params", "bindings").contains(modelUtil.getEntryBlockLabel(variable))) {
+            } else if (Arrays.asList(VARIABLES, PARAMS, BINDINGS).contains(modelUtil.getEntryBlockLabel(variable))) {
                 return getType(variable, modelUtil.getEntryBlockLabel(variable));
             }
         } else {
@@ -377,17 +387,51 @@ public class VariableUtil {
     }
 
     public List<Resource> getType(OMTParameterWithType parameterWithType) {
-        if (parameterWithType.getParameterType() != null) {
-            return Collections.singletonList(parameterWithType.getParameterType().getAsResource());
-        } else {
-            // defined as 'operator', which means a shortname like 'string':
-            Pattern pattern = Pattern.compile("\\(([a-z]*)\\)");
-            Matcher matcher = pattern.matcher(parameterWithType.getText());
-            if (matcher.find() && matcher.group(1) != null) {
-                return Collections.singletonList(getRdfModelUtil().getPrimitiveTypeAsResource(matcher.group(1)));
-            } else {
-                return new ArrayList<>();
-            }
+        return Collections.singletonList(parameterWithType.getParameterType().getAsResource());
+    }
+
+    /**
+     * Returns the value of variable from the closest assignment
+     *
+     * @param variable
+     * @return
+     */
+    public OMTVariableValue getValue(OMTVariable variable) {
+        final List<OMTVariableAssignment> assignments = getAssignments(variable);
+        if (assignments.isEmpty()) {
+            return null;
         }
+        return assignments.get(assignments.size() - 1).getVariableValue();
+    }
+
+    public List<OMTVariableAssignment> getAssignments(OMTVariable variable) {
+        List<OMTVariableAssignment> assignments = new ArrayList<>();
+        // get it from the script:
+        assignments.addAll(
+                scriptUtil.getAccessibleElements(variable, OMTVariableAssignment.class)
+                        .stream().filter(variableAssignment -> variableAssignment.getVariableList().stream().anyMatch(
+                        assignedVariable -> assignedVariable.getName().equals(variable.getName())
+                )).collect(Collectors.toList())
+        );
+        // and finally, by it's containing model item (!Activity, !Procedure etc)
+        assignments.addAll(getBlockEntryVariableAssignments(variable));
+
+        return assignments;
+    }
+
+    private List<OMTVariableAssignment> getBlockEntryVariableAssignments(OMTVariable variable) {
+        Optional<OMTModelItemBlock> modelItemBlock = modelUtil.getModelItemBlock(variable);
+        List<OMTVariableAssignment> assignments = new ArrayList<>();
+        modelItemBlock.ifPresent(omtModelItemBlock ->
+                assignments.addAll(
+                        PsiTreeUtil.findChildrenOfType(omtModelItemBlock, OMTVariableAssignment.class).stream()
+                                .filter(variableAssignment ->
+                                        variableAssignment.getVariableList().stream().anyMatch(
+                                                assignedVariable -> assignedVariable.getName().equals(variable.getName())
+                                        ) &&
+                                                modelUtil.getEntryBlockLabel(variableAssignment).equals(VARIABLES))
+                                .collect(Collectors.toList())
+                ));
+        return assignments;
     }
 }

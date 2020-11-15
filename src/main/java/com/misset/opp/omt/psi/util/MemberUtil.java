@@ -9,6 +9,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
+import com.misset.opp.omt.exceptions.IncorrectSignatureArgument;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.external.util.builtIn.BuiltInMember;
 import com.misset.opp.omt.external.util.builtIn.BuiltInType;
@@ -283,6 +284,8 @@ public class MemberUtil {
     }
 
     private void validateSignature(@NotNull OMTCall call, @NotNull OMTCallable callable, @NotNull AnnotationHolder holder) {
+
+        // validate the call itself, number of arguments, required etc
         try {
             callable.validateSignature(call);
         } catch (NumberOfInputParametersMismatchException | CallCallableMismatchException e) {
@@ -296,6 +299,24 @@ public class MemberUtil {
                     .range(call.getFlagSignature())
                     .create();
         }
+        // if passed, validate the individual arguments
+        if (call.getSignature() != null) {
+            call.getSignature().getSignatureArgumentList().forEach(
+                    signatureArgument -> {
+                        try {
+                            callable.validateSignatureArgument(
+                                    call.getSignature().getSignatureArgumentList().indexOf(signatureArgument),
+                                    signatureArgument
+                            );
+                        } catch (IncorrectSignatureArgument exception) {
+                            holder.newAnnotation(HighlightSeverity.ERROR, exception.getMessage())
+                                    .range(signatureArgument)
+                                    .create();
+                        }
+                    }
+            );
+        }
+
     }
 
     /**

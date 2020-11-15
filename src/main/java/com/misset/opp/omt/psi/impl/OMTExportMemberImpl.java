@@ -1,17 +1,16 @@
 package com.misset.opp.omt.psi.impl;
 
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
-import com.misset.opp.omt.psi.OMTDefineCommandStatement;
-import com.misset.opp.omt.psi.OMTDefineQueryStatement;
-import com.misset.opp.omt.psi.OMTModelItemBlock;
-import com.misset.opp.omt.psi.OMTQuery;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.ExportMemberType;
 import com.misset.opp.omt.psi.support.OMTExportMember;
+import com.misset.opp.omt.psi.util.ModelUtil;
 import com.misset.opp.omt.psi.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * An exported member can be a wide variety of items, a Query or StandAlone query, both are considered Operator
@@ -23,14 +22,7 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
     private final ExportMemberType type;
 
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private RDFModelUtil rdfModelUtil;
-
-    private RDFModelUtil getRDFModelUtil() {
-        if (rdfModelUtil == null || !rdfModelUtil.isLoaded()) {
-            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
-        }
-        return rdfModelUtil;
-    }
+    private ModelUtil modelUtil = ModelUtil.SINGLETON;
 
     public OMTExportMemberImpl(PsiElement exportMemberPsi, ExportMemberType type) {
         super(type.name(), type == ExportMemberType.Command || type == ExportMemberType.Procedure || type == ExportMemberType.Activity);
@@ -90,7 +82,7 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
             case Query:
                 return
                         getReturnType().isEmpty() || getReturnType().get(0).getURI().equals(
-                                getRDFModelUtil().getPrimitiveTypeAsResource("any").toString()
+                                projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource("any").toString()
                         );
         }
     }
@@ -98,17 +90,26 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
     @Override
     public List<Resource> getReturnType() {
         switch (type) {
-            case Activity:
             case StandaloneQuery:
+                final OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) element;
+                final Optional<OMTBlockEntry> queryBlock = modelUtil.getModelItemBlockEntry(modelItemBlock, "query");
+                if (queryBlock.isPresent()) {
+                    final OMTQuery query = PsiTreeUtil.findChildOfType(queryBlock.get(), OMTQuery.class);
+                    return query != null ? query.resolveToResource() : super.getReturnType();
+                }
+                break;
+
+            case Query:
+                final OMTQuery query = ((OMTDefineQueryStatement) this.element).getQuery();
+                return query.resolveToResource();
+
+            case Activity:
             case Procedure:
             case Command:
             default:
                 return super.getReturnType();
-
-            case Query:
-                final OMTQuery query = ((OMTDefineQueryStatement) element).getQuery();
-                return query.resolveToResource();
         }
+        return super.getReturnType();
     }
 
     private void set() {

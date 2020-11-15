@@ -74,7 +74,7 @@ class ScriptUtilTest extends LightJavaCodeInsightFixtureTestCase {
             OMTVariable variableA = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$variableA"));
             OMTVariable variableB = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$variableB"));
             OMTVariable variableC = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$variableC"));
-            List<PsiElement> accessibleElements = scriptUtil.getAccessibleElements(variableC, OMTVariable.class);
+            List<OMTVariable> accessibleElements = scriptUtil.getAccessibleElements(variableC, OMTVariable.class);
             assertNotNull(variableA);
             assertNotNull(variableB);
             assertNotNull(variableC);
@@ -91,7 +91,7 @@ class ScriptUtilTest extends LightJavaCodeInsightFixtureTestCase {
             OMTVariable variableD = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$variableD"));
             assertNotNull(variableC);
             assertNotNull(variableD);
-            List<PsiElement> accessibleElements = scriptUtil.getAccessibleElements(variableC, OMTVariable.class);
+            List<OMTVariable> accessibleElements = scriptUtil.getAccessibleElements(variableC, OMTVariable.class);
             assertFalse(accessibleElements.contains(variableD));
         });
     }

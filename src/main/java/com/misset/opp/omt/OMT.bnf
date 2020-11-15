@@ -128,20 +128,20 @@ declareVariable ::=                         DECLARE_VAR (variableAssignment | va
 // a variable assignment is $var = 1234
 variableAssignment::=                       variable (COMMA variable)* EQUALS variableValue
 // a variable can be assigned with anything
-variableValue ::=                           query | commandCall | constant_value
+variableValue ::=                           query | commandCall
 
 // a parameter type is used to typecast input parameters in OMT model items
 variable ::=                                VARIABLE_NAME | ignoredVariable | globalVariable {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTVariableNamedElementImpl"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTVariableNamedElement"
-                                                                                 methods=[getName setName isDeclaredVariable isIgnoredVariable isGlobalVariable getNameIdentifier getType]
+                                                                                 methods=[getName setName isDeclaredVariable isIgnoredVariable isGlobalVariable getNameIdentifier getType getValue getAssignments]
                                                                                }
 // the lexer should determine if operating in a state of declare and provide a difference response for the discovered variable name
 globalVariable ::=                          GLOBAL_VARIABLE_NAME
 ignoredVariable ::=                         IGNORE_VARIABLE_NAME
-parameterWithType ::=                       variable PARENTHESES_OPEN (parameterType | OPERATOR) PARENTHESES_CLOSE { methods=[ getType ]}
+parameterWithType ::=                       variable PARENTHESES_OPEN parameterType PARENTHESES_CLOSE { methods=[ getType ]}
 
-parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) {
+parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) | OPERATOR {
     methods = [isDefinedByPrefix getAsResource]
 }
 
@@ -194,7 +194,7 @@ commandCall ::=                             COMMAND flagSignature? signature?
 signature ::=                               PARENTHESES_OPEN (signatureArgument (COMMA signatureArgument)*)? PARENTHESES_CLOSE {
                                                              methods=[numberOfParameters]
 }
-signatureArgument ::=                       (query | commandBlock | commandCall | operatorCall)
+signatureArgument ::=                       (query | commandBlock | commandCall | operatorCall) { methods=[resolveToResource] }
 flagSignature ::=                           FLAG
 
 logicalBlock ::=                            ifBlock commandBlock trailing? (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?

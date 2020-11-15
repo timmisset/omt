@@ -242,4 +242,6 @@ class VariableUtilTest extends LightJavaCodeInsightFixtureTestCase {
             assertTrue(variableUtil.isDeclaredVariable(variable));
         });
     }
+
+
 }
