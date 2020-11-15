@@ -66,7 +66,8 @@ public class QueryUtil {
         if (isDecorated(subQuery)) {
             return true;
         }
-        if (subQuery.getQuery() instanceof OMTBooleanStatement) {
+        if (subQuery.getQuery() instanceof OMTBooleanStatement ||
+                subQuery.getQuery() instanceof OMTQueryArray) {
             return true;
         }
         if (PsiTreeUtil.findFirstParent(subQuery, parent -> parent instanceof OMTIfBlock) != null) {

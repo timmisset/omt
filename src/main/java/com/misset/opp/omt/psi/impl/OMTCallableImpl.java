@@ -220,8 +220,10 @@ public abstract class OMTCallableImpl implements OMTCallable {
         } // could not resolve the type to a Resource, for now, just leave it
         final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
         List<Resource> acceptableTypes = rdfModelUtil.getClassDescendants(parameterType, true);
-        final List<Resource> argumentTypes = rdfModelUtil.getClasses(argument.resolveToResource());
-        if (acceptableTypes.isEmpty() || argumentTypes.isEmpty() || argumentTypes.contains(rdfModelUtil.getPrimitiveTypeAsResource("any"))) {
+        List<Resource> argumentTypes = new ArrayList<>(argument.resolveToResource());
+        argumentTypes.addAll(rdfModelUtil.allSubClasses(argumentTypes));
+        argumentTypes = rdfModelUtil.getDistinctResources(rdfModelUtil.getClasses(argumentTypes));
+        if (acceptableTypes.isEmpty() || argumentTypes.isEmpty() || argumentTypes.contains(rdfModelUtil.getAnyType())) {
             // when the argument type cannot be resolved to specific class or type it's resolved to any
             // which means we cannot validate the call
             return;

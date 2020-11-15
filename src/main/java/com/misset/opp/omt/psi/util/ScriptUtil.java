@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ScriptUtil {
@@ -38,6 +39,24 @@ public class ScriptUtil {
         OMTScriptLine currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTScriptLine);
         while (currentScriptLine != null) {
             getPrecedingScriptLines(currentScriptLine).forEach(scriptLine -> items.addAll(getChildrenOfTypeNotEnclosed(scriptLine, type)));
+            currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(currentScriptLine.getParent(), parent -> parent instanceof OMTScriptLine);
+        }
+        return items;
+    }
+
+    public <T> List<T> getRelatableElements(PsiElement element, Class<T> type, Predicate<T> condition) {
+        List<T> items = new ArrayList<>();
+        if (!PsiElement.class.isAssignableFrom(type)) {
+            return items;
+        }
+        OMTScriptLine currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTScriptLine);
+        while (currentScriptLine != null) {
+            getPrecedingScriptLines(currentScriptLine)
+                    .forEach(scriptLine -> PsiTreeUtil.findChildrenOfType(scriptLine, (Class<? extends PsiElement>) type)
+                            .stream()
+                            .map(type::cast)
+                            .filter(condition)
+                            .forEach(items::add));
             currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(currentScriptLine.getParent(), parent -> parent instanceof OMTScriptLine);
         }
         return items;

@@ -482,6 +482,15 @@ public class PsiImplUtil {
         return resources.isEmpty() && curieElement != null ? rdfModelUtil.getPredicateSubjects(curieElement.getAsResource()) : resources;
     }
 
+    public static List<Resource> resolveToResource(OMTResolvableValue value) {
+        if (value.getQuery() != null) {
+            return value.getQuery().resolveToResource();
+        } else {
+            final OMTCallable callable = memberUtil.getCallable(Objects.requireNonNull(value.getCommandCall()));
+            return callable.getReturnType();
+        }
+    }
+
     public static List<Resource> getPreviousStep(PsiElement step) {
         PsiElement previous = step.getPrevSibling();
         while (previous != null && !(previous instanceof OMTQueryPath) && !(previous instanceof OMTQueryStep)) {
@@ -542,18 +551,17 @@ public class PsiImplUtil {
     }
 
     public static List<Resource> resolveToResource(OMTSignatureArgument signatureArgument) {
-        if (signatureArgument.getCommandCall() != null) {
-            final OMTCallable callable = memberUtil.getCallable(signatureArgument.getCommandCall());
-            return callable.getReturnType();
+        if (signatureArgument.getCommandBlock() != null) {
+            return signatureArgument.getCommandBlock().resolveToResource();
         }
-        if (signatureArgument.getOperatorCall() != null) {
-            final OMTCallable callable = memberUtil.getCallable(signatureArgument.getOperatorCall());
-            return callable.getReturnType();
+        return Objects.requireNonNull(signatureArgument.getResolvableValue()).resolveToResource();
+    }
+
+    public static List<Resource> resolveToResource(OMTCommandBlock commandBlock) {
+        final OMTReturnStatement returnStatement = PsiTreeUtil.findChildOfType(commandBlock, OMTReturnStatement.class);
+        if (returnStatement != null && returnStatement.getResolvableValue() != null) {
+            return returnStatement.getResolvableValue().resolveToResource();
         }
-        if (signatureArgument.getQuery() != null) {
-            return signatureArgument.getQuery().resolveToResource();
-        }
-        final Resource resource = projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource("any");
-        return Collections.singletonList(resource);
+        return projectUtil.getRDFModelUtil().getAnyTypeAsList();
     }
 }

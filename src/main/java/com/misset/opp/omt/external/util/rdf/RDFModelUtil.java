@@ -161,6 +161,9 @@ public class RDFModelUtil {
     }
 
     public boolean isClassOrType(Resource resource) {
+        if (resource == null) {
+            return false;
+        }
         final List<Statement> statementList = resource.listProperties(RDF_TYPE).toList();
         for (Statement statement : statementList) {
             if (statement.getObject().asResource().toString().equals(OWL_CLASS.get().toString())) {
@@ -459,5 +462,13 @@ public class RDFModelUtil {
 
     public Resource getResource(String iri) {
         return model.getResource(iri);
+    }
+
+    public List<Resource> getAnyTypeAsList() {
+        return Collections.singletonList(getAnyType());
+    }
+
+    public Resource getAnyType() {
+        return getPrimitiveTypeAsResource("any");
     }
 }
