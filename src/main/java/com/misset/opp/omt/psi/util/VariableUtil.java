@@ -342,11 +342,11 @@ public class VariableUtil {
     public List<Resource> getType(OMTVariableAssignment variableAssignment) {
         final OMTVariableValue variableValue = variableAssignment.getVariableValue();
         // commands that return the type passed into the first argument
-        List<String> resolvableCommands = Arrays.asList("NEW", "COPYINGRAPH", "ASSIGN");
+        List<String> resolvableCommands = Arrays.asList("NEW", "COPY_IN_GRAPH", "ASSIGN");
         if (variableValue.getCommandCall() != null && resolvableCommands.contains(variableValue.getCommandCall().getName())) {
             final List<OMTSignatureArgument> signatureArgumentList = variableValue.getCommandCall().getSignature().getSignatureArgumentList();
-            if (!signatureArgumentList.isEmpty() && signatureArgumentList.get(0).getQuery() != null) {
-                return Objects.requireNonNull(signatureArgumentList.get(0).getQuery()).resolveToResource();
+            if (!signatureArgumentList.isEmpty()) {
+                return Objects.requireNonNull(signatureArgumentList.get(0).getResolvableValue()).resolveToResource();
             }
         }
         if (variableValue.getQuery() != null) {
@@ -375,18 +375,15 @@ public class VariableUtil {
                 return new ArrayList<>();
             }
             OMTVariable declaredByVariable = getDeclaredByVariable(variable).orElse(null);
-            final List<Resource> types = declaredByVariable != null ? declaredByVariable.getType() : new ArrayList<>();
+            final List<Resource> types = new ArrayList<>(declaredByVariable != null ? declaredByVariable.getType() : new ArrayList<>());
             // and all possible assignments:
-            scriptUtil.getScript(variable).ifPresent(
-                    omtScript -> PsiTreeUtil.findChildrenOfType(omtScript, OMTVariableAssignment.class)
-                            .stream().filter(
-                                    variableAssignment -> variableAssignment.getVariableList().stream().anyMatch(
-                                            assignedVariable -> assignedVariable.getName().equals(variable.getName()) &&
-                                                    variable != assignedVariable
-                                    )
-                            )
-                            .forEach(variableAssignment -> types.addAll(getType(variableAssignment)))
+            scriptUtil.getRelatableElements(variable, OMTVariableAssignment.class, variableAssignment ->
+                    variableAssignment.getVariableList().stream().anyMatch(
+                            assignedVariable -> declaredByVariable == getDeclaredByVariable(assignedVariable).orElse(null)
+                    )).forEach(
+                    variableAssignment -> types.addAll(getType(variableAssignment))
             );
+            return projectUtil.getRDFModelUtil().getDistinctResources(types);
         }
         return new ArrayList<>();
     }

@@ -81,8 +81,8 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
 
             case Query:
                 return
-                        getReturnType().isEmpty() || getReturnType().get(0).getURI().equals(
-                                projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource("any").toString()
+                        getReturnType().isEmpty() || getReturnType().get(0).equals(
+                                projectUtil.getRDFModelUtil().getAnyType()
                         );
         }
     }
@@ -91,8 +91,8 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
     public List<Resource> getReturnType() {
         switch (type) {
             case StandaloneQuery:
-                final OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) element;
-                final Optional<OMTBlockEntry> queryBlock = modelUtil.getModelItemBlockEntry(modelItemBlock, "query");
+                final OMTModelItemBlock standAloneQueryBlock = (OMTModelItemBlock) element;
+                final Optional<OMTBlockEntry> queryBlock = modelUtil.getModelItemBlockEntry(standAloneQueryBlock, "query");
                 if (queryBlock.isPresent()) {
                     final OMTQuery query = PsiTreeUtil.findChildOfType(queryBlock.get(), OMTQuery.class);
                     return query != null ? query.resolveToResource() : super.getReturnType();
@@ -103,8 +103,18 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
                 final OMTQuery query = ((OMTDefineQueryStatement) this.element).getQuery();
                 return query.resolveToResource();
 
-            case Activity:
             case Procedure:
+                final OMTModelItemBlock procedureBlock = (OMTModelItemBlock) element;
+                final Optional<OMTBlockEntry> onRun = modelUtil.getModelItemBlockEntry(procedureBlock, "onRun");
+                if (onRun.isPresent()) {
+                    final OMTReturnStatement returnStatement = PsiTreeUtil.findChildOfType(onRun.get(), OMTReturnStatement.class);
+                    return returnStatement != null && returnStatement.getResolvableValue() != null ?
+                            returnStatement.getResolvableValue().resolveToResource() : super.getReturnType();
+                }
+                break;
+
+            case Activity:
+
             case Command:
             default:
                 return super.getReturnType();
