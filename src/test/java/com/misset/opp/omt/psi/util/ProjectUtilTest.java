@@ -177,10 +177,10 @@ class ProjectUtilTest extends LightJavaCodeInsightFixtureTestCase {
         OMTExportMember mockCommand = mock(OMTExportMember.class);
         OMTExportMember mockOperator = mock(OMTExportMember.class);
 
-        doReturn("myCommand").when(mockCommand).asSuggestion();
+        doReturn("myCommand").when(mockCommand).getAsSuggestion();
         doReturn(true).when(mockCommand).isCommand();
         doReturn(false).when(mockCommand).isOperator();
-        doReturn("myOperator").when(mockOperator).asSuggestion();
+        doReturn("myOperator").when(mockOperator).getAsSuggestion();
         doReturn(true).when(mockOperator).isOperator();
         doReturn(false).when(mockOperator).isCommand();
 

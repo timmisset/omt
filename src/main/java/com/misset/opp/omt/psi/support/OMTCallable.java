@@ -3,9 +3,12 @@ package com.misset.opp.omt.psi.support;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
+import com.misset.opp.omt.exceptions.IncorrectSignatureArgument;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
+import com.misset.opp.omt.psi.OMTSignatureArgument;
 import org.apache.jena.rdf.model.Resource;
 
+import java.util.HashMap;
 import java.util.List;
 
 public interface OMTCallable {
@@ -40,15 +43,21 @@ public interface OMTCallable {
 
     PsiElement getElement();
 
+    void validateSignatureArgument(int index, OMTSignatureArgument argument) throws IncorrectSignatureArgument;
+
     String htmlDescription();
 
     String shortDescription();
 
-    String asSuggestion();
+    String getAsSuggestion();
+
+    void setName(String name);
 
     List<Resource> getReturnType();
 
     String getCallableType();
+
+    HashMap<String, Resource> getCallArgumentTypes();
 
     boolean returnsAny();
 }

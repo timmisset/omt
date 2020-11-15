@@ -46,3 +46,7 @@ ont:ClassC
       sh:maxCount 1 ;
     ] ;
 .
+ont:ClassCImpl
+  rdf:type ont:ClassC ;
+  ont:omschrijving "Test"^^xsd:string ;
+.

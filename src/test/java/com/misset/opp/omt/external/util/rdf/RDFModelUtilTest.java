@@ -5,6 +5,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -146,6 +147,19 @@ class RDFModelUtilTest {
         assertEquals(0, modelUtil.getMaxCount(resourceFor("ClassA"), resourceFor("booleanProperty")));
     }
 
+    @Test
+    void testGetClass() {
+        assertEquals(resourceFor("ClassA"), modelUtil.getClass(resourceFor("ClassA")));
+        assertEquals(resourceFor("ClassC"), modelUtil.getClass(resourceFor("ClassCImpl")));
+    }
+
+    @Test
+    void testGetClasses() {
+        assertContainsElements(modelUtil.getClasses(
+                Arrays.asList(resourceFor("ClassA"), resourceFor("ClassCImpl"))
+        ), resourceFor("ClassA"), resourceFor("ClassC"));
+    }
+
     private Resource resourceFor(String value) {
         return resourceFor("http://ontologie#", value);
     }
@@ -153,4 +167,5 @@ class RDFModelUtilTest {
     private Resource resourceFor(String prefix, String value) {
         return model.getResource(String.format("%s%s", prefix, value));
     }
+
 }

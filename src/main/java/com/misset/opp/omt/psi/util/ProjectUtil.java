@@ -51,6 +51,15 @@ public class ProjectUtil {
     private FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
     private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
 
+    private RDFModelUtil rdfModelUtil;
+
+    public RDFModelUtil getRDFModelUtil() {
+        if (rdfModelUtil == null || !rdfModelUtil.isLoaded()) {
+            rdfModelUtil = new RDFModelUtil(getOntologyModel());
+        }
+        return rdfModelUtil;
+    }
+
     public WindowManager getWindowManager() {
         return windowManager;
     }
@@ -209,7 +218,7 @@ public class ProjectUtil {
     }
 
     public List<String> getExportedMembersAsSuggestions(boolean commands) {
-        return getExportedMembers(commands).stream().map(OMTCallable::asSuggestion).distinct().collect(Collectors.toList());
+        return getExportedMembers(commands).stream().map(OMTCallable::getAsSuggestion).distinct().collect(Collectors.toList());
     }
 
     public List<OMTExportMember> getExportedMembers(boolean commands) {

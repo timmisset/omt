@@ -3,6 +3,7 @@ package com.misset.opp.omt.psi.impl;
 import com.google.gson.JsonObject;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
+import com.misset.opp.omt.exceptions.IncorrectSignatureArgument;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
@@ -11,6 +12,7 @@ import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
 import com.misset.opp.omt.psi.util.ModelUtil;
 import com.misset.opp.omt.psi.util.ProjectUtil;
+import com.misset.opp.omt.psi.util.VariableUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.*;
@@ -30,6 +32,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     private ModelUtil modelUtil = ModelUtil.SINGLETON;
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+    private VariableUtil variableUtil = VariableUtil.SINGLETON;
     private RDFModelUtil rdfModelUtil;
     public OMTCallableImpl(String type, boolean isCommand) {
         this.type = type;
@@ -114,7 +117,8 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     @Override
     public int getMinExpected() {
-        return (int) parameters.values().stream().filter(OMTParameter::isRequired).count();
+        final long minRequired = parameters.values().stream().filter(OMTParameter::isRequired).count();
+        return minRequired == 0 && hasRest() ? 1 : (int) minRequired;
     }
 
     @Override
@@ -191,16 +195,55 @@ public abstract class OMTCallableImpl implements OMTCallable {
         OMTFlagSignature flagSignature = call.getFlagSignature();
         if (flagSignature != null) {
             String flagName = flagSignature.getText().substring(1);
-            if (!flags.contains(flagName)) {
-                throw new IncorrectFlagException(flagName, flags);
+            if (!getFlags().contains(flagName)) {
+                throw new IncorrectFlagException(flagName, getFlags());
             }
         }
+    }
+
+    @Override
+    public void validateSignatureArgument(int index, OMTSignatureArgument argument) throws IncorrectSignatureArgument {
+        OMTParameter parameter = index <= parameterList.size() - 1 ? parameterList.get(index) : null;
+        if (parameter == null && hasRest()) {
+            parameter = parameterList.get(parameterList.size() - 1);
+        }
+        if (parameter == null) {
+            return;
+        } // cannot determine parameter, the validateSignature will catch this
+
+        if (parameter.getType() == null) {
+            return;
+        }
+        final Resource parameterType = parameter.getType().getAsResource();
+        if (parameterType == null) {
+            return;
+        } // could not resolve the type to a Resource, for now, just leave it
+        final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
+        List<Resource> acceptableTypes = rdfModelUtil.getClassDescendants(parameterType, true);
+        final List<Resource> argumentTypes = rdfModelUtil.getClasses(argument.resolveToResource());
+        if (acceptableTypes.isEmpty() || argumentTypes.isEmpty() || argumentTypes.contains(rdfModelUtil.getPrimitiveTypeAsResource("any"))) {
+            // when the argument type cannot be resolved to specific class or type it's resolved to any
+            // which means we cannot validate the call
+            return;
+        }
+        for (Resource argumentType : argumentTypes) {
+            if (acceptableTypes.contains(argumentType)) {
+                return;
+            } // acceptable type found
+        }
+        throw new IncorrectSignatureArgument(parameter, acceptableTypes, argumentTypes);
     }
 
     void setParametersFromDefined(OMTDefineParam parameters) {
         parameters.getVariableList().stream()
                 .map(OMTParameterImpl::new)
-                .forEach(this::addParameter);
+                .forEach(omtParameter -> {
+                    variableUtil.getTypeFromAnnotation(omtParameter.getVariable(), parameters.getParent())
+                            .ifPresent(omtParameterAnnotation -> omtParameter.setType(
+                                    omtParameterAnnotation.getParameterWithType().getParameterType()
+                            ));
+                    addParameter(omtParameter);
+                });
     }
 
     @Override
@@ -217,24 +260,26 @@ public abstract class OMTCallableImpl implements OMTCallable {
         return String.format("%s: %s", type, name);
     }
 
+    @Override
     public String getName() {
         return this.name;
     }
 
     @Override
-    public String asSuggestion() {
-        String name = getName();
-        if (isCommand) {
-            name = "@" + name;
-        }
-        String params = hasParameters() ? String.format(
-                "(%s)", String.join(", ", getParameterNames())
-        ) : (isCommand ? "()" : "");
-        return name + params;
-    }
-
     public void setName(String name) {
         this.name = name.endsWith(":") ? name.substring(0, name.length() - 1) : name;
+    }
+
+    @Override
+    public String getAsSuggestion() {
+        String exposedName = isCommand ? String.format("@%s", getName()) : getName();
+        String exposedParameters = hasParameters() ?
+                String.format("(%s)", String.join(", ", getParameterNames())) :
+                "";
+        if (isCommand && exposedParameters.isEmpty()) {
+            exposedParameters = "()";
+        }
+        return exposedName + exposedParameters;
     }
 
     @Override
@@ -250,5 +295,15 @@ public abstract class OMTCallableImpl implements OMTCallable {
     @Override
     public String getCallableType() {
         return type;
+    }
+
+    @Override
+    public HashMap<String, Resource> getCallArgumentTypes() {
+        HashMap<String, Resource> callArgumentTypes = new HashMap<>();
+        parameterList.stream()
+                .filter(parameter -> parameter.getType() != null)
+                .forEach(parameter -> callArgumentTypes.put(parameter.getName(), parameter.getType().getAsResource())
+                );
+        return callArgumentTypes;
     }
 }

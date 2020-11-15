@@ -164,12 +164,20 @@ public class OMTFile extends PsiFileBase {
     }
 
     public String resourceToCurie(Resource resource) {
+        if (resource == null) {
+            return "";
+        }
         OMTPrefix prefix = getPrefixes().get(resource.getNameSpace());
         if (prefix == null) {
             return resource.toString();
         }
 
         return String.format("%s:%s", prefix.getNamespacePrefix().getName(), resource.getLocalName());
+    }
+
+    public String curieToIri(String curie) {
+        final String[] curieContent = curie.split(":");
+        return String.format("%s%s", getPrefixIri(curieContent[0]), curieContent[1]);
     }
 
     public void updateMembers() {

@@ -33,8 +33,8 @@ public class ScriptUtil {
      * @param element
      * @return
      */
-    public List<PsiElement> getAccessibleElements(PsiElement element, Class<? extends PsiElement> type) {
-        List<PsiElement> items = new ArrayList<>();
+    public <T> List<T> getAccessibleElements(PsiElement element, Class<T> type) {
+        List<T> items = new ArrayList<>();
         OMTScriptLine currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTScriptLine);
         while (currentScriptLine != null) {
             getPrecedingScriptLines(currentScriptLine).forEach(scriptLine -> items.addAll(getChildrenOfTypeNotEnclosed(scriptLine, type)));
@@ -49,10 +49,10 @@ public class ScriptUtil {
                 .collect(Collectors.toList());
     }
 
-    private List<PsiElement> getChildrenOfTypeNotEnclosed(PsiElement element, Class<? extends PsiElement> type) {
-        List<PsiElement> allChildren = new ArrayList<>();
+    private <T> List<T> getChildrenOfTypeNotEnclosed(PsiElement element, Class<T> type) {
+        List<T> allChildren = new ArrayList<>();
         if (type.isAssignableFrom(element.getClass())) {
-            allChildren.add(element);
+            allChildren.add(type.cast(element));
         }
         @NotNull PsiElement[] children = element.getChildren();
         if (children.length > 0) {

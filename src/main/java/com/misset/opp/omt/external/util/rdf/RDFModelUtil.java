@@ -30,6 +30,7 @@ public class RDFModelUtil {
     private final String rootFolder;
     Model model;
     public final Supplier<Resource> OWL_CLASS = () -> this.model.createResource("http://www.w3.org/2002/07/owl#Class");
+    public final Supplier<Resource> NODE_SHAPE = () -> this.model.createResource("http://www.w3.org/ns/shacl#NodeShape");
 
     private static HashMap<Resource, List<Resource>> predicateObjects = new HashMap<>();
     private static HashMap<Resource, List<Resource>> predicateSubjects = new HashMap<>();
@@ -186,7 +187,14 @@ public class RDFModelUtil {
     }
 
     public List<Resource> getClassDescendants(Resource resource) {
+        return getClassDescendants(resource, false);
+    }
+
+    public List<Resource> getClassDescendants(Resource resource, boolean includeSelf) {
         List<Resource> descendants = new ArrayList<>();
+        if (includeSelf) {
+            descendants.add(resource);
+        }
         final ResIterator resIterator = model.listSubjectsWithProperty(RDFS_SUBCLASS, resource);
         resIterator.forEachRemaining(
                 descendant -> {
@@ -196,6 +204,22 @@ public class RDFModelUtil {
         );
         return descendants;
     }
+
+    public Resource getClass(Resource implementation) {
+        final Resource classResource = implementation.getPropertyResourceValue(RDF_TYPE);
+        if (classResource == null) {
+            return implementation;
+        }
+        if (classResource.equals(OWL_CLASS.get()) || classResource.equals(NODE_SHAPE.get())) {
+            return implementation;
+        }
+        return classResource;
+    }
+
+    public List<Resource> getClasses(List<Resource> implementantions) {
+        return implementantions.stream().map(this::getClass).collect(Collectors.toList());
+    }
+
 
     public boolean isClassResource(Resource resource) {
         StmtIterator stmtIterator = resource.listProperties(RDF_TYPE);
@@ -295,7 +319,7 @@ public class RDFModelUtil {
     }
 
     public List<Resource> getDistinctResources(List<Resource> resources) {
-        return resources.stream().map(Resource::toString).distinct().map(value -> model.createResource(value)).collect(Collectors.toList());
+        return resources.stream().distinct().collect(Collectors.toList());
     }
 
     public List<Resource> listObjectsWithSubjectPredicate(List<Resource> subjects, Resource predicate) {
@@ -310,7 +334,7 @@ public class RDFModelUtil {
     }
 
     public boolean isTypePredicate(Resource resource) {
-        return resource.toString().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+        return resource.equals(RDF_TYPE);
     }
 
     public Resource getPrimitiveTypeAsResource(String name) {
@@ -431,5 +455,9 @@ public class RDFModelUtil {
             description.append("</ul>");
         }
         return description.toString();
+    }
+
+    public Resource getResource(String iri) {
+        return model.getResource(iri);
     }
 }

@@ -73,6 +73,9 @@ public class TokenUtil {
         if (isToken(constantValue.getFirstChild(), "OMTTokenType.BOOLEAN")) {
             return constantValue.getText().equals("true");
         }
+        if (isToken(constantValue.getFirstChild(), "OMTTokenType.NULL")) {
+            return null;
+        }
         return constantValue.getText();
     }
 

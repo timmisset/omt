@@ -142,4 +142,9 @@ public class OMTParameterImpl implements OMTParameter {
                 isRequired() ? " (required) " : "",
                 defaultValue != null ? defaultValue.toString() : "");
     }
+
+    @Override
+    public void setType(OMTParameterType parameterType) {
+        this.type = parameterType;
+    }
 }

@@ -38,14 +38,14 @@ public class BuiltInUtil {
     public List<String> getBuiltInOperatorsAsSuggestions() {
         return builtInMembers.values().stream()
                 .filter(OMTCallableImpl::isOperator)
-                .map(OMTCallableImpl::asSuggestion)
+                .map(OMTCallableImpl::getAsSuggestion)
                 .collect(Collectors.toList());
     }
 
     public List<String> getBuiltInCommandsAsSuggestions() {
         return builtInMembers.values().stream()
                 .filter(OMTCallableImpl::isCommand)
-                .map(OMTCallableImpl::asSuggestion)
+                .map(OMTCallableImpl::getAsSuggestion)
                 .collect(Collectors.toList());
     }
 
