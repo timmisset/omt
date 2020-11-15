@@ -356,12 +356,6 @@ public class VariableUtil {
     }
 
     public List<Resource> getType(OMTVariable variable) {
-        // first check if it can be resolved from an assigned value:
-        final OMTVariableValue value = variable.getValue();
-        if (value != null) {
-            return getType((OMTVariableAssignment) value.getParent());
-        }
-
         if (variable.isDeclaredVariable()) {
             // a declared variable
             if (variable.getParent() instanceof OMTParameterWithType) {
@@ -381,7 +375,18 @@ public class VariableUtil {
                 return new ArrayList<>();
             }
             OMTVariable declaredByVariable = getDeclaredByVariable(variable).orElse(null);
-            return declaredByVariable != null && declaredByVariable.isDeclaredVariable() ? declaredByVariable.getType() : new ArrayList<>();
+            final List<Resource> types = declaredByVariable != null ? declaredByVariable.getType() : new ArrayList<>();
+            // and all possible assignments:
+            scriptUtil.getScript(variable).ifPresent(
+                    omtScript -> PsiTreeUtil.findChildrenOfType(omtScript, OMTVariableAssignment.class)
+                            .stream().filter(
+                                    variableAssignment -> variableAssignment.getVariableList().stream().anyMatch(
+                                            assignedVariable -> assignedVariable.getName().equals(variable.getName()) &&
+                                                    variable != assignedVariable
+                                    )
+                            )
+                            .forEach(variableAssignment -> types.addAll(getType(variableAssignment)))
+            );
         }
         return new ArrayList<>();
     }
