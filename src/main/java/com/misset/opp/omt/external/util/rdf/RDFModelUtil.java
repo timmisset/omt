@@ -151,12 +151,11 @@ public class RDFModelUtil {
     public List<Resource> getClassLineage(Resource resource) {
         List<Resource> lineage = new ArrayList<>();
         lineage.add(resource);
-        if (resource.getProperty(RDFS_SUBCLASS) != null && resource.getProperty(RDFS_SUBCLASS).getObject() != null) {
-            final Resource subClass = resource.getProperty(RDFS_SUBCLASS).getObject().asResource();
-            if (!subClass.toString().equals(resource.toString())) {
-                lineage.addAll(getClassLineage(subClass));
-            }
-        }
+        resource.listProperties(RDFS_SUBCLASS).toList()
+                .stream().filter(statement -> statement.getObject() != null && statement.getObject().asResource() != resource)
+                .forEach(
+                        statement -> lineage.addAll(getClassLineage(statement.getObject().asResource()))
+                );
         return lineage;
     }
 
@@ -337,7 +336,7 @@ public class RDFModelUtil {
     }
 
     public boolean isTypePredicate(Resource resource) {
-        return resource.equals(RDF_TYPE);
+        return resource != null && resource.equals(RDF_TYPE);
     }
 
     public Resource getPrimitiveTypeAsResource(String name) {

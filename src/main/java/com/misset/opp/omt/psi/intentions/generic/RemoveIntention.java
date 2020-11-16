@@ -16,9 +16,18 @@ import java.util.List;
 
 public class RemoveIntention {
     public static final RemoveIntention SINGLETON = new RemoveIntention();
+    private final CurieUtil curieUtil;
+    private final ImportUtil importUtil;
 
-    private CurieUtil curieUtil = CurieUtil.SINGLETON;
-    private ImportUtil importUtil = ImportUtil.SINGLETON;
+    public RemoveIntention() {
+        curieUtil = CurieUtil.SINGLETON;
+        importUtil = ImportUtil.SINGLETON;
+    }
+
+    public RemoveIntention(CurieUtil curieUtil, ImportUtil importUtil) {
+        this.curieUtil = curieUtil;
+        this.importUtil = importUtil;
+    }
 
     public IntentionAction getRemoveIntention(PsiElement element) {
         return getRemoveIntention(element, "Remove");

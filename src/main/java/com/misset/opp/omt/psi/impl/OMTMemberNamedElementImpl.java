@@ -38,9 +38,6 @@ public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement imp
     @Override
     public PsiReference getReference() {
         NamedMemberType namedMemberType = getType();
-        if (namedMemberType == null) {
-            return null;
-        }
         switch (namedMemberType) {
             case DefineName:
                 return toReference((OMTDefineName) getPsi());

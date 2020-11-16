@@ -5,6 +5,7 @@ import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTFileType;
 import com.misset.opp.omt.OMTLanguage;
@@ -111,7 +112,7 @@ public class OMTFile extends PsiFileBase {
         return getRootBlock("module").isPresent();
     }
 
-    public HashMap<OMTImport, VirtualFile> getImportedFiles() {
+    public Map<OMTImport, VirtualFile> getImportedFiles() {
         Optional<OMTImportBlock> importBlock = getSpecificBlock("import", OMTImportBlock.class);
         if (!importBlock.isPresent()) {
             return new HashMap<>();
@@ -121,6 +122,26 @@ public class OMTFile extends PsiFileBase {
         importBlock.get().getImportList()
                 .forEach(omtImport -> importHashmap.put(omtImport, importUtil.getImportedFile(omtImport)));
         return importHashmap;
+    }
+
+    public Map<String, OMTExportMember> getImportedMembersAsExportedMembers() {
+        HashMap<String, OMTExportMember> importedMembers = new HashMap<>();
+        getImportedFiles().forEach(
+                (omtImport, virtualFile) -> {
+                    if (omtImport.getMemberList() != null) {
+                        omtImport.getMemberList().getMemberListItemList().forEach(
+                                omtMemberListItem -> {
+                                    final OMTFile omtFile = (OMTFile) PsiManager.getInstance(getProject()).findFile(virtualFile);
+                                    if (omtFile != null) {
+                                        omtFile.getExportedMember(omtMemberListItem.getMember().getName())
+                                                .ifPresent(exportMember -> importedMembers.put(exportMember.getName(), exportMember));
+                                    }
+                                }
+                        );
+                    }
+                }
+        );
+        return importedMembers;
     }
 
     /**
@@ -321,6 +342,24 @@ public class OMTFile extends PsiFileBase {
                 .filter(Objects::nonNull)
                 .forEach(omtExportMember -> exported.put(omtExportMember.getName(), omtExportMember))
         );
+
+        // exporting members from module:
+        Optional<OMTExportBlock> optionalOMTExportBlock = getSpecificBlock("export", OMTExportBlock.class);
+        optionalOMTExportBlock.ifPresent(
+                omtExportBlock ->
+                {
+                    final Map<String, OMTExportMember> importedMembersAsExportedMembers = getImportedMembersAsExportedMembers();
+                    if (omtExportBlock.getMemberList() != null) {
+                        omtExportBlock.getMemberList().getMemberListItemList()
+                                .stream().map(OMTMemberListItem::getMember)
+                                .filter(member -> importedMembersAsExportedMembers.containsKey(member.getName()))
+                                .forEach(
+                                        member -> exported.put(member.getName(), importedMembersAsExportedMembers.get(member.getName()))
+                                );
+                    }
+                }
+        );
+
         exportMembers = exported;
     }
 }

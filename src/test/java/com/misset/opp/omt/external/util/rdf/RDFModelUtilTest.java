@@ -160,6 +160,12 @@ class RDFModelUtilTest {
         ), resourceFor("ClassA"), resourceFor("ClassC"));
     }
 
+    @Test
+    void testMultipleClassInheritances() {
+        assertContainsElements(modelUtil.getClassLineage(resourceFor("ClassF"))
+                , resourceFor("ClassE"), resourceFor("ClassD"));
+    }
+
     private Resource resourceFor(String value) {
         return resourceFor("http://ontologie#", value);
     }

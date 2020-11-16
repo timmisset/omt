@@ -81,7 +81,7 @@ importSource ::=                            importLocation (start EMPTY_ARRAY en
                                                                            implements="com.misset.opp.omt.psi.named.OMTImportNamedElement"
                                                                            methods=[getName setName getNameIdentifier]
                                                                          }
-importLocation ::=                          PROPERTY | IMPORT_PATH
+importLocation ::=                          (MODULE_START indentToken PROPERTY dedentToken) | PROPERTY | IMPORT_PATH
 
 prefixBlock::=                              PREFIX_BLOCK_START trailing? (prefix+ | (indentToken prefix+ dedentToken))?
 prefix::=                                   leading? namespacePrefix namespaceIri trailing? { methods=[getName] }

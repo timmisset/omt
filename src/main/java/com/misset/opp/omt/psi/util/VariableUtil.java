@@ -340,13 +340,19 @@ public class VariableUtil {
     }
 
     public List<Resource> getType(OMTVariableAssignment variableAssignment) {
+        return getType(variableAssignment, 0);
+    }
+
+    public List<Resource> getType(OMTVariableAssignment variableAssignment, int index) {
         final OMTVariableValue variableValue = variableAssignment.getVariableValue();
         // commands that return the type passed into the first argument
         List<String> resolvableCommands = Arrays.asList("NEW", "COPY_IN_GRAPH", "ASSIGN");
-        if (variableValue.getCommandCall() != null && resolvableCommands.contains(variableValue.getCommandCall().getName())) {
-            final List<OMTSignatureArgument> signatureArgumentList = variableValue.getCommandCall().getSignature().getSignatureArgumentList();
-            if (!signatureArgumentList.isEmpty()) {
-                return Objects.requireNonNull(signatureArgumentList.get(0).getResolvableValue()).resolveToResource();
+        if (variableValue.getCommandCall() != null) {
+            if (resolvableCommands.contains(variableValue.getCommandCall().getName())) {
+                final List<OMTSignatureArgument> signatureArgumentList = variableValue.getCommandCall().getSignature().getSignatureArgumentList();
+                if (!signatureArgumentList.isEmpty()) {
+                    return Objects.requireNonNull(signatureArgumentList.get(0).getResolvableValue()).resolveToResource();
+                }
             }
         }
         if (variableValue.getQuery() != null) {

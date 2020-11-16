@@ -150,6 +150,7 @@ IElementType toSpecificBlockLabel() {
         case "model:": return logAndReturn(OMTTypes.MODEL_BLOCK_START);
         case "moduleName:": return logAndReturn(OMTTypes.MODULE_NAME_START);
         case "export:": return logAndReturn(OMTTypes.EXPORT_START);
+        case "module:": return logAndReturn(OMTTypes.MODULE_START);
         default: return logAndReturn(OMTTypes.PROPERTY);
     }
 }

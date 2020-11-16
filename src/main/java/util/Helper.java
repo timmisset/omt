@@ -20,9 +20,8 @@ public class Helper {
                 .map(name -> {
                     String format = String.format("%s/%s", folder, name);
                     InputStream inputStream = classLoader.getResourceAsStream(format);
-                    try (Reader reader = new InputStreamReader(inputStream)) {
-                        String data = CharStreams.toString(reader);
-                        return data;
+                    try (Reader reader = new InputStreamReader(Objects.requireNonNull(inputStream))) {
+                        return CharStreams.toString(reader);
                     } catch (IOException e) {
                         e.printStackTrace();
                         return "";
@@ -32,20 +31,12 @@ public class Helper {
     }
 
     private static ClassLoader getClassLoader() {
-        return PluginId.getRegisteredIdList()
-                .stream()
-                .anyMatch(pluginId -> pluginId.getIdString().equals("com.misset.OMT")) ?
-                Objects.requireNonNull(PluginManagerCore.getPlugin(PluginId.getId("com.misset.OMT"))).getPluginClassLoader() :
-                Thread.currentThread().getContextClassLoader();
+        return Objects.requireNonNull(PluginManagerCore.getPlugin(PluginId.getId("com.misset.OMT"))).getPluginClassLoader();
     }
 
     public static File getResource(String item) {
         URL url = getClassLoader().getResource(item);
-
-        if (url == null) {
-            return null;
-        }
-        return new File(url.getPath());
+        return new File(Objects.requireNonNull(url).getPath());
     }
 
     public static String getResourceAsString(String item) throws IOException {

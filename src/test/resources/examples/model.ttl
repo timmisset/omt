@@ -46,6 +46,20 @@ ont:ClassC
       sh:maxCount 1 ;
     ] ;
 .
+ont:ClassD
+  a owl:Class ;
+  a sh:NodeShape ;
+.
+ont:ClassE
+  a owl:Class ;
+  a sh:NodeShape ;
+.
+ont:ClassF
+  a owl:Class ;
+  a sh:NodeShape ;
+  rdfs:subClassOf ont:ClassD ;
+  rdfs:subClassOf ont:ClassE ;
+.
 ont:ClassCImpl
   rdf:type ont:ClassC ;
   ont:omschrijving "Test"^^xsd:string ;

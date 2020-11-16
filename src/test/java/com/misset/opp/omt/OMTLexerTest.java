@@ -144,6 +144,17 @@ class OMTLexerTest {
         assertThat(elements, not(hasItem("BAD_CHARACTER")));
     }
 
+    @Test
+    public void testImportModule() {
+        String contentToTest = "import:\n" +
+                "   module:ModuleNaam:\n" +
+                "   - member\n" +
+                "\n";
+        List<String> elements = getElements(contentToTest);
+        final HashMap<String, String> parsedElementsAsTypes = getParsedElementsAsTypes(contentToTest);
+        assertThat(elements, not(hasItem("BAD_CHARACTER")));
+    }
+
     private void testOMTFile(String name) throws IOException {
         // This method will test an entire OMT file for identical contents with the expected outcome
         // the expected content is based on the output after parsing was finally successful. Therefore, this method is to make
@@ -159,14 +170,20 @@ class OMTLexerTest {
 
     }
 
-    private List<String> getElements(String content, int start, int end) throws IOException {
+    private List<String> getElements(String content, int start, int end) {
         OMTLexerAdapter lexer = new OMTLexerAdapter();
         lexer.start(content, start, end, 0);
         List<String> elements = new ArrayList<>();
+        IElementType element = lexer.getTokenType();
+        if (element != null) {
+            if (!element.toString().equals("WHITE_SPACE")) {
+                elements.add(element.toString());
+            }
+        }
         boolean cont = true;
         while (cont) {
             lexer.advance();
-            IElementType element = lexer.getTokenType();
+            element = lexer.getTokenType();
             if (element != null) {
                 if (!element.toString().equals("WHITE_SPACE")) {
                     elements.add(element.toString());
@@ -178,15 +195,15 @@ class OMTLexerTest {
         return elements;
     }
 
-    private List<String> getElements(String content) throws IOException {
+    private List<String> getElements(String content) {
         return getElements(content, 0, content.length());
     }
 
-    private HashMap<String, String> getParsedElementsAsTypes(String content) throws IOException {
+    private HashMap<String, String> getParsedElementsAsTypes(String content) {
         return getParsedElementsAsTypes(content, 0, content.length());
     }
 
-    private HashMap<String, String> getParsedElementsAsTypes(String content, int start, int end) throws IOException {
+    private HashMap<String, String> getParsedElementsAsTypes(String content, int start, int end) {
         OMTLexerAdapter lexer = new OMTLexerAdapter();
         lexer.start(content, start, end, 0);
         HashMap<String, String> elements = new HashMap<>();
@@ -207,7 +224,7 @@ class OMTLexerTest {
 
 
     @Test
-    public void testSpecificContent() throws IOException {
+    public void testSpecificContent() {
         printLexerLog = true;
         String contentToTest = "import:\n" +
                 "    '@client/locatie/src/util/locatie-upsert.omt':\n" +
