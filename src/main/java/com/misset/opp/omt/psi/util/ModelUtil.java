@@ -167,7 +167,7 @@ public class ModelUtil {
     }
 
     public void annotateBlock(OMTBlock block, AnnotationHolder holder) {
-        annotateMissingEntries(getJsonAttributes(block).getAsJsonObject(ATTRIBUTES), block, holder);
+        annotateMissingEntries(block, holder);
     }
 
     public void annotateBlockEntry(OMTBlockEntry omtBlockEntry, AnnotationHolder holder) {
@@ -195,11 +195,13 @@ public class ModelUtil {
                 jsonInfo.has(MAPOF);
     }
 
-    private void annotateMissingEntries(@NotNull JsonObject attributes, OMTBlock block, AnnotationHolder holder) {
+    private void annotateMissingEntries(OMTBlock block, AnnotationHolder holder) {
         List<String> entryLabels = block.getBlockEntryList().stream().map(this::getEntryBlockLabel).collect(Collectors.toList());
-        if (attributes == null) {
+        final JsonObject jsonAttributes = getJsonAttributes(block);
+        if (jsonAttributes.has("shortcut")) {
             return;
         }
+        final JsonObject attributes = jsonAttributes.getAsJsonObject(ATTRIBUTES);
         List<String> missingElements = attributes.entrySet().stream()
                 .filter(entry ->
                         entry.getValue().getAsJsonObject().has("required") &&
@@ -213,7 +215,7 @@ public class ModelUtil {
                     getEntryBlockLabel(block),
                     String.join(", ", missingElements));
             holder.newAnnotation(HighlightSeverity.ERROR, error)
-                    .range(getEntryBlockLabelElement(block)).create();
+                    .range(block).create();
         }
     }
 
