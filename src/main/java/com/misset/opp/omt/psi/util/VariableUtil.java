@@ -99,7 +99,7 @@ public class VariableUtil {
                 variables.addAll(
                         PsiTreeUtil.findChildrenOfType(omtModelItemBlock, OMTVariable.class).stream()
                                 .filter(variable -> variable.isDeclaredVariable() &&
-                                        entryLabels.contains(modelUtil.getEntryBlockLabel(variable)))
+                                        entryLabels.contains(modelUtil.getModelItemEntryLabel(variable)))
                                 .collect(Collectors.toList())
                 ));
         return variables;
