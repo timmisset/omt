@@ -61,6 +61,19 @@ public class OMTAnnotator implements Annotator {
         if (element instanceof OMTParameterType) {
             curieUtil.annotateParameterType((OMTParameterType) element, holder);
         }
+        if (element instanceof OMTAddToCollection) {
+            queryUtil.annotateAddToCollection((OMTAddToCollection) element, holder);
+        }
+        if (element instanceof OMTRemoveFromCollection) {
+            queryUtil.annotateRemoveFromCollection((OMTRemoveFromCollection) element, holder);
+        }
+        if (element instanceof OMTAssignmentStatement) {
+            queryUtil.annotateAssignmentStatement((OMTAssignmentStatement) element, holder);
+        }
+        if (element instanceof OMTEquationStatement) {
+            queryUtil.annotateEquationStatement((OMTEquationStatement) element, holder);
+        }
+
         if (element instanceof OMTQueryStep) {
             if (element.getParent() instanceof OMTQueryReverseStep) {
                 return;

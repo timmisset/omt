@@ -12,10 +12,12 @@ import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
 import com.misset.opp.omt.psi.util.ModelUtil;
 import com.misset.opp.omt.psi.util.ProjectUtil;
+import com.misset.opp.omt.psi.util.QueryUtil;
 import com.misset.opp.omt.psi.util.VariableUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class OMTCallableImpl implements OMTCallable {
 
@@ -33,6 +35,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
     private ModelUtil modelUtil = ModelUtil.SINGLETON;
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private VariableUtil variableUtil = VariableUtil.SINGLETON;
+    private QueryUtil queryUtil = QueryUtil.SINGLETON;
     private RDFModelUtil rdfModelUtil;
     public OMTCallableImpl(String type, boolean isCommand) {
         this.type = type;
@@ -218,22 +221,16 @@ public abstract class OMTCallableImpl implements OMTCallable {
         if (parameterType == null) {
             return;
         } // could not resolve the type to a Resource, for now, just leave it
-        final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
-        List<Resource> acceptableTypes = rdfModelUtil.getClassDescendants(parameterType, true);
-        List<Resource> argumentTypes = new ArrayList<>(argument.resolveToResource());
-        argumentTypes.addAll(rdfModelUtil.allSubClasses(argumentTypes));
-        argumentTypes = rdfModelUtil.getDistinctResources(rdfModelUtil.getClasses(argumentTypes));
-        if (acceptableTypes.isEmpty() || argumentTypes.isEmpty() || argumentTypes.contains(rdfModelUtil.getAnyType())) {
-            // when the argument type cannot be resolved to specific class or type it's resolved to any
-            // which means we cannot validate the call
-            return;
+
+        OMTParameter finalParameter = parameter;
+        AtomicReference<IncorrectSignatureArgument> exception = new AtomicReference<>();
+        queryUtil.validateType(
+                parameterType, argument.resolveToResource(),
+                (acceptableTypes, argumentTypes) -> exception.set(new IncorrectSignatureArgument(finalParameter, acceptableTypes, argumentTypes))
+        );
+        if (exception.get() != null) {
+            throw exception.get();
         }
-        for (Resource argumentType : argumentTypes) {
-            if (acceptableTypes.contains(argumentType)) {
-                return;
-            } // acceptable type found
-        }
-        throw new IncorrectSignatureArgument(parameter, acceptableTypes, argumentTypes);
     }
 
     void setParametersFromDefined(OMTDefineParam parameters) {
