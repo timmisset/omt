@@ -20,6 +20,9 @@ public class ImportReference extends PsiReferenceBase<PsiElement> implements Psi
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
         VirtualFile importedFile = importUtil.getImportedFile((OMTImport) myElement.getParent());
+        if (importedFile == null) {
+            return new ResolveResult[0];
+        }
         PsiFile file = PsiManager.getInstance(myElement.getProject()).findFile(importedFile);
         return new ResolveResult[]{new PsiElementResolveResult(file)};
     }

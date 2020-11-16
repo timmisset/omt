@@ -79,7 +79,10 @@ public class ImportUtil {
         } else if (importLocation.startsWith(".")) {
             relativePath = "../" + importLocation;
         } else if (importLocation.startsWith(MODULE)) {
-            relativePath = getRelativePath(getModuleLocation(importLocation), importingFile);
+            relativePath = getRelativePath(
+                    String.format("%s/%s",
+                            omtImport.getProject().getBasePath(),
+                            getModuleLocation(importLocation.trim().toLowerCase())), importingFile);
         }
         return relativePath != null ? importingFile.findFileByRelativePath(relativePath) : null;
     }
@@ -147,11 +150,13 @@ public class ImportUtil {
             return Optional.of(member);
         }
         VirtualFile importedFile = getImportedFile(omtImport);
-        PsiFile psiFile = getPsiManager(omtImport.getProject()).findFile(importedFile);
-        if (psiFile instanceof OMTFile) {
-            OMTFile omtFile = (OMTFile) psiFile;
-            Optional<OMTExportMember> exportedMember = omtFile.getExportedMember(member.getName());
-            return exportedMember.map(OMTExportMember::getResolvingElement);
+        if (importedFile != null) {
+            PsiFile psiFile = getPsiManager(omtImport.getProject()).findFile(importedFile);
+            if (psiFile instanceof OMTFile) {
+                OMTFile omtFile = (OMTFile) psiFile;
+                Optional<OMTExportMember> exportedMember = omtFile.getExportedMember(member.getName());
+                return exportedMember.map(OMTExportMember::getResolvingElement);
+            }
         }
         return Optional.of(member);
     }

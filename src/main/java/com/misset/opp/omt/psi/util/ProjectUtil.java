@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
@@ -47,9 +48,16 @@ public class ProjectUtil {
     public static final ProjectUtil SINGLETON = new ProjectUtil();
 
     private Model model;
-    private WindowManager windowManager = WindowManager.getInstance();
-    private FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
+    private WindowManager windowManager;
+    private FileDocumentManager fileDocumentManager;
     private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
+
+    public ProjectUtil() {
+        if (ApplicationManager.getApplication() != null) {
+            windowManager = WindowManager.getInstance();
+            fileDocumentManager = FileDocumentManager.getInstance();
+        }
+    }
 
     private RDFModelUtil rdfModelUtil;
 

@@ -11,7 +11,16 @@ import org.jetbrains.annotations.NotNull;
 
 public class RegisterPrefixIntention {
     public static final RegisterPrefixIntention SINGLETON = new RegisterPrefixIntention();
-    private CurieUtil curieUtil = CurieUtil.SINGLETON;
+
+    private final CurieUtil curieUtil;
+
+    public RegisterPrefixIntention() {
+        curieUtil = CurieUtil.SINGLETON;
+    }
+
+    public RegisterPrefixIntention(CurieUtil curieUtil) {
+        this.curieUtil = curieUtil;
+    }
 
     public IntentionAction getRegisterPrefixIntention(OMTNamespacePrefix namespacePrefix, String iri) {
         return new IntentionAction() {
