@@ -238,19 +238,15 @@ public class QueryUtil {
             List<Resource> sender,
             BiConsumer<List<Resource>, List<Resource>> onFail) {
         final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
+        // acceptable types for receiver
         List<Resource> acceptableTypes = new ArrayList<>(receiver);
         acceptableTypes.addAll(rdfModelUtil.allSubClasses(receiver));
+        // append comparable types, like int and decimal, dateTime and date
+        rdfModelUtil.appendComparableTypes(acceptableTypes);
+
         List<Resource> argumentTypes = new ArrayList<>(sender);
         argumentTypes.addAll(rdfModelUtil.allSubClasses(argumentTypes));
         argumentTypes = rdfModelUtil.getDistinctResources(rdfModelUtil.getClasses(argumentTypes));
-
-        if (argumentTypes.stream().anyMatch(
-                resource -> rdfModelUtil.getPrimitiveTypeAsResource("int").equals(resource) ||
-                        rdfModelUtil.getPrimitiveTypeAsResource("decimal").equals(resource)
-        )) {
-            acceptableTypes.add(rdfModelUtil.getPrimitiveTypeAsResource("int"));
-            acceptableTypes.add(rdfModelUtil.getPrimitiveTypeAsResource("decimal"));
-        }
 
         if (acceptableTypes.isEmpty() ||
                 argumentTypes.isEmpty() ||

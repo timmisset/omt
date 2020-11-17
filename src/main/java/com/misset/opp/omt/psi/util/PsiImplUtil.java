@@ -457,10 +457,23 @@ public class PsiImplUtil {
         if (step.getOperatorCall() != null) {
             final OMTCallable callable = memberUtil.getCallable(step.getOperatorCall());
             if (callable != null) {
+                if (callable.getName().equals("CAST")) {
+                    return getCastType(step.getOperatorCall());
+                }
                 return callable.returnsAny() ? previousStep : callable.getReturnType();
             }
         }
         return new ArrayList<>();
+    }
+
+    private static List<Resource> getCastType(OMTOperatorCall call) {
+        if (call.getSignature() != null) {
+            final OMTSignatureArgument omtSignatureArgument = call.getSignature().getSignatureArgumentList().get(0);
+            final List<Resource> resources = omtSignatureArgument.resolveToResource();
+            return resources.isEmpty() ? projectUtil.getRDFModelUtil().getAnyTypeAsList() : resources;
+        }
+        return projectUtil.getRDFModelUtil().getAnyTypeAsList();
+
     }
 
     public static List<Resource> resolveToResource(OMTCurieConstantElement step) {

@@ -188,6 +188,27 @@ public class RDFModelUtil {
         ).flatMap(Collection::stream).collect(Collectors.toList()));
     }
 
+    public void appendComparableTypes(List<Resource> resources) {
+        List<Resource> comparableResources = new ArrayList<>();
+        resources.forEach(
+                resource -> {
+                    if (resource.equals(getPrimitiveTypeAsResource("int"))) {
+                        comparableResources.add(getPrimitiveTypeAsResource("decimal"));
+                    }
+                    if (resource.equals(getPrimitiveTypeAsResource("decimal"))) {
+                        comparableResources.add(getPrimitiveTypeAsResource("int"));
+                    }
+                    if (resource.equals(getPrimitiveTypeAsResource("date"))) {
+                        comparableResources.add(getPrimitiveTypeAsResource("dateTime"));
+                    }
+                    if (resource.equals(getPrimitiveTypeAsResource("dateTime"))) {
+                        comparableResources.add(getPrimitiveTypeAsResource("date"));
+                    }
+                }
+        );
+        resources.addAll(comparableResources);
+    }
+
     public List<Resource> getClassDescendants(Resource resource) {
         return getClassDescendants(resource, false);
     }
