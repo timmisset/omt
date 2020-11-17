@@ -50,9 +50,8 @@ public class VariableUtil {
      */
     public List<OMTVariable> getDeclaredVariables(PsiElement element) {
         // Get the declared variable from the script
-        List<OMTVariable> variables = new ArrayList<>(scriptUtil.getAccessibleElements(element, OMTVariable.class).stream()
-                .filter(OMTVariable::isDeclaredVariable)
-                .collect(Collectors.toList()));
+        List<OMTVariable> variables = scriptUtil.getAccessibleElements(element, OMTVariable.class).stream()
+                .filter(OMTVariable::isDeclaredVariable).collect(Collectors.toCollection(ArrayList::new));
 
         // OR from the DEFINE statement
         Optional<OMTDefineParam> definedParameters = getDefinedParameters(element);
@@ -92,17 +91,25 @@ public class VariableUtil {
     }
 
     private List<OMTVariable> getBlockEntryDeclaredVariables(PsiElement element) {
-        Optional<OMTModelItemBlock> modelItemBlock = modelUtil.getModelItemBlock(element);
         List<OMTVariable> variables = new ArrayList<>();
+        Optional<OMTModelItemBlock> modelItemBlock = modelUtil.getModelItemBlock(element);
+        if (!modelItemBlock.isPresent()) {
+            return variables;
+        }
+        final OMTModelItemBlock omtModelItemBlock = modelItemBlock.get();
+
+        final List<PsiElement> blocks = PsiTreeUtil.collectParents(element, OMTBlock.class, false, parent -> parent == omtModelItemBlock);
+        blocks.add(omtModelItemBlock);
+
         final List<String> entryLabels = Arrays.asList(PARAMS, VARIABLES, BASE, BINDINGS);
-        modelItemBlock.ifPresent(omtModelItemBlock ->
-                variables.addAll(
-                        PsiTreeUtil.findChildrenOfType(omtModelItemBlock, OMTVariable.class).stream()
-                                .filter(variable -> variable.isDeclaredVariable() &&
-                                        entryLabels.contains(modelUtil.getModelItemEntryLabel(variable)))
-                                .collect(Collectors.toList())
-                ));
-        return variables;
+        blocks.forEach(block -> variables.addAll(
+                PsiTreeUtil.findChildrenOfType(block, OMTVariable.class).stream()
+                        .filter(variable -> variable.isDeclaredVariable() &&
+                                (entryLabels.contains(modelUtil.getEntryBlockLabel(variable)) ||
+                                        entryLabels.contains(modelUtil.getModelItemEntryLabel(variable))))
+                        .collect(Collectors.toList())
+        ));
+        return variables.stream().distinct().collect(Collectors.toList());
     }
 
     public void annotateVariable(@NotNull final OMTVariable variable, @NotNull AnnotationHolder holder) {

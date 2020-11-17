@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import static com.misset.opp.omt.psi.intentions.query.UnwrapIntention.getUnwrapIntention;
+
 public class QueryUtil {
     public static final QueryUtil SINGLETON = new QueryUtil();
     private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
@@ -61,6 +63,7 @@ public class QueryUtil {
         if (!wrappableStep(subQuery)) {
             holder.newAnnotation(HighlightSeverity.WARNING,
                     "Unnecessary wrapping of statement")
+                    .withFix(getUnwrapIntention(subQuery))
                     .create();
         }
     }

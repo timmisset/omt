@@ -351,6 +351,9 @@ public class PsiImplUtil {
 
     public static List<Resource> resolveToResource(OMTQueryPath query, boolean lookBack) {
         final List<OMTQueryStep> queryStepList = query.getQueryStepList();
+        if (queryStepList.isEmpty()) {
+            return new ArrayList<>();
+        }
         final OMTQueryStep queryStep = queryStepList.get(queryStepList.size() - 1);
         if (queryStep instanceof OMTCurieConstantElement) {
             return resolveToResource((OMTCurieConstantElement) queryStep);
