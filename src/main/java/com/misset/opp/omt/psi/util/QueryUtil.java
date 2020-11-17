@@ -212,6 +212,9 @@ public class QueryUtil {
 
     private void annotateBoolean(List<Resource> valueType, AnnotationHolder holder, PsiElement range) {
         final Resource booleanType = projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource("boolean");
+        if (valueType == null || valueType.isEmpty()) {
+            return;
+        }
         if (valueType.stream().noneMatch(
                 booleanType::equals
         )) {
