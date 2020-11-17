@@ -73,6 +73,12 @@ public class OMTAnnotator implements Annotator {
         if (element instanceof OMTEquationStatement) {
             queryUtil.annotateEquationStatement((OMTEquationStatement) element, holder);
         }
+        if (element instanceof OMTBooleanStatement) {
+            queryUtil.annotateBooleanStatement((OMTBooleanStatement) element, holder);
+        }
+        if (element instanceof OMTIfBlock) {
+            queryUtil.annotateIfBlock((OMTIfBlock) element, holder);
+        }
 
         if (element instanceof OMTQueryStep) {
             if (element.getParent() instanceof OMTQueryReverseStep) {
