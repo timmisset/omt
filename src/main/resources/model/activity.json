@@ -6,7 +6,8 @@
       "nested",
       "autonomous",
       "dialog",
-      "sidebar"
+      "sidebar",
+      "sibling"
     ],
     "localCommands": [
       "COMMIT",
