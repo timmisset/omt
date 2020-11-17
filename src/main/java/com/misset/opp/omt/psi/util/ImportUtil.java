@@ -58,6 +58,9 @@ public class ImportUtil {
     }
 
     public VirtualFile getImportedFile(OMTImport omtImport, VirtualFile importingFile) {
+        if (importingFile == null) {
+            return null;
+        }
         String importLocation = omtImport.getImportSource().getImportLocation().getText();
         importLocation = importLocation.replaceAll("[\'\":]", "");
 
