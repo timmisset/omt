@@ -198,6 +198,30 @@ public class QueryUtil {
                         ).create());
     }
 
+
+    public void annotateIfBlock(OMTIfBlock omtIfBlock, AnnotationHolder holder) {
+        annotateBoolean(omtIfBlock.getQuery().resolveToResource(), holder, omtIfBlock.getQuery());
+    }
+
+    public void annotateBooleanStatement(OMTBooleanStatement booleanStatement, AnnotationHolder holder) {
+        booleanStatement.getQueryList().forEach(
+                query -> annotateBoolean(query.resolveToResource(), holder, query)
+        );
+
+    }
+
+    private void annotateBoolean(List<Resource> valueType, AnnotationHolder holder, PsiElement range) {
+        final Resource booleanType = projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource("boolean");
+        if (valueType.stream().noneMatch(
+                booleanType::equals
+        )) {
+            holder.newAnnotation(HighlightSeverity.ERROR,
+                    String.format("Expected boolean, got %s",
+                            valueType.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")))
+            ).range(range).create();
+        }
+    }
+
     public void validateType(Resource resource, List<Resource> sender, BiConsumer<List<Resource>, List<Resource>> onFail) {
         validateType(Collections.singletonList(resource), sender, onFail);
     }
