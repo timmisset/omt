@@ -4,6 +4,7 @@ import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTDefineParam;
@@ -51,7 +52,7 @@ public class AnnotateParameterIntention {
                     String comment = String.format("/**%n" +
                             "%s* @param %s (%s)%n" +
                             "%s*/", whiteSpace, variableName, type, whiteSpace);
-                    insertAnnotation(comment, statement, null, whiteSpace, editor.getDocument());
+                    insertAnnotation(comment, statement, null, whiteSpace, editor.getDocument(), project);
                 } else {
                     // add to existing block:
                     final OMTJdComment jdComment = PsiTreeUtil.findChildOfType(leading, OMTJdComment.class);
@@ -59,7 +60,7 @@ public class AnnotateParameterIntention {
                         String comment = jdComment.getText().replace("*/",
                                 String.format("* @param %s (prefix:Type)%n" +
                                         "%s*/", variableName, whiteSpace));
-                        insertAnnotation(comment, statement, jdComment, whiteSpace, editor.getDocument());
+                        insertAnnotation(comment, statement, jdComment, whiteSpace, editor.getDocument(), project);
                     }
                 }
             }
@@ -77,19 +78,24 @@ public class AnnotateParameterIntention {
         return definedStatement.getTextOffset() - lineStartOffset;
     }
 
-    private void insertAnnotation(String comment, OMTDefinedStatement statement, OMTJdComment existingComment, String whiteSpace, Document document) {
+    private void insertAnnotation(String comment, OMTDefinedStatement statement, OMTJdComment existingComment, String whiteSpace, Document document, Project project) {
         String template = String.format("queries:|%n" +
                 "   %s%n" +
                 "   DEFINE QUERY test() => '';%n" +
                 "%n", comment);
         template = template.replace("\r\n", "\n");
+
         final OMTJdComment commentBlock = (OMTJdComment) OMTElementFactory.fromString(template, OMTJdComment.class, statement.getProject());
         if (existingComment == null) {
             statement.addBefore(commentBlock, statement.getFirstChild());
+            PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(document);
             document.insertString(statement.getDefineLabel().getTextOffset(), "\n" + whiteSpace); // final padding with spaces
+            PsiDocumentManager.getInstance(project).commitDocument(document);
         } else {
             existingComment.replace(commentBlock);
         }
+
+
     }
 
 }

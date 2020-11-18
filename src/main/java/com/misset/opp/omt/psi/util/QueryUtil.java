@@ -247,8 +247,6 @@ public class QueryUtil {
         // acceptable types for receiver
         List<Resource> acceptableTypes = new ArrayList<>(receiver);
         acceptableTypes.addAll(rdfModelUtil.allSubClasses(receiver));
-        // append comparable types, like int and decimal, dateTime and date
-        rdfModelUtil.appendComparableTypes(acceptableTypes);
 
         List<Resource> argumentTypes = new ArrayList<>(sender);
         argumentTypes.addAll(rdfModelUtil.allSubClasses(argumentTypes));
@@ -264,7 +262,9 @@ public class QueryUtil {
             return;
         }
         for (Resource argumentType : argumentTypes) {
-            if (acceptableTypes.contains(argumentType)) {
+            if (acceptableTypes.stream().anyMatch(resource ->
+                    projectUtil.getRDFModelUtil().areComparable(resource, argumentType)
+            )) {
                 return; // acceptable type found
             }
         }

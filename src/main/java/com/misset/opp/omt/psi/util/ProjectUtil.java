@@ -68,6 +68,12 @@ public class ProjectUtil {
         return rdfModelUtil;
     }
 
+    private void updateModelUtil() {
+        if (rdfModelUtil != null) {
+            rdfModelUtil.setModel(model);
+        }
+    }
+
     public WindowManager getWindowManager() {
         return windowManager;
     }
@@ -132,6 +138,7 @@ public class ProjectUtil {
             rootFolderPath = rootFolderPath.substring(1);
         }
         model = new RDFModelUtil(rootFolderPath).readModel();
+        updateModelUtil();
     }
 
     private void loadBuiltInMembersViaSettingsOrFromFilename(Project project,

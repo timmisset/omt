@@ -420,53 +420,70 @@ public class PsiImplUtil {
         return resolveToResource(step, true);
     }
 
-    public static List<Resource> resolveToResource(OMTQueryStep step, boolean lookBack) {
-        // steps that do not include preceeding info
-        if (step.getConstantValue() != null) {
-            Model ontologyModel = projectUtil.getOntologyModel();
-            final Object typedLiteral = tokenUtil.parseToTypedLiteral(step.getConstantValue());
-            if (typedLiteral == null) {
-                return new ArrayList<>();
-            }
-            return Collections.singletonList(
-                    ontologyModel
-                            .createResource(ontologyModel.createTypedLiteral(typedLiteral)
-                                    .getDatatypeURI())
-            );
+    public static List<Resource> resolveToResource(OMTConstantValue constantValue) {
+        Model ontologyModel = projectUtil.getOntologyModel();
+        final Object typedLiteral = tokenUtil.parseToTypedLiteral(constantValue);
+        if (typedLiteral == null) {
+            return new ArrayList<>();
         }
-        if (step.getVariable() != null) {
-            return step.getVariable().getType();
-        }
-        if (step.getNegatedStep() != null) {
-            return Collections.singletonList(projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
-        }
+        return Collections.singletonList(
+                ontologyModel
+                        .createResource(ontologyModel.createTypedLiteral(typedLiteral)
+                                .getDatatypeURI())
+        );
+    }
 
-        // steps that require preceeding info
+    public static List<Resource> resolveToResource(OMTCurieElement curieElement, OMTQueryStep step, boolean lookBack, List<Resource> previousStep) {
+        // list based on the preceeding data
+        if (lookBack && !previousStep.isEmpty()) {
+            return projectUtil.getRDFModelUtil().listObjectsWithSubjectPredicate(previousStep, curieElement.getAsResource());
+        }
+        // No initial information to use, continue from this position with the curie as it should be resolvable
+        // to a predicate which can point to class or datatype
+        return step.getParent().getFirstChild().equals(step) ?
+                Collections.singletonList(curieElement.getAsResource()) :
+                projectUtil.getRDFModelUtil().getPredicateObjects(curieElement.getAsResource());
+    }
+
+    public static List<Resource> resolveToResource(OMTOperatorCall call, OMTQueryStep step, List<Resource> previousStep) {
+        final OMTCallable callable = memberUtil.getCallable(call);
+        if (callable != null) {
+            if (callable.getName().equals("CAST")) {
+                return filter(step, getCastType(call));
+            }
+            return callable.returnsAny() ? previousStep : callable.getReturnType();
+        }
+        return previousStep;
+    }
+
+    public static List<Resource> resolveToResource(OMTQueryStep step, boolean lookBack) {
+        return resolveToResource(step, lookBack, true);
+    }
+
+    public static List<Resource> resolveToResource(OMTQueryStep step, boolean lookBack, boolean filter) {
+        // steps that do not include preceeding info
+        List<Resource> resources = new ArrayList<>();
         List<Resource> previousStep = getPreviousStep(step);
-        if (step.getCurieElement() != null) {
-            // list based on the preceeding data
-            if (lookBack && !previousStep.isEmpty()) {
-                return projectUtil.getRDFModelUtil().listObjectsWithSubjectPredicate(previousStep, step.getCurieElement().getAsResource());
-            }
-            // No initial information to use, continue from this position with the curie as it should be resolvable
-            // to a predicate which can point to class or datatype
-            return step.getParent().getFirstChild().equals(step) ?
-                    Collections.singletonList(step.getCurieElement().getAsResource()) :
-                    projectUtil.getRDFModelUtil().getPredicateObjects(step.getCurieElement().getAsResource());
+
+        if (step.getConstantValue() != null) {
+            resources = resolveToResource(step.getConstantValue());
+        } else if (step.getVariable() != null) {
+            resources = step.getVariable().getType();
+        } else if (step.getNegatedStep() != null) {
+            resources = Collections.singletonList(projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
+        } else if (step.getCurieElement() != null) {
+            resources = resolveToResource(step.getCurieElement(), step, lookBack, previousStep);
+        } else if (step.getOperatorCall() != null) {
+            resources = resolveToResource(step.getOperatorCall(), step, previousStep);
         }
-        if (step instanceof OMTQueryFilter) {
-            return ((OMTQueryFilter) step).getQuery().filter(previousStep);
+        return filter ? filter(step, resources) : resources;
+    }
+
+    private static List<Resource> filter(OMTQueryStep step, List<Resource> resources) {
+        for (OMTQueryFilter filter : step.getQueryFilterList()) {
+            resources = filter.getQuery().filter(resources);
         }
-        if (step.getOperatorCall() != null) {
-            final OMTCallable callable = memberUtil.getCallable(step.getOperatorCall());
-            if (callable != null) {
-                if (callable.getName().equals("CAST")) {
-                    return getCastType(step.getOperatorCall());
-                }
-                return callable.returnsAny() ? previousStep : callable.getReturnType();
-            }
-        }
-        return new ArrayList<>();
+        return resources;
     }
 
     private static List<Resource> getCastType(OMTOperatorCall call) {
@@ -480,7 +497,7 @@ public class PsiImplUtil {
     }
 
     public static List<Resource> resolveToResource(OMTCurieConstantElement step) {
-        return Collections.singletonList(step.getCurieElement().getAsResource());
+        return filter(step, Collections.singletonList(step.getCurieElement().getAsResource()));
     }
 
     public static List<Resource> resolveToResource(OMTSubQuery step) {
@@ -492,10 +509,11 @@ public class PsiImplUtil {
         final OMTCurieElement curieElement = step.getQueryStep().getCurieElement();
         final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
         if (curieElement != null && !rdfModelUtil.isTypePredicate(curieElement.getAsResource()) && !resources.isEmpty()) {
-            return rdfModelUtil.listSubjectsWithPredicateObjectClass(curieElement.getAsResource(),
-                    rdfModelUtil.allSuperClasses(resources));
+            return filter(step.getQueryStep(), rdfModelUtil.listSubjectsWithPredicateObjectClass(curieElement.getAsResource(),
+                    rdfModelUtil.allSuperClasses(resources)));
         }
-        return resources.isEmpty() && curieElement != null ? rdfModelUtil.getPredicateSubjects(curieElement.getAsResource()) : resources;
+        resources = resources.isEmpty() && curieElement != null ? rdfModelUtil.getPredicateSubjects(curieElement.getAsResource()) : resources;
+        return filter(step.getQueryStep(), resources);
     }
 
     public static List<Resource> resolveToResource(OMTResolvableValue value) {
@@ -508,6 +526,7 @@ public class PsiImplUtil {
     }
 
     public static List<Resource> getPreviousStep(PsiElement step) {
+        // check if inside filter:
         PsiElement previous = step.getPrevSibling();
         while (previous != null && !(previous instanceof OMTQueryPath) && !(previous instanceof OMTQueryStep)) {
             previous = previous.getPrevSibling();
@@ -517,7 +536,12 @@ public class PsiImplUtil {
             final PsiElement containingQueryStep = PsiTreeUtil.findFirstParent(
                     step, parent -> parent != step && (parent instanceof OMTSubQuery || parent instanceof OMTQueryFilter));
             // retrieve via the subQuery:
-            return containingQueryStep != null ? getPreviousStep(containingQueryStep) : new ArrayList<>();
+            if (containingQueryStep instanceof OMTQueryFilter) {
+                return ((OMTQueryStep) containingQueryStep.getParent()).resolveToResource(true, false);
+            } else if (containingQueryStep instanceof OMTSubQuery) {
+                return getPreviousStep(containingQueryStep);
+            }
+            return new ArrayList<>();
         }
         List<Resource> typesForStep = new ArrayList<>(resolvePathPart(previous));
         typesForStep.addAll(projectUtil.getRDFModelUtil().allSubClasses(typesForStep));
