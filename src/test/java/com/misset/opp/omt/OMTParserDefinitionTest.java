@@ -61,11 +61,11 @@ class OMTParserDefinitionTest extends LightJavaCodeInsightFixtureTestCase {
 
         assertTrue(query instanceof OMTQueryPath);
         OMTQueryPath queryPath = (OMTQueryPath) query;
-        assertEquals(2, queryPath.getQueryStepList().size());
+        assertEquals(1, queryPath.getQueryStepList().size());
 
-        OMTQueryStep step = queryPath.getQueryStepList().get(1);
-        assertTrue(step instanceof OMTQueryFilter);
-        assertTrue(((OMTQueryFilter) step).getQuery().isBooleanType());
+        OMTQueryStep step = queryPath.getQueryStepList().get(0);
+        assertEquals(1, step.getQueryFilterList().size());
+        assertTrue(step.getQueryFilterList().get(0).getQuery().isBooleanType());
 
     }
 

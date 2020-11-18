@@ -92,7 +92,7 @@ namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)        
                                                                                    }
 namespaceIri ::=                            start IRI end                          { methods = [getName getNamespace] }
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix getAsResource getPrefixName]}
-curieConstantElement ::=                    CURIE_CONSTANT_ELEMENT_PREFIX curieElement { extends=queryStep methods=[resolveToResource ]}
+curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FORWARD_SLASH) curieElement queryFilter* { extends=queryStep methods=[resolveToResource ]}
 
 modelBlock::=                               MODEL_BLOCK_START trailing? (indentToken modelItemBlock* dedentToken)?
 modelItemBlock::=                           leading? modelItemLabel trailing? block?
@@ -223,7 +223,7 @@ query     ::=                               queryPath | queryArray | booleanStat
 // For example, a queryArray can consist of 'a' | 'b' in which both 'a' and 'b' are encapsulated
 // into a queryPath and subsequently a queryStep
 // The queryPath is constructed using the Forward slash as delimiter a contains as many steps as possible
-queryPath ::=                               (FORWARD_SLASH? queryStep)+ { extends=query methods=[resolveToResource] }
+queryPath ::=                               (curieConstantElement | queryStep) (FORWARD_SLASH queryStep)* { extends=query methods=[resolveToResource] }
 // The queryArray uses the PIPE symbol to split the array where both can be resolved separately
 queryArray ::=                              query trailing? (PIPE trailing? query)+ { extends=query methods=[resolveToResource] }
 // A booleanStatement works the same as the queryArray but using a BOOLEAN_OPERATOR
@@ -244,16 +244,16 @@ negatedStep ::=                             NOT_OPERATOR trailing? query { exten
 // that add some additional behavior to the step (like a filter)
 // TODO: it might be worthwhile to consider appending the filter to the queryStep instead of making it a separate step
 queryStep ::=                               (queryReverseStep |
-                                            constant_value | variable | curieConstantElement | curieElement |
+                                            constant_value | variable | curieElement |
                                             operatorCall | IRI | DOT | OWLPROPERTY | interpolatedString |
-                                            queryFilter | chooseBlock | negatedStep | NOT_OPERATOR |
+                                            chooseBlock | negatedStep | NOT_OPERATOR |
                                             subQuery |
-                                            trailing | leading) stepDecorator?
+                                            trailing | leading) stepDecorator? queryFilter*
                                             { methods = [ resolveToResource ]}
 queryReverseStep ::=                        CARET queryStep { methods = [ resolveToResource ] extends=queryStep}
 stepDecorator ::=                           ASTERIX | PLUS
 // a query filter is contained by brackets [] and should resolve to boolean
-queryFilter ::=                             BRACKET_OPEN trailing? query trailing? BRACKET_CLOSED { extends=queryStep }
+queryFilter ::=                             BRACKET_OPEN trailing? query trailing? BRACKET_CLOSED
 
 // the subQuery encapsulated a query by PARENTHESES, it can be resolved as-is, for example in an equation
 // or be cast to a traverse-like behavior using the ASTERIX and PLUS appendixes

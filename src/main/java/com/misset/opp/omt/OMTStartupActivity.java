@@ -3,6 +3,7 @@ package com.misset.opp.omt;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.newvfs.BulkFileListener;
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
@@ -75,8 +76,23 @@ public class OMTStartupActivity implements StartupActivity {
                                     projectUtil.loadBuiltInMembers(project);
                                     return;
                                 default:
+                                    byExtension(virtualFile);
                             }
                         });
+            }
+
+            private void byExtension(VirtualFile virtualFile) {
+                if (virtualFile == null || virtualFile.getExtension() == null) {
+                    return;
+                }
+                String extension = virtualFile.getExtension();
+                if (".ttl".equals(extension)) {
+                    projectUtil.loadOntologyModel(project);
+                } else if (".omt".equals(extension)) {
+                    projectUtil.resetExportedMembers(
+                            (OMTFile) PsiManager.getInstance(project).findFile(virtualFile)
+                    );
+                }
             }
         });
     }

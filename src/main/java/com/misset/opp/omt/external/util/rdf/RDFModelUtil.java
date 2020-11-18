@@ -188,25 +188,22 @@ public class RDFModelUtil {
         ).flatMap(Collection::stream).collect(Collectors.toList()));
     }
 
-    public void appendComparableTypes(List<Resource> resources) {
-        List<Resource> comparableResources = new ArrayList<>();
-        resources.forEach(
-                resource -> {
-                    if (resource.equals(getPrimitiveTypeAsResource("int"))) {
-                        comparableResources.add(getPrimitiveTypeAsResource("decimal"));
-                    }
-                    if (resource.equals(getPrimitiveTypeAsResource("decimal"))) {
-                        comparableResources.add(getPrimitiveTypeAsResource("int"));
-                    }
-                    if (resource.equals(getPrimitiveTypeAsResource("date"))) {
-                        comparableResources.add(getPrimitiveTypeAsResource("dateTime"));
-                    }
-                    if (resource.equals(getPrimitiveTypeAsResource("dateTime"))) {
-                        comparableResources.add(getPrimitiveTypeAsResource("date"));
-                    }
-                }
-        );
-        resources.addAll(comparableResources);
+    public boolean isNumeric(Resource resource) {
+        List<String> numericTypes = Arrays.asList("integer", "int", "double", "decimal");
+        return resource.getNameSpace().equals(XSD) &&
+                numericTypes.contains(resource.getLocalName());
+    }
+
+    public boolean isDate(Resource resource) {
+        List<String> dateTypes = Arrays.asList("date", "dateTime");
+        return resource.getNameSpace().equals(XSD) &&
+                dateTypes.contains(resource.getLocalName());
+    }
+
+    public boolean areComparable(Resource resource1, Resource resource2) {
+        return resource1.equals(resource2) ||
+                (isNumeric(resource1) && isNumeric(resource2)) ||
+                (isDate(resource1) && isNumeric(resource2));
     }
 
     public List<Resource> getClassDescendants(Resource resource) {
@@ -490,5 +487,9 @@ public class RDFModelUtil {
 
     public Resource getAnyType() {
         return getPrimitiveTypeAsResource("any");
+    }
+
+    public void setModel(Model model) {
+        this.model = model;
     }
 }
