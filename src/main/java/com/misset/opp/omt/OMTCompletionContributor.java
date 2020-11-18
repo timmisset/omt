@@ -39,7 +39,9 @@ public class OMTCompletionContributor extends CompletionContributor {
     private static String DUMMY_SCALAR = "DUMMYSCALARVALUE";
     private static String DUMMY_PROPERTY = "DUMMYPROPERTYVALUE:";
     private static String DUMMY_IMPORT = "- DUMMYIMPORT";
+    private static String DUMMY_QUERYSTEP = "DUMMY / ";
     private static String DUMMY_ENTRY = String.format("%s %s", DUMMY_PROPERTY, DUMMY_SCALAR);
+
     private static String SEMICOLON = ";";
 
     private static String ATTRIBUTES = "attributes";
@@ -236,6 +238,9 @@ public class OMTCompletionContributor extends CompletionContributor {
             // get the import itself:
             setResolvedElementsForImport(elementAtCaret, true, elementAtCaret);
             isResolved = true;
+        }
+        if (PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTQueryStep) != null) {
+            setDummyPlaceHolder(DUMMY_QUERYSTEP, context);
         }
     }
 

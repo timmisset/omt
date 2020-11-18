@@ -8,7 +8,6 @@ import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.util.ProjectUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 
@@ -289,7 +288,6 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
-    @Tag("Failing")
     void completionProvider_addsSuggestionsForQueryPathFromModelForwardInFilter() {
         List<String> suggestions = getSuggestions("" +
                 "prefixes:\n" +
