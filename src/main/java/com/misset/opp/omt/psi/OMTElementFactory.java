@@ -117,11 +117,11 @@ public class OMTElementFactory {
         }
         blockEntry.add(getWhiteSpaceElement(project, 1, "\n"));
 
-        if (block.getDedentToken() != null) {
-            block.addBefore(blockEntry, block.getDedentToken());
-        } else {
-            block.add(blockEntry);
-        }
+//        if (block.getDedentToken() != null) {
+//            block.addBefore(blockEntry, block.getDedentToken());
+//        } else {
+        block.add(blockEntry);
+//        }
 
         return block;
     }
@@ -146,5 +146,9 @@ public class OMTElementFactory {
     public static PsiElement fromString(String text, Class<? extends PsiElement> getClass, Project project) {
         PsiElement rootElement = createFile(project, text);
         return PsiTreeUtil.findChildOfType(rootElement, getClass);
+    }
+
+    public static void validateFile(String text, Project project) {
+        PsiElement rootElement = createFile(project, text);
     }
 }

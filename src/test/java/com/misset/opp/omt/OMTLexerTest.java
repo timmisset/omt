@@ -171,7 +171,7 @@ class OMTLexerTest {
     }
 
     private List<String> getElements(String content, int start, int end) {
-        OMTLexerAdapter lexer = new OMTLexerAdapter();
+        OMTLexerAdapter lexer = new OMTLexerAdapter(printLexerLog);
         lexer.start(content, start, end, 0);
         List<String> elements = new ArrayList<>();
         IElementType element = lexer.getTokenType();
@@ -185,9 +185,9 @@ class OMTLexerTest {
             lexer.advance();
             element = lexer.getTokenType();
             if (element != null) {
-                if (!element.toString().equals("WHITE_SPACE")) {
+//                if (!element.toString().equals("WHITE_SPACE")) {
                     elements.add(element.toString());
-                }
+//                }
             } else {
                 cont = false;
             }
@@ -226,28 +226,12 @@ class OMTLexerTest {
     @Test
     public void testSpecificContent() {
         printLexerLog = true;
-        String contentToTest = "import:\n" +
-                "    '@client/locatie/src/util/locatie-upsert.omt':\n" +
-                "    -   upsertOngevalideerdAdres\n" +
-                "    '@client/test/src/test.activity.omt':\n" +
-                "    -   TestActivity\n" +
-                "\n" +
-                "prefixes:\n" +
-                "    pol:    <http://ontologie.politie.nl/def/politie#>\n" +
-                "    rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-                "\n" +
-                "model:\n" +
-                "    test: !Activity\n" +
-                "        /**\n" +
-                "        * @param $test (pol:Signaal)\n" +
-                "        */\n" +
-                "        variables:\n" +
-                "        -   $test\n" +
-                "\n" +
-                "        params:\n" +
-                "            - $param (pol:SignaalDossier)\n" +
-                "        queries: |\n" +
-                "            DEFINE QUERY mySecondQuery() => $param / ^pol:inContextVan;\n";
+        String contentToTest = "model:\n" +
+                " Activiteit: !Activity\n" +
+                "  title: 'TEST'\n" +
+                " Procedure: !Procedure\n" +
+                "   onRun: |\n" +
+                "     'test';\n";
 
         System.out.println(
                 String.join("\n", getElements(contentToTest))

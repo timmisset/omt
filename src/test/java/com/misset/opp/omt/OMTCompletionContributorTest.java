@@ -138,6 +138,26 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
         assertNotEmpty(suggestions);
     }
 
+    @Test
+    void completionProvider_addsSuggestionsForBuiltInCommandAtScriptAtAt() {
+        List<String> suggestions = getSuggestions("model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        onStart: |\n" +
+                "            @<caret>\n");
+        assertContainsElements(suggestions, "@FOREACH($param0, $param1)", "@FORKJOIN($param0)");
+        assertNotEmpty(suggestions);
+    }
+
+    @Test
+    void completionProvider_addsSuggestionsForBuiltInCommandAtScriptAtAtWithSemicolon() {
+        List<String> suggestions = getSuggestions("model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        onStart: |\n" +
+                "            @<caret>;\n");
+        assertContainsElements(suggestions, "@FOREACH($param0, $param1)", "@FORKJOIN($param0)");
+        assertNotEmpty(suggestions);
+    }
+
 
     @Test
     void completionProvider_addsSuggestionsForLocalCommandAtScript() {
@@ -295,6 +315,17 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
                 "queries: |\n" +
                 "    DEFINE QUERY myFirstQuery() => /ont:ClassA [<caret>];\n");
         assertContainsElements(suggestions, "ont:stringProperty", "ont:classProperty", "ont:booleanProperty");
+    }
+
+    @Test
+    void completionProvider_addsSuggestionsForQueryPathInExistingPath() {
+        List<String> suggestions = getSuggestions("" +
+                "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY myFirstQuery() => /ont:ClassA / ^rdf:type / <caret>ont:classProperty / ont:stringProperty;\n");
+        assertContainsElements(suggestions, "ont:classProperty");
     }
 
     @Test

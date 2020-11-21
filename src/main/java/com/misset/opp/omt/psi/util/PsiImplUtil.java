@@ -506,14 +506,15 @@ public class PsiImplUtil {
 
     public static List<Resource> resolveToResource(OMTQueryReverseStep step) {
         List<Resource> resources = getPreviousStep(step);
-        final OMTCurieElement curieElement = step.getQueryStep().getCurieElement();
+        final OMTCurieElement curieElement = step.getCurieElement();
         final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
-        if (curieElement != null && !rdfModelUtil.isTypePredicate(curieElement.getAsResource()) && !resources.isEmpty()) {
-            return filter(step.getQueryStep(), rdfModelUtil.listSubjectsWithPredicateObjectClass(curieElement.getAsResource(),
-                    rdfModelUtil.allSuperClasses(resources)));
+        if (!rdfModelUtil.isTypePredicate(curieElement.getAsResource())) { // for a type predicate, resolve only to the given class
+            resources = rdfModelUtil.allSuperClasses(resources);
         }
-        resources = resources.isEmpty() && curieElement != null ? rdfModelUtil.getPredicateSubjects(curieElement.getAsResource()) : resources;
-        return filter(step.getQueryStep(), resources);
+        List<Resource> resolvedResources = resources.isEmpty() ?
+                rdfModelUtil.getPredicateSubjects(curieElement.getAsResource()) : // only by predicate
+                rdfModelUtil.listSubjectsWithPredicateObjectClass(curieElement.getAsResource(), resources);// by predicate and object
+        return filter(step, resolvedResources);
     }
 
     public static List<Resource> resolveToResource(OMTResolvableValue value) {
@@ -537,7 +538,9 @@ public class PsiImplUtil {
                     step, parent -> parent != step && (parent instanceof OMTSubQuery || parent instanceof OMTQueryFilter));
             // retrieve via the subQuery:
             if (containingQueryStep instanceof OMTQueryFilter) {
-                return ((OMTQueryStep) containingQueryStep.getParent()).resolveToResource(true, false);
+                final List<Resource> resources = ((OMTQueryStep) containingQueryStep.getParent()).resolveToResource(true, false);
+                resources.addAll(projectUtil.getRDFModelUtil().allSubClasses(resources));
+                return projectUtil.getRDFModelUtil().getDistinctResources(resources);
             } else if (containingQueryStep instanceof OMTSubQuery) {
                 return getPreviousStep(containingQueryStep);
             }
@@ -545,8 +548,7 @@ public class PsiImplUtil {
         }
         List<Resource> typesForStep = new ArrayList<>(resolvePathPart(previous));
         typesForStep.addAll(projectUtil.getRDFModelUtil().allSubClasses(typesForStep));
-        typesForStep = projectUtil.getRDFModelUtil().getDistinctResources(typesForStep);
-        return typesForStep;
+        return projectUtil.getRDFModelUtil().getDistinctResources(typesForStep);
     }
 
     private static List<Resource> resolvePathPart(PsiElement part) {
