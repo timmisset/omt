@@ -69,8 +69,23 @@ public class OMTFormattingContext {
     }
 
     private boolean isQueryPart(ASTNode node) {
+        if (node.getTreeParent() == null) {
+            return false;
+        }
+        // extensions of query that use directly embedded elements that can occur at indentation/alignment position
+        if (PIPE == node.getElementType() && QUERY_ARRAY == node.getTreeParent().getElementType()) {
+            return true;
+        }
+        if (BOOLEAN_OPERATOR == node.getElementType() && BOOLEAN_STATEMENT == node.getTreeParent().getElementType()) {
+            return true;
+        }
+        if (CONDITIONAL_OPERATOR == node.getElementType() && EQUATION_STATEMENT == node.getTreeParent().getElementType()) {
+            return true;
+        }
+
+        // anything which is a direct descendant of QueryStep
         return TokenSet.create(
-                QUERY_STEP, QUERY_ARRAY
+                QUERY_STEP
         ).contains(PsiUtilCore.getElementType(node.getTreeParent()));
     }
 
@@ -80,6 +95,16 @@ public class OMTFormattingContext {
                 return true;
             }
             node = node.getFirstChildNode();
+        }
+        return false;
+    }
+
+    private boolean isPartOfQuery(ASTNode node) {
+        while (node != null) {
+            if (QUERY_STEP == node.getElementType() || QUERY_PATH == node.getElementType()) {
+                return true;
+            }
+            node = node.getTreeParent();
         }
         return false;
     }
@@ -129,8 +154,12 @@ public class OMTFormattingContext {
             } else {
                 return nodeAlignment.get(getFirstOfItsKindInParent(node));
             }
+        } else if (OMTTokenSets.ALIGNMENT_QUERIES.contains(node.getElementType())) {
+            return registerAndReturnIfAnyOf(node, OMTTokenSets.ALIGNMENT_QUERIES.getTypes());
         } else if (OMTTokenSets.CHOOSE.contains(node.getElementType())) {
             return alignChooseBlock(node);
+        } else if (isPartOfQuery(node) && OMTTokenSets.ALIGNMENT_QUERY_PARTS.contains(node.getElementType())) {
+            return registerAndReturnIfAnyOf(node, OMTTokenSets.ALIGNMENT_QUERY_PARTS.getTypes());
         } else if (node.getTreeParent() != null && INTERPOLATED_STRING == node.getTreeParent().getElementType()) {
             return alignInterpolatedString(node);
         } else if (isJavaDocsPart(node)) {
@@ -138,6 +167,15 @@ public class OMTFormattingContext {
         }
 
         return null;
+    }
+
+    private Alignment registerAndReturnIfAnyOf(ASTNode node, IElementType... types) {
+        final ASTNode firstOfKindInParent = getFirstOfKindInParent(node.getTreeParent(), types);
+        if (firstOfKindInParent == node) {
+            return registerAlignementAndReturn(node);
+        } else {
+            return nodeAlignment.get(firstOfKindInParent);
+        }
     }
 
     private Alignment alignChooseBlock(ASTNode node) {

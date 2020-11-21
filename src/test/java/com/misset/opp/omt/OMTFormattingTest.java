@@ -59,6 +59,24 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void testScalarValue() {
+        assertFormattingApplied("model:\n" +
+                        "    mijnActiviteit: !Activity\n" +
+                        "        payload:\n" +
+                        "            payloadItem:\n" +
+                        "            $variable / functie() / EXISTS\n" + // <-- scalar value
+                        "", "model:\n" +
+                        "    mijnActiviteit: !Activity\n" +
+                        "        payload:\n" +
+                        "            payloadItem:\n" +
+                        "                $variable / functie() / EXISTS\n" + // <-- scalar value
+                        "",
+                psiFile -> setLanguageSettings(psiFile,
+                        commonCodeStyleSettings ->
+                                commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
+    }
+
+    @Test
     void testIndentationPrefixes() {
         assertFormattingApplied(
                 "prefixes:\n" +
@@ -156,10 +174,6 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
                                 commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
     }
 
-    @Test
-    void testComment() {
-
-    }
 
     private void setLanguageSettings(PsiFile file, Consumer<CommonCodeStyleSettings> languageSettings) {
         languageSettings.accept(CodeStyle.getLanguageSettings(file));

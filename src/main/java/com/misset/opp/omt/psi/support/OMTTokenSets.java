@@ -18,7 +18,10 @@ public interface OMTTokenSets {
             IMPORT,
             PREFIX,
             DEFINE_COMMAND_STATEMENT,
-            DEFINE_QUERY_STATEMENT
+            DEFINE_QUERY_STATEMENT,
+            MEMBER_LIST_ITEM,
+            SEQUENCE_ITEM,
+            SCALAR_VALUE
     );
     TokenSet QUERY_INDENTATION_PARENT = TokenSet.create(
             SUB_QUERY, FORWARD_SLASH, WHEN_PATH, OTHERWISE_PATH
@@ -40,5 +43,11 @@ public interface OMTTokenSets {
     TokenSet CHOOSE = TokenSet.orSet(CHOOSE_INNER, CHOOSE_OUTER);
     TokenSet JAVADOCS = TokenSet.create(
             JAVADOCS_CONTENT, JAVADOCS_START, JAVADOCS_END
+    );
+    TokenSet ALIGNMENT_QUERY_PARTS = TokenSet.create(
+            QUERY_STEP, BOOLEAN_OPERATOR, CONDITIONAL_OPERATOR, PIPE, FORWARD_SLASH
+    );
+    TokenSet ALIGNMENT_QUERIES = TokenSet.create(
+            QUERY, QUERY_PATH, QUERY_ARRAY, EQUATION_STATEMENT, SUB_QUERY
     );
 }
