@@ -39,6 +39,7 @@ SCHEME=                         {ALPHA}({ALPHA}|{DIGIT}|[+.-])*
 IRI=                            "<"{SCHEME}":"({SYMBOL}|[?&#/+*.-])+">"
 INCOMPLETE_IRI=                 "<"{SCHEME}":"({SYMBOL}|[?&#/+*.-])+
 END_OF_LINE_COMMENT=            ("#" | "\/\/")[^\r\n]*
+JDCOMMENTLINE=                  ("*")[^\*\@\r\n]*
 JDSTART=                         \/\*\*
 JDEND=                           \*\/ // all between /** and */
 NAME=                           {ALPHA}({ALPHA}|{DIGIT}|{UNDERSCORE})*
@@ -416,6 +417,7 @@ void setTemplateInScalar(boolean state) {
           setJavadocs(true);
           setState(YAML_SCALAR);
           return returnElement(OMTTypes.ANNOTATE_PARAMETER); }
+    {JDCOMMENTLINE}                                                 { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
     [^]                                                             { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
 }
 [^]                                                                  { return returnElement(TokenType.BAD_CHARACTER); }
