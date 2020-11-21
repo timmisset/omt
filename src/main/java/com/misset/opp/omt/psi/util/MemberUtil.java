@@ -406,20 +406,44 @@ public class MemberUtil {
     }
 
     public void annotateImportedMember(OMTMember importedMember, AnnotationHolder holder) {
+        annotateImportMemberUsage(importedMember, holder);
+        annotateImportMemberDuplications(importedMember, holder);
+    }
+
+    private void annotateImportMemberDuplications(OMTMember importedMember, AnnotationHolder holder) {
+        final OMTMemberList omtMemberList = PsiTreeUtil.getParentOfType(importedMember, OMTMemberList.class);
+        final List<OMTMemberListItem> memberListItemList = omtMemberList.getMemberListItemList();
+        final boolean duplication = memberListItemList.stream().anyMatch(
+                omtMemberListItem -> omtMemberListItem.getMember().getName().equals(importedMember.getName()) &&
+                        memberListItemList.indexOf(omtMemberListItem) < memberListItemList.indexOf(importedMember.getParent())
+        );
+        if (duplication) {
+            holder.newAnnotation(HighlightSeverity.ERROR, "Duplicate import")
+                    .withFix(removeIntention.getRemoveIntention(importedMember.getParent()))
+                    .create();
+        }
+    }
+
+    private void annotateImportMemberUsage(OMTMember importedMember, AnnotationHolder holder) {
+        if (importedMember.getReference() == null) {
+            return;
+        }
         PsiElement reference = importedMember.getReference().resolve();
         if (reference != null) {
-            Collection<OMTCall> calls = PsiTreeUtil.findChildrenOfType(importedMember.getContainingFile(), OMTCall.class);
-            for (OMTCall call : calls) {
-                if (call.getReference() != null && call.getReference().isReferenceTo(reference)) {
+            List<PsiElement> elements = new ArrayList<>(PsiTreeUtil.findChildrenOfType(importedMember.getContainingFile(), OMTCall.class));
+            elements.addAll(PsiTreeUtil.findChildrenOfType(importedMember.getContainingFile(), OMTMember.class));
+
+            for (PsiElement element : elements) {
+                if (element.getReference() != null &&
+                        element != importedMember &&
+                        element.getReference().isReferenceTo(reference)) {
                     return;
                 }
             }
             // import is not used:
             holder.newAnnotation(HighlightSeverity.WARNING, String.format(
                     "%s is not used", importedMember.getName()
-            )).withFix(removeIntention.getRemoveIntention(
-                    PsiTreeUtil.findFirstParent(importedMember, parent -> parent instanceof OMTMemberListItem)
-            )).create();
+            )).withFix(removeIntention.getRemoveIntention(importedMember.getParent())).create();
         }
     }
 }

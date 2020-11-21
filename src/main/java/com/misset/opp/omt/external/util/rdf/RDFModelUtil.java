@@ -129,6 +129,10 @@ public class RDFModelUtil {
      */
     public HashMap<Statement, Resource> getShaclProperties(Resource resource) {
         HashMap<Statement, Resource> statementMap = new HashMap<>();
+        if (resource == null) {
+            return statementMap;
+        }
+
         resource.listProperties(SHACL_PROPERTY).forEachRemaining(statement -> statementMap.put(statement, resource));
 
         if (resource.getProperty(RDFS_SUBCLASS) != null && resource.getProperty(RDFS_SUBCLASS).getObject() != null) {
@@ -179,13 +183,13 @@ public class RDFModelUtil {
     public List<Resource> allSuperClasses(List<Resource> resources) {
         return getDistinctResources(resources.stream().map(
                 this::getClassLineage
-        ).flatMap(Collection::stream).collect(Collectors.toList()));
+        ).flatMap(Collection::stream).distinct().collect(Collectors.toList()));
     }
 
     public List<Resource> allSubClasses(List<Resource> resources) {
         return getDistinctResources(resources.stream().map(
                 this::getClassDescendants
-        ).flatMap(Collection::stream).collect(Collectors.toList()));
+        ).flatMap(Collection::stream).distinct().collect(Collectors.toList()));
     }
 
     public boolean isNumeric(Resource resource) {
@@ -278,14 +282,16 @@ public class RDFModelUtil {
      * Returns the classes that point to the given class using the specified predicate, traversing the shacl structure
      *
      * @param predicate
-     * @param targetClass
+     * @param object
      * @return
      */
-    public List<Resource> listSubjectsWithPredicateObjectClass(Resource predicate, Resource targetClass) {
-
-        ResIterator shaclsPointingToTargetClass = targetClass.getNameSpace().equals(XSD) ?
-                model.listSubjectsWithProperty(SHACL_DATATYPE, targetClass) :
-                model.listSubjectsWithProperty(SHACL_CLASS, targetClass);
+    public List<Resource> listSubjectsWithPredicateObjectClass(Resource predicate, Resource object) {
+        if (isTypePredicate(predicate)) {
+            return Collections.singletonList(object);
+        }
+        ResIterator shaclsPointingToTargetClass = object.getNameSpace().equals(XSD) ?
+                model.listSubjectsWithProperty(SHACL_DATATYPE, object) :
+                model.listSubjectsWithProperty(SHACL_CLASS, object);
         List<Resource> resources = new ArrayList<>();
         while (shaclsPointingToTargetClass.hasNext()) {
             Resource shacl = shaclsPointingToTargetClass.next();

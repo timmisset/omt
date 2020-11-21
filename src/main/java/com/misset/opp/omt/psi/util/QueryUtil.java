@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import static com.misset.opp.omt.psi.intentions.query.MergeFiltersIntention.getMergeFilterIntention;
 import static com.misset.opp.omt.psi.intentions.query.UnwrapIntention.getUnwrapIntention;
 
 public class QueryUtil {
@@ -36,6 +37,13 @@ public class QueryUtil {
                 .collect(Collectors.toList());
         if (resources.isEmpty()) {
             validateQueryCurieElement(step, holder);
+        }
+        if (step.getQueryFilterList().size() > 1) {
+            holder.newAnnotation(
+                    HighlightSeverity.WARNING,
+                    "Multiple filter steps on the same step")
+                    .withFix(getMergeFilterIntention(step))
+                    .create();
         }
         // annotate the subquery
         if (step instanceof OMTSubQuery) {

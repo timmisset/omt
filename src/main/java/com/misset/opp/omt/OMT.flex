@@ -70,6 +70,7 @@ void yypushback(int number, String id) {
     log("token moved back from " + position + " to " + zzMarkedPos);
 }
 boolean inScalarBlock = false;
+// TODO: check nut van deze functie
 IElementType startScalarBlock() {
     inScalarBlock = true;
     yypushback(yylength() - 1, "starting scalar");
@@ -92,7 +93,8 @@ void setState(int state) {
 }
 IElementType lastDedent;
 IElementType resetIndent() {
-    if(!indents.isEmpty() && indents.peek() > yylength()) {
+    int leadingSpaces = yytext().toString().replace("\n", "").length();
+    if(!indents.isEmpty() && indents.peek() > leadingSpaces) {
         lastDedent = lastDedent == null || lastDedent == OMTTypes.DEDENT2 ? OMTTypes.DEDENT : OMTTypes.DEDENT2;
         indents.pop();
         return returnElement(lastDedent);
@@ -171,9 +173,9 @@ IElementType returnElement(IElementType element) {
 String lastResponse = null;
 IElementType logAndReturn(IElementType element) {
     String response = yystate() + "." + element.toString() + "." + zzMarkedPos;
-    if(element != TokenType.WHITE_SPACE) {
+//    if(element != TokenType.WHITE_SPACE) {
         log("Returning " + yytext() + " as " + element.toString() + " --> " + response);
-    }
+//    }
     if(response.equals(lastResponse)) {
         error("===============> Error, lexer not advancing!");
         error("Returning " + yytext() + " as " + element.toString() + " --> " + response);
@@ -231,21 +233,30 @@ void setTemplateInScalar(boolean state) {
           // correctly with dedent handeling using the {NEWLINE}{NOT_WHITE_SPACE} method
           yypushback(1, "initial");
           return returnElement(TokenType.WHITE_SPACE); }
-    {NEWLINE}+                                                { return returnElement(TokenType.WHITE_SPACE); }
+    {NEWLINE}{NOT_WHITE_SPACE}                                {
+                                                                      return dedentOrReturnAndSetState(TokenType.WHITE_SPACE, "resetting indent, new line no whitespace, returning whitespace", -1, 1);
+                                                              }
+    {NEWLINE}                                                 { return returnElement(TokenType.WHITE_SPACE); }
 
     {PROPERTY_KEY}                                            { return indentOrReturn(OMTTypes.PROPERTY, "setting indent"); }
     "!"{NAME}                                                 { return returnElement(OMTTypes.MODEL_ITEM_TYPE); }
     "- "                                                      { return indentOrReturn(OMTTypes.SEQUENCE_BULLET, "setting indent"); }
-    ^{WHITE_SPACE}+                                           {
-                                                                   if(yylength() == 0 || (!indents.isEmpty() && yylength() <= indents.peek())) {
+    {NEWLINE}+({WHITE_SPACE}+)                                {
+                                                                   int leadingSpaces = yytext().toString().replace("\n", "").length();
+                                                                    if(!indents.isEmpty() && leadingSpaces <= indents.peek()) {
                                                                        return dedentOrReturn(TokenType.WHITE_SPACE, "resetting indent, indent < peek");
                                                                    } else {
                                                                        return returnElement(TokenType.WHITE_SPACE);
                                                                    }
                                                               }
-    {NEWLINE}{NOT_WHITE_SPACE}                                {
-                                                                    return dedentOrReturnAndSetState(TokenType.WHITE_SPACE, "resetting indent, new line no whitespace, returning whitespace", -1, 1);
-                                                              }
+//^{WHITE_SPACE}+                                           {
+//                                                                   if(yylength() == 0 || (!indents.isEmpty() && yylength() <= indents.peek())) {
+//                                                                       return dedentOrReturn(TokenType.WHITE_SPACE, "resetting indent, indent < peek");
+//                                                                   } else {
+//                                                                       return returnElement(TokenType.WHITE_SPACE);
+//                                                                   }
+//                                                              }
+
     {WHITE_SPACE}+                                            { return TokenType.WHITE_SPACE; } // capture all whitespace
     {JDSTART}                                                 {
                                                                   return indentOrReturnAndSetState(OMTTypes.JAVADOCS_START, "setting indent", JAVADOCS, 0);
@@ -255,8 +266,9 @@ void setTemplateInScalar(boolean state) {
     [^]                                                       { yypushback(yylength(), "initial"); setState(YAML_SCALAR); return returnElement(OMTTypes.START_TOKEN); }
 }
 <YAML_SCALAR> {
-    ^{WHITE_SPACE}+                                           {
-                                                                    if(yylength() == 0 || (!indents.isEmpty() && yylength() <= indents.peek())) {
+    {NEWLINE}+({WHITE_SPACE}+)                                 {
+                                                                    int leadingSpaces = yytext().toString().replace("\n", "").length();
+                                                                    if(!indents.isEmpty() && leadingSpaces <= indents.peek()) {
                                                                         return retryInInitial("indent < peek");
                                                                     } else {
                                                                         return returnElement(TokenType.WHITE_SPACE);
@@ -265,7 +277,8 @@ void setTemplateInScalar(boolean state) {
     {WHITE_SPACE}+                                            { return TokenType.WHITE_SPACE; } // capture all whitespace
     {JDSTART}                                                 { setState(JAVADOCS); return returnElement(OMTTypes.JAVADOCS_START); }
     {END_OF_LINE_COMMENT}                                     { return returnElement(OMTTypes.END_OF_LINE_COMMENT); }
-    {NEWLINE}                                                 { return returnElement(TokenType.WHITE_SPACE); }
+//    {NEWLINE}                                                 { return returnElement(TokenType.WHITE_SPACE); }
+    {NEWLINE}                                                 { return retryInInitial("new line in scalar"); }
     {NEWLINE}{NOT_WHITE_SPACE}                                {
                                                                     return retryInInitial("newline starts with non-whitespace");
                                                               }
@@ -278,16 +291,16 @@ void setTemplateInScalar(boolean state) {
     "- "                                                      {
                                                                     if(inScalarBlock) {
                                                                         yypushback(1, "yaml_scalar");
-                                                                        return returnElement(OMTTypes.PIPE); }
+                                                                        return returnElement(OMTTypes.SEQUENCE_BULLET); }
                                                                     else { return retryInInitial("sequence bullet outside scalar block"); }
                                                               }
     {GLOBAL_VARIABLE}                                         { return returnElement(OMTTypes.GLOBAL_VARIABLE_NAME); } // capture all whitespace
     {BOOLEAN}                                                 { return returnElement(OMTTypes.BOOLEAN); }
     {NULL}                                                    { return returnElement(OMTTypes.NULL); }
-     "/"{CURIE}                                               {
-                                                                  yypushback(yylength() - 1);
-                                                                  return returnElement(OMTTypes.CURIE_CONSTANT_ELEMENT_PREFIX);
-                                                              }
+//     "/"{CURIE}                                               {
+//                                                                  yypushback(yylength() - 1);
+//                                                                  return returnElement(OMTTypes.CURIE_CONSTANT_ELEMENT_PREFIX);
+//                                                              }
     {CURIE}                                                   {
                                                                   setState(CURIE);
                                                                   yypushback(yylength() - yytext().toString().indexOf(":"));

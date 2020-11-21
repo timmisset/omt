@@ -32,7 +32,10 @@ public class OMTParserDefinition implements ParserDefinition {
     @NotNull
     @Override
     public TokenSet getWhitespaceTokens() {
-        return WHITE_SPACES;
+        return TokenSet.create(
+                TokenType.WHITE_SPACE
+        );
+//        return WHITE_SPACES;
     }
 
     @NotNull

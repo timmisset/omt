@@ -60,7 +60,6 @@ public class OMTCompletionContributor extends CompletionContributor {
     private MemberUtil memberUtil = MemberUtil.SINGLETON;
     private CurieUtil curieUtil = CurieUtil.SINGLETON;
     private ImportUtil importUtil = ImportUtil.SINGLETON;
-    private RDFModelUtil rdfModelUtil;
 
     private PsiElement originalElement;
 
@@ -69,13 +68,6 @@ public class OMTCompletionContributor extends CompletionContributor {
          * Generic completion that resolves the suggestion based on the cursor position
          */
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), getCompletionProvider());
-    }
-
-    private RDFModelUtil getRDFModel() {
-        if (rdfModelUtil == null || !rdfModelUtil.isLoaded()) {
-            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
-        }
-        return rdfModelUtil;
     }
 
     private CompletionProvider<CompletionParameters> getCompletionProvider() {
@@ -162,8 +154,11 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void setDummyPlaceHolder(String placeHolder, @NotNull CompletionInitializationContext context) {
-        dummyPlaceHolderSet = true;
-        context.setDummyIdentifier(placeHolder);
+        if (dummyPlaceHolderSet == false) {
+            dummyPlaceHolderSet = true;
+            context.setDummyIdentifier(placeHolder);
+        }
+
     }
 
     /**
@@ -178,7 +173,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         isResolved = false;
         resolvedElements = new ArrayList<>();
         resolvedSuggestions = new ArrayList<>();
-        dummyPlaceHolderSet = true;
+        dummyPlaceHolderSet = false;
 
         PsiElement elementAtCaret = context.getFile().findElementAt(context.getCaret().getOffset());
         if (elementAtCaret == null) {
@@ -242,15 +237,20 @@ public class OMTCompletionContributor extends CompletionContributor {
         if (PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTQueryStep) != null) {
             setDummyPlaceHolder(DUMMY_QUERYSTEP, context);
         }
+        if (element instanceof OMTDefineQueryStatement) {
+            setDummyPlaceHolder(DUMMY_QUERYSTEP, context);
+        }
+        setDummyPlaceHolder(DUMMY_SCALAR, context);
     }
 
     private void setResolvedElementsFor(PsiElement elementAt, Class<? extends OMTDefinedStatement> definedType, BuiltInType builtInType) {
         // check if the path can be resolved to a model based suggestion
         OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(elementAt, parent -> parent instanceof OMTQueryStep);
         if (queryStep != null) {
+            final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
             List<Resource> previousStep = PsiImplUtil.getPreviousStep(queryStep);
-            getRDFModel().listPredicatesForSubjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, false, 9));
-            getRDFModel().listPredicatesForObjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, true, 8));
+            rdfModelUtil.listPredicatesForSubjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, false, 9));
+            rdfModelUtil.listPredicatesForObjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, true, 8));
         }
 
         // check if there are local variables available, they also have the highest suggestion priority
@@ -350,7 +350,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void setResolvedElementsForClasses(PsiElement element) {
-        getRDFModel().getAllClasses().stream().filter(resource -> resource.getURI() != null).forEach(
+        projectUtil.getRDFModelUtil().getAllClasses().stream().filter(resource -> resource.getURI() != null).forEach(
                 resource -> setCurieSuggestion(element, resource, false, 1)
         );
     }
@@ -392,7 +392,7 @@ public class OMTCompletionContributor extends CompletionContributor {
                     }
                 }),
                 null,
-                !resolvesTo.isEmpty() && !getRDFModel().isTypePredicate(resource) ? omtFile.resourceToCurie(resolvesTo.get(0)) : null);
+                !resolvesTo.isEmpty() && !projectUtil.getRDFModelUtil().isTypePredicate(resource) ? omtFile.resourceToCurie(resolvesTo.get(0)) : null);
     }
 
     private String getPrefixSuggestion(Resource resource) {

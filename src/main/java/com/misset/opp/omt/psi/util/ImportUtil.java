@@ -135,7 +135,7 @@ public class ImportUtil {
             if (omtImport.getMemberList() != null) {
                 omtImport.getMemberList().getMemberListItemList().forEach(omtMemberListItem -> {
                     String memberName = omtMemberListItem.getMember().getName().trim();
-                    if (!exportingFile.getExportedMember(memberName).isPresent()) {
+                    if (exportingFile != null && !exportingFile.getExportedMember(memberName).isPresent()) {
                         holder.newAnnotation(HighlightSeverity.ERROR,
                                 String.format("%s is not an exported member of %s", memberName, omtImport.getImportSource().getText()))
                                 .range(omtMemberListItem.getMember())
@@ -242,7 +242,7 @@ public class ImportUtil {
                         }
                     });
         }
-        if (!importProcessed.get()) {
+        if (!importProcessed.get() && importMember != null) {
             addImportSource(importPath, "", "", importBlockBuilder);
             addImportMember(importMember, "", "", importBlockBuilder);
         }
