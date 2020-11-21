@@ -35,7 +35,7 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
-    void testIdentionBlocks() {
+    void testIndentationBlocks() {
         assertFormattingApplied(
                 "model:\n" +
                         " Activiteit: !Activity\n" +
@@ -43,17 +43,122 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
                         "\n" +
                         " Procedure: !Procedure\n" +
                         "  onRun: |\n" +
-                        "    'test';\n",
+                        "    'test';\n" +
+                        "    'test2';\n",
                 "model:\n" +
                         "    Activiteit: !Activity\n" +
                         "        title: 'TEST'\n" +
                         "\n" +
                         "    Procedure: !Procedure\n" +
                         "        onRun: |\n" +
-                        "            'test';\n",
+                        "            'test';\n" +
+                        "            'test2';\n",
                 psiFile -> setLanguageSettings(psiFile,
                         commonCodeStyleSettings ->
-                                commonCodeStyleSettings.getIndentOptions().CONTINUATION_INDENT_SIZE = 4));
+                                commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
+    }
+
+    @Test
+    void testIndentationPrefixes() {
+        assertFormattingApplied(
+                "prefixes:\n" +
+                        " pol:    <http://enter.your/iri/>\n",
+                "prefixes:\n" +
+                        "    pol:    <http://enter.your/iri/>\n",
+                psiFile -> setLanguageSettings(psiFile,
+                        commonCodeStyleSettings ->
+                                commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
+    }
+
+    @Test
+    void testIndentationDefinedQueries() {
+        assertFormattingApplied(
+                "queries: |\n" +
+                        " DEFINE QUERY query => 'test';\n" +
+                        "  DEFINE QUERY query2 => 'test';\n",
+                "queries: |\n" +
+                        "    DEFINE QUERY query => 'test';\n" +
+                        "    DEFINE QUERY query2 => 'test';",
+                psiFile -> setLanguageSettings(psiFile,
+                        commonCodeStyleSettings ->
+                                commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
+    }
+
+    @Test
+    void testIndentationSubQuery() {
+        assertFormattingApplied(
+                "queries: |\n" +
+                        " DEFINE QUERY query => \n" +
+                        "  ('test');\n",
+                "queries: |\n" +
+                        "    DEFINE QUERY query =>\n" +
+                        "        ('test');\n",
+                psiFile -> setLanguageSettings(psiFile,
+                        commonCodeStyleSettings ->
+                                commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
+    }
+
+    @Test
+    void testIndentationFilter() {
+        String text = "queries: |\n" +
+                "    DEFINE QUERY query => 'a'\n" +
+                "        [\n" +
+                "            . == 'test'\n" +
+                "        ];";
+        assertFormattingApplied(text, text,
+                psiFile -> setLanguageSettings(psiFile,
+                        commonCodeStyleSettings ->
+                                commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
+    }
+
+    @Test
+    void testIndentationQueryPaths() {
+        String text = "queries: |\n" +
+                "    DEFINE QUERY query($param) =>\n" +
+                "        'test'\n" +
+                "            /   CHOOSE\n" +
+                "                WHEN 'a == a' => 'a' /\n" +
+                "                    FIRST\n" +
+                "                OTHERWISE => null\n" +
+                "                END ;";
+        String expected = "queries: |\n" +
+                "    DEFINE QUERY query($param) =>\n" +
+                "        'test'\n" +
+                "            /   CHOOSE\n" +
+                "                    WHEN 'a == a' => 'a' /\n" +
+                "                        FIRST\n" +
+                "                    OTHERWISE => null\n" +
+                "                END ;";
+        assertFormattingApplied(text, expected,
+                psiFile -> setLanguageSettings(psiFile,
+                        commonCodeStyleSettings ->
+                                commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
+    }
+
+    @Test
+    void testInterpolatedString() {
+        String text = "queries: |\n" +
+                "    DEFINE QUERY query() => \n" +
+                "        MAP(`{\"a\": \"${b}\",\n" +
+                "              \"c\": \"${d}\",\n" +
+                "              \"d\": \"${e}\",\n" +
+                "              }`) / CAST(JSON);";
+        String expectedString = "queries: |\n" +
+                "    DEFINE QUERY query() =>\n" +
+                "        MAP(`{\"a\": \"${b}\",\n" +
+                "             \"c\": \"${d}\",\n" +
+                "             \"d\": \"${e}\",\n" +
+                "             }`) / CAST(JSON);";
+        // the formatting is aligned on the first occurance of the String which starts with: {
+        assertFormattingApplied(text, expectedString,
+                psiFile -> setLanguageSettings(psiFile,
+                        commonCodeStyleSettings ->
+                                commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
+    }
+
+    @Test
+    void testComment() {
+
     }
 
     private void setLanguageSettings(PsiFile file, Consumer<CommonCodeStyleSettings> languageSettings) {

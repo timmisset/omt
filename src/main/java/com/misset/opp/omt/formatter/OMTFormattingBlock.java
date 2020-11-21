@@ -35,11 +35,6 @@ public class OMTFormattingBlock extends AbstractBlock {
         ASTNode child = node.getFirstChildNode();
         while (child != null) {
             if (!OMTTokenSets.WHITESPACE.contains(child.getElementType())) {
-//                if(OMTTokenSets.CONTAINERS.contains(child.getElementType())) {
-//                    blocks.addAll(buildChildren(spacingBuilder, child));
-//                } else if (OMTTokenSets.BLOCKS.contains(child.getElementType())) {
-//                    blocks.add(new OMTFormattingBlock(child, formattingContext));
-//                }
                 blocks.add(new OMTFormattingBlock(child, formattingContext));
             }
             child = child.getTreeNext();
@@ -55,7 +50,7 @@ public class OMTFormattingBlock extends AbstractBlock {
 
     @Override
     public Indent getIndent() {
-        return null;
+        return indent;
     }
 
     @Override

@@ -29,7 +29,7 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
 
         if (PsiTreeUtil.findFirstParent(elementAt, parent -> parent instanceof OMTJdComment) != null) {
             insert(editor, "*", 1, caretOffset);
-            return Result.Stop;
+            return Result.Continue;
         }
 
         PsiElement sibling = elementAt;
