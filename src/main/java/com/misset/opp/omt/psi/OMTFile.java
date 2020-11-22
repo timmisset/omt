@@ -134,7 +134,7 @@ public class OMTFile extends PsiFileBase {
                                    omtMemberListItem -> {
                                        final OMTFile omtFile = (OMTFile) PsiManager.getInstance(getProject()).findFile(virtualFile);
                                        if (omtFile != null) {
-                                           omtFile.getExportedMember(omtMemberListItem.getMember().getName())
+                                           omtFile.getExportedMember(omtMemberListItem.getName())
                                                    .ifPresent(exportMember -> importedMembers.put(exportMember.getName(), exportMember));
                                        }
                                    }

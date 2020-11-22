@@ -177,24 +177,11 @@ public class OMTFormattingContext {
             // All entry types and sequences are anchored to the first instance
             alignment = registerAndReturnIfAnyOf(node, node.getElementType());
         } else if (OMTTokenSets.ALL_QUERY_TOKENS.contains(node.getElementType())) {
-            // Arrays are aligned to first indentable element
-            ASTNode previous = getTreePrev(node, OMTTokenSets.ALL_QUERY_TOKENS);
-            if (previous != null &&
-                    OMTTokenSets.ALL_QUERY_TOKENS.contains(previous.getElementType()) &&
-                    nodeAlignment.containsKey(previous)) {
-                alignment = getAlignmentAndRegisterSelf(node, previous); // use the previous sibling alignment
-            } else if (node.getTreeParent() != null &&
-                    OMTTokenSets.ALL_QUERY_TOKENS.contains(node.getTreeParent().getElementType()) &&
-                    nodeAlignment.containsKey(node.getTreeParent())) {
-                alignment = getAlignmentAndRegisterSelf(node, node.getTreeParent()); // use the parent alignment
-            } else {
-                // create alignment anchor for first
-                if (isFirstIndentableQueryStep(node)) {
-                    alignment = registerAlignmentAndReturn(node);
-                } // this is the top level query alignment, self register and return
-            }
+            alignment = computeQueryAlignment(node);
         } else if (OMTTokenSets.CHOOSE.contains(node.getElementType())) {
             alignment = alignChooseBlock(node);
+        } else if (OMTTokenSets.SEQUENCE_ITEMS.contains(node.getElementType())) {
+            alignment = getAlignmentAndRegisterSelf(node, node.getTreeParent());
         } else if (node.getTreeParent() != null && INTERPOLATED_STRING == node.getTreeParent().getElementType()) {
             // An interpolated string as a block is aligned in the query, the parts of the string are further aligned
             // if applicable. This will align the first placeholder ${} or string used to be the alignment anchor
@@ -205,6 +192,26 @@ public class OMTFormattingContext {
         }
         //        System.out.println(node.getText().substring(0, Math.min(10, node.getTextLength())) + " --> " + (alignment != null ? alignment.toString() : "null"));
         return alignment;
+    }
+
+    private Alignment computeQueryAlignment(ASTNode node) {
+        // Arrays are aligned to first indentable element
+        ASTNode previous = getTreePrev(node, OMTTokenSets.ALL_QUERY_TOKENS);
+        if (previous != null &&
+                OMTTokenSets.ALL_QUERY_TOKENS.contains(previous.getElementType()) &&
+                nodeAlignment.containsKey(previous)) {
+            return getAlignmentAndRegisterSelf(node, previous); // use the previous sibling alignment
+        } else if (node.getTreeParent() != null &&
+                OMTTokenSets.ALL_QUERY_TOKENS.contains(node.getTreeParent().getElementType()) &&
+                nodeAlignment.containsKey(node.getTreeParent())) {
+            return getAlignmentAndRegisterSelf(node, node.getTreeParent()); // use the parent alignment
+        } else {
+            // create alignment anchor for first
+            if (isFirstIndentableQueryStep(node)) {
+                return registerAlignmentAndReturn(node);
+            } // this is the top level query alignment, self register and return
+        }
+        return null;
     }
 
     /**

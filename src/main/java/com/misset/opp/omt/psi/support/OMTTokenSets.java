@@ -19,8 +19,13 @@ public interface OMTTokenSets {
             PREFIX,
             DEFINE_COMMAND_STATEMENT,
             DEFINE_QUERY_STATEMENT,
+            MEMBER_LIST,
+            SEQUENCE
+    );
+    TokenSet SEQUENCE_ITEMS = TokenSet.create(
+            SEQUENCE_ITEM,
             MEMBER_LIST_ITEM,
-            SEQUENCE_ITEM
+            SEQUENCE_BULLET
     );
     TokenSet ASSIGNMENT_OPERATORS = TokenSet.create(
             EQUALS,

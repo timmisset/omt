@@ -123,6 +123,10 @@ public class PsiImplUtil {
         return member.getStart().getNextSibling();
     }
 
+    public static String getName(OMTMemberListItem memberListItem) {
+        return memberListItem.getMember() == null ? "" : memberListItem.getMember().getName();
+    }
+
     // ////////////////////////////////////////////////////////////////////////////
     // ModelItemLabel
     // ////////////////////////////////////////////////////////////////////////////

@@ -43,7 +43,7 @@ scalarValue ::=                             (start (parameterWithType | variable
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indentToken, it must 
 sequence ::=                                trailing? sequenceItem+
-sequenceItem ::=                            leading? SEQUENCE_BULLET (scalarValue | block)
+sequenceItem ::=                            leading? SEQUENCE_BULLET (scalarValue | block)?
 
 // SPECIFIC BLOCKS
 specificBlock ::=                          importBlock | exportBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock | moduleBlock {
@@ -53,7 +53,7 @@ specificBlock ::=                          importBlock | exportBlock | prefixBlo
 // sequences
 exportBlock ::=                             EXPORT_START trailing? memberList?
 memberList ::=                              memberListItem+ | (indentToken memberListItem+ dedentToken)
-memberListItem ::=                          (leading? SEQUENCE_BULLET member)
+memberListItem ::=                          (leading? SEQUENCE_BULLET member?) { methods=[getName] }
 member ::=                                  start OPERATOR end {
                                                        mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
                                                        implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"

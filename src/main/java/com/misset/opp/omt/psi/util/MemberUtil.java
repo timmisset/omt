@@ -414,7 +414,7 @@ public class MemberUtil {
         final OMTMemberList omtMemberList = PsiTreeUtil.getParentOfType(importedMember, OMTMemberList.class);
         final List<OMTMemberListItem> memberListItemList = omtMemberList.getMemberListItemList();
         final boolean duplication = memberListItemList.stream().anyMatch(
-                omtMemberListItem -> omtMemberListItem.getMember().getName().equals(importedMember.getName()) &&
+                omtMemberListItem -> omtMemberListItem.getName().equals(importedMember.getName()) &&
                         memberListItemList.indexOf(omtMemberListItem) < memberListItemList.indexOf(importedMember.getParent())
         );
         if (duplication) {
