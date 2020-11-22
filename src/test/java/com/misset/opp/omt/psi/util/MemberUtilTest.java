@@ -79,11 +79,8 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
         MockitoAnnotations.initMocks(this);
 
-        exampleFiles = new ExampleFiles(this);
-
-        ApplicationManager.getApplication().runReadAction(() -> {
-            rootBlock = exampleFiles.getActivityWithMembers();
-        });
+        exampleFiles = new ExampleFiles(this, myFixture);
+        rootBlock = exampleFiles.getActivityWithMembers();
         doReturn(SHORT_DESCRIPTION).when(builtInMember).shortDescription();
         doReturn(HTML_DESCRIPTION).when(builtInMember).htmlDescription();
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(HighlightSeverity.class), anyString());

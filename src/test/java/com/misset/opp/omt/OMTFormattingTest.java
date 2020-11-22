@@ -36,23 +36,23 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void testIndentationBlocks() {
-        assertFormattingApplied(
-                "model:\n" +
-                        " Activiteit: !Activity\n" +
-                        "  title: 'TEST'\n" +
-                        "\n" +
-                        " Procedure: !Procedure\n" +
-                        "  onRun: |\n" +
-                        "    'test';\n" +
-                        "    'test2';\n",
-                "model:\n" +
-                        "    Activiteit: !Activity\n" +
-                        "        title: 'TEST'\n" +
-                        "\n" +
-                        "    Procedure: !Procedure\n" +
-                        "        onRun: |\n" +
-                        "            'test';\n" +
-                        "            'test2';\n",
+        String text = "model:\n" +
+                " Activiteit: !Activity\n" +
+                "  title: 'TEST'\n" +
+                "\n" +
+                " Procedure: !Procedure\n" +
+                "  onRun: |\n" +
+                "    'test';\n" +
+                "    'test2';\n";
+        String expectedText = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        title: 'TEST'\n" +
+                "\n" +
+                "    Procedure: !Procedure\n" +
+                "        onRun: |\n" +
+                "            'test';\n" +
+                "            'test2';\n";
+        assertFormattingApplied(text, expectedText,
                 psiFile -> setLanguageSettings(psiFile,
                         commonCodeStyleSettings ->
                                 commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
@@ -123,7 +123,12 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
                 "        [\n" +
                 "            . == 'test'\n" +
                 "        ];";
-        assertFormattingApplied(text, text,
+        String expectedString = "queries: |\n" +
+                "    DEFINE QUERY query => 'a'\n" +
+                "        [\n" +
+                "            . == 'test'\n" +
+                "        ];";
+        assertFormattingApplied(text, expectedString,
                 psiFile -> setLanguageSettings(psiFile,
                         commonCodeStyleSettings ->
                                 commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
@@ -142,11 +147,11 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
         String expected = "queries: |\n" +
                 "    DEFINE QUERY query($param) =>\n" +
                 "        'test'\n" +
-                "            /   CHOOSE\n" +
-                "                    WHEN 'a == a' => 'a' /\n" +
-                "                        FIRST\n" +
-                "                    OTHERWISE => null\n" +
-                "                END ;";
+                "        /   CHOOSE\n" +
+                "                WHEN 'a == a' => 'a' /\n" +
+                "                    FIRST\n" +
+                "                OTHERWISE => null\n" +
+                "            END ;";
         assertFormattingApplied(text, expected,
                 psiFile -> setLanguageSettings(psiFile,
                         commonCodeStyleSettings ->

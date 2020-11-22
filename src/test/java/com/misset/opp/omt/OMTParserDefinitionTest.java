@@ -17,7 +17,7 @@ class OMTParserDefinitionTest extends LightJavaCodeInsightFixtureTestCase {
     protected void setUp() throws Exception {
         super.setName("OMTParserDefinitionTest");
         super.setUp();
-        exampleFiles = new ExampleFiles(this);
+        exampleFiles = new ExampleFiles(this, myFixture);
     }
 
     @Override

@@ -3,8 +3,8 @@ package com.misset.opp.omt.psi;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.testFramework.fixtures.JavaCodeInsightTestFixture;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
-import com.misset.opp.omt.OMTLanguage;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,10 +18,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ExampleFiles {
 
     private final LightJavaCodeInsightFixtureTestCase testCase;
+    private final JavaCodeInsightTestFixture fixture;
 
-    public ExampleFiles(LightJavaCodeInsightFixtureTestCase testCase) {
+    public ExampleFiles(LightJavaCodeInsightFixtureTestCase testCase, JavaCodeInsightTestFixture myFixture) {
         this.testCase = testCase;
-
+        this.fixture = myFixture;
     }
 
     public PsiElement getActivityWithImportsPrefixesParamsVariablesGraphsPayload() {
@@ -69,6 +70,7 @@ public class ExampleFiles {
     }
 
     private PsiElement process(String resourcePath) {
+
         File file = new File(getClass().getClassLoader().getResource(resourcePath).getFile());
         String data = null;
         try {
@@ -85,7 +87,7 @@ public class ExampleFiles {
     }
 
     public PsiElement fromContent(String fileName, String content) {
-        return testCase.createLightFile(fileName, OMTLanguage.INSTANCE, content);
+        return fixture.configureByText(fileName, content);
     }
 
     public <T> T getPsiElementFromRootDocument(Class<? extends PsiElement> elementClass, PsiElement rootBlock) {

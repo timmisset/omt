@@ -27,7 +27,7 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
         myFixture.copyFileToProject(new File("src/test/resources/builtinCommands.ts").getAbsolutePath(), "builtinCommands.ts");
         myFixture.copyFileToProject(new File("src/test/resources/builtinOperators.ts").getAbsolutePath(), "builtinOperators.ts");
         myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
-        exampleFiles = new ExampleFiles(this);
+        exampleFiles = new ExampleFiles(this, myFixture);
 
         ApplicationManager.getApplication().runReadAction(() -> ProjectUtil.SINGLETON.loadOntologyModel(getProject()));
     }
@@ -109,12 +109,11 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
         List<String> suggestions = getSuggestions("model:\n" +
                 "    MijnActiviteit: !Activity\n" +
                 "        onStart: |\n" +
-                "            <caret>\n");
+                "            @<caret>\n");
         assertContainsElements(suggestions, BuiltInUtil.SINGLETON.getBuiltInCommandsAsSuggestions());
         assertDoesntContain(suggestions, BuiltInUtil.SINGLETON.getBuiltInOperatorsAsSuggestions());
         assertNotEmpty(suggestions);
     }
-
 
     @Test
     void completionProvider_addsSuggestionsForCommandAtScript() {
@@ -122,7 +121,7 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
                 "    MijnActiviteit: !Activity\n" +
                 "        onStart: |\n" +
                 "            @myFirstCommand();\n" +
-                "            <caret>\n");
+                "            @<caret>\n");
         assertContainsElements(suggestions, BuiltInUtil.SINGLETON.getBuiltInCommandsAsSuggestions());
         assertDoesntContain(suggestions, BuiltInUtil.SINGLETON.getBuiltInOperatorsAsSuggestions());
         assertNotEmpty(suggestions);

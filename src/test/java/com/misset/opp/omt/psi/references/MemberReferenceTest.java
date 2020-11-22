@@ -1,6 +1,7 @@
 package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveResult;
@@ -64,7 +65,7 @@ class MemberReferenceTest extends LightJavaCodeInsightFixtureTestCase {
     void setUpSuite() throws Exception {
         super.setName("MemberReferenceTest");
         super.setUp();
-        exampleFiles = new ExampleFiles(this);
+        exampleFiles = new ExampleFiles(this, myFixture);
         MockitoAnnotations.initMocks(this);
         importMemberReference = new MemberReference(member, textRange, NamedMemberType.ImportingMember, memberUtil, importUtil);
         exportMemberReference = new MemberReference(member, textRange, NamedMemberType.ExportingMember, memberUtil, importUtil);
@@ -202,8 +203,8 @@ class MemberReferenceTest extends LightJavaCodeInsightFixtureTestCase {
         AtomicReference<PsiElement> originalElement = new AtomicReference<>();
         AtomicReference<PsiElement> replacedElement = new AtomicReference<>();
         ;
-        ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement root = exampleFiles.getActivityWithMembers();
+        PsiElement root = exampleFiles.getActivityWithMembers();
+        WriteCommandAction.runWriteCommandAction(getProject(), () -> {
             originalElement.set(exampleFiles.getPsiElementFromRootDocument(targetClass, root));
 
             PsiElement parent = originalElement.get().getParent();

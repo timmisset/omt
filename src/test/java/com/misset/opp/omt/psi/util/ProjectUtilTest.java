@@ -47,7 +47,7 @@ class ProjectUtilTest extends LightJavaCodeInsightFixtureTestCase {
     ProjectUtil projectUtil;
 
 
-    ExampleFiles exampleFiles = new ExampleFiles(this);
+    ExampleFiles exampleFiles;
 
     @Mock
     StatusBar statusBar;
@@ -60,15 +60,10 @@ class ProjectUtilTest extends LightJavaCodeInsightFixtureTestCase {
         super.setName("ProjectUtilTest");
         super.setUp();
         MockitoAnnotations.initMocks(this);
-
+        exampleFiles = new ExampleFiles(this, myFixture);
         projectUtil = spy(projectUtil);
         doReturn(statusBar).when(projectUtil).getStatusBar(eq(getProject()));
-
-        ApplicationManager.getApplication().runReadAction(() ->
-                {
-                    rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
-                }
-        );
+        rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
     }
 
     @AfterEach

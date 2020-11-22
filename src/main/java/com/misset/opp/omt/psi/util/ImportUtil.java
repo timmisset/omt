@@ -71,7 +71,8 @@ public class ImportUtil {
         // ugly solition: defer the virtualfile via the FilenameIndex:
         if (importingFile.getUrl().startsWith("temp:///")) {
             String[] split = importLocation.split("/");
-            return FilenameIndex.getFilesByName(omtImport.getProject(), split[split.length - 1], GlobalSearchScope.allScope(omtImport.getProject()))[0].getVirtualFile();
+            final PsiFile[] filesByName = FilenameIndex.getFilesByName(omtImport.getProject(), split[split.length - 1], GlobalSearchScope.allScope(omtImport.getProject()));
+            return filesByName.length > 0 ? filesByName[0].getVirtualFile() : null;
         }
 
         String relativePath = null;
