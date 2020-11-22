@@ -9,16 +9,10 @@ public interface OMTTokenSets {
     TokenSet WHITESPACE = TokenSet.create(
             TokenType.WHITE_SPACE,
             INDENT_TOKEN,
-            INDENT,
-            INDENT2,
-            DEDENT,
-            DEDENT2,
             DEDENT_TOKEN,
             START_TOKEN,
             END_TOKEN,
-            EMPTY_ARRAY,
-            END,
-            START
+            EMPTY_ARRAY
     );
     TokenSet SEQUENCES = TokenSet.create(
             IMPORT,

@@ -6,6 +6,7 @@ import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.psi.*;
@@ -122,8 +123,8 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void getPrefixBlockReturnsNull() {
+        PsiElement activityWithoutPrefixBlock = exampleFiles.getActivityWithQueryWatcher();
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement activityWithoutPrefixBlock = exampleFiles.getActivityWithQueryWatcher();
             OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, activityWithoutPrefixBlock);
             OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixBlock(variable);
             assertNull(returnedPrefixBlock);
@@ -132,8 +133,9 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void annotateNamespacePrefixThrowsNotUsedAnnotation() {
+        final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
         ApplicationManager.getApplication().runReadAction(() -> {
-            loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
+            loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
             curieUtil.annotateNamespacePrefix(def, annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.WARNING), eq("def: is never used"));
             verify(annotationBuilder, times(1)).create();
@@ -142,8 +144,9 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void annotateNamespacePrefixDoesNotThrowNotUsedAnnotation() {
+        final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
         ApplicationManager.getApplication().runReadAction(() -> {
-            loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
+            loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
             curieUtil.annotateNamespacePrefix(abcDeclared, annotationHolder);
             verify(annotationBuilder, times(0)).create();
         });
@@ -151,8 +154,9 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void annotateNamespacePrefixThrowsNotDeclaredAnnotation() {
+        final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
         ApplicationManager.getApplication().runReadAction(() -> {
-            loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
+            loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
             curieUtil.annotateNamespacePrefix(ghi, annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("ghi: is not declared"));
             verify(annotationBuilder, times(1)).create();
@@ -161,11 +165,12 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void annotateNamespacePrefixThrowsNotDeclaredAnnotationWithFix() {
+        final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
         ApplicationManager.getApplication().runReadAction(() -> {
             List<OMTPrefix> suggestions = exampleFiles.getPsiElementsFromRootDocument(OMTPrefix.class, rootBlock);
             doReturn(suggestions).when(projectUtil).getKnownPrefixes(eq("ghi"));
 
-            loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
+            loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
             curieUtil.annotateNamespacePrefix(ghi, annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("ghi: is not declared"));
             verify(annotationBuilder, times(1)).create();
@@ -177,6 +182,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void annotateNamespacePrefixThrowsNotDeclaredAnnotationAddsFixSuggestion() {
+        final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTPrefix knownPrefix = mock(OMTPrefix.class);
             OMTNamespaceIri iri = mock(OMTNamespaceIri.class);
@@ -184,7 +190,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
             doReturn("<http://myiri/>").when(iri).getText();
 
             doReturn(Collections.singletonList(knownPrefix)).when(projectUtil).getKnownPrefixes(eq("ghi:"));
-            loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
+            loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
             curieUtil.annotateNamespacePrefix(ghi, annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("ghi: is not declared"));
             verify(annotationBuilder, times(1)).withFix(any()); // remove fix only
@@ -194,8 +200,9 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void annotateNamespacePrefixDoesNotThrowNotDeclaredAnnotation() {
+        final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
         ApplicationManager.getApplication().runReadAction(() -> {
-            loadUndeclaredNamespacePrefixes(exampleFiles.getActivityWithUndeclaredElements());
+            loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
             curieUtil.annotateNamespacePrefix(abcUsage, annotationHolder);
             verify(annotationBuilder, times(0)).create();
         });
@@ -203,7 +210,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void resetPrefixBlock() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        WriteCommandAction.runWriteCommandAction(getProject(), () -> {
             OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
             curieUtil.resetPrefixBlock(prefix);
             OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
@@ -220,7 +227,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void addPrefixToBlockFromString() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        WriteCommandAction.runWriteCommandAction(getProject(), () -> {
             OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
             curieUtil.addPrefixToBlock(prefix, "def", "<http://ontologie.alfabet.nl/def#>");
             OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
@@ -238,7 +245,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void addNewPrefixToBlockFromString() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        WriteCommandAction.runWriteCommandAction(getProject(), () -> {
             OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
 
             OMTFile file = (OMTFile) spy(prefix.getContainingFile());
@@ -257,7 +264,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void addPrefixToBlockFromPrefix() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        WriteCommandAction.runWriteCommandAction(getProject(), () -> {
             OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
             curieUtil.addPrefixToBlock(prefix, prefix);
             OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
