@@ -66,11 +66,11 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
         super.setName("ImportUtilTest");
         super.setUp();
 
-        exampleFiles = new ExampleFiles(this);
+        exampleFiles = new ExampleFiles(this, myFixture);
         MockitoAnnotations.initMocks(this);
 
+        rootBlock = exampleFiles.getActivityWithImports();
         ApplicationManager.getApplication().runReadAction(() -> {
-            rootBlock = exampleFiles.getActivityWithImports();
             omtImport = exampleFiles.getPsiElementFromRootDocument(OMTImport.class, rootBlock);
             omtImport = spy(omtImport);
 
@@ -277,8 +277,8 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void addImportMemberToBlock_NewImport() {
+        PsiElement procedureWithScript = exampleFiles.getProcedureWithScript();
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement procedureWithScript = exampleFiles.getProcedureWithScript();
             importUtil.addImportMemberToBlock(procedureWithScript, "'@client/someModule/activity.omt':", "AnotherMember");
             OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, procedureWithScript);
             String text = importBlock.getText();

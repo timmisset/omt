@@ -51,10 +51,10 @@ class VariableUtilTest extends LightJavaCodeInsightFixtureTestCase {
         super.setUp();
 
         MockitoAnnotations.initMocks(this);
-        exampleFiles = new ExampleFiles(this);
+        exampleFiles = new ExampleFiles(this, myFixture);
+        rootBlock = exampleFiles.getActivityWithVariables();
 
         ApplicationManager.getApplication().runReadAction(() -> {
-            rootBlock = exampleFiles.getActivityWithVariables();
             onStartBlock = exampleFiles.getPsiElementFromRootDocument(
                     OMTBlockEntry.class, rootBlock,
                     omtBlockEntry ->

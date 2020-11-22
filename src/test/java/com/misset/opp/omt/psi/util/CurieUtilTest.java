@@ -38,7 +38,7 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @InjectMocks
     CurieUtil curieUtil;
-    private final ExampleFiles exampleFiles = new ExampleFiles(this);
+    private ExampleFiles exampleFiles;
     PsiElement rootBlock;
 
     private OMTNamespacePrefix abcDeclared;
@@ -50,15 +50,14 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
     void setUpSuite() throws Exception {
         super.setName("CurieUtilTest");
         super.setUp();
-
+        exampleFiles = new ExampleFiles(this, myFixture);
         MockitoAnnotations.initMocks(this);
         myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
 
         ApplicationManager.getApplication().runReadAction(() -> {
             ProjectUtil.SINGLETON.loadOntologyModel(getProject());
-            rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
         });
-
+        rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());
         doReturn(annotationBuilder).when(annotationBuilder).range(any(PsiElement.class));
         doReturn(annotationBuilder).when(annotationBuilder).withFix(any(IntentionAction.class));

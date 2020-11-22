@@ -9,10 +9,16 @@ public interface OMTTokenSets {
     TokenSet WHITESPACE = TokenSet.create(
             TokenType.WHITE_SPACE,
             INDENT_TOKEN,
+            INDENT,
+            INDENT2,
+            DEDENT,
+            DEDENT2,
             DEDENT_TOKEN,
             START_TOKEN,
             END_TOKEN,
-            EMPTY_ARRAY
+            EMPTY_ARRAY,
+            END,
+            START
     );
     TokenSet SEQUENCES = TokenSet.create(
             IMPORT,
@@ -20,11 +26,7 @@ public interface OMTTokenSets {
             DEFINE_COMMAND_STATEMENT,
             DEFINE_QUERY_STATEMENT,
             MEMBER_LIST_ITEM,
-            SEQUENCE_ITEM,
-            SCALAR_VALUE
-    );
-    TokenSet QUERY_INDENTATION_PARENT = TokenSet.create(
-            SUB_QUERY, FORWARD_SLASH, WHEN_PATH, OTHERWISE_PATH
+            SEQUENCE_ITEM
     );
     TokenSet ASSIGNMENT_OPERATORS = TokenSet.create(
             EQUALS,
@@ -44,10 +46,14 @@ public interface OMTTokenSets {
     TokenSet JAVADOCS = TokenSet.create(
             JAVADOCS_CONTENT, JAVADOCS_START, JAVADOCS_END
     );
-    TokenSet ALIGNMENT_QUERY_PARTS = TokenSet.create(
-            QUERY_STEP, BOOLEAN_OPERATOR, CONDITIONAL_OPERATOR, PIPE, FORWARD_SLASH
+    TokenSet SKIPPABLE_CONTAINERS = TokenSet.create(
+            SCALAR_VALUE, SCALAR
     );
-    TokenSet ALIGNMENT_QUERIES = TokenSet.create(
-            QUERY, QUERY_PATH, QUERY_ARRAY, EQUATION_STATEMENT, SUB_QUERY
-    );
+    // ALL QUERIES AND PARTS THAT CAN BE USED FOR ALIGNMENT
+    TokenSet QUERIES = TokenSet.create(QUERY, QUERY_PATH, QUERY_ARRAY, BOOLEAN_STATEMENT, EQUATION_STATEMENT, NEGATED_STEP);
+    TokenSet QUERY_TOKENS = TokenSet.create(FORWARD_SLASH, PIPE, BOOLEAN_OPERATOR, CONDITIONAL_OPERATOR, NOT_OPERATOR);
+    TokenSet QUERYSTEPS = TokenSet.create(QUERY_STEP, CURIE_CONSTANT_ELEMENT, QUERY_REVERSE_STEP, SUB_QUERY, INTERPOLATED_STRING);
+    TokenSet QUERYSTEP_TOKENS = TokenSet.create(CURIE_CONSTANT_ELEMENT_PREFIX, FORWARD_SLASH, CARET, ASTERIX, PLUS);
+    TokenSet ALL_QUERY_TOKENS = TokenSet.orSet(QUERIES, QUERY_TOKENS, QUERYSTEPS, QUERYSTEP_TOKENS);
+    TokenSet ALL_QUERY_TOKENS_AND_FILTER = TokenSet.orSet(QUERIES, QUERY_TOKENS, QUERYSTEPS, QUERYSTEP_TOKENS, TokenSet.create(QUERY_FILTER));
 }

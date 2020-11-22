@@ -43,12 +43,9 @@ class ScriptUtilTest extends LightJavaCodeInsightFixtureTestCase {
         super.setName("ModelUtilTest");
         super.setUp();
 
-        exampleFiles = new ExampleFiles(this);
+        exampleFiles = new ExampleFiles(this, myFixture);
         MockitoAnnotations.initMocks(this);
-
-        ApplicationManager.getApplication().runReadAction(() -> {
-            rootBlock = exampleFiles.getProcedureWithScript();
-        });
+        rootBlock = exampleFiles.getProcedureWithScript();
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());
         doReturn(annotationBuilder).when(annotationBuilder).range(any(PsiElement.class));
         doReturn(annotationBuilder).when(annotationBuilder).withFix(any(IntentionAction.class));

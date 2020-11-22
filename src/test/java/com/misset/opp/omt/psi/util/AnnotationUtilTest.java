@@ -24,7 +24,7 @@ import static org.mockito.Mockito.*;
 class AnnotationUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     private static final AnnotationUtil annotationUtil = AnnotationUtil.SINGLETON;
-    private final ExampleFiles exampleFiles = new ExampleFiles(this);
+    private ExampleFiles exampleFiles;
     @Mock
     AnnotationHolder annotationHolder;
     @Mock
@@ -40,9 +40,9 @@ class AnnotationUtilTest extends LightJavaCodeInsightFixtureTestCase {
         super.setUp();
 
         MockitoAnnotations.initMocks(this);
-
+        exampleFiles = new ExampleFiles(this, myFixture);
+        rootBlock = exampleFiles.getActivityWithUndeclaredElements();
         ApplicationManager.getApplication().runReadAction(() -> {
-            rootBlock = exampleFiles.getActivityWithUndeclaredElements();
             List<OMTVariable> variables = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, rootBlock);
             variables.forEach(omtVariable ->
                     {

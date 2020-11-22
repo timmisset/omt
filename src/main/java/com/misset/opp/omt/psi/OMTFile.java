@@ -129,7 +129,7 @@ public class OMTFile extends PsiFileBase {
         HashMap<String, OMTExportMember> importedMembers = new HashMap<>();
            getImportedFiles().forEach(
                    (omtImport, virtualFile) -> {
-                       if (omtImport.getMemberList() != null) {
+                       if (virtualFile != null && omtImport.getMemberList() != null) {
                            omtImport.getMemberList().getMemberListItemList().forEach(
                                    omtMemberListItem -> {
                                        final OMTFile omtFile = (OMTFile) PsiManager.getInstance(getProject()).findFile(virtualFile);
@@ -138,8 +138,8 @@ public class OMTFile extends PsiFileBase {
                                                    .ifPresent(exportMember -> importedMembers.put(exportMember.getName(), exportMember));
                                        }
                                    }
-                        );
-                    }
+                           );
+                       }
                 }
         );
         return importedMembers;

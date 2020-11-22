@@ -52,11 +52,11 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
     void setUpSuite() throws Exception {
         super.setName("ModelUtilTest");
         super.setUp();
-        exampleFiles = new ExampleFiles(this);
+        exampleFiles = new ExampleFiles(this, myFixture);
         MockitoAnnotations.initMocks(this);
 
+        rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
         ApplicationManager.getApplication().runReadAction(() -> {
-            rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
             activity = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, rootBlock);
             importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock);
             variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock);
@@ -206,8 +206,8 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void annotateModelItemType_ThrowsUnknownModelType() {
+        PsiElement modelWithWrongModelItemType = exampleFiles.getModelWithWrongModelItemType();
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement modelWithWrongModelItemType = exampleFiles.getModelWithWrongModelItemType();
             OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, modelWithWrongModelItemType);
             modelUtil.annotateModelItemType(modelItemBlock.getModelItemLabel().getModelItemTypeElement(), annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("Unknown model type: !WrongModelItemType"));
@@ -227,8 +227,8 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void annotateBlock_ThrowsMissingAttributes() {
+        PsiElement modelWithWrongModelItemType = exampleFiles.getStandaloneQueryWithMissingAttribute();
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement modelWithWrongModelItemType = exampleFiles.getStandaloneQueryWithMissingAttribute();
             OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, modelWithWrongModelItemType);
             modelUtil.annotateBlock(modelItemBlock.getBlock(), annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), startsWith("myStandAloneQuery is missing attribute(s)"));
@@ -238,8 +238,8 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void annotateBlockEntry_ThrowsWrongAttribute() {
+        PsiElement modelWithWrongNestedAttribute = exampleFiles.getActivityWithWrongNestedAttribute();
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement modelWithWrongNestedAttribute = exampleFiles.getActivityWithWrongNestedAttribute();
             OMTBlockEntry blockEntry = exampleFiles.getPsiElementFromRootDocument(OMTBlockEntry.class, modelWithWrongNestedAttribute, omtBlockEntry -> modelUtil.getEntryBlockLabel(omtBlockEntry).equals("queryX"));
             modelUtil.annotateBlockEntry(blockEntry, annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), startsWith("queryX is not a known attribute for PayloadProperty"));
@@ -261,8 +261,8 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void getLocalCommands_ContainsOntologyCommand() {
+        PsiElement modelWithLoadOntology = exampleFiles.getLoadOntology();
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement modelWithLoadOntology = exampleFiles.getLoadOntology();
             OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, modelWithLoadOntology);
 
             List<String> localCommands = modelUtil.getLocalCommands(call);
@@ -297,8 +297,8 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void getJson_returnsJsonForMapOfItemScalarValue() {
+        PsiElement activityWithVariablesActions = exampleFiles.getActivityWithVariablesActions();
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement activityWithVariablesActions = exampleFiles.getActivityWithVariablesActions();
             List<OMTVariable> variables = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, activityWithVariablesActions);
             // last variable is in the action
             OMTVariable payloadVariable = variables.get(variables.size() - 1);
@@ -320,8 +320,8 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void getJsonAttributes_returnsJsonAttributesForMapOfItemScalarValue() {
+        PsiElement activityWithVariablesActions = exampleFiles.getActivityWithVariablesActions();
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement activityWithVariablesActions = exampleFiles.getActivityWithVariablesActions();
             List<OMTVariable> variables = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, activityWithVariablesActions);
             // last variable is in the action
             OMTVariable payloadVariable = variables.get(variables.size() - 1);
@@ -332,8 +332,8 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void getJsonAttributes_returnsTitelAttributes() {
+        PsiElement activity = exampleFiles.getActivityWithMembers();
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement activity = exampleFiles.getActivityWithMembers();
             OMTCall titel = exampleFiles.getPsiElementFromRootDocument(OMTCall.class, activity, call -> call.getName().equals("MijnTweedeActiviteit"));
             // last variable is in the action
             JsonObject json = modelUtil.getJson(titel);
@@ -343,8 +343,8 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void isOntology() {
+        PsiElement loadOntology = exampleFiles.getLoadOntology();
         ApplicationManager.getApplication().runReadAction(() -> {
-            PsiElement loadOntology = exampleFiles.getLoadOntology();
             List<OMTModelItemBlock> modelBlocks = exampleFiles.getPsiElementsFromRootDocument(OMTModelItemBlock.class, loadOntology);
             assertEquals(2, modelBlocks.size());
             assertFalse(modelUtil.isOntology(modelBlocks.get(0)));

@@ -21,8 +21,7 @@ public class OMTFormattingBlock extends AbstractBlock {
     protected OMTFormattingBlock(@NotNull ASTNode node, @NotNull OMTFormattingContext omtFormattingContext) {
         super(node, null, omtFormattingContext.computeAlignment(node));
         this.formattingContext = omtFormattingContext;
-
-        this.indent = formattingContext.computeBlockIndent(node, this);
+        this.indent = formattingContext.computeBlockIndent(node);
     }
 
     @Override

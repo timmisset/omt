@@ -70,6 +70,26 @@ public class OMTCompletionContributor extends CompletionContributor {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), getCompletionProvider());
     }
 
+    private void resolveErrorElement(PsiErrorElement element) {
+        final List<String> expectedTypesFromError = getExpectedTypesFromError(element);
+        if (expectedTypesFromError.contains("define query statement")) {
+            addQueryExamples();
+        }
+        if (expectedTypesFromError.contains("define command statement")) {
+            addCommandExamples();
+        }
+    }
+
+    private void addQueryExamples() {
+        resolvedElements.add(LookupElementBuilder.create("DEFINE QUERY"));
+        resolvedElements.add(LookupElementBuilder.create("DEFINE QUERY myQuery() => 'hello world';"));
+    }
+
+    private void addCommandExamples() {
+        resolvedElements.add(LookupElementBuilder.create("DEFINE COMMAND"));
+        resolvedElements.add(LookupElementBuilder.create("DEFINE COMMAND myCommand() => { @LOG('hello world'); }"));
+    }
+
     private CompletionProvider<CompletionParameters> getCompletionProvider() {
         return new CompletionProvider<CompletionParameters>() {
             @Override
@@ -80,8 +100,13 @@ public class OMTCompletionContributor extends CompletionContributor {
                 }
 
                 PsiElement element = parameters.getPosition();
-                originalElement = parameters.getOriginalPosition();
+                if (element.getParent() instanceof PsiErrorElement) {
+                    resolveErrorElement((PsiErrorElement) element.getParent());
+                    result.addAllElements(resolvedElements);
+                    return;
+                }
 
+                originalElement = parameters.getOriginalPosition();
                 while (tokenUtil.isWhiteSpace(element) && element != null) {
                     element = element.getParent();
                 }
@@ -194,24 +219,14 @@ public class OMTCompletionContributor extends CompletionContributor {
         }
         // find the PsiElement containing the caret:
 
-        if (element instanceof OMTFile || element instanceof PsiErrorElement) {
+        // error in parsing, try to resolve it
+        if ((element instanceof OMTFile || element instanceof PsiErrorElement) &&
+                !getExpectedTypeAtOMTFile(elementAtCaret, false).isEmpty()) {
             List<String> expectedTypesAtDummyBlock = getExpectedTypeAtOMTFile(elementAtCaret, false);
             setDummyContextFromExpectedList(expectedTypesAtDummyBlock, context, hasValuePosition(elementAtCaret, context));
             return;
         }
 
-        if (element instanceof OMTCommandsBlock) {
-            isResolved = true;
-            resolvedElements.add(LookupElementBuilder.create("DEFINE COMMAND"));
-            resolvedElements.add(LookupElementBuilder.create("DEFINE COMMAND myCommand() => { @LOG('hello world'); }"));
-            return;
-        }
-        if (element instanceof OMTQueriesBlock) {
-            isResolved = true;
-            resolvedElements.add(LookupElementBuilder.create("DEFINE QUERY"));
-            resolvedElements.add(LookupElementBuilder.create("DEFINE QUERY myQuery() => 'hello world';"));
-            return;
-        }
         if (element instanceof OMTCommandBlock ||
                 element instanceof OMTScript ||
                 element instanceof OMTScriptLine ||
@@ -376,21 +391,21 @@ public class OMTCompletionContributor extends CompletionContributor {
 
 
         addPriorityElement(curieElement, priority, title, (context, item) ->
-                // if the iri is not registered in the page, do it
-                ApplicationManager.getApplication().runWriteAction(() -> {
-                    if (originalElement.getPrevSibling() instanceof OMTNamespacePrefix) {
-                        // remove the existing prefix
-                        int startOffset = originalElement.getPrevSibling().getTextOffset();
-                        int endOffset = startOffset + originalElement.getPrevSibling().getTextLength();
-                        context.getDocument().replaceString(startOffset, endOffset, "");
-                        context.commitDocument();
-                    }
-                    if (registerPrefix.get()) {
-                        curieUtil.addPrefixToBlock(context.getFile(),
-                                item.getLookupString().split(":")[0].substring(reverse ? 1 : 0),
-                                resource.getNameSpace());
-                    }
-                }),
+                        // if the iri is not registered in the page, do it
+                        ApplicationManager.getApplication().runWriteAction(() -> {
+                            if (originalElement.getPrevSibling() instanceof OMTNamespacePrefix) {
+                                // remove the existing prefix
+                                int startOffset = originalElement.getPrevSibling().getTextOffset();
+                                int endOffset = startOffset + originalElement.getPrevSibling().getTextLength();
+                                context.getDocument().replaceString(startOffset, endOffset, "");
+                                context.commitDocument();
+                            }
+                            if (registerPrefix.get()) {
+                                curieUtil.addPrefixToBlock(context.getFile(),
+                                        item.getLookupString().split(":")[0].substring(reverse ? 1 : 0),
+                                        resource.getNameSpace());
+                            }
+                        }),
                 null,
                 !resolvesTo.isEmpty() && !projectUtil.getRDFModelUtil().isTypePredicate(resource) ? omtFile.resourceToCurie(resolvesTo.get(0)) : null);
     }

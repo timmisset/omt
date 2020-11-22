@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
-    private final ExampleFiles exampleFiles = new ExampleFiles(this);
+    private final ExampleFiles exampleFiles = new ExampleFiles(this, myFixture);
 
     @BeforeEach
     void setUpSuite() throws Exception {
