@@ -5,6 +5,7 @@ import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -214,7 +215,7 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void resetImportBlock() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        WriteCommandAction.runWriteCommandAction(getProject(), () -> {
             importUtil.resetImportBlock(rootBlock);
             OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock);
             String text = importBlock.getText();
@@ -236,7 +237,7 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void addImportMemberToBlock_ToExistingImport() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        WriteCommandAction.runWriteCommandAction(getProject(), () -> {
             importUtil.addImportMemberToBlock(rootBlock, "'@client/procedure_with_exporting_members.omt':", "AnotherMember");
             OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock);
             String text = importBlock.getText();
@@ -256,7 +257,7 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Test
     void addImportMemberToBlock_ToNewImport() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        WriteCommandAction.runWriteCommandAction(getProject(), () -> {
             importUtil.addImportMemberToBlock(rootBlock, "'@client/someModule/activity.omt':", "AnotherMember");
             OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock);
             String text = importBlock.getText();
@@ -278,7 +279,7 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
     @Test
     void addImportMemberToBlock_NewImport() {
         PsiElement procedureWithScript = exampleFiles.getProcedureWithScript();
-        ApplicationManager.getApplication().runReadAction(() -> {
+        WriteCommandAction.runWriteCommandAction(getProject(), () -> {
             importUtil.addImportMemberToBlock(procedureWithScript, "'@client/someModule/activity.omt':", "AnotherMember");
             OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, procedureWithScript);
             String text = importBlock.getText();

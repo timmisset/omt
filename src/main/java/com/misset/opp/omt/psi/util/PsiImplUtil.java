@@ -507,9 +507,6 @@ public class PsiImplUtil {
     public static List<Resource> resolveToResource(OMTQueryReverseStep step) {
         List<Resource> resources = getPreviousStep(step);
         final OMTCurieElement curieElement = step.getCurieElement();
-        if (curieElement == null) {
-            return resources;
-        }
         final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
         if (!rdfModelUtil.isTypePredicate(curieElement.getAsResource())) { // for a type predicate, resolve only to the given class
             resources = rdfModelUtil.allSuperClasses(resources);
