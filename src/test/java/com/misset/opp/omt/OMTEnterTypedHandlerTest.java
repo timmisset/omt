@@ -34,32 +34,32 @@ class OMTEnterTypedHandlerTest extends LightJavaCodeInsightFixtureTestCase {
     void postProcessEnter_AddsBulletForImport() {
         String content = "import:\n" +
                 "    'import.omt':\n" +
-                "    - gebeurtenisLocatieRelatieSoortGraph<caret>\n" +
+                "       -   gebeurtenisLocatieRelatieSoortGraph<caret>\n" +
                 "";
         myFixture.configureByText("test.omt", content);
         myFixture.type('\n');
         assertEquals("import:\n" +
                 "    'import.omt':\n" +
-                "    - gebeurtenisLocatieRelatieSoortGraph\n" +
-                "    - \n", myFixture.getFile().getText());
+                "       -   gebeurtenisLocatieRelatieSoortGraph\n" +
+                "       -   \n", myFixture.getFile().getText());
     }
 
     @Test
     void postProcessEnter_AddsBulletForImport2() {
         String content = "import:\n" +
                 "    'import.omt':\n" +
-                "    - gebeurtenisLocatieRelatieSoortGraph<caret>\n" +
+                "       -   gebeurtenisLocatieRelatieSoortGraph<caret>\n" +
                 "    'import2.omt':\n" +
-                "    - gebeurtenisLocatieRelatieSoortGraph\n" +
+                "       -   gebeurtenisLocatieRelatieSoortGraph\n" +
                 "";
         myFixture.configureByText("test.omt", content);
         myFixture.type('\n');
         assertEquals("import:\n" +
                 "    'import.omt':\n" +
-                "    - gebeurtenisLocatieRelatieSoortGraph\n" +
-                "    - \n" +
+                "       -   gebeurtenisLocatieRelatieSoortGraph\n" +
+                "       -   \n" +
                 "    'import2.omt':\n" +
-                "    - gebeurtenisLocatieRelatieSoortGraph\n", myFixture.getFile().getText());
+                "       -   gebeurtenisLocatieRelatieSoortGraph\n", myFixture.getFile().getText());
     }
 
     @Test

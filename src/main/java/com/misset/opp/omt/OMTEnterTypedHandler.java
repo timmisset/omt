@@ -2,7 +2,9 @@ package com.misset.opp.omt;
 
 import com.intellij.codeInsight.editorActions.enter.EnterHandlerDelegateAdapter;
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -13,12 +15,13 @@ import org.jetbrains.annotations.NotNull;
 public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
 
     private TokenUtil tokenUtil = TokenUtil.SINGLETON;
-
+    private PsiDocumentManager documentManager = null;
     @Override
     public Result postProcessEnter(@NotNull PsiFile file, @NotNull Editor editor, @NotNull DataContext dataContext) {
         if (!(file instanceof OMTFile)) {
             return Result.Continue;
         }
+        documentManager = PsiDocumentManager.getInstance(file.getProject());
         int caretOffset = editor.getCaretModel().getOffset();
         PsiElement elementAt = file.findElementAt(caretOffset);
         while (elementAt == null && caretOffset > 0) {
@@ -36,7 +39,7 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
         while (sibling != null && tokenUtil.isWhiteSpace(sibling)) {
             sibling = sibling.getPrevSibling();
         }
-        if (sibling instanceof OMTImport || sibling instanceof OMTSequence) {
+        if (sibling instanceof OMTImport || sibling instanceof OMTSequence || sibling instanceof OMTMemberListItem) {
             insert(editor, "-", getSequenceBulletTrailingSpace(sibling), caretOffset);
             return Result.Stop;
         }
@@ -53,10 +56,14 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
 
 
     private void insert(Editor editor, String token, int indentationAfter, int caretOffset) {
+        final Document document = editor.getDocument();
+        documentManager.doPostponedOperationsAndUnblockDocument(document);
         String insertedString = String.format("%s%s",
                 token,
                 new String(new char[indentationAfter]).replace("\0", " "));
-        editor.getDocument().insertString(caretOffset, insertedString);
+
+        document.insertString(caretOffset, insertedString);
+        documentManager.commitDocument(document);
         editor.getCaretModel().moveToOffset(caretOffset + insertedString.length());
     }
 

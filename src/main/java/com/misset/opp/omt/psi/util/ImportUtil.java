@@ -135,8 +135,10 @@ public class ImportUtil {
             OMTFile exportingFile = (OMTFile) getPsiManager(omtImport.getProject()).findFile(importedFile);
             if (omtImport.getMemberList() != null) {
                 omtImport.getMemberList().getMemberListItemList().forEach(omtMemberListItem -> {
-                    String memberName = omtMemberListItem.getMember().getName().trim();
-                    if (exportingFile != null && !exportingFile.getExportedMember(memberName).isPresent()) {
+                    String memberName = omtMemberListItem.getName().trim();
+                    if (exportingFile != null &&
+                            omtMemberListItem.getMember() != null &&
+                            !exportingFile.getExportedMember(memberName).isPresent()) {
                         holder.newAnnotation(HighlightSeverity.ERROR,
                                 String.format("%s is not an exported member of %s", memberName, omtImport.getImportSource().getText()))
                                 .range(omtMemberListItem.getMember())
@@ -230,7 +232,7 @@ public class ImportUtil {
                                         memberItem -> {
                                             String leadingMemberComment = memberItem.getLeading() != null ? memberItem.getLeading().getText() : "";
                                             String trailingMemberComment = memberItem.getMember().getEnd().getTrailing() != null ? memberItem.getMember().getEnd().getTrailing().getText() : "";
-                                            addImportMember(memberItem.getMember().getName(), leadingMemberComment, trailingMemberComment, importBlockBuilder);
+                                            addImportMember(memberItem.getName(), leadingMemberComment, trailingMemberComment, importBlockBuilder);
                                         }
                                 );
                             }
