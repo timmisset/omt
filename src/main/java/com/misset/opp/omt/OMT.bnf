@@ -17,19 +17,19 @@
 }
 
 // the end of the file (or the entire file) can be a (set of) comment(s)
-OMTFile ::= leading? block? trailing?
+OMTFile ::= leading? block? 
 
 start ::=                                   START_TOKEN leading?
 // sometimes the comments following a block are indented wrong but this is not forbidden
 // however, to correctly close the indented block preceeding the comment, the comment should
 // be encapsulated within this end statement. This will be the leading block and should not be considered
 // an actual comment on the item closed by this end block
-end ::=                                     trailing? END_TOKEN leading?
+end ::=                                     END_TOKEN leading?
 indentToken ::=                             INDENT | INDENT2
 dedentToken ::=                             DEDENT | DEDENT2
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
-block ::=                                   leading? (blockEntry+ | (indentToken blockEntry+ dedentToken)) trailing?
-blockEntry ::=                              leading? specificBlock | (leading? propertyLabel trailing? ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken))) {
+block ::=                                   leading? (blockEntry+ | (indentToken blockEntry+ dedentToken)) 
+blockEntry ::=                              leading? specificBlock | (leading? propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken))) {
                                             mixin="com.misset.opp.omt.psi.impl.OMTAnnotationHolderImpl"
                                             implements="com.misset.opp.omt.psi.support.OMTAnnotationHolder"
                                             methods=[ getName getLabel ]
@@ -42,7 +42,7 @@ scalarValue ::=                             (start (parameterWithType | variable
 
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indentToken, it must 
-sequence ::=                                trailing? sequenceItem+
+sequence ::=                                sequenceItem+
 sequenceItem ::=                            leading? SEQUENCE_BULLET (scalarValue | block)?
 
 // SPECIFIC BLOCKS
@@ -51,7 +51,7 @@ specificBlock ::=                          importBlock | exportBlock | prefixBlo
                                                 }
 
 // sequences
-exportBlock ::=                             EXPORT_START trailing? memberList?
+exportBlock ::=                             EXPORT_START memberList?
 memberList ::=                              memberListItem+ | (indentToken memberListItem+ dedentToken)
 memberListItem ::=                          (leading? SEQUENCE_BULLET member?) { methods=[getName] }
 member ::=                                  start OPERATOR end {
@@ -61,21 +61,21 @@ member ::=                                  start OPERATOR end {
                                                      }
 
 // scalars
-queriesBlock::=                             QUERY_BLOCK_START (start PIPE trailing? defineQueryStatement* end)? {
+queriesBlock::=                             QUERY_BLOCK_START (start PIPE defineQueryStatement* end)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
                                                                 }
-commandsBlock::=                            COMMAND_BLOCK_START (start PIPE trailing? defineCommandStatement* end)? {
+commandsBlock::=                            COMMAND_BLOCK_START (start PIPE defineCommandStatement* end)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
                                                                 }
 
-moduleBlock::=                              leading? MODULE_NAME_START moduleName trailing?
+moduleBlock::=                              leading? MODULE_NAME_START moduleName 
 moduleName::=                               NAME | (start OPERATOR end)
 
 // maps
-importBlock ::=                             leading? IMPORT_START trailing? (indentToken import* dedentToken)?
-import ::=                                  leading? importSource trailing? memberList?
+importBlock ::=                             leading? IMPORT_START (indentToken import* dedentToken)?
+import ::=                                  leading? importSource memberList?
 importSource ::=                            importLocation (start EMPTY_ARRAY end)? {
                                                                            mixin="com.misset.opp.omt.psi.impl.OMTImportNamedElementImpl"
                                                                            implements="com.misset.opp.omt.psi.named.OMTImportNamedElement"
@@ -83,8 +83,8 @@ importSource ::=                            importLocation (start EMPTY_ARRAY en
                                                                          }
 importLocation ::=                          (MODULE_START indentToken PROPERTY dedentToken) | PROPERTY | IMPORT_PATH
 
-prefixBlock::=                              PREFIX_BLOCK_START trailing? (prefix+ | (indentToken prefix+ dedentToken))?
-prefix::=                                   leading? namespacePrefix namespaceIri trailing? { methods=[getName] }
+prefixBlock::=                              PREFIX_BLOCK_START (prefix+ | (indentToken prefix+ dedentToken))?
+prefix::=                                   leading? namespacePrefix namespaceIri { methods=[getName] }
 namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)            {
                                                                                          mixin="com.misset.opp.omt.psi.impl.OMTNamespacePrefixNamedElementImpl"
                                                                                          implements="com.misset.opp.omt.psi.named.OMTNamespacePrefixNamedElement"
@@ -94,8 +94,8 @@ namespaceIri ::=                            start IRI end                       
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix getAsResource getPrefixName]}
 curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FORWARD_SLASH) curieElement queryFilter* { extends=queryStep methods=[resolveToResource ]}
 
-modelBlock::=                               MODEL_BLOCK_START trailing? (indentToken modelItemBlock* dedentToken)?
-modelItemBlock::=                           leading? modelItemLabel trailing? block?
+modelBlock::=                               MODEL_BLOCK_START (indentToken modelItemBlock* dedentToken)?
+modelItemBlock::=                           leading? modelItemLabel block?
 modelItemLabel::=                           propertyLabel modelItemTypeElement  {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
@@ -108,11 +108,7 @@ modelItemTypeElement ::=                    MODEL_ITEM_TYPE
 jdComment ::=                               JAVADOCS_START jdContent* JAVADOCS_END END_TOKEN?
 jdContent ::=                               JAVADOCS_CONTENT+ | START_TOKEN | END_TOKEN | parameterAnnotation
 parameterAnnotation ::=                     ANNOTATE_PARAMETER parameterWithType
-comment ::=                                 END_OF_LINE_COMMENT | jdComment
-eolComment ::=                              END_OF_LINE_COMMENT
-// trailing is everything at the end of the current line and before NEW_LINE.
-// It can be simply the NEW_LINE or an eolComment followed by a NEW_LINE
-trailing ::=                                eolComment+
+comment ::=                                 jdComment
 // leading? is everything before a block or item. Assuming that comments are written above the code they are
 // commenting on, this should help to relate the comment to the code
 leading ::=                                 comment+
@@ -149,10 +145,10 @@ parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEM
 // an ODT (script) block is always started by a Yaml scalar node
 // it can start on the same line and be restricted to that line (not required) or it can be started by the
 // literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and and 
-script ::=                                  PIPE trailing? (scriptLine+ | query)?
-commandBlock ::=                            CURLY_OPEN trailing? (script | scriptLine+)? CURLY_CLOSED { methods=[resolveToResource]}
+script ::=                                  PIPE (scriptLine+ | query)?
+commandBlock ::=                            CURLY_OPEN (script | scriptLine+)? CURLY_CLOSED { methods=[resolveToResource]}
 // a scriptline is contained by the addition of the semicolon at the end
-scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) trailing?
+scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) 
 // the contents of a script, contained by a scriptLine or Scalar
 scriptContent ::=                           declareVariable | variableAssignment | definePrefix | commandCall | assignmentStatement |
                                             addToCollection | removeFromCollection | logicalBlock | returnStatement | query
@@ -167,15 +163,15 @@ defineName ::=                              NAME | OPERATOR    {
                                                            implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                            methods=[getName setName getNameIdentifier]
                                                          }
-defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA query SEMICOLON trailing? {
+defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA query SEMICOLON {
                                                             implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
                                                             extends="com.misset.opp.omt.psi.impl.OMTDefinedStatementImpl"
                                             }
-defineCommandStatement ::=                  leading? DEFINE_START DEFINE_COMMAND defineName defineParam? LAMBDA commandBlock trailing? {
+defineCommandStatement ::=                  leading? DEFINE_START DEFINE_COMMAND defineName defineParam? LAMBDA commandBlock {
                                                           implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
                                                           extends="com.misset.opp.omt.psi.impl.OMTDefinedStatementImpl"
                                             }
-definePrefix ::=                            leading? PREFIX_DEFINE_START prefix trailing?
+definePrefix ::=                            leading? PREFIX_DEFINE_START prefix 
 defineParam ::=                             PARENTHESES_OPEN (variable (COMMA variable)*)? PARENTHESES_CLOSE
 
 // MEMBER CALLS
@@ -197,17 +193,17 @@ signature ::=                               PARENTHESES_OPEN (signatureArgument 
 signatureArgument ::=                       resolvableValue | commandBlock { methods=[resolveToResource] }
 flagSignature ::=                           FLAG
 resolvableValue ::=                         query | commandCall { methods=[resolveToResource]}
-logicalBlock ::=                            ifBlock commandBlock trailing? (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
+logicalBlock ::=                            ifBlock commandBlock (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
 ifBlock ::=                                 IF_OPERATOR (query | (PARENTHESES_OPEN query PARENTHESES_CLOSE))
 elseBlock ::=                               ELSE_OPERATOR commandBlock
 returnStatement ::=                         RETURN_OPERATOR resolvableValue?
-chooseBlock ::=                             CHOOSE_OPERATOR trailing?
+chooseBlock ::=                             CHOOSE_OPERATOR 
                                                 whenPath+
                                                 otherwisePath?
                                                 endPath
 whenPath ::=                                leading? WHEN_OPERATOR booleanStatement LAMBDA query
 otherwisePath ::=                           leading? OTHERWISE_OPERATOR LAMBDA query
-endPath ::=                                 END_OPERATOR trailing?
+endPath ::=                                 END_OPERATOR 
 // QUERIES
 // A query is the superclass of different variants of a query.
 // it is used to break the array into meaningful subsections based on detected tokens
@@ -227,46 +223,46 @@ query     ::=                               queryPath | queryArray | booleanStat
 // The queryPath is constructed using the Forward slash as delimiter a contains as many steps as possible
 queryPath ::=                               (curieConstantElement | queryStep) (FORWARD_SLASH queryStep)* { extends=query methods=[resolveToResource] }
 // The queryArray uses the PIPE symbol to split the array where both can be resolved separately
-queryArray ::=                              query trailing? (PIPE trailing? query)+ { extends=query methods=[resolveToResource] }
+queryArray ::=                              query (PIPE query)+ { extends=query methods=[resolveToResource] }
 // A booleanStatement works the same as the queryArray but using a BOOLEAN_OPERATOR
 // When resolving, it should be checked that all parts of the query are resolved to boolean types
-booleanStatement ::=                        query trailing? (BOOLEAN_OPERATOR trailing? query)+ { extends=query methods=[resolveToResource filter] }
+booleanStatement ::=                        query (BOOLEAN_OPERATOR query)+ { extends=query methods=[resolveToResource filter] }
 // The equationStatement uses a conditional operator (like ==, >=, <=) to split the statement
 // it only allows a left-hand and right-hand query, both should be resolved to boolean type
-equationStatement ::=                       query trailing? CONDITIONAL_OPERATOR trailing? query { extends=query methods=[resolveToResource filter getOpposite] }
+equationStatement ::=                       query CONDITIONAL_OPERATOR query { extends=query methods=[resolveToResource filter getOpposite] }
 // The negated statement detects the usage of the NOT operator
 // This can be used as '.. / NOT IN (...)' OR '.. / NOT'. In the former the negation is based on the subsequent
 // query whereas the latter it's based on the preceding query
 // NOTE: for some reason the 2 options need to be stated separately for the compiler to make sense of it
 // creation of a single negatedStatement with both options is not working
 // the leading statement is preferred
-negatedStep ::=                             NOT_OPERATOR trailing? query { extends=query }
+negatedStep ::=                             NOT_OPERATOR query { extends=query }
 
 // a queryStep is anything that is acceptable between the / ... / FORWARD_SLASH delimiters in the query or
 // that add some additional behavior to the step (like a filter)
 // TODO: it might be worthwhile to consider appending the filter to the queryStep instead of making it a separate step
-queryStep ::=                               (queryReverseStep |
+queryStep ::=                               leading? (queryReverseStep |
                                             constant_value | variable | curieElement |
                                             operatorCall | IRI | DOT | OWLPROPERTY | interpolatedString |
                                             chooseBlock | negatedStep | NOT_OPERATOR |
-                                            subQuery |
-                                            trailing | leading) stepDecorator? queryFilter*
+                                            subQuery)
+                                            stepDecorator? queryFilter*
                                             { methods = [ resolveToResource ]}
 queryReverseStep ::=                        CARET curieElement stepDecorator? queryFilter* { methods = [ resolveToResource ] extends=queryStep}
 stepDecorator ::=                           ASTERIX | PLUS
 // a query filter is contained by brackets [] and should resolve to boolean
-queryFilter ::=                             BRACKET_OPEN trailing? query trailing? BRACKET_CLOSED
+queryFilter ::=                             BRACKET_OPEN query BRACKET_CLOSED
 
 // the subQuery encapsulated a query by PARENTHESES, it can be resolved as-is, for example in an equation
 // or be cast to a traverse-like behavior using the ASTERIX and PLUS appendixes
-subQuery ::=                                PARENTHESES_OPEN trailing? query trailing? PARENTHESES_CLOSE { extends=queryStep methods=[resolveToResource] }
+subQuery ::=                                PARENTHESES_OPEN query PARENTHESES_CLOSE { extends=queryStep methods=[resolveToResource] }
 
 // the assignment statement is used to assign a value to a left-hand target, like a variable or a resolved resource iri
 // addTo and removeFrom are similar which will add/remove the item to/from the collection
 // these are not used defined query statement but in command blocks
-assignmentStatement ::=                     query trailing? EQUALS trailing? resolvableValue
-addToCollection ::=                         query trailing? ADD trailing? resolvableValue
-removeFromCollection ::=                    query trailing? REMOVE trailing? resolvableValue
+assignmentStatement ::=                     query EQUALS resolvableValue
+addToCollection ::=                         query ADD resolvableValue
+removeFromCollection ::=                    query REMOVE resolvableValue
 
 // interpolation
 interpolationTemplate ::=                   TEMPLATE_OPEN query TEMPLATE_CLOSED
