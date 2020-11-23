@@ -193,7 +193,6 @@ public class OMTFormattingContext {
         //        System.out.println(node.getText().substring(0, Math.min(10, node.getTextLength())) + " --> " + (alignment != null ? alignment.toString() : "null"));
         return alignment;
     }
-
     private Alignment computeQueryAlignment(ASTNode node) {
         // Arrays are aligned to first indentable element
         ASTNode previous = getTreePrev(node, OMTTokenSets.ALL_QUERY_TOKENS);
@@ -270,9 +269,15 @@ public class OMTFormattingContext {
             return registerAlignmentAndReturn(node);
         } else if (JAVADOCS_END == node.getElementType()) {
             // END shares the same parent
+            if (node.getTreeParent() == null) {
+                return null;
+            } // probably not completed yet
             return nodeAlignment.get(getFirstOfKindInParent(node.getTreeParent(), JAVADOCS_START));
         } else {
             // Only other option is JAVADOCS_CONTENT, which is contained by JD_CONTENT which is part of the same parent
+            if (node.getTreeParent().getTreeParent() == null) {
+                return null;
+            }
             return nodeAlignment.get(getFirstOfKindInParent(node.getTreeParent().getTreeParent(), JAVADOCS_START));
         }
     }

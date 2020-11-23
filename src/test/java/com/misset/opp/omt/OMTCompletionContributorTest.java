@@ -353,7 +353,7 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
         List<String> suggestions = getSuggestions("" +
                 "import:\n" +
                 "    '@client/exportFile.omt':\n" +
-                "    - <caret>\n");
+                "       - <caret>\n");
         assertContainsElements(suggestions, "myQuery");
     }
 

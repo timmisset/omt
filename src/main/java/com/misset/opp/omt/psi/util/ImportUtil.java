@@ -7,6 +7,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.misset.opp.omt.psi.*;
@@ -18,7 +19,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ImportUtil {
 
@@ -167,10 +167,6 @@ public class ImportUtil {
         return Optional.of(member);
     }
 
-    public void resetImportBlock(PsiElement element) {
-        resetImportBlock(element, null, null);
-    }
-
     public void addImportMemberToBlock(PsiElement element, String importPath, String importMember) {
         resetImportBlock(element, importPath, importMember);
     }
@@ -209,48 +205,34 @@ public class ImportUtil {
 
     private void resetImportBlock(PsiElement element, String importPath, String importMember) {
         OMTFile targetFile = (OMTFile) element.getContainingFile();
+        Project project = element.getProject();
+        String template = String.format("import:\n" +
+                "    %s\n" +
+                "        -   %s\n\n", importPath, importMember);
         Optional<OMTBlockEntry> rootBlock = targetFile.getRootBlock("import");
-        AtomicBoolean importProcessed = new AtomicBoolean(importPath == null || importMember == null);
-
-        StringBuilder importBlockBuilder = new StringBuilder();
-        importBlockBuilder.append("import:\n");
-        if (rootBlock.isPresent() && rootBlock.get().getSpecificBlock() != null && rootBlock.get().getSpecificBlock().getImportBlock() != null) {
-            OMTImportBlock omtBlockEntry = rootBlock.get().getSpecificBlock().getImportBlock();
-            omtBlockEntry.getImportList()
-                    .forEach(omtImport -> {
-                        if (omtImport.getImportSource().getName() != null) {
-                            if ((omtImport.getMemberList() != null && !omtImport.getMemberList().getMemberListItemList().isEmpty()) ||
-                                    sameImportLocation(omtImport, importPath)) {
-                                String leadingComment = omtImport.getLeading() != null ? omtImport.getLeading().getText() : "";
-                                String trailingComment = omtImport.getTrailing() != null ? omtImport.getTrailing().getText() : "";
-                                addImportSource(omtImport.getImportSource().getName(), leadingComment, trailingComment, importBlockBuilder);
-                            }
-
-                            // add existing imports
-                            if (omtImport.getMemberList() != null) {
-                                omtImport.getMemberList().getMemberListItemList().forEach(
-                                        memberItem -> {
-                                            String leadingMemberComment = memberItem.getLeading() != null ? memberItem.getLeading().getText() : "";
-                                            String trailingMemberComment = memberItem.getMember().getEnd().getTrailing() != null ? memberItem.getMember().getEnd().getTrailing().getText() : "";
-                                            addImportMember(memberItem.getName(), leadingMemberComment, trailingMemberComment, importBlockBuilder);
-                                        }
-                                );
-                            }
-
-                            // add new import if identical import path:
-                            if (!importProcessed.get() && sameImportLocation(omtImport, importPath)) {
-                                addImportMember(importMember, "", "", importBlockBuilder);
-                                importProcessed.set(true);
-                            }
-                        }
-                    });
+        if (rootBlock.isPresent()) {
+            final OMTImportBlock importBlock = rootBlock.get().getSpecificBlock().getImportBlock();
+            final Optional<OMTImport> existingImport = importBlock.getImportList().stream().filter(omtImport -> sameImportLocation(omtImport, importPath)).findFirst();
+            if (existingImport.isPresent()) {
+                // add member to existing import
+                final OMTMemberList memberList = existingImport.get().getMemberList();
+                final List<OMTMemberListItem> memberListItemList = memberList.getMemberListItemList();
+                final PsiElement importMemberItem = OMTElementFactory.fromString(template, OMTMemberListItem.class, project);
+                final PsiElement addedMember = memberList.addAfter(importMemberItem, memberListItemList.get(memberListItemList.size() - 1));
+                memberList.addBefore(OMTElementFactory.createNewLine(project), addedMember);
+            } else {
+                // add new import and member to existing import block
+                final OMTImport newImport = (OMTImport) OMTElementFactory.fromString(template, OMTImport.class, project);
+                final OMTImport lastImport = importBlock.getImportList().get(importBlock.getImportList().size() - 1);
+                importBlock.addAfter(newImport, lastImport);
+            }
+            CodeStyleManager.getInstance(project).reformat(importBlock);
+        } else {
+            // add new import block:
+            OMTImportBlock importBlock = (OMTImportBlock) OMTElementFactory.fromString(template, OMTImportBlock.class, project);
+            targetFile.setRootBlock(importBlock);
+            CodeStyleManager.getInstance(project).reformat(importBlock);
         }
-        if (!importProcessed.get() && importMember != null) {
-            addImportSource(importPath, "", "", importBlockBuilder);
-            addImportMember(importMember, "", "", importBlockBuilder);
-        }
-        importBlockBuilder.append("\n");
-        targetFile.setRootBlock((OMTImportBlock) OMTElementFactory.fromString(importBlockBuilder.toString(), OMTImportBlock.class, element.getProject()));
     }
 
     private boolean sameImportLocation(OMTImport omtImport, String path) {

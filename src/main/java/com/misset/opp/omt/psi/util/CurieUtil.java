@@ -3,7 +3,9 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
@@ -79,10 +81,6 @@ public class CurieUtil {
         }
     }
 
-    public void resetPrefixBlock(PsiElement element) {
-        resetPrefixBlock(element, "", "");
-    }
-
     public void addPrefixToBlock(PsiElement element, String addNamespacePrefix, String addNamespaceIri) {
         resetPrefixBlock(element, addNamespacePrefix, addNamespaceIri);
     }
@@ -93,51 +91,20 @@ public class CurieUtil {
 
     private void resetPrefixBlock(PsiElement element, @NotNull String addNamespacePrefix, @NotNull String addNamespaceIri) {
         OMTPrefixBlock prefixBlock = getPrefixBlock(element);
-        StringBuilder prefixBlockBuilder = new StringBuilder();
-        prefixBlockBuilder.append("prefixes:\n");
-        int indents = 2;
-        if (prefixBlock != null) {
-            // check the max length of the prefix label used
-            // adjust indentation based on that length to align the prefix IRIs
-            int maxPrefixLength = Math.max(addNamespacePrefix.length(), prefixBlock.getPrefixList().stream().map(
-                    prefix -> prefix.getNamespacePrefix().getText().length()
-            ).max(Integer::compareTo).orElse(0));
-            indents = (int) Math.ceil((double) (maxPrefixLength + 1) / OMTElementFactory.getIndentSpace(1).length());
-
-            int finalIndents = indents;
-            prefixBlock.getPrefixList()
-                    .forEach(prefix -> {
-                        if (prefix.getLeading() != null) {
-                            prefixBlockBuilder.append(OMTElementFactory.getIndentSpace(1));
-                            prefixBlockBuilder.append(prefix.getLeading().getText().trim());
-                            prefixBlockBuilder.append("\n");
-                        }
-                        prefixBlockBuilder
-                                .append(OMTElementFactory.getIndentSpace(1))
-                                .append(prefix.getNamespacePrefix().getName())
-                                .append(":");
-                        prefixBlockBuilder
-                                .append(OMTElementFactory.getIndentSpace(finalIndents, prefix.getNamespacePrefix().getText().length()))
-                                .append(prefix.getNamespaceIri().getText().trim()); // this will include EOL comments captured in the END
-                        prefixBlockBuilder.append("\n");
-                    });
+        Project project = element.getProject();
+        // do not use %n instead of \n, this is not accepted by IntelliJ
+        String template = String.format("prefixes: \n %s: %s\n\n", addNamespacePrefix, addNamespaceIri);
+        if (prefixBlock == null) {
+            prefixBlock = (OMTPrefixBlock) OMTElementFactory.fromString(template, OMTPrefixBlock.class, project);
+            ((OMTFile) element.getContainingFile()).setRootBlock(prefixBlock);
+        } else {
+            OMTPrefix prefix = (OMTPrefix) OMTElementFactory.fromString(template, OMTPrefix.class, project);
+            final List<OMTPrefix> prefixList = prefixBlock.getPrefixList();
+            final OMTPrefix lastPrefix = prefixList.get(prefixList.size() - 1);
+            final PsiElement insertedPrefix = prefixBlock.addAfter(prefix, lastPrefix);
+            prefixBlock.addBefore(OMTElementFactory.createNewLine(project), insertedPrefix);
         }
-        if (!addNamespaceIri.isEmpty()) {
-            String trimmedNamespaceIri = addNamespaceIri.trim();
-            prefixBlockBuilder
-                    .append(OMTElementFactory.getIndentSpace(1))
-                    .append(addNamespacePrefix)
-                    .append(":");
-            prefixBlockBuilder
-                    // prefixlength + 1 for the colon, which is not included in the getName() of the existing prefixes
-                    .append(OMTElementFactory.getIndentSpace(indents, addNamespacePrefix.length() + 1))
-                    .append(trimmedNamespaceIri.startsWith("<") ? "" : "<")
-                    .append(trimmedNamespaceIri)
-                    .append(trimmedNamespaceIri.endsWith(">") ? "" : ">");
-            prefixBlockBuilder.append("\n");
-        }
-        prefixBlockBuilder.append("\n");
-        ((OMTFile) element.getContainingFile()).setRootBlock((OMTPrefixBlock) OMTElementFactory.fromString(prefixBlockBuilder.toString(), OMTPrefixBlock.class, element.getProject()));
+        CodeStyleManager.getInstance(project).reformat(prefixBlock);
     }
 
     public void annotateCurieElement(OMTCurieElement curieElement, AnnotationHolder annotationHolder) {

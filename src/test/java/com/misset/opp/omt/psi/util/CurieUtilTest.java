@@ -209,23 +209,6 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
-    void resetPrefixBlock() {
-        WriteCommandAction.runWriteCommandAction(getProject(), () -> {
-            OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
-            curieUtil.resetPrefixBlock(prefix);
-            OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
-            String asText = prefixBlock.getText();
-            assertSameContent("prefixes:\n" +
-                    "    /**\n" +
-                    "    * Some info about abc\n" +
-                    "    */\n" +
-                    "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
-                    "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#> // and about foaf\n" +
-                    "\n", asText);
-        });
-    }
-
-    @Test
     void addPrefixToBlockFromString() {
         WriteCommandAction.runWriteCommandAction(getProject(), () -> {
             OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
