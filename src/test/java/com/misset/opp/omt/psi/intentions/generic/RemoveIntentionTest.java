@@ -86,7 +86,6 @@ class RemoveIntentionTest {
                 mock(Editor.class),
                 mock(PsiFile.class));
         verify(prefix).delete();
-        verify(curieUtil).resetPrefixBlock(psiFile);
     }
 
     @Test
@@ -103,7 +102,6 @@ class RemoveIntentionTest {
                 mock(Editor.class),
                 mock(PsiFile.class));
         verify(parent, times(0)).delete();
-        verify(curieUtil, times(0)).resetPrefixBlock(psiFile);
     }
 
     @Test
@@ -118,7 +116,6 @@ class RemoveIntentionTest {
                 mock(Editor.class),
                 mock(PsiFile.class));
         verify(memberListItem).delete();
-        verify(importUtil).resetImportBlock(psiFile);
     }
 
     @Test

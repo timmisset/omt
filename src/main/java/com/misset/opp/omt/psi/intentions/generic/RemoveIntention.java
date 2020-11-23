@@ -5,6 +5,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.util.CurieUtil;
@@ -67,23 +68,39 @@ public class RemoveIntention {
     }
 
     private void deleteElementContainer(PsiElement element) {
-        PsiFile containingFile = element.getContainingFile();
         if (element instanceof OMTNamespacePrefix) {
-            if (element.getParent() instanceof OMTPrefix) {
-                element.getParent().delete();
-                curieUtil.resetPrefixBlock(containingFile);
-            }
+            deletePrefix((OMTNamespacePrefix) element);
         }
-
         if (element instanceof OMTVariable) {
-            List<OMTSequenceItem> omtSequenceItems = PsiTreeUtil.collectParents(element, OMTSequenceItem.class, false, item -> item instanceof OMTBlockEntry);
-            if (omtSequenceItems.size() == 1) {
-                omtSequenceItems.get(0).delete();
-            }
+            deleteVariable((OMTVariable) element);
         }
         if (element instanceof OMTMemberListItem) {
-            element.delete();
-            importUtil.resetImportBlock(containingFile);
+            deleteImportMember((OMTMemberListItem) element);
+        }
+    }
+
+    private void deletePrefix(OMTNamespacePrefix namespacePrefix) {
+        OMTPrefixBlock prefixBlock = (OMTPrefixBlock) PsiTreeUtil.findFirstParent(namespacePrefix, parent -> parent instanceof OMTPrefixBlock);
+        if (namespacePrefix.getParent() instanceof OMTPrefix) {
+            namespacePrefix.getParent().delete();
+        }
+        if (prefixBlock != null) {
+            CodeStyleManager.getInstance(namespacePrefix.getProject()).reformat(prefixBlock);
+        }
+    }
+
+    private void deleteVariable(OMTVariable variable) {
+        List<OMTSequenceItem> omtSequenceItems = PsiTreeUtil.collectParents(variable, OMTSequenceItem.class, false, item -> item instanceof OMTBlockEntry);
+        if (omtSequenceItems.size() == 1) {
+            omtSequenceItems.get(0).delete();
+        }
+    }
+
+    private void deleteImportMember(OMTMemberListItem listItem) {
+        OMTImportBlock importBlock = (OMTImportBlock) PsiTreeUtil.findFirstParent(listItem, parent -> parent instanceof OMTImportBlock);
+        listItem.delete();
+        if (importBlock != null) {
+            CodeStyleManager.getInstance(listItem.getProject()).reformat(importBlock);
         }
     }
 }

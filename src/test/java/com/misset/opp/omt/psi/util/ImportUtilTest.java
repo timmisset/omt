@@ -213,24 +213,6 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
         });
     }
 
-    @Test
-    void resetImportBlock() {
-        WriteCommandAction.runWriteCommandAction(getProject(), () -> {
-            importUtil.resetImportBlock(rootBlock);
-            OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock);
-            String text = importBlock.getText();
-            assertSameContent("import:\n" +
-                    "    /**\n" +
-                    "    * Some info about the import\n" +
-                    "    */\n" +
-                    "    '@client/procedure_with_exporting_members.omt': #or behind the path\n" +
-                    "    /**\n" +
-                    "    * specific information about the member\n" +
-                    "    */\n" +
-                    "    -   MijnProcedure #and something about the member", text.replaceAll("\\s+", ""));
-        });
-    }
-
     private void assertSameContent(String expected, String value) {
         assertEquals(expected.replaceAll("\\s+", ""), value.replaceAll("\\s+", ""));
     }
@@ -285,7 +267,7 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
             String text = importBlock.getText();
             assertEquals("import:\n" +
                     "    '@client/someModule/activity.omt':\n" +
-                    "    -   AnotherMember\n" +
+                    "        -   AnotherMember\n" +
                     "\n", text);
         });
     }
