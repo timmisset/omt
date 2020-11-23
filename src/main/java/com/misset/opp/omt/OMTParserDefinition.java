@@ -15,6 +15,7 @@ import com.misset.opp.omt.psi.OMTFile;
 import org.intellij.sdk.language.parser.OMTParser;
 import org.jetbrains.annotations.NotNull;
 
+import static com.misset.opp.omt.psi.OMTIgnored.END_OF_LINE_COMMENT;
 import static com.misset.opp.omt.psi.OMTTypes.Factory;
 import static com.misset.opp.omt.psi.OMTTypes.STRING;
 
@@ -41,7 +42,9 @@ public class OMTParserDefinition implements ParserDefinition {
     @NotNull
     @Override
     public TokenSet getCommentTokens() {
-        return TokenSet.EMPTY;
+        return TokenSet.create(
+                END_OF_LINE_COMMENT
+        );
     }
 
     @NotNull

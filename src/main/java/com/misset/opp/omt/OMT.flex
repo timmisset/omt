@@ -3,8 +3,12 @@ package com.misset.opp.omt;
 
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
-import com.misset.opp.omt.psi.OMTElementType;import com.misset.opp.omt.psi.OMTTokenType;import com.misset.opp.omt.psi.OMTTypes;
-import com.intellij.psi.TokenType;import jdk.nashorn.internal.parser.Token;
+import com.misset.opp.omt.psi.OMTElementType;
+import com.misset.opp.omt.psi.OMTTokenType;
+import com.misset.opp.omt.psi.OMTTypes;
+import com.misset.opp.omt.psi.OMTIgnored;
+import com.intellij.psi.TokenType;
+import jdk.nashorn.internal.parser.Token;
 import java.util.Stack;
 import java.util.HashMap;
 
@@ -262,7 +266,7 @@ void setTemplateInScalar(boolean state) {
     {JDSTART}                                                 {
                                                                   return indentOrReturnAndSetState(OMTTypes.JAVADOCS_START, "setting indent", JAVADOCS, 0);
                                                               }
-    {END_OF_LINE_COMMENT}                                     { return returnElement(OMTTypes.END_OF_LINE_COMMENT); }
+    {END_OF_LINE_COMMENT}                                     { return returnElement(OMTIgnored.END_OF_LINE_COMMENT); }
     <<EOF>>                                                   { return resetIndent(); }
     [^]                                                       { yypushback(yylength(), "initial"); setState(YAML_SCALAR); return returnElement(OMTTypes.START_TOKEN); }
 }
@@ -277,7 +281,7 @@ void setTemplateInScalar(boolean state) {
                                                               }
     {WHITE_SPACE}+                                            { return TokenType.WHITE_SPACE; } // capture all whitespace
     {JDSTART}                                                 { setState(JAVADOCS); return returnElement(OMTTypes.JAVADOCS_START); }
-    {END_OF_LINE_COMMENT}                                     { return returnElement(OMTTypes.END_OF_LINE_COMMENT); }
+    {END_OF_LINE_COMMENT}                                     { return returnElement(OMTIgnored.END_OF_LINE_COMMENT); }
 //    {NEWLINE}                                                 { return returnElement(TokenType.WHITE_SPACE); }
     {NEWLINE}                                                 { return retryInInitial("new line in scalar"); }
     {NEWLINE}{NOT_WHITE_SPACE}                                {
