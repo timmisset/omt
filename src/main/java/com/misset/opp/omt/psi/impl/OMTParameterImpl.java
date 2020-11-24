@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTParameter;
+import org.jetbrains.annotations.Nullable;
 
 public class OMTParameterImpl implements OMTParameter {
     private static String REST = "rest";
@@ -144,7 +145,7 @@ public class OMTParameterImpl implements OMTParameter {
     }
 
     @Override
-    public void setType(OMTParameterType parameterType) {
+    public void setType(@Nullable OMTParameterType parameterType) {
         this.type = parameterType;
     }
 }

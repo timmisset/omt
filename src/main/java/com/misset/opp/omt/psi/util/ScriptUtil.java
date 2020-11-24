@@ -37,6 +37,14 @@ public class ScriptUtil {
     public <T> List<T> getAccessibleElements(PsiElement element, Class<T> type) {
         List<T> items = new ArrayList<>();
         OMTScriptLine currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTScriptLine);
+        if (currentScriptLine == null && element instanceof OMTCommandBlock) {
+            final List<OMTScriptLine> scriptLines = PsiTreeUtil.getChildrenOfTypeAsList(element, OMTScriptLine.class);
+            if (scriptLines.isEmpty()) {
+                return items;
+            }
+            currentScriptLine = scriptLines.get(scriptLines.size() - 1);
+        }
+        items.addAll(getChildrenOfTypeNotEnclosed(currentScriptLine, type));
         while (currentScriptLine != null) {
             getPrecedingScriptLines(currentScriptLine).forEach(scriptLine -> items.addAll(getChildrenOfTypeNotEnclosed(scriptLine, type)));
             currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(currentScriptLine.getParent(), parent -> parent instanceof OMTScriptLine);

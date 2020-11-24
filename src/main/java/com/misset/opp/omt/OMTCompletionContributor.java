@@ -366,7 +366,10 @@ public class OMTCompletionContributor extends CompletionContributor {
 
     private void setResolvedElementsForClasses(PsiElement element) {
         projectUtil.getRDFModelUtil().getAllClasses().stream().filter(resource -> resource.getURI() != null).forEach(
-                resource -> setCurieSuggestion(element, resource, false, 1)
+                resource -> setCurieSuggestion(element, resource, false, 2)
+        );
+        Arrays.asList("string", "integer", "boolean", "date").forEach(
+                type -> addPriorityElement("string", 1)
         );
     }
 

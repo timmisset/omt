@@ -36,6 +36,7 @@ public class VariableUtil {
     private static String BASE = "base";
     private static String BINDINGS = "bindings";
     private MemberUtil memberUtil = MemberUtil.SINGLETON;
+    public static final String NO_TYPE_SPECIFIED = "No type specified";
 
     public Optional<OMTVariable> getFirstAppearance(OMTVariable variable, PsiElement container) {
         return PsiTreeUtil.findChildrenOfType(container, OMTVariable.class).stream()
@@ -402,6 +403,9 @@ public class VariableUtil {
     }
 
     public List<Resource> getType(OMTParameterWithType parameterWithType) {
+        if (parameterWithType.getParameterType() == null) {
+            return new ArrayList<>();
+        }
         return Collections.singletonList(parameterWithType.getParameterType().getAsResource());
     }
 
@@ -448,5 +452,11 @@ public class VariableUtil {
                                 .collect(Collectors.toList())
                 ));
         return assignments;
+    }
+
+    public void annotateParameterWithType(OMTParameterWithType parameterWithType, AnnotationHolder holder) {
+        if (parameterWithType.getParameterType() == null) {
+            holder.newAnnotation(HighlightSeverity.ERROR, "No type specified").create();
+        }
     }
 }
