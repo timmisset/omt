@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import static com.misset.opp.omt.psi.OMTIgnored.END_OF_LINE_COMMENT;
 import static com.misset.opp.omt.psi.OMTTypes.*;
 
 
@@ -62,6 +63,8 @@ public class OMTFormattingContext {
                 indent = Indent.getNormalIndent(false);
             } else if (SCALAR == node.getElementType()) {
                 indent = Indent.getNormalIndent(true);
+            } else if (END_OF_LINE_COMMENT == node.getElementType()) {
+                indent = indentEOLComment(node);
             }
         }
 
@@ -189,6 +192,8 @@ public class OMTFormattingContext {
         } else if (isJavaDocsPart(node)) {
             // All Javadocs are aligned to the START /** anchor
             alignment = alignJavaDocs(node);
+        } else if (END_OF_LINE_COMMENT == node.getElementType()) {
+            alignment = alignEOLComment(node);
         }
         //        System.out.println(node.getText().substring(0, Math.min(10, node.getTextLength())) + " --> " + (alignment != null ? alignment.toString() : "null"));
         return alignment;
@@ -303,6 +308,26 @@ public class OMTFormattingContext {
             }
         }
         return null;
+    }
+
+
+    private Alignment alignEOLComment(ASTNode node) {
+        node = getEOLCommentSibling(node);
+        return node != null ? computeAlignment(node) : null;
+    }
+
+    private Indent indentEOLComment(ASTNode node) {
+        node = getEOLCommentSibling(node);
+        return node != null ? computeBlockIndent(node) : null;
+    }
+
+    private ASTNode getEOLCommentSibling(ASTNode node) {
+        // anchor to next sibling:
+        node = node.getTreeNext();
+        while (node != null && TokenSet.WHITE_SPACE.contains(node.getElementType())) {
+            node = node.getTreeNext();
+        }
+        return node;
     }
 
     private Alignment registerAlignmentAndReturn(ASTNode node) {

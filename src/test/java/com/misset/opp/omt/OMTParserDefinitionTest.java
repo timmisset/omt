@@ -117,7 +117,7 @@ class OMTParserDefinitionTest extends LightJavaCodeInsightFixtureTestCase {
         OMTFile file = parseQuery("/pol:ClassA | /pol:ClassB | /pol:ClassC");
         final OMTQuery query = exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, file);
         assertTrue(query instanceof OMTQueryArray);
-        assertEquals(2, ((OMTQueryArray) query).getQueryList().size());
+        assertEquals(3, ((OMTQueryArray) query).getQueryList().size());
     }
 
 
