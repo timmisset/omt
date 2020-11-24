@@ -93,6 +93,9 @@ public class CurieUtil {
         OMTPrefixBlock prefixBlock = getPrefixBlock(element);
         Project project = element.getProject();
         // do not use %n instead of \n, this is not accepted by IntelliJ
+        if (!addNamespaceIri.startsWith("<")) {
+            addNamespaceIri = "<" + addNamespaceIri + ">";
+        }
         String template = String.format("prefixes: \n %s: %s\n\n", addNamespacePrefix, addNamespaceIri);
         if (prefixBlock == null) {
             prefixBlock = (OMTPrefixBlock) OMTElementFactory.fromString(template, OMTPrefixBlock.class, project);
