@@ -135,9 +135,9 @@ variable ::=                                VARIABLE_NAME | ignoredVariable | gl
 // the lexer should determine if operating in a state of declare and provide a difference response for the discovered variable name
 globalVariable ::=                          GLOBAL_VARIABLE_NAME
 ignoredVariable ::=                         IGNORE_VARIABLE_NAME
-parameterWithType ::=                       variable PARENTHESES_OPEN parameterType PARENTHESES_CLOSE { methods=[ getType ]}
+parameterWithType ::=                       variable PARENTHESES_OPEN parameterType? PARENTHESES_CLOSE { methods=[ getType ]}
 
-parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) | OPERATOR {
+parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) | OPERATOR | NAMESPACE_MEMBER {
     methods = [isDefinedByPrefix getAsResource]
 }
 

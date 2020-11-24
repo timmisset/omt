@@ -30,7 +30,7 @@ ALPHA=                          [A-Za-z]
 NEWLINE=                        (\r\n) | (\r) | (\n)
 UNDERSCORE=                     [_]
 DIGIT=                          [0-9]
-STRING=                         (\"[^\"]*\")|(\'[^\']*\')
+STRING=                         (\"[^\"\\]*(\\.[^\"\\]*)*\")|(\'[^\'\\]*(\\.[^\'\\]*)*\')
 INTEGER=                        \-?([1-9][0-9]+|[0-9])
 DECIMAL=                        {INTEGER}\.[0-9]+
 BOOLEAN=                        "true"|"false"
@@ -92,8 +92,11 @@ String getStateName(int state) {
 }
 int previousState = 0;
 void setState(int state) {
+    setState(state, true);
+}
+void setState(int state, boolean assignPreviousState) {
     log("Setting state to: " + getStateName(state));
-    previousState = yystate();
+    if(assignPreviousState) { previousState = yystate(); }
     yybegin(state);
 }
 IElementType lastDedent;
@@ -230,6 +233,7 @@ void setTemplateInScalar(boolean state) {
 %state CURIE
 %state BACKTICK
 %state JAVADOCS
+%state PARAM_ANNOTATION
 
 %%
 <YYINITIAL> {
@@ -254,13 +258,6 @@ void setTemplateInScalar(boolean state) {
                                                                        return returnElement(TokenType.WHITE_SPACE);
                                                                    }
                                                               }
-//^{WHITE_SPACE}+                                           {
-//                                                                   if(yylength() == 0 || (!indents.isEmpty() && yylength() <= indents.peek())) {
-//                                                                       return dedentOrReturn(TokenType.WHITE_SPACE, "resetting indent, indent < peek");
-//                                                                   } else {
-//                                                                       return returnElement(TokenType.WHITE_SPACE);
-//                                                                   }
-//                                                              }
 
     {WHITE_SPACE}+                                            { return TokenType.WHITE_SPACE; } // capture all whitespace
     {JDSTART}                                                 {
@@ -282,7 +279,6 @@ void setTemplateInScalar(boolean state) {
     {WHITE_SPACE}+                                            { return TokenType.WHITE_SPACE; } // capture all whitespace
     {JDSTART}                                                 { setState(JAVADOCS); return returnElement(OMTTypes.JAVADOCS_START); }
     {END_OF_LINE_COMMENT}                                     { return returnElement(OMTIgnored.END_OF_LINE_COMMENT); }
-//    {NEWLINE}                                                 { return returnElement(TokenType.WHITE_SPACE); }
     {NEWLINE}                                                 { return retryInInitial("new line in scalar"); }
     {NEWLINE}{NOT_WHITE_SPACE}                                {
                                                                     return retryInInitial("newline starts with non-whitespace");
@@ -302,10 +298,6 @@ void setTemplateInScalar(boolean state) {
     {GLOBAL_VARIABLE}                                         { return returnElement(OMTTypes.GLOBAL_VARIABLE_NAME); } // capture all whitespace
     {BOOLEAN}                                                 { return returnElement(OMTTypes.BOOLEAN); }
     {NULL}                                                    { return returnElement(OMTTypes.NULL); }
-//     "/"{CURIE}                                               {
-//                                                                  yypushback(yylength() - 1);
-//                                                                  return returnElement(OMTTypes.CURIE_CONSTANT_ELEMENT_PREFIX);
-//                                                              }
     {CURIE}                                                   {
                                                                   setState(CURIE);
                                                                   yypushback(yylength() - yytext().toString().indexOf(":"));
@@ -384,17 +376,7 @@ void setTemplateInScalar(boolean state) {
     "+="                                                            { return returnElement(OMTTypes.ADD); }
     "-="                                                            { return returnElement(OMTTypes.REMOVE); }
     "`"                                                             { setBacktick(true); setState(BACKTICK); return returnElement(OMTTypes.BACKTICK); }
-    "*/" | "*"                                                      {
-                                                                              if(jdocs) {
-                                                                                  if(yylength() == 1) {
-                                                                                      setState(JAVADOCS);
-                                                                                      setJavadocs(false);
-                                                                                      return returnElement(OMTTypes.JAVADOCS_CONTENT);
-                                                                                  } else {
-                                                                                      return returnElement(OMTTypes.JAVADOCS_END);
-                                                                                  }
-                                                                              }
-                                                                              if(yylength() == 2) { yypushback(1); }
+    "*"                                                             {
                                                                               return returnElement(OMTTypes.ASTERIX);
                                                                     }
     "${"                                                            { setTemplateInScalar(true); return returnElement(OMTTypes.TEMPLATE_OPEN); }
@@ -414,14 +396,20 @@ void setTemplateInScalar(boolean state) {
     "$"                                                             { return returnElement(OMTTypes.STRING); }
 }
 <JAVADOCS> {
-    {JDEND}                                                       { setState(previousState); return returnElement(OMTTypes.JAVADOCS_END); }
+    {JDEND}                                                         { setState(previousState); return returnElement(OMTTypes.JAVADOCS_END); }
     {WHITE_SPACE}+                                                  { return returnElement(TokenType.WHITE_SPACE); }
     {NEWLINE}+                                                      { return returnElement(TokenType.WHITE_SPACE); }
-    "@param"                                                        {
-          setJavadocs(true);
-          setState(YAML_SCALAR);
-          return returnElement(OMTTypes.ANNOTATE_PARAMETER); }
     {JDCOMMENTLINE}                                                 { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
+    "@param"                                                        { setState(PARAM_ANNOTATION, false); return returnElement(OMTTypes.ANNOTATE_PARAMETER); }
     [^]                                                             { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
+}
+<PARAM_ANNOTATION> {
+    {WHITE_SPACE}+                                                  { return returnElement(TokenType.WHITE_SPACE); }
+    "$"{NAME}                                                       { return returnElement(OMTTypes.VARIABLE_NAME); }
+    {NAME}":"                                                       { return returnElement(OMTTypes.PROPERTY); }
+    {NAME} | {SYMBOL}                                               { return returnElement(OMTTypes.NAMESPACE_MEMBER); }
+    "("                                                             { return returnElement(OMTTypes.PARENTHESES_OPEN); }
+    ")"                                                             { setState(JAVADOCS, false); return returnElement(OMTTypes.PARENTHESES_CLOSE); }
+    [^]                                                             { setState(JAVADOCS, false); return returnElement(OMTTypes.JAVADOCS_CONTENT); }
 }
 [^]                                                                  { return returnElement(TokenType.BAD_CHARACTER); }

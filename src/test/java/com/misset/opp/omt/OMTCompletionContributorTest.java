@@ -357,6 +357,17 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
         assertContainsElements(suggestions, "myQuery");
     }
 
+    @Test
+    void completionProviders_addsSuggestionForDeclaredVariable() {
+        String content = "commands: |\n" +
+                "   DEFINE COMMAND command() => {\n" +
+                "       VAR $myVar = 'test';\n" +
+                "       <caret>\n" +
+                "   }\n";
+        List<String> suggestions = getSuggestions(content);
+        assertContainsElements(suggestions, "$myVar");
+    }
+
     private List<String> getSuggestions(String content) {
         myFixture.configureFromExistingVirtualFile(copyFileToProject(content, "tmp", "test.omt"));
         myFixture.completeBasic();

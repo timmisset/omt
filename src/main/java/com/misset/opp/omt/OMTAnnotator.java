@@ -61,6 +61,9 @@ public class OMTAnnotator implements Annotator {
         if (element instanceof OMTParameterType) {
             curieUtil.annotateParameterType((OMTParameterType) element, holder);
         }
+        if (element instanceof OMTParameterWithType) {
+            variableUtil.annotateParameterWithType((OMTParameterWithType) element, holder);
+        }
         if (element instanceof OMTAddToCollection) {
             queryUtil.annotateAddToCollection((OMTAddToCollection) element, holder);
         }
