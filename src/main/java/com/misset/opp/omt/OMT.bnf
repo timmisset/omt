@@ -146,7 +146,7 @@ parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEM
 script ::=                                  PIPE (scriptLine+ | query)?
 commandBlock ::=                            CURLY_OPEN (script | scriptLine+)? CURLY_CLOSED { methods=[resolveToResource]}
 // a scriptline is contained by the addition of the semicolon at the end
-scriptLine ::=                              leading? ((scriptContent SEMICOLON) | commandBlock | logicalBlock) 
+scriptLine ::=                              leading? ((scriptContent SEMICOLON+) | commandBlock | logicalBlock)
 // the contents of a script, contained by a scriptLine or Scalar
 scriptContent ::=                           declareVariable | variableAssignment | definePrefix | commandCall | assignmentStatement |
                                             addToCollection | removeFromCollection | logicalBlock | returnStatement | query
@@ -161,7 +161,7 @@ defineName ::=                              NAME | OPERATOR    {
                                                            implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                            methods=[getName setName getNameIdentifier]
                                                          }
-defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA query SEMICOLON {
+defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA query SEMICOLON+ {
                                                             implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
                                                             extends="com.misset.opp.omt.psi.impl.OMTDefinedStatementImpl"
                                             }

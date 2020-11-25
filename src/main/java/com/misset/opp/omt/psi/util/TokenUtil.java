@@ -55,7 +55,6 @@ public class TokenUtil {
         return element instanceof OMTParameterWithType
                 || element instanceof OMTParameterType;
     }
-
     public Object parseToTypedLiteral(OMTConstantValue constantValue) {
         if (isToken(constantValue.getFirstChild(), "OMTTokenType.STRING")) {
             return constantValue.getText().substring(1, constantValue.getTextLength() - 1);
@@ -82,4 +81,6 @@ public class TokenUtil {
         return element instanceof LeafPsiElement &&
                 ((LeafPsiElement) element).getElementType().toString().equals(debugName);
     }
+
+
 }

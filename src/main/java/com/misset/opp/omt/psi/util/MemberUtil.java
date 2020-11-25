@@ -62,7 +62,7 @@ public class MemberUtil {
         }
 
         // or of locally available ontology declarations:
-        HashMap<String, OMTModelItemBlock> declaredOntologies = currentFile.getDeclaredOntologies();
+        Map<String, OMTModelItemBlock> declaredOntologies = currentFile.getDeclaredOntologies();
         if (declaredOntologies.containsKey(callName)) {
             return Optional.of(declaredOntologies.get(callName));
         }
@@ -411,6 +411,9 @@ public class MemberUtil {
 
     private void annotateImportMemberDuplications(OMTMember importedMember, AnnotationHolder holder) {
         final OMTMemberList omtMemberList = PsiTreeUtil.getParentOfType(importedMember, OMTMemberList.class);
+        if (omtMemberList == null) {
+            return;
+        }
         final List<OMTMemberListItem> memberListItemList = omtMemberList.getMemberListItemList();
         final boolean duplication = memberListItemList.stream().anyMatch(
                 omtMemberListItem -> omtMemberListItem.getName().equals(importedMember.getName()) &&
