@@ -29,6 +29,9 @@ public class OMTAnnotator implements Annotator {
         if (element instanceof OMTImport) {
             importUtil.annotateImport((OMTImport) element, holder);
         }
+        if (element instanceof OMTImportSource) {
+            importUtil.annotateImportSource((OMTImportSource) element, holder);
+        }
         if (element instanceof OMTMember) {
             if (((OMTMember) element).getType() == NamedMemberType.ImportingMember) {
                 memberUtil.annotateImportedMember((OMTMember) element, holder);

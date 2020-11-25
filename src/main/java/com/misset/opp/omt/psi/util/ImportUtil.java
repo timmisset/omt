@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.misset.opp.omt.psi.intentions.imports.UnwrapIntention.getUnwrapIntention;
+
 public class ImportUtil {
 
     public static final ImportUtil SINGLETON = new ImportUtil();
@@ -228,4 +230,13 @@ public class ImportUtil {
         return path;
     }
 
+    public void annotateImportSource(OMTImportSource importSource, AnnotationHolder holder) {
+        final String name = importSource.getName();
+        if (name != null && name.startsWith("'.")) {
+            holder.newAnnotation(HighlightSeverity.WARNING,
+                    "Unnecessary wrapping of import statement")
+                    .withFix(getUnwrapIntention(importSource))
+                    .create();
+        }
+    }
 }

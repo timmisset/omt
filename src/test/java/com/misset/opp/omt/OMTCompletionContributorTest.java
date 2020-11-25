@@ -210,6 +210,7 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
         assertContainsElements(suggestions, "http://ontologie#ClassA", "http://ontologie#ClassB", "http://ontologie#ClassC");
     }
 
+
     @Test
     void completionProvider_addsSuggestionForParameterWithTypeWithKnownPrefix() {
         List<String> suggestions = getSuggestions("" +
@@ -219,6 +220,20 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
                 "    MijnActiviteit: !Activity\n" +
                 "        params:\n" +
                 "            - $mijnParam (<caret>)\n" +
+                "\n");
+
+        assertContainsElements(suggestions, "ont:ClassA", "ont:ClassB", "ont:ClassC");
+    }
+
+    @Test
+    void completionProvider_addsSuggestionForParameterWithTypeWithKnownPrefixWithExistingType() {
+        List<String> suggestions = getSuggestions("" +
+                "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        params:\n" +
+                "            - $mijnParam (<caret>ont:ClassA)\n" +
                 "\n");
 
         assertContainsElements(suggestions, "ont:ClassA", "ont:ClassB", "ont:ClassC");
@@ -303,6 +318,16 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
                 "    ont:     <http://ontologie#>\n" +
                 "queries: |\n" +
                 "    DEFINE QUERY myFirstQuery() => /ont:ClassA / <caret>\n");
+        assertContainsElements(suggestions, "ont:stringProperty", "ont:classProperty", "ont:booleanProperty");
+    }
+
+    @Test
+    void completionProvider_addsSuggestionsForQueryPathFromModelForwardForClassWhenPathIsNotClosedPartial() {
+        List<String> suggestions = getSuggestions("" +
+                "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY myFirstQuery() => /ont:ClassA / ont:<caret>\n");
         assertContainsElements(suggestions, "ont:stringProperty", "ont:classProperty", "ont:booleanProperty");
     }
 

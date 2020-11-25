@@ -136,6 +136,7 @@ public class VariableUtil {
                 }
                 annotationBuilder.create();
             }
+            annotateUntypedParameter(variable, holder);
         } else {
             // variable usage must have exactly 1 resolved value:
             if (variable.getReference() != null && variable.getReference().resolve() == null) {
@@ -151,6 +152,13 @@ public class VariableUtil {
                             .create();
                 }
             }
+        }
+    }
+
+    private void annotateUntypedParameter(OMTVariable variable, AnnotationHolder holder) {
+        if (PsiTreeUtil.getParentOfType(variable, OMTParameterWithType.class) == null &&
+                modelUtil.getEntryBlockLabel(variable).equals(PARAMS)) {
+            holder.newAnnotation(HighlightSeverity.WARNING, "Annotate parameter with a type").create();
         }
     }
 
