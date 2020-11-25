@@ -2,31 +2,33 @@ package com.misset.opp.omt.psi.util;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
-import com.intellij.psi.impl.source.tree.LeafPsiElement;
-import com.misset.opp.omt.psi.OMTConstantValue;
-import com.misset.opp.omt.psi.OMTMember;
-import com.misset.opp.omt.psi.OMTParameterType;
-import com.misset.opp.omt.psi.OMTParameterWithType;
+import com.intellij.psi.tree.IElementType;
+import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.named.NamedMemberType;
+
+import java.util.Arrays;
+
+import static com.misset.opp.omt.psi.OMTTypes.*;
 
 public class TokenUtil {
 
+    private static final String TRUE = "true";
     public static TokenUtil SINGLETON = new TokenUtil();
 
     public boolean isModelItemType(PsiElement element) {
-        return isToken(element, "OMTTokenType.MODEL_ITEM_TYPE");
+        return isToken(element, MODEL_ITEM_TYPE);
     }
 
     public boolean isProperty(PsiElement element) {
-        return isToken(element, "OMTTokenType.PROPERTY");
+        return isToken(element, PROPERTY);
     }
 
     public boolean isCommand(PsiElement element) {
-        return isToken(element, "OMTTokenType.COMMAND");
+        return isToken(element, COMMAND);
     }
 
     public boolean isOperator(PsiElement element) {
-        return isToken(element, "OMTTokenType.OPERATOR");
+        return isToken(element, OPERATOR);
     }
 
     public boolean isMemberImport(PsiElement element) {
@@ -40,46 +42,46 @@ public class TokenUtil {
     }
 
     public boolean isSequenceBullet(PsiElement element) {
-        return isToken(element, "OMTTokenType.SEQUENCE_BULLET");
+        return isToken(element, SEQUENCE_BULLET);
     }
 
     public boolean isNotOperator(PsiElement element) {
-        return isToken(element, "OMTTokenType.NOT_OPERATOR");
+        return isToken(element, NOT_OPERATOR);
     }
 
     public boolean isNamespaceMember(PsiElement element) {
-        return isToken(element, "OMTTokenType.NAMESPACE_MEMBER");
+        return isToken(element, NAMESPACE, NAMESPACE_MEMBER);
     }
 
     public boolean isParameterType(PsiElement element) {
         return element instanceof OMTParameterWithType
-                || element instanceof OMTParameterType;
+                || element instanceof OMTParameterType
+                || (element instanceof OMTNamespacePrefix && isParameterType(element.getParent()));
     }
     public Object parseToTypedLiteral(OMTConstantValue constantValue) {
-        if (isToken(constantValue.getFirstChild(), "OMTTokenType.STRING")) {
+        if (isToken(constantValue.getFirstChild(), STRING)) {
             return constantValue.getText().substring(1, constantValue.getTextLength() - 1);
         }
-        if (isToken(constantValue.getFirstChild(), "OMTTokenType.INTEGER")) {
+        if (isToken(constantValue.getFirstChild(), INTEGER)) {
             return Integer.parseInt(constantValue.getText());
         }
-        if (isToken(constantValue.getFirstChild(), "OMTTokenType.DECIMAL")) {
+        if (isToken(constantValue.getFirstChild(), DECIMAL)) {
             return Double.parseDouble(constantValue.getText());
         }
-        if (isToken(constantValue.getFirstChild(), "OMTTokenType.BOOLEAN")) {
-            return constantValue.getText().equals("true");
+        if (isToken(constantValue.getFirstChild(), BOOLEAN)) {
+            return constantValue.getText().equals(TRUE);
         }
-        if (isToken(constantValue.getFirstChild(), "OMTTokenType.NULL")) {
+        if (isToken(constantValue.getFirstChild(), NULL)) {
             return null;
         }
         return constantValue.getText();
     }
 
-    private boolean isToken(PsiElement element, String debugName) {
-        if (element == null) {
+    private boolean isToken(PsiElement element, IElementType... types) {
+        if (element == null || element.getNode() == null) {
             return false;
         }
-        return element instanceof LeafPsiElement &&
-                ((LeafPsiElement) element).getElementType().toString().equals(debugName);
+        return Arrays.stream(types).anyMatch(type -> element.getNode().getElementType() == type);
     }
 
 

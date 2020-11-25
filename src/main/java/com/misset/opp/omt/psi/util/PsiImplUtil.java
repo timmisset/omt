@@ -39,9 +39,11 @@ public class PsiImplUtil {
         }
         return variable;
     }
+
     public static PsiElement getNameIdentifier(OMTVariable variable) {
         return variable;
     }
+
     public static boolean isDeclaredVariable(OMTVariable variable) {
 
         return variableUtil.isDeclaredVariable(variable);
@@ -307,6 +309,17 @@ public class PsiImplUtil {
         return "unknown";
     }
 
+    public static List<? extends PsiElement> getUsages(PsiElement element, Class<? extends PsiElement> usageClass) {
+        return PsiTreeUtil.findChildrenOfType(
+                element.getContainingFile(),
+                usageClass
+        ).stream().filter(
+                usageElement -> usageElement != element &&
+                        usageElement.getReference() != null &&
+                        usageElement.getReference().resolve() == element
+        ).collect(Collectors.toList());
+    }
+
     // ////////////////////////////////////////////////////////////////////////////
     // Queries
     // ////////////////////////////////////////////////////////////////////////////
@@ -343,10 +356,9 @@ public class PsiImplUtil {
     }
 
     public static OMTQuery getOpposite(OMTEquationStatement equationStatement, OMTQuery query) {
-        if (equationStatement.getQueryList().get(0) != query) {
-            return query;
-        }
-        return equationStatement.getQueryList().get(0);
+        return equationStatement.getQueryList().stream().filter(
+                query1 -> query != query1
+        ).findFirst().orElse(null);
     }
 
     public static List<Resource> resolveToResource(OMTQueryPath query) {

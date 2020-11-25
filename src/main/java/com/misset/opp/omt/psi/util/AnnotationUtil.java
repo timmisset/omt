@@ -4,11 +4,10 @@ import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
+import java.util.List;
 
 public class AnnotationUtil {
 
@@ -31,13 +30,9 @@ public class AnnotationUtil {
     }
 
     public AnnotationBuilder annotateUsageGetBuilder(PsiElement element, Class<? extends PsiElement> usageClass, @NotNull AnnotationHolder holder) {
-        Collection<? extends PsiElement> usages = PsiTreeUtil.findChildrenOfType(element.getContainingFile(), usageClass);
-        for (PsiElement usage : usages) {
-            if (!usage.isEquivalentTo(element) &&
-                    usage.getReference() != null &&
-                    usage.getReference().isReferenceTo(element)) {
-                return null;
-            }
+        List<? extends PsiElement> usages = PsiImplUtil.getUsages(element, usageClass);
+        if (!usages.isEmpty()) {
+            return null;
         }
         return holder.newAnnotation(HighlightSeverity.WARNING, String.format("%s is never used", element.getText())).range(element);
     }

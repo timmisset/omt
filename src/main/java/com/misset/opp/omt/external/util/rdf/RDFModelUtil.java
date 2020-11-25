@@ -193,12 +193,18 @@ public class RDFModelUtil {
     }
 
     public boolean isNumeric(Resource resource) {
+        if (resource == null || resource.getNameSpace() == null || resource.getLocalName() == null) {
+            return false;
+        }
         List<String> numericTypes = Arrays.asList("integer", "int", "double", "decimal");
         return resource.getNameSpace().equals(XSD) &&
                 numericTypes.contains(resource.getLocalName());
     }
 
     public boolean isDate(Resource resource) {
+        if (resource == null || resource.getNameSpace() == null || resource.getLocalName() == null) {
+            return false;
+        }
         List<String> dateTypes = Arrays.asList("date", "dateTime");
         return resource.getNameSpace().equals(XSD) &&
                 dateTypes.contains(resource.getLocalName());
@@ -206,8 +212,22 @@ public class RDFModelUtil {
 
     public boolean areComparable(Resource resource1, Resource resource2) {
         return resource1.equals(resource2) ||
+                getClass(resource1).equals(getClass(resource2)) ||
                 (isNumeric(resource1) && isNumeric(resource2)) ||
                 (isDate(resource1) && isNumeric(resource2));
+    }
+
+    public List<Resource> getComparableOptions(List<Resource> resources) {
+        return getAllClasses().stream().filter(
+                classAsResource ->
+                        !resources.contains(classAsResource) &&
+                                resources.stream().anyMatch(
+                                        resource -> areComparable(classAsResource, resource)
+                                )
+        )
+                .filter(resource -> resource.getLocalName() != null)
+                .sorted(Comparator.comparing(Resource::getLocalName))
+                .collect(Collectors.toList());
     }
 
     public List<Resource> getClassDescendants(Resource resource) {
