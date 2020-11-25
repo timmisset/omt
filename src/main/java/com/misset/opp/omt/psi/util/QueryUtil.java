@@ -94,10 +94,7 @@ public class QueryUtil {
         if (step instanceof OMTBooleanStatement) {
             return false;
         }
-        if (step instanceof OMTEquationStatement) {
-            return false;
-        }
-        return true;
+        return !(step instanceof OMTEquationStatement);
     }
 
     private boolean isDecorated(OMTQueryStep step) {

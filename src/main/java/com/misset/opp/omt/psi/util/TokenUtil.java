@@ -35,10 +35,6 @@ public class TokenUtil {
                 ((OMTMember) element.getParent()).getType() == NamedMemberType.ImportingMember;
     }
 
-    public boolean isSemiColon(PsiElement element) {
-        return isToken(element, "OMTTokenType.SEMICOLON");
-    }
-
     public boolean isWhiteSpace(PsiElement element) {
         return element instanceof PsiWhiteSpace;
     }

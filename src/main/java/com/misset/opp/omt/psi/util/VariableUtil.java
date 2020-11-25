@@ -16,7 +16,6 @@ import com.misset.opp.omt.psi.impl.OMTQueryReverseStepImpl;
 import com.misset.opp.omt.psi.intentions.variables.AnnotateParameterIntention;
 import com.misset.opp.omt.psi.intentions.variables.RenameVariableIntention;
 import com.misset.opp.omt.psi.support.OMTCall;
-import com.misset.opp.omt.psi.support.OMTCallable;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,7 +34,6 @@ public class VariableUtil {
     private static String VARIABLES = "variables";
     private static String BASE = "base";
     private static String BINDINGS = "bindings";
-    private MemberUtil memberUtil = MemberUtil.SINGLETON;
     public static final String NO_TYPE_SPECIFIED = "No type specified";
 
     public Optional<OMTVariable> getFirstAppearance(OMTVariable variable, PsiElement container) {
@@ -288,15 +286,6 @@ public class VariableUtil {
         return projectUtil.getRDFModelUtil().getDistinctResources(types);
     }
 
-    private boolean addTypeSuggestionsFromQueryCall(OMTQueryPath queryPath, List<Resource> types) {
-        if (queryPath.getParent() instanceof OMTSignatureArgument) {
-            OMTOperatorCall call = (OMTOperatorCall) PsiTreeUtil.findFirstParent(queryPath, parent -> parent instanceof OMTCall);
-            final OMTCallable callable = memberUtil.getCallable(call);
-
-        }
-        return false;
-    }
-
     private boolean addTypeSuggestionsFromQueryStep(OMTQueryPath queryPath, OMTQueryStep queryStep, List<Resource> types) {
         final int stepIndex = queryPath.getQueryStepList().indexOf(queryStep);
         if (stepIndex >= 0 && queryPath.getQueryStepList().size() > stepIndex + 1) {
@@ -308,8 +297,9 @@ public class VariableUtil {
                 return true;
             }
             if (omtQueryStep instanceof OMTQueryReverseStep &&
-                    ((OMTQueryReverseStep) omtQueryStep).getQueryStep().getCurieElement() != null) {
-                final Resource predicate = ((OMTQueryReverseStep) omtQueryStep).getQueryStep().getCurieElement().getAsResource();
+                    omtQueryStep.getQueryStep() != null &&
+                    omtQueryStep.getQueryStep().getCurieElement() != null) {
+                final Resource predicate = omtQueryStep.getQueryStep().getCurieElement().getAsResource();
                 types.addAll(projectUtil.getRDFModelUtil().getPredicateObjects(predicate));
                 return true;
             }
@@ -352,11 +342,17 @@ public class VariableUtil {
     }
 
     public List<Resource> getType(OMTVariableAssignment variableAssignment, int index) {
+        // only use-case of a second index variable for now is the committed boolean
+        if (index > 0) {
+            return projectUtil.getRDFModelUtil().getPrimitiveTypeAsResourceList("boolean");
+        }
         final OMTVariableValue variableValue = variableAssignment.getVariableValue();
         // commands that return the type passed into the first argument
         List<String> resolvableCommands = Arrays.asList("NEW", "COPY_IN_GRAPH", "ASSIGN");
         if (variableValue.getCommandCall() != null) {
-            if (resolvableCommands.contains(variableValue.getCommandCall().getName())) {
+            if (resolvableCommands.contains(variableValue.getCommandCall().getName()) &&
+                    variableValue.getCommandCall().getSignature() != null
+            ) {
                 final List<OMTSignatureArgument> signatureArgumentList = variableValue.getCommandCall().getSignature().getSignatureArgumentList();
                 if (!signatureArgumentList.isEmpty()) {
                     return Objects.requireNonNull(signatureArgumentList.get(0).getResolvableValue()).resolveToResource();

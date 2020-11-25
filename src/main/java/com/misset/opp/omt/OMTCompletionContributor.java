@@ -36,23 +36,20 @@ import java.util.stream.Collectors;
 
 public class OMTCompletionContributor extends CompletionContributor {
 
-    private static String DUMMY_SCALAR = "DUMMYSCALARVALUE";
-    private static String DUMMY_PROPERTY = "DUMMYPROPERTYVALUE:";
-    private static String DUMMY_IMPORT = "- DUMMYIMPORT";
-    private static String DUMMY_QUERYSTEP = "DUMMY / ";
-    private static String DUMMY_ENTRY = String.format("%s %s", DUMMY_PROPERTY, DUMMY_SCALAR);
-
-    private static String SEMICOLON = ";";
-
-    private static String ATTRIBUTES = "attributes";
+    private static final String DUMMY_SCALAR = "DUMMYSCALARVALUE";
+    private static final String DUMMY_PROPERTY = "DUMMYPROPERTYVALUE:";
+    private static final String DUMMY_IMPORT = "- DUMMYIMPORT";
+    private static final String DUMMY_QUERYSTEP = "DUMMY / ";
+    private static final String DUMMY_ENTRY = String.format("%s %s", DUMMY_PROPERTY, DUMMY_SCALAR);
+    private static final String SEMICOLON = ";";
+    private static final String ATTRIBUTES = "attributes";
     private boolean dummyPlaceHolderSet = false;
 
     List<LookupElement> resolvedElements;
     List<String> resolvedSuggestions;
     private boolean isResolved;
 
-    final ModelUtil modelUtil = ModelUtil.SINGLETON;
-
+    private final ModelUtil modelUtil = ModelUtil.SINGLETON;
     private VariableUtil variableUtil = VariableUtil.SINGLETON;
     private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
@@ -139,12 +136,11 @@ public class OMTCompletionContributor extends CompletionContributor {
                     setResolvedElementsForOperator(element);
                     resolvedElements.forEach(result::addElement);
                 }
-                if (tokenUtil.isNamespaceMember(element)) {
-                    if (element != null && tokenUtil.isParameterType(element.getParent())) {
-                        setResolvedElementsForClasses(element);
-                        result.addAllElements(resolvedElements);
-                        return;
-                    }
+                if (tokenUtil.isNamespaceMember(element) &&
+                        element != null &&
+                        tokenUtil.isParameterType(element.getParent())) {
+                    setResolvedElementsForClasses(element);
+                    result.addAllElements(resolvedElements);
                 }
             }
         };
@@ -179,7 +175,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void setDummyPlaceHolder(String placeHolder, @NotNull CompletionInitializationContext context) {
-        if (dummyPlaceHolderSet == false) {
+        if (!dummyPlaceHolderSet) {
             dummyPlaceHolderSet = true;
             context.setDummyIdentifier(placeHolder);
         }
@@ -441,16 +437,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         }, null, null);
     }
 
-    private void addPriorityElement(String text, int priority, String title) {
-        addPriorityElement(text, priority, title, (context, item) -> {
-        }, null, null);
-    }
-
-    private void addPriorityElement(String text, int priority, InsertHandler insertHandler) {
-        addPriorityElement(text, priority, text, insertHandler, null, null);
-    }
-
-    private void addPriorityElement(String text, int priority, String title, InsertHandler insertHandler,
+    private void addPriorityElement(String text, int priority, String title, InsertHandler<LookupElement> insertHandler,
                                     String tailText, String typeText) {
         if (resolvedSuggestions.contains(title)) {
             return;
@@ -492,7 +479,6 @@ public class OMTCompletionContributor extends CompletionContributor {
         }
         if (expectedTypes.contains("import $")) {
             setDummyPlaceHolder(DUMMY_IMPORT, context);
-            return;
         }
     }
 

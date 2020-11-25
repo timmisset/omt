@@ -26,6 +26,7 @@ public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement imp
 
     private NamedMemberType type;
 
+    @NotNull
     @Override
     public NamedMemberType getType() {
         if (type == null) {

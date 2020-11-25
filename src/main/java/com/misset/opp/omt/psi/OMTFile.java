@@ -29,6 +29,14 @@ public class OMTFile extends PsiFileBase {
     private static final ModelUtil modelUtil = ModelUtil.SINGLETON;
     private static final ImportUtil importUtil = ImportUtil.SINGLETON;
 
+    public static final String IMPORT = "import";
+    public static final String QUERIES = "queries";
+    public static final String COMMANDS = "commands";
+    public static final String MODEL = "model";
+    public static final String PREFIXES = "prefixes";
+    public static final String EXPORT = "export";
+    public static final String MODULE = "module";
+
     private String currentContent = "";
 
     @Override
@@ -64,6 +72,7 @@ public class OMTFile extends PsiFileBase {
         List<OMTBlockEntry> blockEntryList = rootBlock.getBlockEntryList();
         return blockEntryList.stream()
                 .filter(blockEntry -> modelUtil.getEntryBlockLabel(blockEntry).startsWith(name))
+                .filter(Objects::nonNull)
                 .findFirst();
     }
 
@@ -76,15 +85,13 @@ public class OMTFile extends PsiFileBase {
 
     public <T> Optional<T> getSpecificBlock(String name, Class<T> specificBlockClass) {
         Optional<OMTBlockEntry> blockEntry = getRootBlock(name);
-        if (!blockEntry.isPresent()) {
-            return Optional.empty();
-        } else {
+        if (blockEntry.isPresent() && blockEntry.get().getSpecificBlock() != null) {
             PsiElement firstChild = blockEntry.get().getSpecificBlock().getFirstChild();
             if (specificBlockClass.isAssignableFrom(firstChild.getClass())) {
                 return Optional.of(specificBlockClass.cast(firstChild));
             }
-            return Optional.empty();
         }
+        return Optional.empty();
 
     }
 
@@ -92,7 +99,7 @@ public class OMTFile extends PsiFileBase {
 
     public List<OMTMember> getImportedMembers() {
         List<OMTMember> importedList = new ArrayList<>();
-        Optional<OMTImportBlock> optionalOMTImportBlock = getSpecificBlock("import", OMTImportBlock.class);
+        Optional<OMTImportBlock> optionalOMTImportBlock = getSpecificBlock(IMPORT, OMTImportBlock.class);
         optionalOMTImportBlock.ifPresent(omtImportBlock ->
                 omtImportBlock.getImportList()
                         .stream()
@@ -109,11 +116,11 @@ public class OMTFile extends PsiFileBase {
     }
 
     public boolean isModuleFile() {
-        return getRootBlock("module").isPresent();
+        return getRootBlock(MODULE).isPresent();
     }
 
     public Map<OMTImport, VirtualFile> getImportedFiles() {
-        Optional<OMTImportBlock> importBlock = getSpecificBlock("import", OMTImportBlock.class);
+        Optional<OMTImportBlock> importBlock = getSpecificBlock(IMPORT, OMTImportBlock.class);
         if (!importBlock.isPresent()) {
             return new HashMap<>();
         }
@@ -165,7 +172,7 @@ public class OMTFile extends PsiFileBase {
 
     public HashMap<String, OMTPrefix> getPrefixes() {
         HashMap<String, OMTPrefix> prefixHashMap = new HashMap<>();
-        Optional<OMTPrefixBlock> prefixes = getSpecificBlock("prefixes", OMTPrefixBlock.class);
+        Optional<OMTPrefixBlock> prefixes = getSpecificBlock(PREFIXES, OMTPrefixBlock.class);
         prefixes.ifPresent(omtPrefixBlock -> omtPrefixBlock.getPrefixList().forEach(omtPrefix ->
         {
             prefixHashMap.put(omtPrefix.getNamespacePrefix().getName(), omtPrefix);
@@ -208,7 +215,7 @@ public class OMTFile extends PsiFileBase {
     }
 
     public HashMap<String, OMTModelItemBlock> getDeclaredOntologies() {
-        Optional<OMTModelBlock> model = getSpecificBlock("model", OMTModelBlock.class);
+        Optional<OMTModelBlock> model = getSpecificBlock(MODEL, OMTModelBlock.class);
         HashMap<String, OMTModelItemBlock> ontologies = new HashMap<>();
         model.ifPresent(omtModelBlock -> omtModelBlock.getModelItemBlockList()
                 .forEach(omtModelItemBlock -> {
@@ -234,7 +241,7 @@ public class OMTFile extends PsiFileBase {
             return;
         }
         OMTBlockEntry prefixBlockAsEntry = (OMTBlockEntry) PsiTreeUtil.findFirstParent(prefixBlock, parent -> parent instanceof OMTBlockEntry);
-        setRootBlock(prefixBlockAsEntry, "prefixes");
+        setRootBlock(prefixBlockAsEntry, PREFIXES);
     }
 
     public void setRootBlock(OMTImportBlock importBlock) {
@@ -242,7 +249,7 @@ public class OMTFile extends PsiFileBase {
             return;
         }
         OMTBlockEntry importBlockAsEntry = (OMTBlockEntry) PsiTreeUtil.findFirstParent(importBlock, parent -> parent instanceof OMTBlockEntry);
-        setRootBlock(importBlockAsEntry, "import");
+        setRootBlock(importBlockAsEntry, IMPORT);
     }
 
     private void setRootBlock(OMTBlockEntry blockEntry, String rootLabel) {
@@ -264,13 +271,15 @@ public class OMTFile extends PsiFileBase {
      * @return
      */
     public boolean hasImportFor(OMTExportMember exportMember) {
-        Optional<OMTBlockEntry> imports = getRootBlock("import");
+        Optional<OMTBlockEntry> imports = getRootBlock(IMPORT);
         if (!imports.isPresent()) {
             return false;
         }
         Collection<OMTMember> importingMembers = PsiTreeUtil.findChildrenOfType(imports.get(), OMTMember.class);
         for (OMTMember member : importingMembers) {
-            if (member.getReference() != null && member.getReference().resolve().equals(exportMember.getResolvingElement())) {
+            if (member.getReference() != null &&
+                    member.getReference().resolve() != null &&
+                    member.getReference().resolve().equals(exportMember.getResolvingElement())) {
                 return true;
             }
         }
@@ -297,13 +306,13 @@ public class OMTFile extends PsiFileBase {
 
     private PsiElement getBeforeAnchor(String rootLabel) {
         switch (rootLabel) {
-            case "prefixes":
+            case PREFIXES:
                 // prefixes is either after import or at the very top
-                return getRootBlock("import").orElse(this.getRoot().getBlockEntryList().get(0));
+                return getRootBlock(IMPORT).orElse(this.getRoot().getBlockEntryList().get(0));
 
             // import or undefined can be added at the top
             default:
-            case "import":
+            case IMPORT:
                 return this.getRoot().getFirstChild();
         }
     }
@@ -311,21 +320,21 @@ public class OMTFile extends PsiFileBase {
     private void updateExportMembers() {
         HashMap<String, OMTExportMember> exported = new HashMap<>();
         // commands
-        Optional<OMTCommandsBlock> commands = getSpecificBlock("commands", OMTCommandsBlock.class);
+        Optional<OMTCommandsBlock> commands = getSpecificBlock(COMMANDS, OMTCommandsBlock.class);
         commands.ifPresent(omtCommandsBlock -> omtCommandsBlock.getDefineCommandStatementList().stream()
                 .map(omtDefineCommandStatement -> new OMTExportMemberImpl(omtDefineCommandStatement, ExportMemberType.Command))
                 .forEach(omtExportMember -> exported.put(omtExportMember.getName(), omtExportMember))
         );
 
         // queries
-        Optional<OMTQueriesBlock> queries = getSpecificBlock("queries", OMTQueriesBlock.class);
+        Optional<OMTQueriesBlock> queries = getSpecificBlock(QUERIES, OMTQueriesBlock.class);
         queries.ifPresent(omtQueriesBlock -> omtQueriesBlock.getDefineQueryStatementList().stream()
                 .map(omtDefineQueryStatement -> new OMTExportMemberImpl(omtDefineQueryStatement, ExportMemberType.Query))
                 .forEach(omtExportMember -> exported.put(omtExportMember.getName(), omtExportMember))
         );
 
         // modelItems
-        Optional<OMTModelBlock> model = getSpecificBlock("model", OMTModelBlock.class);
+        Optional<OMTModelBlock> model = getSpecificBlock(MODEL, OMTModelBlock.class);
         model.ifPresent(omtModelBlock -> omtModelBlock.getModelItemBlockList().stream()
                 .map(omtModelItemBlock -> {
                     String modelItemType = omtModelItemBlock.getModelItemLabel().getModelItemTypeElement().getText();
@@ -345,7 +354,7 @@ public class OMTFile extends PsiFileBase {
         );
 
         // exporting members from module:
-        Optional<OMTExportBlock> optionalOMTExportBlock = getSpecificBlock("export", OMTExportBlock.class);
+        Optional<OMTExportBlock> optionalOMTExportBlock = getSpecificBlock(EXPORT, OMTExportBlock.class);
         optionalOMTExportBlock.ifPresent(
                 omtExportBlock ->
                 {
@@ -353,7 +362,7 @@ public class OMTFile extends PsiFileBase {
                     if (omtExportBlock.getMemberList() != null) {
                         omtExportBlock.getMemberList().getMemberListItemList()
                                 .stream().map(OMTMemberListItem::getMember)
-                                .filter(member -> importedMembersAsExportedMembers.containsKey(member.getName()))
+                                .filter(member -> member != null && importedMembersAsExportedMembers.containsKey(member.getName()))
                                 .forEach(
                                         member -> exported.put(member.getName(), importedMembersAsExportedMembers.get(member.getName()))
                                 );

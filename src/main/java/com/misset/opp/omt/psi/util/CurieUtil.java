@@ -55,8 +55,8 @@ public class CurieUtil {
     }
 
     public OMTPrefixBlock getPrefixBlock(PsiElement element) {
-        Optional<OMTBlockEntry> prefixes = ((OMTFile) element.getContainingFile()).getRootBlock("prefixes");
-        return prefixes.map(omtBlockEntry -> omtBlockEntry.getSpecificBlock().getPrefixBlock()).orElse(null);
+        Optional<OMTPrefixBlock> prefixes = ((OMTFile) element.getContainingFile()).getSpecificBlock(OMTFile.PREFIXES, OMTPrefixBlock.class);
+        return prefixes.orElse(null);
     }
 
     public void annotateNamespacePrefix(@NotNull OMTNamespacePrefix namespacePrefix, @NotNull AnnotationHolder holder) {

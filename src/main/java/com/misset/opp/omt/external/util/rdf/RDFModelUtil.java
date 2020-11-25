@@ -367,6 +367,10 @@ public class RDFModelUtil {
         return model.createResource(String.format("%s%s", XSD, name));
     }
 
+    public List<Resource> getPrimitiveTypeAsResourceList(String name) {
+        return Arrays.asList(getPrimitiveTypeAsResource(name));
+    }
+
     public boolean isPrimitiveType(Resource resource) {
         return resource.toString().startsWith(XSD) && !resource.toString().endsWith("#any");
     }

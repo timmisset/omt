@@ -21,7 +21,7 @@ public abstract class OMTCallImpl extends OMTMemberNamedElementImpl implements O
     }
 
     @Override
-    public PsiElement setName(String newName) {
+    public PsiElement setName(@NotNull String newName) {
         PsiElement replacement = isCommandCall() ?
                 OMTElementFactory.createCommand(getProject(), newName) :
                 OMTElementFactory.createOperator(getProject(), newName);
