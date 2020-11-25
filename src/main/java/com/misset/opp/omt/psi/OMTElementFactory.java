@@ -62,7 +62,7 @@ public class OMTElementFactory {
                 "            DEFINE QUERY %s() => ''; \n" +
                 "\n", name));
         OMTDefineQueryStatement defineQueryStatement = PsiTreeUtil.findChildOfType(file, OMTDefineQueryStatement.class);
-        return defineQueryStatement.getDefineName();
+        return defineQueryStatement != null ? defineQueryStatement.getDefineName() : null;
     }
 
     public static OMTOperatorCall createOperatorCall(Project project, String name, String flagSignature, String signature) {
@@ -79,7 +79,7 @@ public class OMTElementFactory {
                 "            DEFINE COMMAND %s() => { RETURN ''} \n" +
                 "\n", name));
         OMTDefineCommandStatement defineCommandStatement = PsiTreeUtil.findChildOfType(file, OMTDefineCommandStatement.class);
-        return defineCommandStatement.getDefineName();
+        return defineCommandStatement != null ? defineCommandStatement.getDefineName() : null;
 
     }
 

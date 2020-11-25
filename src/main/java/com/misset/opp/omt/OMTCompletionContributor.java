@@ -29,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -136,11 +137,16 @@ public class OMTCompletionContributor extends CompletionContributor {
                     setResolvedElementsForOperator(element);
                     resolvedElements.forEach(result::addElement);
                 }
-                if (tokenUtil.isNamespaceMember(element) &&
-                        element != null &&
-                        tokenUtil.isParameterType(element.getParent())) {
-                    setResolvedElementsForClasses(element);
-                    result.addAllElements(resolvedElements);
+                if (tokenUtil.isNamespaceMember(element)) {
+                    assert element != null;
+                    if (tokenUtil.isParameterType(element.getParent())) {
+                        setResolvedElementsForClasses(element);
+                        result.addAllElements(resolvedElements);
+                    } else if (element.getParent() instanceof OMTCurieElement &&
+                            element.getParent().getParent() instanceof OMTQueryStep) {
+                        setQueryStepSuggestions((OMTQueryStep) element.getParent().getParent(), element);
+                        result.addAllElements(resolvedElements);
+                    }
                 }
             }
         };
@@ -254,14 +260,18 @@ public class OMTCompletionContributor extends CompletionContributor {
         setDummyPlaceHolder(DUMMY_SCALAR, context);
     }
 
-    private void setResolvedElementsFor(PsiElement elementAt, Class<? extends OMTDefinedStatement> definedType, BuiltInType builtInType) {
+    private void setQueryStepSuggestions(@NotNull OMTQueryStep queryStep, @NotNull PsiElement elementAt) {
+        final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
+        List<Resource> previousStep = PsiImplUtil.getPreviousStep(queryStep);
+        rdfModelUtil.listPredicatesForSubjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, false, 9));
+        rdfModelUtil.listPredicatesForObjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, true, 8));
+    }
+
+    private void setResolvedElementsFor(@NotNull PsiElement elementAt, Class<? extends OMTDefinedStatement> definedType, BuiltInType builtInType) {
         // check if the path can be resolved to a model based suggestion
         OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(elementAt, parent -> parent instanceof OMTQueryStep);
         if (queryStep != null) {
-            final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
-            List<Resource> previousStep = PsiImplUtil.getPreviousStep(queryStep);
-            rdfModelUtil.listPredicatesForSubjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, false, 9));
-            rdfModelUtil.listPredicatesForObjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, true, 8));
+            setQueryStepSuggestions(queryStep, elementAt);
         }
 
         // check if there are local variables available, they also have the highest suggestion priority
@@ -346,6 +356,7 @@ public class OMTCompletionContributor extends CompletionContributor {
                             omtImport.getMemberList().getMemberListItemList()
                                     .stream()
                                     .map(OMTMemberListItem::getMember)
+                                    .filter(Objects::nonNull)
                                     .map(OMTMember::getName)
                                     .collect(Collectors.toList());
             OMTFile omtFile = importedFile == null ? null : (OMTFile) PsiManager.getInstance(elementAtCaret.getProject()).findFile(importedFile);

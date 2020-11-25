@@ -77,8 +77,11 @@ public class OMTFile extends PsiFileBase {
     }
 
     public boolean isPartOfRootBlock(PsiElement element) {
-        PsiElement blockEntry = PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTBlockEntry);
+        OMTBlockEntry blockEntry = (OMTBlockEntry) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTBlockEntry);
         OMTBlock rootBlock = PsiTreeUtil.getChildOfType(this, OMTBlock.class);
+        if (rootBlock == null) {
+            return false;
+        }
         return rootBlock.getBlockEntryList().contains(blockEntry);
     }
 
@@ -214,7 +217,7 @@ public class OMTFile extends PsiFileBase {
         ProjectUtil.SINGLETON.resetExportedMembers(this);
     }
 
-    public HashMap<String, OMTModelItemBlock> getDeclaredOntologies() {
+    public Map<String, OMTModelItemBlock> getDeclaredOntologies() {
         Optional<OMTModelBlock> model = getSpecificBlock(MODEL, OMTModelBlock.class);
         HashMap<String, OMTModelItemBlock> ontologies = new HashMap<>();
         model.ifPresent(omtModelBlock -> omtModelBlock.getModelItemBlockList()
@@ -222,7 +225,7 @@ public class OMTFile extends PsiFileBase {
                     String modelItemType = omtModelItemBlock.getModelItemLabel().getModelItemTypeElement().getText();
                     if (modelItemType.equalsIgnoreCase("!ontology")) {
                         String name = omtModelItemBlock.getModelItemLabel().getName();
-                        name = name.endsWith(":") ? name.substring(0, name.length() - 1) : name;
+                        name = name != null && name.endsWith(":") ? name.substring(0, name.length() - 1) : name;
                         ontologies.put(name, omtModelItemBlock);
                     }
                 })
@@ -277,9 +280,8 @@ public class OMTFile extends PsiFileBase {
         }
         Collection<OMTMember> importingMembers = PsiTreeUtil.findChildrenOfType(imports.get(), OMTMember.class);
         for (OMTMember member : importingMembers) {
-            if (member.getReference() != null &&
-                    member.getReference().resolve() != null &&
-                    member.getReference().resolve().equals(exportMember.getResolvingElement())) {
+            PsiElement resolved = member.getReference() != null ? member.getReference().resolve() : null;
+            if (resolved != null && resolved.equals(exportMember.getResolvingElement())) {
                 return true;
             }
         }

@@ -14,6 +14,7 @@ public abstract class OMTCallImpl extends OMTMemberNamedElementImpl implements O
         super(node);
     }
 
+    @NotNull
     @Override
     public String getName() {
         String name = getFirstChild().getText();
