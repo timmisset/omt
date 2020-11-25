@@ -7,14 +7,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.util.CurieUtil;
-import com.misset.opp.omt.psi.util.ImportUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,19 +20,13 @@ import static org.mockito.Mockito.*;
 
 class RemoveIntentionTest {
 
-    @Mock
-    CurieUtil curieUtil;
-    @Mock
-    ImportUtil importUtil;
-
-    @InjectMocks
     RemoveIntention removeIntention;
 
     IntentionAction intentionAction;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.initMocks(this);
+        removeIntention = new RemoveIntention();
         intentionAction = this.removeIntention.getRemoveIntention(mock(PsiElement.class));
     }
 
@@ -123,7 +112,7 @@ class RemoveIntentionTest {
         final OMTSequenceItem sequenceItem = mock(OMTSequenceItem.class);
         final OMTVariable variable = mock(OMTVariable.class);
 
-        try (MockedStatic mocked = mockStatic(PsiTreeUtil.class)) {
+        try (MockedStatic<PsiTreeUtil> mocked = mockStatic(PsiTreeUtil.class)) {
             List<OMTSequenceItem> list = new ArrayList<>();
             list.add(sequenceItem);
 
@@ -145,7 +134,7 @@ class RemoveIntentionTest {
         final OMTSequenceItem sequenceItem = mock(OMTSequenceItem.class);
         final OMTVariable variable = mock(OMTVariable.class);
 
-        try (MockedStatic mocked = mockStatic(PsiTreeUtil.class)) {
+        try (MockedStatic<PsiTreeUtil> mocked = mockStatic(PsiTreeUtil.class)) {
             List<OMTSequenceItem> list = new ArrayList<>();
             list.add(sequenceItem);
             list.add(sequenceItem);

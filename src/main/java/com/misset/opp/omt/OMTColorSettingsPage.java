@@ -22,7 +22,7 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
             new AttributesDescriptor("Variable", OMTSyntaxHighlighter.VARIABLE),
             new AttributesDescriptor("Bad Value", OMTSyntaxHighlighter.BAD_CHARACTER),
             new AttributesDescriptor("Comment Block", OMTSyntaxHighlighter.COMMENTBLOCK),
-            new AttributesDescriptor("Operator and Command names", OMTSyntaxHighlighter.OPERATOR_OR_COMMAND),
+            new AttributesDescriptor("Operator & Command Names", OMTSyntaxHighlighter.OPERATOR_OR_COMMAND),
             new AttributesDescriptor("Curie and Prefixes", OMTSyntaxHighlighter.PREFIX),
             new AttributesDescriptor("OWL Properties", OMTSyntaxHighlighter.OWLPROPERTY),
 

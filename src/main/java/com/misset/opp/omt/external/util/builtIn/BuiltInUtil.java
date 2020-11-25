@@ -147,6 +147,9 @@ public class BuiltInUtil {
                 items = parseBuiltIn(document.getText(), type);
                 break;
         }
+        if (items == null) {
+            return;
+        }
 
         Parser parser = Parser.builder().build();
         HtmlRenderer renderer = HtmlRenderer.builder().build();

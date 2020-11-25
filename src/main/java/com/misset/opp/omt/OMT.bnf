@@ -30,8 +30,6 @@ dedentToken ::=                             DEDENT | DEDENT2
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
 block ::=                                   leading? (blockEntry+ | (indentToken blockEntry+ dedentToken)) 
 blockEntry ::=                              leading? specificBlock | (leading? propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken))) {
-                                            mixin="com.misset.opp.omt.psi.impl.OMTAnnotationHolderImpl"
-                                            implements="com.misset.opp.omt.psi.support.OMTAnnotationHolder"
                                             methods=[ getName getLabel ]
 }
 propertyLabel ::=                           PROPERTY { methods=[getPropertyLabelName]}

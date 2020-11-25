@@ -101,7 +101,6 @@ public class OMTSettingsComponent {
         ontologyModelRootPath.setText(newText);
     }
 
-    @NotNull
     public boolean getIncludeMochaFolderImportSuggestions() {
         return includeMochaFolderImportSuggestions.isSelected();
     }

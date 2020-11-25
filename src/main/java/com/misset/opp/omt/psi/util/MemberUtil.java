@@ -27,7 +27,6 @@ import java.util.*;
 public class MemberUtil {
 
     private ModelUtil modelUtil = ModelUtil.SINGLETON;
-    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private ImportUtil importUtil = ImportUtil.SINGLETON;
     private ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
     private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;

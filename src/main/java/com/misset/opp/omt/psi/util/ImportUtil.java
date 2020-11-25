@@ -23,7 +23,7 @@ import java.util.Optional;
 public class ImportUtil {
 
     public static final ImportUtil SINGLETON = new ImportUtil();
-    private static String MODULE = "module";
+    private static final String MODULE = "module";
 
     private PsiManager psiManager;
 
@@ -33,25 +33,6 @@ public class ImportUtil {
         }
         return psiManager;
     }
-
-    private void addImportSource(String source, String leadingComment, String endOfLineComment, StringBuilder builder) {
-        addLeadingComment(leadingComment, builder);
-        builder
-                .append(OMTElementFactory.getIndentSpace(1))
-                .append(formatImportPath(source))
-                .append(endOfLineComment.isEmpty() ? "" : (" " + endOfLineComment))
-                .append("\n");
-    }
-
-    private void addImportMember(String member, String leadingComment, String endOfLineComment, StringBuilder builder) {
-        addLeadingComment(leadingComment, builder);
-        builder.append(OMTElementFactory.getIndentSpace(1))
-                .append("-   ")
-                .append(member.trim())
-                .append(endOfLineComment.isEmpty() ? "" : (" " + endOfLineComment))
-                .append("\n");
-    }
-
 
     public VirtualFile getImportedFile(OMTImport omtImport) {
         return getImportedFile(omtImport, omtImport.getContainingFile().getVirtualFile());
@@ -114,14 +95,6 @@ public class ImportUtil {
             module = module.substring(MODULE.length());
         }
         return String.format("frontend/libs/%s/src/%s.module.omt", module, module);
-    }
-
-    private static void addLeadingComment(String leadingComment, StringBuilder builder) {
-        if (!leadingComment.isEmpty()) {
-            builder.append(OMTElementFactory.getIndentSpace(1))
-                    .append(leadingComment)
-                    .append("\n");
-        }
     }
 
     public void annotateImport(OMTImport omtImport, AnnotationHolder holder) {
@@ -209,13 +182,16 @@ public class ImportUtil {
         String template = String.format("import:\n" +
                 "    %s\n" +
                 "        -   %s\n\n", importPath, importMember);
-        Optional<OMTBlockEntry> rootBlock = targetFile.getRootBlock("import");
-        if (rootBlock.isPresent()) {
-            final OMTImportBlock importBlock = rootBlock.get().getSpecificBlock().getImportBlock();
+        Optional<OMTImportBlock> optionalImportBlock = targetFile.getSpecificBlock("import", OMTImportBlock.class);
+        if (optionalImportBlock.isPresent()) {
+            final OMTImportBlock importBlock = optionalImportBlock.get();
             final Optional<OMTImport> existingImport = importBlock.getImportList().stream().filter(omtImport -> sameImportLocation(omtImport, importPath)).findFirst();
             if (existingImport.isPresent()) {
                 // add member to existing import
                 final OMTMemberList memberList = existingImport.get().getMemberList();
+                if (memberList == null) {
+                    return;
+                } // invalid import statement (empty import)
                 final List<OMTMemberListItem> memberListItemList = memberList.getMemberListItemList();
                 final PsiElement importMemberItem = OMTElementFactory.fromString(template, OMTMemberListItem.class, project);
                 final PsiElement addedMember = memberList.addAfter(importMemberItem, memberListItemList.get(memberListItemList.size() - 1));
@@ -252,8 +228,4 @@ public class ImportUtil {
         return path;
     }
 
-    private String formatImportPath(String path) {
-        path = cleanUpPath(path);
-        return String.format("'%s':", path);
-    }
 }

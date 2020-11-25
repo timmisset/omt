@@ -44,6 +44,9 @@ public class ScriptUtil {
             }
             currentScriptLine = scriptLines.get(scriptLines.size() - 1);
         }
+        if (currentScriptLine == null || type == null) {
+            return items;
+        }
         items.addAll(getChildrenOfTypeNotEnclosed(currentScriptLine, type));
         while (currentScriptLine != null) {
             getPrecedingScriptLines(currentScriptLine).forEach(scriptLine -> items.addAll(getChildrenOfTypeNotEnclosed(scriptLine, type)));

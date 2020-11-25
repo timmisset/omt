@@ -12,7 +12,6 @@ import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.ImportUtil;
-import com.misset.opp.omt.psi.util.MemberUtil;
 import com.misset.opp.omt.psi.util.ProjectUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,7 +22,6 @@ import java.util.List;
 
 public class MemberIntention {
 
-    private MemberUtil memberUtil = MemberUtil.SINGLETON;
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     public static MemberIntention SINGLETON = new MemberIntention();
 
