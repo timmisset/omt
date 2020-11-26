@@ -24,6 +24,7 @@ import static com.misset.opp.omt.psi.util.VariableUtil.NO_TYPE_SPECIFIED;
 public class VariableUtilTest_Fixture extends LightJavaCodeInsightFixtureTestCase {
 
     RDFModelUtil rdfModelUtil;
+    VariableUtil variableUtil;
 
     @Override
     @BeforeEach
@@ -36,6 +37,7 @@ public class VariableUtilTest_Fixture extends LightJavaCodeInsightFixtureTestCas
             ProjectUtil.SINGLETON.loadOntologyModel(getProject());
         });
         rdfModelUtil = ProjectUtil.SINGLETON.getRDFModelUtil();
+        variableUtil = VariableUtil.SINGLETON;
     }
 
     @Override
@@ -78,6 +80,21 @@ public class VariableUtilTest_Fixture extends LightJavaCodeInsightFixtureTestCas
                 "           VAR $variable = null;\n" +
                 "           $variable = 'test';\n" +
                 "           @LOG($variable);\n"), rdfModelUtil.getPrimitiveTypeAsResource("string"));
+    }
+
+    @Test
+    void getDeclaredVariableFromNameAttribute() {
+        String content = "model:\n" +
+                "   activiteit: !Activity\n" +
+                "       variables: \n" +
+                "           -   name:   $naam\n" +
+                "";
+        final PsiFile psiFile = myFixture.configureByText("test.omt", content);
+        ApplicationManager.getApplication().runReadAction(() -> {
+            final OMTVariable variable = PsiTreeUtil.findChildOfType(psiFile, OMTVariable.class);
+            assertEquals("$naam", variable.getName());
+            assertTrue(variableUtil.isDeclaredVariable(variable));
+        });
     }
 
     @Test

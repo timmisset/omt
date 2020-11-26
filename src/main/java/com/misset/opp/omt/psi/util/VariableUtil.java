@@ -25,15 +25,17 @@ import java.util.stream.Collectors;
 public class VariableUtil {
 
     public static final VariableUtil SINGLETON = new VariableUtil();
+
     private ModelUtil modelUtil = ModelUtil.SINGLETON;
     private ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
     private AnnotationUtil annotationUtil = AnnotationUtil.SINGLETON;
     private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
     private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private static String PARAMS = "params";
-    private static String VARIABLES = "variables";
-    private static String BASE = "base";
-    private static String BINDINGS = "bindings";
+    private static final String PARAMS = "params";
+    private static final String VARIABLES = "variables";
+    private static final String BASE = "base";
+    private static final String BINDINGS = "bindings";
+    private static final String NAME = "name";
     public static final String NO_TYPE_SPECIFIED = "No type specified";
 
     public Optional<OMTVariable> getFirstAppearance(OMTVariable variable, PsiElement container) {
@@ -183,8 +185,8 @@ public class VariableUtil {
                 }
             }
             JsonObject attributes = modelUtil.getJson(element);
-            if (attributes != null && attributes.has("variables")) {
-                attributes.get("variables").getAsJsonArray().forEach(variable -> {
+            if (attributes != null && attributes.has(VARIABLES)) {
+                attributes.get(VARIABLES).getAsJsonArray().forEach(variable -> {
                     localVariables.put(variable.getAsString(), attributes.get("name").getAsString());
                 });
             }
@@ -194,54 +196,23 @@ public class VariableUtil {
     }
 
     public boolean isDeclaredVariable(OMTVariable variable) {
-        PsiElement lookWith = variable;
-        if (PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTVariableValue) != null) {
+        if (PsiTreeUtil.findFirstParent(variable, parent -> parent instanceof OMTVariableValue) != null) {
             return false;
         }
-        if (lookWith.getParent() instanceof OMTParameterWithType) {
-            lookWith = variable.getParent();
-        }
-        // check if direct parent is the VAR ... statement.
-        if (lookWith.getParent() instanceof OMTDeclareVariable) {
-            return true;
-        }
-        if (lookWith.getParent() instanceof OMTDefineParam) {
-            return true;
-        }
-        // if part of an assignment: VAR $myVariable = 'test'; OR $myVariable = test (in the variables: block)
-        if (lookWith.getParent() instanceof OMTVariableAssignment) {
-            if (lookWith.getParent().getParent() instanceof OMTDeclareVariable) {
-                return true;
-            }
-            if (lookWith.getParent().getParent() instanceof OMTScalarValue) {
-                if (partOfBlockEntryLevel(lookWith, "variables")) {
-                    return true;
-                }
-            }
-        }
-        // check if part of the base: property of a standalone query
-        if (partOfBlockEntryLevel(lookWith, "base")) {
-            return true;
-        }
-        // check if part of the bindings: property of a component
-        if (partOfModelItemEntryLevel(lookWith, BINDINGS)) {
-            return true;
-        }
 
-        OMTScalarValue asScalarValue = (OMTScalarValue) PsiTreeUtil.findFirstParent(lookWith, parent -> parent instanceof OMTScalarValue);
-        return partOfBlockEntryLevel(asScalarValue, VARIABLES) || partOfBlockEntryLevel(asScalarValue, PARAMS);
+        final PsiElement parent = variable.getParent();
+
+        // ODT defined parameters
+        if (parent instanceof OMTDeclareVariable ||
+                parent instanceof OMTDefineParam ||
+                parent.getParent() instanceof OMTDeclareVariable) {
+            return true;
+        }
+        // OMT defined parameters
+        String modelItemEntryLabel = modelUtil.getModelItemEntryLabel(variable);
+        return Arrays.asList(VARIABLES, PARAMS, BINDINGS, BASE).contains(modelItemEntryLabel);
+
     }
-
-    private boolean partOfBlockEntryLevel(PsiElement element, String entryLevelLabel) {
-        String blockEntryLabel = modelUtil.getEntryBlockLabel(element);
-        return blockEntryLabel != null && blockEntryLabel.equals(entryLevelLabel);
-    }
-
-    private boolean partOfModelItemEntryLevel(PsiElement element, String entryLevelLabel) {
-        String blockEntryLabel = modelUtil.getModelItemEntryLabel(element);
-        return blockEntryLabel != null && blockEntryLabel.equals(entryLevelLabel);
-    }
-
     public void annotateDefineParameter(OMTDefineParam defineParam, AnnotationHolder holder) {
         defineParam.getVariableList().forEach(omtVariable -> {
             final List<Resource> type = omtVariable.getType();
