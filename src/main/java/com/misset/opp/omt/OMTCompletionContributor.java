@@ -49,6 +49,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     /**
      * The higher the priority number, the higher it gets listed
      */
+    private static final int ATTRIBUTES_PRIORITY = 11;              // model entry attributes
     private static final int EQUATION_PRIORITY = 10;                // the other side of the equation, shows a limited set of options based on the resolved type of the other side
     private static final int CLASSES_PRIORITY = 9;                  // list with available classes
     private static final int PREDICATE_FORWARD_PRIORITY = 8;
@@ -59,6 +60,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     private static final int LOCAL_COMMAND_PRIORITY = 3;
     private static final int BUILTIN_MEMBER_PRIORITY = 2;
     private static final int IMPORTABLE_MEMBER_PRIORITY = 1;
+
 
     private boolean dummyPlaceHolderSet = false;
 
@@ -127,7 +129,9 @@ public class OMTCompletionContributor extends CompletionContributor {
                 }
                 // entry: for a model item
                 if (tokenUtil.isProperty(element)) {
-                    addJsonAttributes(element, result);
+                    setAttributeSuggestions(element, true);
+                    result.addAllElements(resolvedElements);
+                    return;
                 }
                 if (tokenUtil.isCommand(element)) {
                     setResolvedElementsForCommand(element);
@@ -166,16 +170,16 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     // add completion in the OMT model based on the Json attributes
-    private void addJsonAttributes(PsiElement element, @NotNull CompletionResultSet result) {
-        JsonObject json = modelUtil.getJsonAtDepth(element, modelUtil.getModelDepth(element) - 1);
+    private void setAttributeSuggestions(PsiElement element, boolean atParent) {
+        JsonObject json = atParent ? modelUtil.getJsonAtDepth(element, modelUtil.getModelDepth(element) - 1) :
+                modelUtil.getJson(element);
         List<String> existingSiblingEntryLabels = getExistingSiblingEntryLabels(element);
         if (json != null && json.has(ATTRIBUTES)) {
+
             json.getAsJsonObject(ATTRIBUTES).keySet()
                     .stream()
                     .filter(key -> !existingSiblingEntryLabels.contains(key))
-                    .forEach(key -> result.addElement(LookupElementBuilder.create(
-                            String.format("%s:", key).trim()
-                            ))
+                    .forEach(key -> addPriorityElement(String.format("%s:", key).trim(), ATTRIBUTES_PRIORITY)
                     );
         }
     }
@@ -232,13 +236,21 @@ public class OMTCompletionContributor extends CompletionContributor {
             setDummyPlaceHolder(DUMMY_ENTRY, context);
             return;
         }
-        // find the PsiElement containing the caret:
 
         // error in parsing, try to resolve it
         if ((element instanceof OMTFile || element instanceof PsiErrorElement) &&
                 !getExpectedTypeAtOMTFile(elementAtCaret, false).isEmpty()) {
             List<String> expectedTypesAtDummyBlock = getExpectedTypeAtOMTFile(elementAtCaret, false);
             setDummyContextFromExpectedList(expectedTypesAtDummyBlock, context, hasValuePosition(elementAtCaret, context));
+            return;
+        }
+
+        if (element instanceof OMTSequence &&
+                modelUtil.getJson(element) != null &&
+                modelUtil.getJson(element).has(ATTRIBUTES)) {
+            // A sequence item that can destructed into separate entries
+            setAttributeSuggestions(element, false);
+            isResolved = true;
             return;
         }
 
