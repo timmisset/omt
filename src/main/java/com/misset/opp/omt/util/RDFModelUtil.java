@@ -1,4 +1,4 @@
-package com.misset.opp.omt.external.util.rdf;
+package com.misset.opp.omt.util;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.jena.rdf.model.*;
@@ -211,10 +211,11 @@ public class RDFModelUtil {
     }
 
     public boolean areComparable(Resource resource1, Resource resource2) {
-        return resource1.equals(resource2) ||
-                getClass(resource1).equals(getClass(resource2)) ||
-                (isNumeric(resource1) && isNumeric(resource2)) ||
-                (isDate(resource1) && isNumeric(resource2));
+        return (resource1 != null && resource2 != null) &&
+                (resource1.equals(resource2) ||
+                        getClass(resource1).equals(getClass(resource2)) ||
+                        (isNumeric(resource1) && isNumeric(resource2)) ||
+                        (isDate(resource1) && isDate(resource2)));
     }
 
     public List<Resource> getComparableOptions(List<Resource> resources) {
@@ -388,7 +389,7 @@ public class RDFModelUtil {
     }
 
     public List<Resource> getPrimitiveTypeAsResourceList(String name) {
-        return Arrays.asList(getPrimitiveTypeAsResource(name));
+        return Collections.singletonList(getPrimitiveTypeAsResource(name));
     }
 
     public boolean isPrimitiveType(Resource resource) {
@@ -419,18 +420,18 @@ public class RDFModelUtil {
     }
 
     public int getMinCount(Resource subject, Resource predicate) {
-        return getIntOrDefault(subject, predicate, SHACL_MINCOUNT, 0);
+        return getInt(subject, predicate, SHACL_MINCOUNT);
     }
 
     public int getMaxCount(Resource subject, Resource predicate) {
-        return getIntOrDefault(subject, predicate, SHACL_MAXCOUNT, 0);
+        return getInt(subject, predicate, SHACL_MAXCOUNT);
     }
 
 
-    private int getIntOrDefault(Resource subject, Resource predicate, Property property, int defaultValue) {
+    private int getInt(Resource subject, Resource predicate, Property property) {
         Optional<Statement> optionalPredicate = getSubjectPredicate(subject, predicate);
         return optionalPredicate.map(statement -> getPropertyValueOrDefault(statement, property,
-                subject.getModel().createTypedLiteral(defaultValue)).getInt()).orElse(defaultValue);
+                subject.getModel().createTypedLiteral(0)).getInt()).orElse(0);
     }
 
     private Literal getPropertyValueOrDefault(Statement statement, Property property, Literal defaultValue) {

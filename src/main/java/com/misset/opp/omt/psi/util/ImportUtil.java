@@ -45,7 +45,7 @@ public class ImportUtil {
             return null;
         }
         String importLocation = omtImport.getImportSource().getImportLocation().getText();
-        importLocation = importLocation.replaceAll("[\'\":]", "");
+        importLocation = importLocation.replaceAll("['\":]", "");
 
         // Fix to allow testing the completion which is triggered in the fixture
         // The fixture will copy files in a temp memory index only so the files do not exist

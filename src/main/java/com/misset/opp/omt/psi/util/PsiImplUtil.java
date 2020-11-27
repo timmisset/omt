@@ -3,10 +3,11 @@ package com.misset.opp.omt.psi.util;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
+import com.misset.opp.omt.util.ProjectUtil;
+import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
@@ -86,7 +87,9 @@ public class PsiImplUtil {
 
     public static PsiElement setName(OMTDefineName defineName, String newName) {
         PsiElement replacement = OMTElementFactory.createOperator(defineName.getProject(), newName);
-        defineName.replace(replacement);
+        if (replacement != null) {
+            defineName.replace(replacement);
+        }
         return replacement;
     }
 
@@ -109,7 +112,6 @@ public class PsiImplUtil {
     // ////////////////////////////////////////////////////////////////////////////
     // Members
     // ////////////////////////////////////////////////////////////////////////////
-    @NotNull
     public static String getName(OMTMember member) {
         return getNameIdentifier(member).getText();
     }
@@ -288,6 +290,9 @@ public class PsiImplUtil {
     // Specific blocks
     // ////////////////////////////////////////////////////////////////////////////
     public static String getName(OMTSpecificBlock specificBlock) {
+        if (specificBlock == null) {
+            return "";
+        }
         if (specificBlock.getCommandsBlock() != null) {
             return "commands";
         }
@@ -520,9 +525,12 @@ public class PsiImplUtil {
         return step.getQuery().resolveToResource();
     }
 
-    public static List<Resource> resolveToResource(OMTQueryReverseStep step) {
+    public static List<Resource> resolveToResource(OMTQueryReverseStep step, boolean lookBack, boolean filter) {
         List<Resource> resources = getPreviousStep(step);
         final OMTCurieElement curieElement = step.getCurieElement();
+        if (curieElement == null) {
+            return resources;
+        }
         final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
         if (!rdfModelUtil.isTypePredicate(curieElement.getAsResource())) { // for a type predicate, resolve only to the given class
             resources = rdfModelUtil.allSuperClasses(resources);
@@ -530,7 +538,11 @@ public class PsiImplUtil {
         List<Resource> resolvedResources = resources.isEmpty() ?
                 rdfModelUtil.getPredicateSubjects(curieElement.getAsResource()) : // only by predicate
                 rdfModelUtil.listSubjectsWithPredicateObjectClass(curieElement.getAsResource(), resources);// by predicate and object
-        return filter(step, resolvedResources);
+        return filter ? filter(step, resolvedResources) : resolvedResources;
+    }
+
+    public static List<Resource> resolveToResource(OMTQueryReverseStep step) {
+        return resolveToResource(step, true, true);
     }
 
     public static List<Resource> resolveToResource(OMTResolvableValue value) {

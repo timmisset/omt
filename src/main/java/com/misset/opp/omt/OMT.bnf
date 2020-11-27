@@ -246,7 +246,7 @@ queryStep ::=                               leading? (queryReverseStep |
                                             subQuery)
                                             stepDecorator? queryFilter*
                                             { methods = [ resolveToResource ]}
-queryReverseStep ::=                        CARET curieElement stepDecorator? queryFilter* { methods = [ resolveToResource ] extends=queryStep}
+queryReverseStep ::=                        CARET curieElement? stepDecorator? queryFilter* { methods = [ resolveToResource ] extends=queryStep}
 stepDecorator ::=                           ASTERIX | PLUS
 // a query filter is contained by brackets [] and should resolve to boolean
 queryFilter ::=                             BRACKET_OPEN query BRACKET_CLOSED

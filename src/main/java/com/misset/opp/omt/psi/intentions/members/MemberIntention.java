@@ -12,7 +12,7 @@ import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.ImportUtil;
-import com.misset.opp.omt.psi.util.ProjectUtil;
+import com.misset.opp.omt.util.ProjectUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;

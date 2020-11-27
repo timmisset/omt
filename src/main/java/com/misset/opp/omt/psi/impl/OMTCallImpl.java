@@ -27,7 +27,9 @@ public abstract class OMTCallImpl extends OMTMemberNamedElementImpl implements O
                 OMTElementFactory.createCommand(getProject(), newName) :
                 OMTElementFactory.createOperator(getProject(), newName);
 
-        replace(replacement);
+        if (replacement != null) {
+            replace(replacement);
+        }
         return replacement;
     }
 

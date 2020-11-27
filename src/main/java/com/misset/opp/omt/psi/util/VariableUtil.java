@@ -8,14 +8,15 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.external.util.builtIn.BuiltInMember;
-import com.misset.opp.omt.external.util.builtIn.BuiltInType;
-import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.impl.BuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTQueryReverseStepImpl;
 import com.misset.opp.omt.psi.intentions.variables.AnnotateParameterIntention;
 import com.misset.opp.omt.psi.intentions.variables.RenameVariableIntention;
+import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.util.BuiltInUtil;
+import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -134,7 +135,7 @@ public class VariableUtil {
             if (annotationBuilder != null) {
                 if (variable.getParent() instanceof OMTVariableAssignment &&
                         PsiTreeUtil.getNextSiblingOfType(variable, OMTVariable.class) != null) {
-                    annotationBuilder.withFix(RenameVariableIntention.SINGLETON.getRenameVariableIntention(variable, "$_"));
+                    annotationBuilder = annotationBuilder.withFix(RenameVariableIntention.SINGLETON.getRenameVariableIntention(variable, "$_"));
                 }
                 annotationBuilder.create();
             }
@@ -186,9 +187,8 @@ public class VariableUtil {
             }
             JsonObject attributes = modelUtil.getJson(element);
             if (attributes != null && attributes.has(VARIABLES)) {
-                attributes.get(VARIABLES).getAsJsonArray().forEach(variable -> {
-                    localVariables.put(variable.getAsString(), attributes.get("name").getAsString());
-                });
+                attributes.get(VARIABLES).getAsJsonArray().forEach(variable ->
+                        localVariables.put(variable.getAsString(), attributes.get("name").getAsString()));
             }
             element = element.getParent();
         }
@@ -209,8 +209,10 @@ public class VariableUtil {
             return true;
         }
         // OMT defined parameters
+        final List<String> validDefinedEntries = Arrays.asList(VARIABLES, PARAMS, BINDINGS, BASE);
         String modelItemEntryLabel = modelUtil.getModelItemEntryLabel(variable);
-        return Arrays.asList(VARIABLES, PARAMS, BINDINGS, BASE).contains(modelItemEntryLabel);
+        String entryBlockLabel = modelUtil.getEntryBlockLabel(variable);
+        return validDefinedEntries.contains(modelItemEntryLabel) || validDefinedEntries.contains(entryBlockLabel);
 
     }
     public void annotateDefineParameter(OMTDefineParam defineParam, AnnotationHolder holder) {
@@ -228,9 +230,15 @@ public class VariableUtil {
                 if (typeSuggestions.isEmpty()) {
                     suggetions.add("prefix:Class");
                 }
-                suggetions.forEach(suggestion -> annotate_parameter_with_type
-                        .withFix(AnnotateParameterIntention.SINGLETON.getAnnotateParameterIntention(
-                                defineParam, omtVariable.getName(), suggestion)));
+
+                final AnnotateParameterIntention annotateParameterIntention = AnnotateParameterIntention.SINGLETON;
+                for (String suggestion : suggetions) {
+                    annotate_parameter_with_type = annotate_parameter_with_type.withFix(
+                            annotateParameterIntention.getAnnotateParameterIntention(
+                                    defineParam, omtVariable.getName(), suggestion
+                            )
+                    );
+                }
                 annotate_parameter_with_type.create();
             }
         });
@@ -253,10 +261,7 @@ public class VariableUtil {
                         } else {
                             if (query instanceof OMTQueryPath) {
                                 final OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(variable, parent -> parent instanceof OMTQueryStep);
-                                boolean addedTypes = addTypeSuggestionsFromQueryStep((OMTQueryPath) query, queryStep, types);
-                                if (!addedTypes) {
-                                    // check if
-                                }
+                                addTypeSuggestionsFromQueryStep((OMTQueryPath) query, queryStep, types);
                             }
                         }
                     }
@@ -265,7 +270,7 @@ public class VariableUtil {
         return projectUtil.getRDFModelUtil().getDistinctResources(types);
     }
 
-    private boolean addTypeSuggestionsFromQueryStep(OMTQueryPath queryPath, OMTQueryStep queryStep, List<Resource> types) {
+    private void addTypeSuggestionsFromQueryStep(OMTQueryPath queryPath, OMTQueryStep queryStep, List<Resource> types) {
         final int stepIndex = queryPath.getQueryStepList().indexOf(queryStep);
         if (stepIndex >= 0 && queryPath.getQueryStepList().size() > stepIndex + 1) {
             // take the next step and try to resolve it:
@@ -273,17 +278,15 @@ public class VariableUtil {
             if (omtQueryStep.getCurieElement() != null) {
                 final Resource predicate = omtQueryStep.getCurieElement().getAsResource();
                 types.addAll(projectUtil.getRDFModelUtil().getPredicateSubjects(predicate));
-                return true;
+                return;
             }
             if (omtQueryStep instanceof OMTQueryReverseStep &&
                     omtQueryStep.getQueryStep() != null &&
                     omtQueryStep.getQueryStep().getCurieElement() != null) {
                 final Resource predicate = omtQueryStep.getQueryStep().getCurieElement().getAsResource();
                 types.addAll(projectUtil.getRDFModelUtil().getPredicateObjects(predicate));
-                return true;
             }
         }
-        return false;
     }
 
     /**

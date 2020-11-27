@@ -1,9 +1,10 @@
-package com.misset.opp.omt.external.util.builtIn;
+package com.misset.opp.omt.psi.impl;
 
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.impl.OMTCallableImpl;
+import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
+import com.misset.opp.omt.util.BuiltInUtil;
 
 import java.util.List;
 

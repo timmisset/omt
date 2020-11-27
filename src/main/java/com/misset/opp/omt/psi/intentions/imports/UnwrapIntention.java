@@ -6,7 +6,6 @@ import com.intellij.codeInspection.util.IntentionName;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import com.intellij.util.IncorrectOperationException;
 import com.misset.opp.omt.psi.OMTImportSource;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,7 +30,10 @@ public class UnwrapIntention {
             }
 
             @Override
-            public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
+            public void invoke(@NotNull Project project, Editor editor, PsiFile file) {
+                if (importSource.getName() == null) {
+                    return;
+                }
                 importSource.setName(
                         importSource.getName().replace("'", "")
                 );

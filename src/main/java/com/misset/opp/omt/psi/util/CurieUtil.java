@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
+import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
@@ -7,15 +8,17 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.intentions.prefix.RegisterPrefixIntention;
+import com.misset.opp.omt.util.ProjectUtil;
+import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class CurieUtil {
 
@@ -68,13 +71,15 @@ public class CurieUtil {
 
             if (annotationBuilder != null) {
                 if (!knownPrefixes.isEmpty()) {
-                    knownPrefixes.stream().map(OMTPrefix::getNamespaceIri)
+                    final List<IntentionAction> intentions = knownPrefixes.stream()
+                            .map(OMTPrefix::getNamespaceIri)
                             .map(PsiElement::getText)
                             .distinct()
-                            .forEach(iri -> annotationBuilder.withFix(
-                                    registerPrefixIntention.getRegisterPrefixIntention(namespacePrefix, iri)
-                                    )
-                            );
+                            .map(iri -> registerPrefixIntention.getRegisterPrefixIntention(namespacePrefix, iri))
+                            .collect(Collectors.toList());
+                    for (IntentionAction intention : intentions) {
+                        annotationBuilder = annotationBuilder.withFix(intention);
+                    }
                 }
                 annotationBuilder.create();
             }

@@ -6,7 +6,7 @@ import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.ExportMemberType;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.ModelUtil;
-import com.misset.opp.omt.psi.util.ProjectUtil;
+import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.List;

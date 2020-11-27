@@ -10,7 +10,7 @@ import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FilenameIndex;
 import com.misset.opp.omt.psi.OMTFile;
-import com.misset.opp.omt.psi.util.ProjectUtil;
+import com.misset.opp.omt.util.ProjectUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

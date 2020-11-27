@@ -27,7 +27,7 @@ public class OMTParserDefinition implements ParserDefinition {
     @NotNull
     @Override
     public Lexer createLexer(Project project) {
-        return new OMTLexerAdapter();
+        return new OMTLexerAdapter("Parser");
     }
 
     @NotNull

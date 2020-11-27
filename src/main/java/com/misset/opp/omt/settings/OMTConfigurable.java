@@ -3,7 +3,7 @@ package com.misset.opp.omt.settings;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.util.NlsContexts;
-import com.misset.opp.omt.psi.util.ProjectUtil;
+import com.misset.opp.omt.util.ProjectUtil;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
