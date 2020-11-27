@@ -19,16 +19,13 @@
 // the end of the file (or the entire file) can be a (set of) comment(s)
 OMTFile ::= leading? block? 
 
-start ::=                                   START_TOKEN leading?
-// sometimes the comments following a block are indented wrong but this is not forbidden
-// however, to correctly close the indented block preceeding the comment, the comment should
-// be encapsulated within this end statement. This will be the leading block and should not be considered
-// an actual comment on the item closed by this end block
-end ::=                                     END_TOKEN leading?
+start ::=                                   START_TOKEN
+end ::=                                     END_TOKEN
 indentToken ::=                             INDENT | INDENT2
 dedentToken ::=                             DEDENT | DEDENT2
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
-block ::=                                   leading? (blockEntry+ | (indentToken blockEntry+ dedentToken)) 
+block ::=                                   leading? (blockWrapper | (indentToken blockWrapper dedentToken)) { methods=[getBlockEntryList]}
+blockWrapper ::=                            blockEntry+
 blockEntry ::=                              leading? specificBlock | (leading? propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken))) {
                                             methods=[ getName getLabel ]
 }
@@ -72,7 +69,8 @@ moduleBlock::=                              leading? MODULE_NAME_START moduleNam
 moduleName::=                               NAME | (start OPERATOR end)
 
 // maps
-importBlock ::=                             leading? IMPORT_START (indentToken import* dedentToken)?
+importBlock ::=                             leading? IMPORT_START (indentToken importWrapper dedentToken)? {methods=[getImportList]}
+importWrapper ::=                           import+
 import ::=                                  leading? importSource memberList?
 importSource ::=                            importLocation (start EMPTY_ARRAY end)? {
                                                                            mixin="com.misset.opp.omt.psi.impl.OMTImportNamedElementImpl"
@@ -81,7 +79,8 @@ importSource ::=                            importLocation (start EMPTY_ARRAY en
                                                                          }
 importLocation ::=                          (MODULE_START indentToken PROPERTY dedentToken) | PROPERTY | IMPORT_PATH
 
-prefixBlock::=                              PREFIX_BLOCK_START (prefix+ | (indentToken prefix+ dedentToken))?
+prefixBlock::=                              PREFIX_BLOCK_START (prefixWrapper | (indentToken prefixWrapper dedentToken))? { methods=[getPrefixList]}
+prefixWrapper ::=                           prefix+
 prefix::=                                   leading? namespacePrefix namespaceIri { methods=[getName] }
 namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)            {
                                                                                          mixin="com.misset.opp.omt.psi.impl.OMTNamespacePrefixNamedElementImpl"
@@ -92,7 +91,8 @@ namespaceIri ::=                            start IRI end                       
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix getAsResource getPrefixName]}
 curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FORWARD_SLASH) curieElement queryFilter* { extends=queryStep methods=[resolveToResource ]}
 
-modelBlock::=                               MODEL_BLOCK_START (indentToken modelItemBlock* dedentToken)?
+modelBlock::=                               MODEL_BLOCK_START (indentToken modelItemWrapper? dedentToken)? {methods=[getModelItemBlockList]}
+modelItemWrapper ::=                        modelItemBlock+
 modelItemBlock::=                           leading? modelItemLabel block?
 modelItemLabel::=                           propertyLabel modelItemTypeElement  {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
