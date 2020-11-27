@@ -15,14 +15,15 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
-import com.misset.opp.omt.external.util.builtIn.BuiltInType;
-import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
-import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.*;
 import com.misset.opp.omt.settings.OMTSettingsState;
+import com.misset.opp.omt.util.BuiltInUtil;
+import com.misset.opp.omt.util.ProjectUtil;
+import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -77,10 +78,10 @@ public class OMTCompletionContributor extends CompletionContributor {
     private CurieUtil curieUtil = CurieUtil.SINGLETON;
     private ImportUtil importUtil = ImportUtil.SINGLETON;
 
+    /**
+     * Generic completion that resolves the suggestion based on the cursor position
+     */
     public OMTCompletionContributor() {
-        /**
-         * Generic completion that resolves the suggestion based on the cursor position
-         */
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), getCompletionProvider());
     }
 
@@ -142,7 +143,7 @@ public class OMTCompletionContributor extends CompletionContributor {
                     if (tokenUtil.isMemberImport(element)) {
                         setResolvedElementsForImport(
                                 PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTImport),
-                                false, parameters.getOriginalPosition());
+                                parameters.getOriginalPosition());
                         result.addAllElements(resolvedElements);
                         return;
                     }
@@ -273,7 +274,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         }
         if (element instanceof OMTImportBlock) {
             // get the import itself:
-            setResolvedElementsForImport(elementAtCaret, true, elementAtCaret);
+            setResolvedElementsForImport(elementAtCaret, elementAtCaret);
             isResolved = true;
         }
         if (element.getParent() instanceof OMTQueryPath) {
@@ -363,12 +364,12 @@ public class OMTCompletionContributor extends CompletionContributor {
                         },
                         "", builtInType.name()));
         projectUtil.getExportedMembers(builtInType == BuiltInType.Command).forEach(
-                omtExportMember -> setImportMemberSuggestion(omtExportMember, IMPORTABLE_MEMBER_PRIORITY)
+                this::setImportMemberSuggestion
         );
         isResolved = true;
     }
 
-    private void setImportMemberSuggestion(OMTExportMember exportMember, int priority) {
+    private void setImportMemberSuggestion(OMTExportMember exportMember) {
         if (exportMember.getResolvingElement() == null || exportMember.getResolvingElement().getContainingFile() == null) {
             return;
         }
@@ -387,7 +388,7 @@ public class OMTCompletionContributor extends CompletionContributor {
                 containingFile.getContainingDirectory().getName() :
                 "<root>", containingFile.getName());
         String title = exportMember.getAsSuggestion();
-        addPriorityElement(title, priority, title,
+        addPriorityElement(title, OMTCompletionContributor.IMPORTABLE_MEMBER_PRIORITY, title,
                 (context, item) -> {
                     OMTFile omtFile = (OMTFile) context.getFile();
                     if (!omtFile.hasImportFor(exportMember)) {
@@ -400,7 +401,7 @@ public class OMTCompletionContributor extends CompletionContributor {
                 }, path, exportMember.getCallableType());
     }
 
-    private void setResolvedElementsForImport(PsiElement elementAtCaret, boolean includeLeadingBullet, PsiElement originalElement) {
+    private void setResolvedElementsForImport(PsiElement elementAtCaret, PsiElement originalElement) {
         PsiElement sibling = elementAtCaret;
         while (sibling != null && !(sibling instanceof OMTImport)) {
             sibling = sibling.getPrevSibling();
@@ -420,9 +421,8 @@ public class OMTCompletionContributor extends CompletionContributor {
             if (omtFile != null) {
                 omtFile.getExportedMembers().values().stream()
                         .filter(exportMember -> !existingImports.contains(exportMember.getName()))
-                        .forEach(exportMember -> resolvedElements.add(LookupElementBuilder.create(
-                                String.format("%s%s", includeLeadingBullet ? " - " : "", exportMember.getName())
-                        ).withPresentableText(exportMember.getName())));
+                        .forEach(exportMember -> resolvedElements.add(LookupElementBuilder.create(exportMember.getName())
+                                .withPresentableText(exportMember.getName())));
             }
             isResolved = true;
         }

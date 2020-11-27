@@ -13,7 +13,7 @@ public class OMTFindUsageProvider implements FindUsagesProvider {
     @Nullable
     @Override
     public WordsScanner getWordsScanner() {
-        return new DefaultWordsScanner(new OMTLexerAdapter(),
+        return new DefaultWordsScanner(new OMTLexerAdapter("Word scanner"),
                 TokenSet.create(
                         OMTTypes.VARIABLE_NAME,
                         OMTTypes.NAMESPACE_PREFIX,

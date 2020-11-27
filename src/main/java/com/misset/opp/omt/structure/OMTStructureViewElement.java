@@ -129,23 +129,24 @@ public class OMTStructureViewElement implements StructureViewTreeElement, Sortab
         if (myElement instanceof OMTSequenceItem) {
             List<TreeElement> treeElements = new ArrayList<>();
             OMTSequenceItem sequenceItem = (OMTSequenceItem) this.myElement;
-            List<OMTBlockEntry> blockEntryList = sequenceItem.getBlock().getBlockEntryList();
-            for (OMTBlockEntry omtBlockEntry : blockEntryList) {
-                treeElements.add(new OMTStructureViewElement((OMTBlockEntryImpl) omtBlockEntry));
-            }
+            addBlockEntries(sequenceItem.getBlock(), treeElements);
             return treeElements.toArray(new TreeElement[0]);
         }
         if (myElement instanceof OMTModelItemBlock) {
             List<TreeElement> treeElements = new ArrayList<>();
             OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) this.myElement;
-            OMTBlock block = modelItemBlock.getBlock();
-            List<OMTBlockEntry> blockEntryList = block.getBlockEntryList();
-            for (OMTBlockEntry omtBlockEntry : blockEntryList) {
-                treeElements.add(new OMTStructureViewElement((OMTBlockEntryImpl) omtBlockEntry));
-            }
+            addBlockEntries(modelItemBlock.getBlock(), treeElements);
             return treeElements.toArray(new TreeElement[0]);
         }
         return EMPTY_ARRAY;
     }
 
+    private void addBlockEntries(OMTBlock block, List<TreeElement> treeElements) {
+        if (block != null) {
+            List<OMTBlockEntry> blockEntryList = block.getBlockEntryList();
+            for (OMTBlockEntry omtBlockEntry : blockEntryList) {
+                treeElements.add(new OMTStructureViewElement((OMTBlockEntryImpl) omtBlockEntry));
+            }
+        }
+    }
 }

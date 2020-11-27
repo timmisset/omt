@@ -1,4 +1,4 @@
-package com.misset.opp.omt.external.util.rdf;
+package com.misset.opp.omt.util;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;

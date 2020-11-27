@@ -1,4 +1,4 @@
-package com.misset.opp.omt.psi.util;
+package com.misset.opp.omt.util;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -15,11 +15,9 @@ import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.misset.opp.omt.external.util.builtIn.BuiltInType;
-import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
-import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
+import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.settings.OMTSettingsState;

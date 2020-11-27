@@ -1,4 +1,4 @@
-package com.misset.opp.omt.psi.util;
+package com.misset.opp.omt.util;
 
 import com.google.gson.JsonObject;
 import com.intellij.openapi.application.ApplicationManager;
@@ -11,7 +11,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
-import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;

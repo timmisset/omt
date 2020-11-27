@@ -8,6 +8,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
+import com.misset.opp.omt.util.ProjectUtil;
 import com.sun.istack.Nullable;
 import org.jetbrains.annotations.NotNull;
 

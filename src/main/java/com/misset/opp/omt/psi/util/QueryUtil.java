@@ -4,8 +4,9 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.util.ProjectUtil;
+import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.ArrayList;
@@ -20,20 +21,12 @@ import static com.misset.opp.omt.psi.intentions.query.UnwrapIntention.getUnwrapI
 public class QueryUtil {
     public static final QueryUtil SINGLETON = new QueryUtil();
     private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private RDFModelUtil rdfModelUtil;
-
-    private RDFModelUtil getRDFModel() {
-        if (rdfModelUtil == null || !rdfModelUtil.isLoaded()) {
-            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
-        }
-        return rdfModelUtil;
-    }
 
     public void annotateQueryStep(OMTQueryStep step, AnnotationHolder holder) {
         final List<Resource> resources = step
                 .resolveToResource()
                 .stream()
-                .filter(resource -> getRDFModel().isClassOrType(resource))
+                .filter(resource -> projectUtil.getRDFModelUtil().isClassOrType(resource))
                 .collect(Collectors.toList());
         if (resources.isEmpty()) {
             validateQueryCurieElement(step, holder);
@@ -110,7 +103,7 @@ public class QueryUtil {
 
     public void validateQueryCurieElement(OMTQueryStep step, AnnotationHolder holder) {
         List<Resource> previousStep = PsiImplUtil.getPreviousStep(step);
-        previousStep = previousStep.stream().filter(resource -> getRDFModel().isClassOrType(resource)).collect(Collectors.toList());
+        previousStep = previousStep.stream().filter(resource -> projectUtil.getRDFModelUtil().isClassOrType(resource)).collect(Collectors.toList());
         if (previousStep.isEmpty()) {
             return;
         } // no error when type resolving has failed
@@ -120,15 +113,16 @@ public class QueryUtil {
 
         if (step instanceof OMTQueryReverseStep) {
             final OMTQueryReverseStep reverseStep = (OMTQueryReverseStep) step;
-            final OMTCurieElement curieElement = reverseStep.getQueryStep().getCurieElement();
+            final OMTCurieElement curieElement = reverseStep.getQueryStep() != null ?
+                    reverseStep.getQueryStep().getCurieElement() : null;
             if (curieElement != null) {
-                final List<Resource> resources = new ArrayList<>(getRDFModel().listPredicatesForObjectClass(previousStep).keySet());
+                final List<Resource> resources = new ArrayList<>(projectUtil.getRDFModelUtil().listPredicatesForObjectClass(previousStep).keySet());
                 validatePredicates(resources, curieElement, previousStep, holder, "REVERSE");
             }
         } else {
             final OMTCurieElement curieElement = step.getCurieElement();
             if (!(step.getParent() instanceof OMTQueryReverseStep)) {
-                final List<Resource> resources = new ArrayList<>(getRDFModel().listPredicatesForSubjectClass(previousStep).keySet());
+                final List<Resource> resources = new ArrayList<>(projectUtil.getRDFModelUtil().listPredicatesForSubjectClass(previousStep).keySet());
                 validatePredicates(resources, curieElement, previousStep, holder, "FORWARD");
             }
         }

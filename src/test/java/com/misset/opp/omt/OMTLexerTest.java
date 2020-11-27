@@ -204,7 +204,7 @@ class OMTLexerTest {
     }
 
     private HashMap<String, String> getParsedElementsAsTypes(String content, int start, int end) {
-        OMTLexerAdapter lexer = new OMTLexerAdapter();
+        OMTLexerAdapter lexer = new OMTLexerAdapter(false);
         lexer.start(content, start, end, 0);
         HashMap<String, String> elements = new HashMap<>();
         boolean cont = true;

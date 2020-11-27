@@ -1,4 +1,4 @@
-package com.misset.opp.omt.external.util.builtIn;
+package com.misset.opp.omt.util;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -7,10 +7,11 @@ import com.google.gson.JsonParser;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
+import com.misset.opp.omt.psi.impl.BuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTCallableImpl;
 import com.misset.opp.omt.psi.impl.OMTParameterImpl;
+import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTParameter;
-import com.misset.opp.omt.psi.util.ProjectUtil;
 import org.commonmark.html.HtmlRenderer;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;

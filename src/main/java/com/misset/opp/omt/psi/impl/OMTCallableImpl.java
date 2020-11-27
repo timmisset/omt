@@ -5,15 +5,15 @@ import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.IncorrectSignatureArgument;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
-import com.misset.opp.omt.external.util.rdf.RDFModelUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
 import com.misset.opp.omt.psi.util.ModelUtil;
-import com.misset.opp.omt.psi.util.ProjectUtil;
 import com.misset.opp.omt.psi.util.QueryUtil;
 import com.misset.opp.omt.psi.util.VariableUtil;
+import com.misset.opp.omt.util.ProjectUtil;
+import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.*;

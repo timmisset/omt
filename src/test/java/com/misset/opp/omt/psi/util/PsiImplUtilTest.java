@@ -8,6 +8,7 @@ import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTParameterWithType;
 import com.misset.opp.omt.psi.OMTQuery;
+import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -128,6 +129,18 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 "\n" +
                 "queries: |\n" +
                 "    DEFINE QUERY test() => 'test' / ^ont:stringProperty [rdf:type == /ont:ClassB];\n";
+        OMTQuery query = parseQueryFromContent(content);
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
+    }
+
+    @Test
+    void queryPathResolveToResourceResolvesFilterWithTypeFromUnknown() {
+        String content = "prefixes:\n" +
+                "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY test() => $unknown / ^ont:stringProperty [rdf:type == /ont:ClassB];\n";
         OMTQuery query = parseQueryFromContent(content);
         ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
     }

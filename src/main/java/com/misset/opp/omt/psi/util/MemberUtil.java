@@ -1,6 +1,7 @@
 package com.misset.opp.omt.psi.util;
 
 import com.google.gson.JsonObject;
+import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
@@ -11,15 +12,14 @@ import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.IncorrectSignatureArgument;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
-import com.misset.opp.omt.external.util.builtIn.BuiltInMember;
-import com.misset.opp.omt.external.util.builtIn.BuiltInType;
-import com.misset.opp.omt.external.util.builtIn.BuiltInUtil;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.impl.BuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTExportMemberImpl;
 import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
 import com.misset.opp.omt.psi.intentions.members.MemberIntention;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.support.*;
+import com.misset.opp.omt.util.BuiltInUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -83,7 +83,10 @@ public class MemberUtil {
         OMTFile containingFile = (OMTFile) element.getContainingFile();
         List<OMTMember> importedMembers = containingFile.getImportedMembers();
         Optional<OMTMember> importedMember = importedMembers.stream()
-                .filter(member -> member.getName().trim().equals(nameIdentifier))
+                .filter(member ->
+                        member != null &&
+                                member.getName() != null &&
+                                member.getName().trim().equals(nameIdentifier))
                 .findFirst();
         if (importedMember.isPresent()) {
             return importUtil.resolveImportMember(importedMember.get());
@@ -179,7 +182,9 @@ public class MemberUtil {
             AnnotationBuilder annotationBuilder = holder.newAnnotation(HighlightSeverity.ERROR, String.format("%s could not be resolved", call.getName()))
                     .range(call.getNameIdentifier());
 
-            memberIntention.getImportMemberIntentions(call).forEach(annotationBuilder::withFix);
+            for (IntentionAction action : memberIntention.getImportMemberIntentions(call)) {
+                annotationBuilder = annotationBuilder.withFix(action);
+            }
             annotationBuilder.create();
         } else {
             annotateReference(resolved, call, holder);
@@ -415,13 +420,14 @@ public class MemberUtil {
             return;
         }
         final List<OMTMemberListItem> memberListItemList = omtMemberList.getMemberListItemList();
+        final OMTMemberListItem importedMemberParent = (OMTMemberListItem) importedMember.getParent();
         final boolean duplication = memberListItemList.stream().anyMatch(
                 omtMemberListItem -> omtMemberListItem.getName().equals(importedMember.getName()) &&
-                        memberListItemList.indexOf(omtMemberListItem) < memberListItemList.indexOf(importedMember.getParent())
+                        memberListItemList.indexOf(omtMemberListItem) < memberListItemList.indexOf(importedMemberParent)
         );
         if (duplication) {
             holder.newAnnotation(HighlightSeverity.ERROR, "Duplicate import")
-                    .withFix(removeIntention.getRemoveIntention(importedMember.getParent()))
+                    .withFix(removeIntention.getRemoveIntention(importedMemberParent))
                     .create();
         }
     }

@@ -55,7 +55,7 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     @NotNull
     @Override
     public Lexer getHighlightingLexer() {
-        return new OMTLexerAdapter();
+        return new OMTLexerAdapter("Highlight Lexer");
     }
 
     @NotNull

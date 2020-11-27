@@ -1,4 +1,4 @@
-package com.misset.opp.omt.external.util.builtIn;
+package com.misset.opp.omt.util;
 
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
@@ -6,7 +6,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
-import com.misset.opp.omt.psi.util.ProjectUtil;
+import com.misset.opp.omt.psi.support.BuiltInType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
