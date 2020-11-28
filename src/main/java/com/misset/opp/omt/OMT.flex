@@ -1,16 +1,11 @@
 // Copyright 2000-2020 JetBrains s.r.o. and other contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package com.misset.opp.omt;
 
-import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
-import com.misset.opp.omt.psi.OMTElementType;
-import com.misset.opp.omt.psi.OMTTokenType;
 import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.OMTIgnored;
 import com.intellij.psi.TokenType;
-import jdk.nashorn.internal.parser.Token;
 import java.util.Stack;
-import java.util.HashMap;
 
 %%
 
@@ -52,11 +47,13 @@ TYPED_VALUE=                    {STRING}"^^"({IRI}|{CURIE})
 IMPORT_PATH=                    (\.{1,2}[^:]*:)
 PROPERTY_KEY=                   {IMPORT_PATH} | (({STRING}|{NAME})({WHITE_SPACE}*)":")
 
+// YYINITIAL state can only have a limited selection of tokens that can trigger indentation
+INITIAL_TOKENS=                {PROPERTY_KEY} | "-" | {JDSTART}    // the valid tokens for
+
 %{
 /* globals to track current indentation */
 int yycolumn;
 Stack<Integer> indents = new Stack();
-HashMap<String, Integer> pushbacks = new HashMap<>();
 void log(String message) {
     if(logging) { System.out.println(message); }
 }
@@ -73,13 +70,6 @@ void yypushback(int number, String id) {
     log("resetting " + number + " of " + yylength() + "'" + yytext() + "'" + " due to: " + id);
     yypushback(number);
     log("token moved back from " + position + " to " + zzMarkedPos);
-}
-boolean inScalarBlock = false;
-// TODO: check nut van deze functie
-IElementType startScalarBlock() {
-    inScalarBlock = true;
-    yypushback(yylength() - 1, "starting scalar");
-    return returnElement(OMTTypes.PIPE);
 }
 String getStateName(int state) {
     switch(state) {
@@ -100,56 +90,14 @@ void setState(int state, boolean assignPreviousState) {
     yybegin(state);
 }
 IElementType lastDedent;
-IElementType resetIndent() {
-    int leadingSpaces = yytext().toString().replace("\n", "").length();
-    if(!indents.isEmpty() && indents.peek() > leadingSpaces) {
-        lastDedent = lastDedent == null || lastDedent == OMTTypes.DEDENT2 ? OMTTypes.DEDENT : OMTTypes.DEDENT2;
-        indents.pop();
-        return returnElement(lastDedent);
-    }
-    return null;
+IElementType getDedent() {
+    lastDedent = lastDedent == null || lastDedent == OMTTypes.DEDENT2 ? OMTTypes.DEDENT : OMTTypes.DEDENT2;
+    return lastDedent;
 }
 IElementType lastIndent;
 IElementType getIndent() {
     lastIndent = lastIndent == null || lastIndent == OMTTypes.INDENT2 ? OMTTypes.INDENT : OMTTypes.INDENT2;
-    return returnElement(lastIndent);
-}
-IElementType setIndent() {
-    if(yycolumn > 0 && (indents.isEmpty() || indents.peek() < yycolumn)) {
-        log((indents.isEmpty() ? "empty" : indents.peek()) + " vs " + yycolumn);
-        indents.push(yycolumn);
-        return getIndent();
-    }
-    if(yycolumn == 0 && indents.isEmpty()) { indents.push(0); }
-    log("indent level = " + indents.peek());
-    return null;
-}
-IElementType retryInInitial(String reason) {
-    return retryInInitial(true, reason);
-}
-IElementType retryInInitial(boolean pushback, String reason) {
-    if(pushback) { yypushback(yylength(), "retry in initial: " + reason); }
-    inScalarBlock = false;
-    setState(YYINITIAL);
-    log(reason + ", remaining buffer = '" + yytext() + "'");
-    return returnElement(OMTTypes.END_TOKEN);
-}
-void trim(IElementType element) {
-    if(element != TokenType.WHITE_SPACE &&
-        element != TokenType.BAD_CHARACTER &&
-        element != OMTTypes.JAVADOCS_CONTENT &&
-        element != OMTTypes.START_TOKEN &&
-        element != OMTTypes.END_TOKEN &&
-        element != OMTTypes.INDENT &&
-        element != OMTTypes.INDENT2 &&
-        element != OMTTypes.DEDENT &&
-        element != OMTTypes.DEDENT2
-        ) {
-        int trimSize = yylength() - yytext().toString().trim().length();
-        if(trimSize > 0){
-             yypushback(trimSize, "trim");
-        }
-    }
+    return lastIndent;
 }
 IElementType toSpecificBlockLabel() {
     switch(yytext().toString()) {
@@ -164,68 +112,108 @@ IElementType toSpecificBlockLabel() {
         default: return logAndReturn(OMTTypes.PROPERTY);
     }
 }
-int totalReturned = 0;
-IElementType lastElementReturned = null;
 IElementType returnElement(IElementType element) {
-    trim(element);
-    if(element == OMTTypes.PROPERTY && lastElementReturned == OMTTypes.PROPERTY) {
-        yypushback(yylength(), "returning empty scalar");
-        lastElementReturned = OMTTypes.EMPTY_ENTRY;
-        return logAndReturn(OMTTypes.EMPTY_ENTRY);
-    }
-    lastElementReturned = element != TokenType.WHITE_SPACE ? element : lastElementReturned;
     if(element == OMTTypes.PROPERTY) { return toSpecificBlockLabel(); }
-    totalReturned++;
     return logAndReturn(element);
 }
 String lastResponse = null;
 IElementType logAndReturn(IElementType element) {
-    String response = yystate() + "." + element.toString() + "." + zzMarkedPos;
-//    if(element != TokenType.WHITE_SPACE) {
-        log("Returning " + yytext() + " as " + element.toString() + " --> " + response);
-//    }
+  String elementName = element == null ? "null" : element.toString();
+    String response = yystate() + "." + elementName + "." + zzMarkedPos;
+    log("Returning " + yytext() + " as " + elementName + " --> " + response);
     if(response.equals(lastResponse)) {
         error("===============> Error, lexer not advancing!");
-        error("Returning " + yytext() + " as " + element.toString() + " --> " + response);
+        error("Returning " + yytext() + " as " + elementName + " --> " + response);
     }
     lastResponse = response;
     return element;
 }
-IElementType indentOrReturnAndSetState(IElementType elementToReturn, String pushbackMessage, int newState, int pushbackOnNoIndent) {
-    return dentOrReturnAndSetState(elementToReturn, pushbackMessage, newState, pushbackOnNoIndent, true);
-}
-IElementType dedentOrReturnAndSetState(IElementType elementToReturn, String pushbackMessage, int newState, int pushbackOnNoIndent) {
-    return dentOrReturnAndSetState(elementToReturn, pushbackMessage, newState, pushbackOnNoIndent, false);
-}
-IElementType dentOrReturnAndSetState(IElementType elementToReturn, String pushbackMessage, int newState, int pushbackOnNoIndent, boolean indent) {
-    IElementType indentOrDedent = indent ? setIndent() : resetIndent();
-        if(indentOrDedent == null) {
-            if(newState != -1) { setState(newState); }
-            if(pushbackOnNoIndent > 0) { yypushback(pushbackOnNoIndent, "pushback on no indent"); }
-            return returnElement(elementToReturn);
-        } else {
-            yypushback(yylength(), pushbackMessage);
-            return returnElement(indentOrDedent);
-        }
-}
-IElementType indentOrReturn(IElementType elementToReturn, String pushbackMessage) {
-    return indentOrReturnAndSetState(elementToReturn, pushbackMessage, -1, 0);
-}
-IElementType dedentOrReturn(IElementType elementToReturn, String pushbackMessage) {
-    return dedentOrReturnAndSetState(elementToReturn, pushbackMessage, -1, 0);
-}
-boolean backtick = false;
-void setBacktick(boolean state) {
-    backtick = state;
-}
-boolean jdocs = false;
-void setJavadocs(boolean state) {
-    jdocs = true;
+boolean templateInBacktick = false;
+void setTemplateInBacktick(boolean state) {
+    templateInBacktick = state;
 }
 boolean templateInScalar = false;
 void setTemplateInScalar(boolean state) {
     templateInScalar = state;
 }
+
+/**
+* Returns an indent, dedent or whitespace for the current leading space
+* @return
+*/
+IElementType dent(IElementType returnType) {
+    int indentAtToken = indentAtToken();
+    int currentIndentation = currentIndentation();
+    int nonWhitespaceSize = currentNonWhiteSpaceSize();
+
+    if(indentAtToken > currentIndentation) {
+        yypushback(nonWhitespaceSize, "nwst");                          // pushback the non-whitespace token
+        indents.push(indentAtToken);                                    // register the indentation
+        return returnElement(getIndent());                              // return whitespace as indent
+    } else if (indentAtToken < currentIndentation) {
+        indents.pop();                                                  // remove the current indentation
+        yypushback(nonWhitespaceSize, "nwst");                          // pushback the non-whitespace token
+        if(!indents.isEmpty() && indents.peek() > indentAtToken)        // check if only one dedent is required
+        {
+            yypushback(indentAtToken, "another dedent required");       // pushback all whitespace, will return to this method
+        }                                                               // for another dedent token to be returned
+        return returnElement(getDedent());                              // return whitespace as dedent
+    } else {
+        return returnLeadingWhitespaceFirst(returnType);                        // return the actual element
+    }
+}
+IElementType returnLeadingWhitespaceFirst(IElementType ifNoWhitespaceLeft) {
+    if(yycolumn < indentAtToken()) {
+      // first return the whitespace, then reprocess the non-whitespace
+      yypushback(currentNonWhiteSpaceSize(), "return leading whitespace first");
+      return returnElement(TokenType.WHITE_SPACE);
+    }
+    return returnElement(ifNoWhitespaceLeft);
+}
+int currentNonWhiteSpaceSize() {
+    return yytext().toString().trim().length();
+}
+int currentIndentation() {
+    return indents.isEmpty() ? 0 : indents.peek();
+}
+int indentAtToken() {
+    return Math.max(0, yycolumn + yylength() - currentNonWhiteSpaceSize());
+}
+boolean shouldExitScalar() {
+    return currentIndentation() >= indentAtToken();
+}
+IElementType startScalar() {
+    IElementType elementType = returnLeadingWhitespaceFirst(OMTTypes.START_TOKEN);
+    if(elementType == OMTTypes.START_TOKEN) {
+        yypushback(currentNonWhiteSpaceSize(), "Starting Scalar");
+        setState(YAML_SCALAR);
+    }
+    return elementType;
+}
+IElementType exitScalar() {
+    setState(YYINITIAL);
+    yypushback(yylength());
+    return returnElement(OMTTypes.END_TOKEN);
+}
+IElementType startBacktick() {
+    setTemplateInBacktick(true);
+    setState(BACKTICK);
+    return returnElement(OMTTypes.BACKTICK);
+}
+IElementType closeBracket() {
+    // a template block: ${} can be part of a backtick statement
+    // or be used stand-alone in a scalar value
+    // whichever state started the template should be returned to
+    if(templateInBacktick) {
+        setState(BACKTICK);
+        return returnElement(OMTTypes.TEMPLATE_CLOSED);
+    }
+    // allow template parsing in the scalar values, annotation of the model tree should determine if their usage is legal
+    if(templateInScalar) {
+        setTemplateInScalar(false);
+        return returnElement(OMTTypes.TEMPLATE_CLOSED);
+    }
+    return returnElement(OMTTypes.CURLY_CLOSED); }
 %}
 
 // YYINITIAL == MAP
@@ -237,64 +225,45 @@ void setTemplateInScalar(boolean state) {
 
 %%
 <YYINITIAL> {
-    ^{WHITE_SPACE}+{NEWLINE}                                  {
-          // pushback the newline, this will make sure if a new block starts on the newline it is processed
-          // correctly with dedent handeling using the {NEWLINE}{NOT_WHITE_SPACE} method
-          yypushback(1, "initial");
-          return returnElement(TokenType.WHITE_SPACE); }
-    {NEWLINE}{NOT_WHITE_SPACE}                                {
-                                                                      return dedentOrReturnAndSetState(TokenType.WHITE_SPACE, "resetting indent, new line no whitespace, returning whitespace", -1, 1);
-                                                              }
-    {NEWLINE}                                                 { return returnElement(TokenType.WHITE_SPACE); }
+    // The YYINITIAL block is mainly responsible for the indentation and encapsulation of blocks
+    // in the comment discriptions, underscore is used to indicate leading spaces
 
-    {PROPERTY_KEY}                                            { return indentOrReturn(OMTTypes.PROPERTY, "setting indent"); }
+    // ____something:
+    // take the whitespace and return it as indent, dedent or whitespace depending on previous indentations
+    // will be resolved when the whitespace is gone, will always pushback the single not_white_space character
+    ^{WHITE_SPACE}+{INITIAL_TOKENS}                         { return dent(TokenType.WHITE_SPACE); }
+
+    // something:
+    // OR
+    //     something:
+    //     -    somethingElse:
+    //          aSecondEntry:
+    // Especially the latter requires the indentation to be adjusted to the position of somethingElse to link
+    // aSecondEntry: accordingly.
+    {PROPERTY_KEY}                                            { return dent(OMTTypes.PROPERTY); }
+
+    // The YAML flag in OMT is only used to typecast the modelitem
     "!"{NAME}                                                 { return returnElement(OMTTypes.MODEL_ITEM_TYPE); }
-    "- "                                                      { return indentOrReturn(OMTTypes.SEQUENCE_BULLET, "setting indent"); }
-    {NEWLINE}+({WHITE_SPACE}+)                                {
-                                                                   int leadingSpaces = yytext().toString().replace("\n", "").length();
-                                                                    if(!indents.isEmpty() && leadingSpaces <= indents.peek()) {
-                                                                       return dedentOrReturn(TokenType.WHITE_SPACE, "resetting indent, indent < peek");
-                                                                   } else {
-                                                                       return returnElement(TokenType.WHITE_SPACE);
-                                                                   }
-                                                              }
 
-    {WHITE_SPACE}+                                            { return TokenType.WHITE_SPACE; } // capture all whitespace
-    {JDSTART}                                                 {
-                                                                  return indentOrReturnAndSetState(OMTTypes.JAVADOCS_START, "setting indent", JAVADOCS, 0);
-                                                              }
-    {END_OF_LINE_COMMENT}                                     { return returnElement(OMTIgnored.END_OF_LINE_COMMENT); }
-    <<EOF>>                                                   { return resetIndent(); }
-    [^]                                                       { yypushback(yylength(), "initial"); setState(YAML_SCALAR); return returnElement(OMTTypes.START_TOKEN); }
+    // A sequence bullet to identify a sequence item
+    // the parser will collect them into a sequence
+    "-"                                                       { return dent(OMTTypes.SEQUENCE_BULLET); }
+
+    // When EOF is reached, resolve all open indentations with dedent tokens and close with null
+    <<EOF>>                                                   { return dent(null); }
 }
 <YAML_SCALAR> {
-    {NEWLINE}+({WHITE_SPACE}+)                                 {
-                                                                    int leadingSpaces = yytext().toString().replace("\n", "").length();
-                                                                    if(!indents.isEmpty() && leadingSpaces <= indents.peek()) {
-                                                                        return retryInInitial("indent < peek");
-                                                                    } else {
-                                                                        return returnElement(TokenType.WHITE_SPACE);
-                                                                    }
-                                                              }
-    {WHITE_SPACE}+                                            { return TokenType.WHITE_SPACE; } // capture all whitespace
-    {JDSTART}                                                 { setState(JAVADOCS); return returnElement(OMTTypes.JAVADOCS_START); }
-    {END_OF_LINE_COMMENT}                                     { return returnElement(OMTIgnored.END_OF_LINE_COMMENT); }
-    {NEWLINE}                                                 { return retryInInitial("new line in scalar"); }
-    {NEWLINE}{NOT_WHITE_SPACE}                                {
-                                                                    return retryInInitial("newline starts with non-whitespace");
-                                                              }
-    {NAME}":"                                                 {
-                                                                    if(inScalarBlock) {
-                                                                        yypushback(1, "yaml_scalar");
-                                                                        return returnElement(OMTTypes.OPERATOR); }
-                                                                    else { return retryInInitial("property key outside scalar block"); }
-                                                              }
-    "- "                                                      {
-                                                                    if(inScalarBlock) {
-                                                                        yypushback(1, "yaml_scalar");
-                                                                        return returnElement(OMTTypes.SEQUENCE_BULLET); }
-                                                                    else { return retryInInitial("sequence bullet outside scalar block"); }
-                                                              }
+    // Firstly, we need to check if the SCALAR state is still applicable
+    // Only the indentation of the INITIAL state is recorded, so when the indentation in the SCALAR state is
+    // <= than the last recorded indentation we can exit the scalar
+    ^{WHITE_SPACE}+{NOT_WHITE_SPACE}                           {
+          if(shouldExitScalar()) { return exitScalar(); }           // exit scalar if required
+          // or else, continue in scalar
+          yypushback(currentNonWhiteSpaceSize());                   // pushback all to be processed in the INITIAL state
+          return returnElement(TokenType.WHITE_SPACE);              // and return the END token
+      }
+    ^{PROPERTY_KEY}                                           {    return exitScalar(); } // property_key at the start of a line can only be an exit of the Scalar
+
     {GLOBAL_VARIABLE}                                         { return returnElement(OMTTypes.GLOBAL_VARIABLE_NAME); } // capture all whitespace
     {BOOLEAN}                                                 { return returnElement(OMTTypes.BOOLEAN); }
     {NULL}                                                    { return returnElement(OMTTypes.NULL); }
@@ -302,11 +271,10 @@ void setTemplateInScalar(boolean state) {
                                                                   setState(CURIE);
                                                                   yypushback(yylength() - yytext().toString().indexOf(":"));
                                                                   return returnElement(OMTTypes.NAMESPACE);
-                                                             }
-    "|"{WHITE_SPACE}*{NEWLINE}                               { return startScalarBlock(); }
-    "|"                                                      { return returnElement(OMTTypes.PIPE); }
+                                                                }
+    // A pipe is used to indicate the start of a script block or a query array (someValue | someOtherValue)
+    "|"                                                             { return returnElement(OMTTypes.PIPE); }
 
-    "TRUE" | "FALSE"                                                { return returnElement(OMTTypes.BOOLEAN); }
     "DEFINE"                                                        { return returnElement(OMTTypes.DEFINE_START); }
     "QUERY"                                                         { return returnElement(OMTTypes.DEFINE_QUERY); }
     "COMMAND"                                                       { return returnElement(OMTTypes.DEFINE_COMMAND); }
@@ -338,7 +306,7 @@ void setTemplateInScalar(boolean state) {
     "END"                                                           { return returnElement(OMTTypes.END_OPERATOR); }
     "RETURN"                                                        { return returnElement(OMTTypes.RETURN_OPERATOR); }
 
-    {IRI}                                                            { return returnElement(OMTTypes.IRI); }
+    {IRI}                                                           { return returnElement(OMTTypes.IRI); }
     {INCOMPLETE_IRI}                                                { return returnElement(TokenType.BAD_CHARACTER); }
     {STRING}                                                        { return returnElement(OMTTypes.STRING); }
     {INTEGER}                                                       { return returnElement(OMTTypes.INTEGER); }
@@ -353,17 +321,7 @@ void setTemplateInScalar(boolean state) {
     ","                                                             { return returnElement(OMTTypes.COMMA); }
     ";"                                                             { return returnElement(OMTTypes.SEMICOLON); }
     "{"                                                             { return returnElement(OMTTypes.CURLY_OPEN); }
-    "}"                                                             {
-          if(backtick) {
-              setState(BACKTICK);
-              return returnElement(OMTTypes.TEMPLATE_CLOSED);
-          }
-          // allow template parsing in the scalar values, annotation of the model tree should determine if their usage is legal
-          if(templateInScalar) {
-                setTemplateInScalar(false);
-                return returnElement(OMTTypes.TEMPLATE_CLOSED);
-          }
-          return returnElement(OMTTypes.CURLY_CLOSED); }
+    "}"                                                             { return closeBracket(); }
     "/"                                                             { return returnElement(OMTTypes.FORWARD_SLASH); }
     "^"                                                             { return returnElement(OMTTypes.CARET); }
     "[]"                                                            { return returnElement(OMTTypes.EMPTY_ARRAY); }
@@ -375,41 +333,84 @@ void setTemplateInScalar(boolean state) {
     "\."                                                            { return returnElement(OMTTypes.DOT); }
     "+="                                                            { return returnElement(OMTTypes.ADD); }
     "-="                                                            { return returnElement(OMTTypes.REMOVE); }
-    "`"                                                             { setBacktick(true); setState(BACKTICK); return returnElement(OMTTypes.BACKTICK); }
-    "*"                                                             {
-                                                                              return returnElement(OMTTypes.ASTERIX);
-                                                                    }
+    "`"                                                             { return startBacktick(); }
+    "*"                                                             { return returnElement(OMTTypes.ASTERIX); }
+    // Its not required to encapsulate an interpolated string with backticks. To support this, the SCALAR state itself can also
+    // capture backtick template blocks ${...}
     "${"                                                            { setTemplateInScalar(true); return returnElement(OMTTypes.TEMPLATE_OPEN); }
     <<EOF>>                                                         { setState(YYINITIAL); return returnElement(OMTTypes.END_TOKEN); }
+}
+<YYINITIAL, YAML_SCALAR> {
+    // JavaDocs can start from both the INITIAL state and SCALAR state
+    // when part of the INITIAL state, it can be the start of the indentation
+    {JDSTART}                                                 {
+                                                                  IElementType element = dent(OMTTypes.JAVADOCS_START);
+                                                                  if(element == OMTTypes.JAVADOCS_START) {
+                                                                    setState(JAVADOCS); // indentation was resolved, change state
+                                                                  }
+                                                                  return element; // can be an indent/dedent token or JAVADOCS_START
+                                                              }
 }
 <CURIE> {
     ":"                                                             { return returnElement(OMTTypes.COLON); }
     {NAME} | {SYMBOL}                                               { return returnElement(OMTTypes.NAMESPACE_MEMBER); }
-    [^]                                                             { yypushback(1, "ending curie"); setState(YAML_SCALAR); }
 }
 <BACKTICK> {
+    // Backtick templates are supported and anything parsed in them can be resolved to PSI elements
     "${"                                                            { setState(YAML_SCALAR); return returnElement(OMTTypes.TEMPLATE_OPEN); }
-    {WHITE_SPACE}+                                                  { return returnElement(TokenType.WHITE_SPACE); }
-    {NEWLINE}+                                                      { return returnElement(TokenType.WHITE_SPACE); }
-    "`"                                                             { setBacktick(false); setState(YAML_SCALAR); return returnElement(OMTTypes.BACKTICK); }
-    [^\$\`\ ]+                                                        { return returnElement(OMTTypes.STRING); }
+    "`"                                                             { setTemplateInBacktick(false); setState(YAML_SCALAR); return returnElement(OMTTypes.BACKTICK); }
+    [^\$\`\ ]+                                                      { return returnElement(OMTTypes.STRING); }
     "$"                                                             { return returnElement(OMTTypes.STRING); }
 }
 <JAVADOCS> {
     {JDEND}                                                         { setState(previousState); return returnElement(OMTTypes.JAVADOCS_END); }
-    {WHITE_SPACE}+                                                  { return returnElement(TokenType.WHITE_SPACE); }
-    {NEWLINE}+                                                      { return returnElement(TokenType.WHITE_SPACE); }
     {JDCOMMENTLINE}                                                 { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
     "@param"                                                        { setState(PARAM_ANNOTATION, false); return returnElement(OMTTypes.ANNOTATE_PARAMETER); }
-    [^]                                                             { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
 }
 <PARAM_ANNOTATION> {
-    {WHITE_SPACE}+                                                  { return returnElement(TokenType.WHITE_SPACE); }
     "$"{NAME}                                                       { return returnElement(OMTTypes.VARIABLE_NAME); }
     {NAME}":"                                                       { return returnElement(OMTTypes.PROPERTY); }
     {NAME} | {SYMBOL}                                               { return returnElement(OMTTypes.NAMESPACE_MEMBER); }
     "("                                                             { return returnElement(OMTTypes.PARENTHESES_OPEN); }
     ")"                                                             { setState(JAVADOCS, false); return returnElement(OMTTypes.PARENTHESES_CLOSE); }
+}
+<YYINITIAL, YAML_SCALAR, JAVADOCS, BACKTICK, PARAM_ANNOTATION> {
+
+    // WHITE_SPACE and NEWLINE are not relevant in YAML except for indentation
+    // which is handled above
+    // the longest possible RegEx match will make sure that the leading whitespace at the start
+    // of the line will be matched first and appropriate indentation is set
+    // all remaining whitespace characters can be collected and returns
+    {WHITE_SPACE}+ | {NEWLINE}+                               { return TokenType.WHITE_SPACE; } // capture all whitespace
+
+    // END_OF_LINE_COMMENTs are ignored by the parser and can be added to any location in the document
+    {END_OF_LINE_COMMENT}                                     { return returnElement(OMTIgnored.END_OF_LINE_COMMENT); }
+}
+
+// Anything not matches by the above blocks is capted using the [^] regex. Per state a certain response is required:
+// These cannot be added to their respective blocks since it would not allow the capturing of the generic items (whitespace, newline and EOL comments)
+<YYINITIAL> {
+    // Anything not resolving to a property(key) or a sequence is automatically a scalar which will be resolved
+    // by the YAML_SCALAR state
+    // SCALAR values are encapsulated by a <START> and <END> token to easier parse them and support the many
+    // variations of how they can be entered in the YAML format.
+    [^]                                                             { return startScalar(); }
+}
+<CURIE> {
+    // The curie will be closed and always returns to the scalar
+    [^]                                                             { yypushback(1, "ending curie"); setState(YAML_SCALAR); }
+}
+<JAVADOCS> {
+    // Javadocs can contain anything. The only thing actually able to close the Javadocs and returning to the previous
+    // lexical state is JDEND
+    [^]                                                             { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
+}
+<PARAM_ANNOTATION> {
+    // Parameter annotations are part of the JavaDocs block and closure should always result to returning to the JAVADOCS state
+    // usually the Param annotation is closed by the closing parenthesis, however when this is not done the lexer should
+    // simply continue in the JAVADOCS state and consider everything a comment
     [^]                                                             { setState(JAVADOCS, false); return returnElement(OMTTypes.JAVADOCS_CONTENT); }
 }
+
+// Not all states have an escape. When the SCALAR hits a bad character it should result in a syntax error
 [^]                                                                  { return returnElement(TokenType.BAD_CHARACTER); }
