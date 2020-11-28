@@ -19,8 +19,6 @@
 // the end of the file (or the entire file) can be a (set of) comment(s)
 OMTFile ::= leading? block? 
 
-start ::=                                   START_TOKEN
-end ::=                                     END_TOKEN
 indentToken ::=                             INDENT | INDENT2
 dedentToken ::=                             DEDENT | DEDENT2
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
@@ -33,7 +31,7 @@ propertyLabel ::=                           PROPERTY { methods=[getPropertyLabel
 
 // a scalar single statement (multiline optional) following a property label
 scalar ::=                                  comment? scalarValue
-scalarValue ::=                             (start (parameterWithType | variableAssignment | block | query | script) end) | nakedString | EMPTY_ENTRY
+scalarValue ::=                             parameterWithType | variableAssignment | block | nakedString | query | script
 
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indentToken, it must 
@@ -47,32 +45,32 @@ specificBlock ::=                          importBlock | exportBlock | prefixBlo
 
 // sequences
 exportBlock ::=                             EXPORT_START memberList?
-memberList ::=                              memberListItem+ | (indentToken memberListItem+ dedentToken)
+memberList ::=                              memberListItem+ // | (indentToken memberListItem+ dedentToken?)
 memberListItem ::=                          (leading? SEQUENCE_BULLET member?) { methods=[getName] }
-member ::=                                  start OPERATOR end {
+member ::=                                  OPERATOR {
                                                        mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
                                                        implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                        methods=[getName setName getNameIdentifier]
                                                      }
 
 // scalars
-queriesBlock::=                             QUERY_BLOCK_START (start PIPE defineQueryStatement* end)? {
+queriesBlock::=                             QUERY_BLOCK_START (PIPE defineQueryStatement*)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
                                                                 }
-commandsBlock::=                            COMMAND_BLOCK_START (start PIPE defineCommandStatement* end)? {
+commandsBlock::=                            COMMAND_BLOCK_START (PIPE defineCommandStatement*)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
                                                                 }
 
 moduleBlock::=                              leading? MODULE_NAME_START moduleName 
-moduleName::=                               NAME | (start OPERATOR end)
+moduleName::=                               NAME | OPERATOR
 
 // maps
 importBlock ::=                             leading? IMPORT_START (indentToken importWrapper dedentToken)? {methods=[getImportList]}
 importWrapper ::=                           import+
 import ::=                                  leading? importSource memberList?
-importSource ::=                            importLocation (start EMPTY_ARRAY end)? {
+importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                            mixin="com.misset.opp.omt.psi.impl.OMTImportNamedElementImpl"
                                                                            implements="com.misset.opp.omt.psi.named.OMTImportNamedElement"
                                                                            methods=[getName setName getNameIdentifier]
@@ -87,7 +85,7 @@ namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)        
                                                                                          implements="com.misset.opp.omt.psi.named.OMTNamespacePrefixNamedElement"
                                                                                          methods=[getName setName getNameIdentifier]
                                                                                    }
-namespaceIri ::=                            start IRI end                          { methods = [getName getNamespace] }
+namespaceIri ::=                            IRI                                   { methods = [getName getNamespace] }
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix getAsResource getPrefixName]}
 curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FORWARD_SLASH) curieElement queryFilter* { extends=queryStep methods=[resolveToResource ]}
 
@@ -267,4 +265,5 @@ interpolationTemplate ::=                   TEMPLATE_OPEN query TEMPLATE_CLOSED
 interpolatedString ::=                      BACKTICK (interpolationTemplate | STRING)* BACKTICK { extends=queryStep }
 
 // string / interpolated string without encapsulation of ' or `
-nakedString ::=                             start (queryStep | COMMA | EQUALS | SEQUENCE_BULLET | interpolationTemplate)+ end
+nakedString ::=                             (COMMA | EQUALS | SEQUENCE_BULLET | interpolationTemplate | (OPERATOR OPERATOR+))+
+
