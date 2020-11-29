@@ -12,15 +12,15 @@ import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTIgnored;
+import com.misset.opp.omt.psi.OMTTypes;
 import org.intellij.sdk.language.parser.OMTParser;
 import org.jetbrains.annotations.NotNull;
 
-import static com.misset.opp.omt.psi.OMTIgnored.END_OF_LINE_COMMENT;
-import static com.misset.opp.omt.psi.OMTTypes.Factory;
-import static com.misset.opp.omt.psi.OMTTypes.STRING;
-
 public class OMTParserDefinition implements ParserDefinition {
-    public static final TokenSet WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE);
+    public static final TokenSet WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE, OMTIgnored.START_TOKEN, OMTIgnored.END_TOKEN);
+    public static final TokenSet END_OF_LINE_COMMENTS = TokenSet.create(OMTIgnored.END_OF_LINE_COMMENT);
+    public static final TokenSet STRINGS = TokenSet.create(OMTTypes.STRING);
 
     public static final IFileElementType FILE = new IFileElementType(OMTLanguage.INSTANCE);
 
@@ -33,26 +33,19 @@ public class OMTParserDefinition implements ParserDefinition {
     @NotNull
     @Override
     public TokenSet getWhitespaceTokens() {
-        return TokenSet.create(
-                TokenType.WHITE_SPACE
-        );
-//        return WHITE_SPACES;
+        return WHITE_SPACES;
     }
 
     @NotNull
     @Override
     public TokenSet getCommentTokens() {
-        return TokenSet.create(
-                END_OF_LINE_COMMENT
-        );
+        return END_OF_LINE_COMMENTS;
     }
 
     @NotNull
     @Override
     public TokenSet getStringLiteralElements() {
-        return TokenSet.create(
-                STRING
-        );
+        return STRINGS;
     }
 
     @NotNull
@@ -79,6 +72,6 @@ public class OMTParserDefinition implements ParserDefinition {
     @NotNull
     @Override
     public PsiElement createElement(ASTNode node) {
-        return Factory.createElement(node);
+        return OMTTypes.Factory.createElement(node);
     }
 }

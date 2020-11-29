@@ -2,7 +2,7 @@ import:
     /**
     * Some info about the import
     */
-    '@client/procedure_with_exporting_members.omt':  #or behind the path
+    '@client/procedure_with_exporting_members.omt': #or behind the path
     /**
     * specific information about the member
     */

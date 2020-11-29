@@ -124,7 +124,7 @@ public class PsiImplUtil {
 
     @NotNull
     public static PsiElement getNameIdentifier(OMTMember member) {
-        return member.getStart().getNextSibling();
+        return member.getFirstChild();
     }
 
     public static String getName(OMTMemberListItem memberListItem) {

@@ -14,26 +14,27 @@ public interface OMTTokenSets {
             END_TOKEN,
             EMPTY_ARRAY
     );
-    TokenSet SEQUENCES = TokenSet.create(
-            IMPORT,
-            PREFIX,
+    TokenSet DEFINED_STATEMENTS = TokenSet.create(
             DEFINE_COMMAND_STATEMENT,
-            DEFINE_QUERY_STATEMENT,
-            MEMBER_LIST,
-            SEQUENCE
+            DEFINE_QUERY_STATEMENT
     );
-    TokenSet SEQUENCE_ITEMS = TokenSet.create(
-            SEQUENCE_ITEM,
-            MEMBER_LIST_ITEM,
-            SEQUENCE_BULLET
-    );
+
     TokenSet ASSIGNMENT_OPERATORS = TokenSet.create(
             EQUALS,
             CONDITIONAL_OPERATOR
     );
     TokenSet ENTRIES = TokenSet.create(
             MODEL_ITEM_BLOCK,
-            BLOCK_ENTRY
+            BLOCK_ENTRY,
+            IMPORT,
+            PREFIX
+    );
+    // SAME_LEVEL_ALIGNMENTS will be used to register an alignment if they are the first instance
+    // in their group or otherwise use the sibling alignment of the same type
+    TokenSet SAME_LEVEL_ALIGNMENTS = TokenSet.orSet(
+            DEFINED_STATEMENTS,
+            ENTRIES,
+            TokenSet.create(SEQUENCE_ITEM, MEMBER_LIST_ITEM)
     );
     TokenSet CHOOSE_OUTER = TokenSet.create(
             CHOOSE_OPERATOR, END_PATH
