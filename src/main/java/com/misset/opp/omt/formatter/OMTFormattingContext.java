@@ -91,6 +91,13 @@ public class OMTFormattingContext {
         final IElementType nodeType = node.getElementType();
         if (OMTTokenSets.SAME_LEVEL_ALIGNMENTS.contains(nodeType)) {
             alignment = registerAndReturnIfAnyOf(node, nodeType);
+        } else if (OMTTokenSets.CONTAINERS.contains(nodeType)) {
+            // align the container to their first child:
+            final ASTNode[] children = node.getChildren(OMTTokenSets.SAME_LEVEL_ALIGNMENTS);
+            if (children.length == 0) {
+                return null;
+            }
+            alignment = computeAlignment(children[0]);
         } else if (OMTTokenSets.ALL_QUERY_TOKENS.contains(nodeType)) {
             alignment = computeQueryAlignment(node);
         } else if (OMTTokenSets.CHOOSE.contains(nodeType)) {

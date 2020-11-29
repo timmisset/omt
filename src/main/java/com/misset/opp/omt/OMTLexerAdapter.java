@@ -23,6 +23,6 @@ public class OMTLexerAdapter extends FlexAdapter {
         if (logging) {
             System.out.printf("%s, started with offset %s - %s in state %s%n", origin, startOffset, endOffset, initialState);
         }
-        super.start(buffer, 0, endOffset, initialState);
+        super.start(buffer, startOffset, endOffset, initialState);
     }
 }

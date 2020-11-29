@@ -27,7 +27,8 @@ public interface OMTTokenSets {
             MODEL_ITEM_BLOCK,
             BLOCK_ENTRY,
             IMPORT,
-            PREFIX
+            PREFIX,
+            MEMBER_LIST
     );
     // SAME_LEVEL_ALIGNMENTS will be used to register an alignment if they are the first instance
     // in their group or otherwise use the sibling alignment of the same type
@@ -35,6 +36,9 @@ public interface OMTTokenSets {
             DEFINED_STATEMENTS,
             ENTRIES,
             TokenSet.create(SEQUENCE_ITEM, MEMBER_LIST_ITEM)
+    );
+    TokenSet CONTAINERS = TokenSet.create(
+            MEMBER_LIST
     );
     TokenSet CHOOSE_OUTER = TokenSet.create(
             CHOOSE_OPERATOR, END_PATH
