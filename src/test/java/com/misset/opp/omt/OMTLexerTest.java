@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OMTLexerTest {
 
-    boolean printLexerLog = false;
+    boolean printLexerLog = true;
     boolean validate = true;
 
     @Test
@@ -176,18 +176,14 @@ class OMTLexerTest {
         List<String> elements = new ArrayList<>();
         IElementType element = lexer.getTokenType();
         if (element != null) {
-            if (!element.toString().equals("WHITE_SPACE")) {
-                elements.add(element.toString());
-            }
+            elements.add(element.toString());
         }
         boolean cont = true;
         while (cont) {
             lexer.advance();
             element = lexer.getTokenType();
             if (element != null) {
-//                if (!element.toString().equals("WHITE_SPACE")) {
-                    elements.add(element.toString());
-//                }
+                elements.add(element.toString());
             } else {
                 cont = false;
             }
@@ -224,15 +220,71 @@ class OMTLexerTest {
 
 
     @Test
-    public void testSpecificContent() {
-        printLexerLog = true;
+    public void testSimpleContent() {
         String contentToTest = "model:\n" +
-                " Activiteit: !Activity\n" +
-                "  title: 'TEST'\n" +
-                " Procedure: !Procedure\n" +
-                "   onRun: |\n" +
-                "     'test';\n";
+                "    Activiteit: !Activity\n" +
+                "        title: 'TEST'\n" +
+                "    Procedure: !Procedure\n";
 
+        System.out.println(
+                String.join("\n", getElements(contentToTest))
+        );
+    }
+
+    @Test
+    public void testImportsContent() {
+        String contentToTest = "import:\n" +
+                "    '@client/bedrijf/src/util/queries.omt':\n" +
+                "        -   gesorteerdeBedrijven\n" +
+                "        -   weergaveNaamBedrijf\n" +
+                "        -   alleHoedanigheidSoorten\n" +
+                "    '../utils/verzend-status.queries.omt':\n" +
+                "        -   isTeVersturenNaarBvh\n" +
+                "    '@client/medewerker/src/utils/medewerker.queries.omt':\n" +
+                "        -   minimaalEenMedewerkerAanwezig\n" +
+                "\n";
+
+        System.out.println(
+                String.join("\n", getElements(contentToTest))
+        );
+    }
+
+    @Test
+    void testScalarValue() {
+
+        String contentToTest = "rules:\n" +
+                "   beginTijdstipMoetVoorEindTijdstip:\n" +
+                "       $opvolgingsDossier / pol:incident / pol:beginTijdstip / EMPTY OR\n" +
+                "       $opvolgingsDossier / pol:incident / pol:eindTijdstip / EMPTY OR\n" +
+                "       $opvolgingsDossier / pol:incident / pol:beginTijdstip <= $opvolgingsDossier / pol:incident / pol:eindTijdstip\n" +
+                "";
+
+        System.out.println(
+                String.join("\n", getElements(contentToTest))
+        );
+    }
+
+
+    @Test
+    void testUnclosedDocument() {
+
+        String contentToTest = "import:\n" +
+                "    module:Registratie:\n" +
+                "    -   Raadplegen\n" +
+                "        "; // not ending with unindented new line
+
+        System.out.println(
+                String.join("\n", getElements(contentToTest))
+        );
+    }
+
+    @Test
+    void testJDCommentOnIndentationPlace() {
+        String contentToTest = "queries:|\n" +
+                "    /**\n" +
+                "    * @param $param1 (string)\n" +
+                "    */\n" +
+                "    DEFINE QUERY myQuery($param1) => $param1;\n";
         System.out.println(
                 String.join("\n", getElements(contentToTest))
         );

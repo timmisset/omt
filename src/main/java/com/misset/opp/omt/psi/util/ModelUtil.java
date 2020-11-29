@@ -68,30 +68,6 @@ public class ModelUtil {
     }
 
     /**
-     * Returns the block entries that are accessible to this element. This is the case when the entry blocks
-     * are direct parents (recursive) or their siblings. But not the child entries in the siblings of parents.
-     *
-     * @param element
-     * @param labels
-     * @return
-     */
-    public List<OMTBlockEntry> getConnectedEntries(PsiElement element, List<String> labels) {
-        List<OMTBlockEntry> blockEntries = new ArrayList<>();
-        List<OMTBlockEntry> parents = PsiTreeUtil.collectParents(element,
-                OMTBlockEntry.class, false, parent -> parent instanceof OMTModelItemBlock);
-        for (OMTBlockEntry parent : parents) {
-            getSiblingEntryBlocks(parent).stream().filter(entry ->
-                    labels.contains(getEntryBlockLabel(entry)))
-                    .forEach(blockEntries::add);
-        }
-        return blockEntries;
-    }
-
-    private List<OMTBlockEntry> getSiblingEntryBlocks(PsiElement element) {
-        return PsiTreeUtil.getChildrenOfTypeAsList(element.getParent(), OMTBlockEntry.class);
-    }
-
-    /**
      * Returns the label of the block entry that directly contains this element
      * model:
      * MyActivity: !Activity

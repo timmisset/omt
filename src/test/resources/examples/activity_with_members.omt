@@ -9,6 +9,9 @@ commands: |
     DEFINE COMMAND myRootCommand() => { @LOG('Hello'); }
 
 model:
+    MijnActiviteitMetTitelDieAlsOperatorCallWordtOpgepakt: !Activity
+        title: Mijn
+
     MijnActiviteit: !Activity
         title: Mijn Activiteit
 

@@ -1,6 +1,7 @@
 // Copyright 2000-2020 JetBrains s.r.o. and other contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package com.misset.opp.omt;
 
+import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.OMTIgnored;
@@ -153,14 +154,23 @@ IElementType dent(IElementType returnType) {
     } else if (indentAtToken < currentIndentation) {
         indents.pop();                                                  // remove the current indentation
         yypushback(nonWhitespaceSize, "nwst");                          // pushback the non-whitespace token
-        if(!indents.isEmpty() && indents.peek() > indentAtToken)        // check if only one dedent is required
+        if(!indents.isEmpty() &&
+            indents.peek() > indentAtToken &&
+            yylength() >= indentAtToken)                                // check if only one dedent is required
         {
             yypushback(indentAtToken, "another dedent required");       // pushback all whitespace, will return to this method
         }                                                               // for another dedent token to be returned
         return returnElement(getDedent());                              // return whitespace as dedent
     } else {
-        return returnLeadingWhitespaceFirst(returnType);                        // return the actual element
+        return returnLeadingWhitespaceFirst(returnType);                // return the actual element
     }
+}
+IElementType finishLexer() {
+    if(!indents.isEmpty()) {
+        indents.pop();
+        return returnElement(getDedent());                              // returns as many as dedents as required to close the document
+    }
+    return null;
 }
 IElementType returnLeadingWhitespaceFirst(IElementType ifNoWhitespaceLeft) {
     if(yycolumn < indentAtToken()) {
@@ -183,8 +193,8 @@ boolean shouldExitScalar() {
     return currentIndentation() >= indentAtToken();
 }
 IElementType startScalar() {
-    IElementType elementType = returnLeadingWhitespaceFirst(OMTTypes.START_TOKEN);
-    if(elementType == OMTTypes.START_TOKEN) {
+    IElementType elementType = returnLeadingWhitespaceFirst(OMTIgnored.START_TOKEN);
+    if(elementType == OMTIgnored.START_TOKEN) {
         yypushback(currentNonWhiteSpaceSize(), "Starting Scalar");
         setState(YAML_SCALAR);
     }
@@ -193,7 +203,7 @@ IElementType startScalar() {
 IElementType exitScalar() {
     setState(YYINITIAL);
     yypushback(yylength());
-    return returnElement(OMTTypes.END_TOKEN);
+    return returnElement(OMTIgnored.END_TOKEN);
 }
 IElementType startBacktick() {
     setTemplateInBacktick(true);
@@ -249,8 +259,18 @@ IElementType closeBracket() {
     // the parser will collect them into a sequence
     "-"                                                       { return dent(OMTTypes.SEQUENCE_BULLET); }
 
+    // JavaDocs can start from both the INITIAL state and SCALAR state
+    // when part of the INITIAL state, it can be the start of the indentation
+    {JDSTART}                                                 {
+                                                                  IElementType element = dent(OMTTypes.JAVADOCS_START);
+                                                                  if(element == OMTTypes.JAVADOCS_START) {
+                                                                    setState(JAVADOCS); // indentation was resolved, change state
+                                                                  }
+                                                                  return element; // can be an indent/dedent token or JAVADOCS_START
+                                                              }
+
     // When EOF is reached, resolve all open indentations with dedent tokens and close with null
-    <<EOF>>                                                   { return dent(null); }
+    <<EOF>>                                                   { return finishLexer(); }
 }
 <YAML_SCALAR> {
     // Firstly, we need to check if the SCALAR state is still applicable
@@ -338,18 +358,15 @@ IElementType closeBracket() {
     // Its not required to encapsulate an interpolated string with backticks. To support this, the SCALAR state itself can also
     // capture backtick template blocks ${...}
     "${"                                                            { setTemplateInScalar(true); return returnElement(OMTTypes.TEMPLATE_OPEN); }
-    <<EOF>>                                                         { setState(YYINITIAL); return returnElement(OMTTypes.END_TOKEN); }
-}
-<YYINITIAL, YAML_SCALAR> {
-    // JavaDocs can start from both the INITIAL state and SCALAR state
-    // when part of the INITIAL state, it can be the start of the indentation
-    {JDSTART}                                                 {
-                                                                  IElementType element = dent(OMTTypes.JAVADOCS_START);
-                                                                  if(element == OMTTypes.JAVADOCS_START) {
-                                                                    setState(JAVADOCS); // indentation was resolved, change state
-                                                                  }
-                                                                  return element; // can be an indent/dedent token or JAVADOCS_START
-                                                              }
+
+    // Javadocs in the Scalar are not indented but are anchored directly as leading block to the next Psi element
+    {JDSTART}                                                       {
+                                                                        setState(JAVADOCS);
+                                                                        return returnElement(OMTTypes.JAVADOCS_START); // can be an indent/dedent token or JAVADOCS_START
+                                                                    }
+    // When continueing from a scalar value into the next sequence item
+    "-"                                                             { return returnElement(OMTTypes.SEQUENCE_BULLET); }
+    <<EOF>>                                                         { setState(YYINITIAL); return returnElement(OMTIgnored.END_TOKEN); }
 }
 <CURIE> {
     ":"                                                             { return returnElement(OMTTypes.COLON); }
@@ -359,7 +376,7 @@ IElementType closeBracket() {
     // Backtick templates are supported and anything parsed in them can be resolved to PSI elements
     "${"                                                            { setState(YAML_SCALAR); return returnElement(OMTTypes.TEMPLATE_OPEN); }
     "`"                                                             { setTemplateInBacktick(false); setState(YAML_SCALAR); return returnElement(OMTTypes.BACKTICK); }
-    [^\$\`\ ]+                                                      { return returnElement(OMTTypes.STRING); }
+    [^\$\`\ \n]+                                                    { return returnElement(OMTTypes.STRING); }
     "$"                                                             { return returnElement(OMTTypes.STRING); }
 }
 <JAVADOCS> {

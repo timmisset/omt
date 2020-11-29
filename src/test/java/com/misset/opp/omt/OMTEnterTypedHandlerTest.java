@@ -45,6 +45,7 @@ class OMTEnterTypedHandlerTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+        // TODO: testen
     void postProcessEnter_AddsBulletForImport2() {
         String content = "import:\n" +
                 "    'import.omt':\n" +

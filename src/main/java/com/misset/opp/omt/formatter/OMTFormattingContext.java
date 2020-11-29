@@ -14,6 +14,7 @@ import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiUtilCore;
 import com.misset.opp.omt.OMTLanguage;
+import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.support.OMTTokenSets;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,7 +24,17 @@ import java.util.HashMap;
 import static com.misset.opp.omt.psi.OMTIgnored.END_OF_LINE_COMMENT;
 import static com.misset.opp.omt.psi.OMTTypes.*;
 
-
+/**
+ * The formatter has 2 main functions, indentation and alignment
+ * The indentation is used to indent a block (relative to its parent).
+ * The element that is indented should generate an alignment token that can be used by subsequent items as an anchor
+ * Even when these items have indentations, the alignment will overrule it and make sure identical
+ * alignment tokens are levelled.
+ * <p>
+ * There is some complexity in this code due to the levelling of query statements which are not
+ * simply processed as YAML scalar values but have certain additional indentation and alignment
+ * based on their query(step) types.
+ */
 public class OMTFormattingContext {
 
     private HashMap<ASTNode, Alignment> nodeAlignment = new HashMap<>();
@@ -46,36 +57,62 @@ public class OMTFormattingContext {
         ;
     }
 
-    public Indent computeBlockIndent(@NotNull ASTNode node) {
+    public Indent computeIndent(@NotNull ASTNode node) {
         IElementType nodeType = PsiUtilCore.getElementType(node);
 
         Indent indent = Indent.getNoneIndent();
-        if (!isRootElement(node)) {
-            if (OMTTokenSets.ENTRIES.contains(nodeType)) {
-                indent = Indent.getNormalIndent(true);
-            } else if (isFirstIndentableQueryStep(node) || OMTTokenSets.SEQUENCES.contains(nodeType)) {
-                indent = Indent.getNormalIndent(false);
-            } else if (OMTTokenSets.CHOOSE_INNER.contains(node.getElementType())) {
-                indent = Indent.getNormalIndent(true);
-            } else if (SCRIPT_LINE == node.getElementType()) {
-                indent = Indent.getNormalIndent(false);
-            } else if (node.getTreeParent() != null && INTERPOLATED_STRING == node.getTreeParent().getElementType()) {
-                indent = Indent.getNormalIndent(false);
-            } else if (SCALAR == node.getElementType()) {
-                indent = Indent.getNormalIndent(true);
-            } else if (END_OF_LINE_COMMENT == node.getElementType()) {
-                indent = indentEOLComment(node);
-            }
+        if (OMTTokenSets.ENTRIES.contains(nodeType) && !isRootElement(node)) {
+            indent = Indent.getNormalIndent(true);
+        } else if (OMTTypes.MEMBER_LIST_ITEM == nodeType) {
+            indent = Indent.getNormalIndent(true); // TODO: Make optional based on a setting
+        } else if (SEQUENCE_ITEM == nodeType) {
+            indent = Indent.getNormalIndent(true); // TODO: Make optional based on a setting
+        } else if (OMTTokenSets.DEFINED_STATEMENTS.contains(nodeType)) { // Query and Command statements
+            indent = Indent.getNormalIndent(false);
+        } else if (isFirstIndentableQueryStep(node)) {
+            indent = Indent.getNormalIndent(false);
+        } else if (OMTTokenSets.CHOOSE_INNER.contains(node.getElementType())) {
+            indent = Indent.getNormalIndent(true);
+        } else if (SCRIPT_LINE == node.getElementType()) {
+            indent = Indent.getNormalIndent(false);
+        } else if (node.getTreeParent() != null && INTERPOLATED_STRING == node.getTreeParent().getElementType()) {
+            indent = Indent.getNormalIndent(false);
+        } else if (END_OF_LINE_COMMENT == node.getElementType()) {
+            indent = indentEOLComment(node);
         }
-
 //        System.out.println(node.getElementType().toString() + " -->  " + node.getText().substring(0, Math.min(node.getTextLength(), 10)) +
 //                " --> " + indent.toString() + " --> " + isFirstIndentableQueryStep(node));
         return indent;
 
     }
 
+    public Alignment computeAlignment(@NotNull ASTNode node) {
+        Alignment alignment = null;
+        final IElementType nodeType = node.getElementType();
+        if (OMTTokenSets.SAME_LEVEL_ALIGNMENTS.contains(nodeType)) {
+            alignment = registerAndReturnIfAnyOf(node, nodeType);
+        } else if (OMTTokenSets.ALL_QUERY_TOKENS.contains(nodeType)) {
+            alignment = computeQueryAlignment(node);
+        } else if (OMTTokenSets.CHOOSE.contains(nodeType)) {
+            alignment = alignChooseBlock(node);
+        } else if (node.getTreeParent() != null && INTERPOLATED_STRING == node.getTreeParent().getElementType()) {
+            // An interpolated string as a block is aligned in the query, the parts of the string are further aligned
+            // if applicable. This will align the first placeholder ${} or string used to be the alignment anchor
+            alignment = alignInterpolatedString(node);
+        } else if (isJavaDocsPart(node)) {
+            // All Javadocs are aligned to the START /** anchor
+            alignment = alignJavaDocs(node);
+        } else if (END_OF_LINE_COMMENT == nodeType) {
+            alignment = alignEOLComment(node);
+        } else if (node.getTreeParent() != null && BLOCK == node.getTreeParent().getElementType()) {
+            alignment = nodeAlignment.get(node.getTreeParent());
+        }
+        //        System.out.println(node.getText().substring(0, Math.min(10, node.getTextLength())) + " --> " + (alignment != null ? alignment.toString() : "null"));
+        return alignment;
+    }
+
     /**
-     * Returns true if this element is part of the query but it's parent is nots
+     * Returns true if this element is part of the query but it's parent is not
      *
      * @param node
      * @return
@@ -90,15 +127,13 @@ public class OMTFormattingContext {
         if (node.getTreeParent() == null) {
             return false;
         }
-        // >= to include blank lines
-        return document.getLineNumber(node.getStartOffset()) >= comparedToLine + 1;
+        return document.getLineNumber(node.getStartOffset()) > comparedToLine;
     }
 
     /**
-     * Returns true if this node's parent is the query root and itself is the first part of the query
-     * which is contained on a new line
-     * Only this part should be indented and used as anchor for the query alignment
-     *
+     * Check if it is the first indentable step in the query:
+     * DEFINE QUERY myQuery => .. / .. /
+     *     ..  <-- first indentable query step
      * @param node
      * @return
      */
@@ -112,6 +147,16 @@ public class OMTFormattingContext {
                 !(node.getTreeParent() != null && isFirstIndentableQueryStep(node.getTreeParent()));
     }
 
+    /**
+     * Returns the line level of the query root
+     * DEFINE QUERY myQuery => .. / .. / <-- root line
+     * ..  / .. / ..
+     * DEFINE QUERY myQuery => <-- root line
+     * .. / .. / ..
+     *
+     * @param node
+     * @return
+     */
     private int rootLineLevel(ASTNode node) {
         while (!isTopLevelQuery(node)) {
             node = node.getTreeParent();
@@ -173,31 +218,6 @@ public class OMTFormattingContext {
         return node;
     }
 
-    public Alignment computeAlignment(@NotNull ASTNode node) {
-        Alignment alignment = null;
-        if (TokenSet.orSet(OMTTokenSets.ENTRIES, OMTTokenSets.SEQUENCES)
-                .contains(node.getElementType())) {
-            // All entry types and sequences are anchored to the first instance
-            alignment = registerAndReturnIfAnyOf(node, node.getElementType());
-        } else if (OMTTokenSets.ALL_QUERY_TOKENS.contains(node.getElementType())) {
-            alignment = computeQueryAlignment(node);
-        } else if (OMTTokenSets.CHOOSE.contains(node.getElementType())) {
-            alignment = alignChooseBlock(node);
-        } else if (OMTTokenSets.SEQUENCE_ITEMS.contains(node.getElementType())) {
-            alignment = getAlignmentAndRegisterSelf(node, node.getTreeParent());
-        } else if (node.getTreeParent() != null && INTERPOLATED_STRING == node.getTreeParent().getElementType()) {
-            // An interpolated string as a block is aligned in the query, the parts of the string are further aligned
-            // if applicable. This will align the first placeholder ${} or string used to be the alignment anchor
-            alignment = alignInterpolatedString(node);
-        } else if (isJavaDocsPart(node)) {
-            // All Javadocs are aligned to the START /** anchor
-            alignment = alignJavaDocs(node);
-        } else if (END_OF_LINE_COMMENT == node.getElementType()) {
-            alignment = alignEOLComment(node);
-        }
-        //        System.out.println(node.getText().substring(0, Math.min(10, node.getTextLength())) + " --> " + (alignment != null ? alignment.toString() : "null"));
-        return alignment;
-    }
     private Alignment computeQueryAlignment(ASTNode node) {
         // Arrays are aligned to first indentable element
         ASTNode previous = getTreePrev(node, OMTTokenSets.ALL_QUERY_TOKENS);
@@ -228,6 +248,8 @@ public class OMTFormattingContext {
      * @return
      */
     private Alignment registerAndReturnIfAnyOf(ASTNode node, IElementType... types) {
+        if (nodeAlignment.containsKey(node)) {
+            return nodeAlignment.get(node); }
         final ASTNode firstOfKindInParent = getFirstOfKindInParent(node.getTreeParent(), types);
         if (firstOfKindInParent == node) {
             return registerAlignmentAndReturn(node);
@@ -318,14 +340,21 @@ public class OMTFormattingContext {
 
     private Indent indentEOLComment(ASTNode node) {
         node = getEOLCommentSibling(node);
-        return node != null ? computeBlockIndent(node) : null;
+        return node != null ? computeIndent(node) : null;
     }
 
+    // The end-of-line comments are assumed to describe the element following it (placed on top if them)
+    // therefore, they can be anchored to the first alignable element that follows the comment(s)
     private ASTNode getEOLCommentSibling(ASTNode node) {
         // anchor to next sibling:
         node = node.getTreeNext();
-        while (node != null && TokenSet.WHITE_SPACE.contains(node.getElementType())) {
+        while (node != null &&
+                TokenSet.orSet(OMTTokenSets.WHITESPACE, TokenSet.create(END_OF_LINE_COMMENT))
+                        .contains(node.getElementType())) {
             node = node.getTreeNext();
+        }
+        if (node != null && BLOCK == node.getElementType()) {
+            return getEOLCommentSibling(node.getFirstChildNode());
         }
         return node;
     }
@@ -340,6 +369,12 @@ public class OMTFormattingContext {
         Alignment alignment = nodeAlignment.get(registeredNode);
         nodeAlignment.put(node, alignment);
         return alignment;
+    }
+
+    public Indent newChildIndent(ASTNode node) {
+        return isRootElement(node)
+                ? Indent.getSpaceIndent(0, true)
+                : Indent.getNormalIndent();
     }
 }
 

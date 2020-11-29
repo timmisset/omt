@@ -27,14 +27,10 @@ import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class OMTCompletionContributor extends CompletionContributor {
 
@@ -187,14 +183,12 @@ public class OMTCompletionContributor extends CompletionContributor {
 
     // used to fetch the entries already available for the item that is targeted by the completion
     private List<String> getExistingSiblingEntryLabels(PsiElement element) {
-        List<String> entryList = new ArrayList<>();
-        PsiElement container = PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTBlock);
+        OMTBlock container = (OMTBlock) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTBlock);
         if (container == null) {
-            return entryList;
+            return Collections.emptyList();
         }
-
-        List<OMTBlockEntry> childrenOfTypeAsList = PsiTreeUtil.getChildrenOfTypeAsList(container, OMTBlockEntry.class);
-        childrenOfTypeAsList.forEach(blockEntry -> entryList.add(modelUtil.getEntryBlockLabel(blockEntry)));
+        List<String> entryList = new ArrayList<>();
+        container.getBlockEntryList().forEach(blockEntry -> entryList.add(modelUtil.getEntryBlockLabel(blockEntry)));
         return entryList;
     }
 
@@ -267,7 +261,7 @@ public class OMTCompletionContributor extends CompletionContributor {
             // scalar value as a block is not enough for useful completion:
             // check to see if there are children that can be used
             Arrays.stream(element.getChildren()).forEach(child -> {
-                if (!(child instanceof OMTStart) && !(child instanceof OMTEnd) && !(tokenUtil.isWhiteSpace(child))) {
+                if (!(tokenUtil.isWhiteSpace(child))) {
                     trySuggestionsForCurrentElementAt(child, elementAtCaret, context);
                 }
             });
@@ -402,30 +396,27 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void setResolvedElementsForImport(PsiElement elementAtCaret, PsiElement originalElement) {
-        PsiElement sibling = elementAtCaret;
-        while (sibling != null && !(sibling instanceof OMTImport)) {
-            sibling = sibling.getPrevSibling();
-        }
-        if (sibling != null) {
-            OMTImport omtImport = (OMTImport) sibling;
-            VirtualFile importedFile = importUtil.getImportedFile(omtImport, originalElement.getContainingFile().getVirtualFile());
-            List<String> existingImports =
-                    omtImport.getMemberList() == null ? new ArrayList<>() :
-                            omtImport.getMemberList().getMemberListItemList()
-                                    .stream()
-                                    .map(OMTMemberListItem::getMember)
-                                    .filter(Objects::nonNull)
-                                    .map(OMTMember::getName)
-                                    .collect(Collectors.toList());
-            OMTFile omtFile = importedFile == null ? null : (OMTFile) PsiManager.getInstance(elementAtCaret.getProject()).findFile(importedFile);
-            if (omtFile != null) {
-                omtFile.getExportedMembers().values().stream()
-                        .filter(exportMember -> !existingImports.contains(exportMember.getName()))
-                        .forEach(exportMember -> resolvedElements.add(LookupElementBuilder.create(exportMember.getName())
-                                .withPresentableText(exportMember.getName())));
-            }
-            isResolved = true;
-        }
+        final Optional<OMTImport> importOptional = TokenFinderUtil.findImport(elementAtCaret);
+        importOptional.ifPresent(
+                omtImport -> {
+                    VirtualFile importedFile = importUtil.getImportedFile(omtImport, originalElement.getContainingFile().getVirtualFile());
+                    OMTFile omtFile = importedFile == null ? null : (OMTFile) PsiManager.getInstance(elementAtCaret.getProject()).findFile(importedFile);
+                    if (omtFile == null) {
+                        return;
+                    } // cannot find imported file
+
+                    final List<String> existingImports = importUtil.getImportedMemberNames(omtImport);
+                    omtFile.getExportedMembers().values().stream()
+                            .filter(exportMember -> !existingImports.contains(exportMember.getName()))
+                            .forEach(this::setResolvedElementsForImport);
+                    isResolved = true;
+                }
+        );
+    }
+
+    private void setResolvedElementsForImport(OMTExportMember exportMember) {
+        resolvedElements.add(LookupElementBuilder.create(exportMember.getName())
+                .withPresentableText(exportMember.getName()));
     }
 
     private void setResolvedElementsForClasses(PsiElement element) {

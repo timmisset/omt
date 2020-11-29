@@ -137,19 +137,19 @@ public class OMTFile extends PsiFileBase {
 
     public Map<String, OMTExportMember> getImportedMembersAsExportedMembers() {
         HashMap<String, OMTExportMember> importedMembers = new HashMap<>();
-           getImportedFiles().forEach(
-                   (omtImport, virtualFile) -> {
-                       if (virtualFile != null && omtImport.getMemberList() != null) {
-                           omtImport.getMemberList().getMemberListItemList().forEach(
-                                   omtMemberListItem -> {
-                                       final OMTFile omtFile = (OMTFile) PsiManager.getInstance(getProject()).findFile(virtualFile);
-                                       if (omtFile != null) {
-                                           omtFile.getExportedMember(omtMemberListItem.getName())
-                                                   .ifPresent(exportMember -> importedMembers.put(exportMember.getName(), exportMember));
-                                       }
-                                   }
-                           );
-                       }
+        getImportedFiles().forEach(
+                (omtImport, virtualFile) -> {
+                    if (virtualFile != null && omtImport.getMemberList() != null) {
+                        omtImport.getMemberList().getMemberListItemList().forEach(
+                                omtMemberListItem -> {
+                                    final OMTFile omtFile = (OMTFile) PsiManager.getInstance(getProject()).findFile(virtualFile);
+                                    if (omtFile != null) {
+                                        omtFile.getExportedMember(omtMemberListItem.getName())
+                                                .ifPresent(exportMember -> importedMembers.put(exportMember.getName(), exportMember));
+                                    }
+                                }
+                        );
+                    }
                 }
         );
         return importedMembers;
@@ -189,7 +189,7 @@ public class OMTFile extends PsiFileBase {
         if (omtPrefix == null) {
             return "";
         }
-        String iri = omtPrefix.getNamespaceIri().getStart().getNextSibling().getText();
+        String iri = omtPrefix.getNamespaceIri().getText();
         iri = iri.startsWith("<") ? iri.substring(1) : iri;
         iri = iri.endsWith(">") ? iri.substring(0, iri.length() - 1) : iri;
         return iri;
@@ -220,6 +220,7 @@ public class OMTFile extends PsiFileBase {
     public Map<String, OMTModelItemBlock> getDeclaredOntologies() {
         Optional<OMTModelBlock> model = getSpecificBlock(MODEL, OMTModelBlock.class);
         HashMap<String, OMTModelItemBlock> ontologies = new HashMap<>();
+
         model.ifPresent(omtModelBlock -> omtModelBlock.getModelItemBlockList()
                 .forEach(omtModelItemBlock -> {
                     String modelItemType = omtModelItemBlock.getModelItemLabel().getModelItemTypeElement().getText();

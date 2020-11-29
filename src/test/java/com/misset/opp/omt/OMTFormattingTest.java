@@ -59,6 +59,7 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+        // TODO: testen
     void testScalarValue() {
         assertFormattingApplied("model:\n" +
                         "    mijnActiviteit: !Activity\n" +
@@ -173,6 +174,20 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
                 "             \"d\": \"${e}\",\n" +
                 "             }`) / CAST(JSON);";
         // the formatting is aligned on the first occurance of the String which starts with: {
+        assertFormattingApplied(text, expectedString,
+                psiFile -> setLanguageSettings(psiFile,
+                        commonCodeStyleSettings ->
+                                commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
+    }
+
+    @Test
+    void testLeadingComment() {
+        String text = "model:\n" +
+                "    // Something about the comment\n" +
+                "    Activiteit: !Activity\n";
+        String expectedString = "model:\n" +
+                "    // Something about the comment\n" +
+                "    Activiteit: !Activity";
         assertFormattingApplied(text, expectedString,
                 psiFile -> setLanguageSettings(psiFile,
                         commonCodeStyleSettings ->

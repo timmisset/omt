@@ -19,11 +19,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -134,31 +132,6 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
             Optional<OMTBlockEntry> variables = modelUtil.getModelItemBlockEntry(variable, "variables");
             assertTrue(variables.isPresent());
             assertEquals("variables", Objects.requireNonNull(variables.get().getPropertyLabel()).getPropertyLabelName());
-        });
-    }
-
-    @Test
-    void getConnectedEntries_Returns2Items() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            List<OMTBlockEntry> connectedEntries = modelUtil.getConnectedEntries(variable, Arrays.asList("variables", "params"));
-            List<String> labels = connectedEntries.stream().map(omtBlockEntry ->
-                    Objects.requireNonNull(omtBlockEntry.getPropertyLabel()).getPropertyLabelName())
-                    .collect(Collectors.toList());
-            assertEquals(2, labels.size());
-            assertTrue(labels.contains("variables"));
-            assertTrue(labels.contains("params"));
-        });
-    }
-
-    @Test
-    void getConnectedEntries_RootItems() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
-            List<OMTBlockEntry> connectedEntries = modelUtil.getConnectedEntries(prefix, Arrays.asList("import"));
-            List<String> labels = connectedEntries.stream().map(OMTBlockEntry::getName)
-                    .collect(Collectors.toList());
-            assertEquals(1, labels.size());
-            assertTrue(labels.contains("import"));
         });
     }
 

@@ -4,7 +4,7 @@ import com.intellij.lexer.FlexAdapter;
 import org.jetbrains.annotations.NotNull;
 
 public class OMTLexerAdapter extends FlexAdapter {
-    private String origin;
+    private final String origin;
     private boolean logging = false;
 
     public OMTLexerAdapter(boolean enableLogging) {
@@ -23,6 +23,6 @@ public class OMTLexerAdapter extends FlexAdapter {
         if (logging) {
             System.out.printf("%s, started with offset %s - %s in state %s%n", origin, startOffset, endOffset, initialState);
         }
-        super.start(buffer, startOffset, endOffset, initialState);
+        super.start(buffer, 0, endOffset, initialState);
     }
 }

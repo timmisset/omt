@@ -228,11 +228,11 @@ class ImportUtilTest extends LightJavaCodeInsightFixtureTestCase {
                     "    * Some info about the import\n" +
                     "    */\n" +
                     "    '@client/procedure_with_exporting_members.omt': #or behind the path\n" +
-                    "    /**\n" +
-                    "    * specific information about the member\n" +
-                    "    */\n" +
-                    "    -   MijnProcedure #and something about the member\n" +
-                    "    -   AnotherMember\n" +
+                    "        /**\n" +
+                    "        * specific information about the member\n" +
+                    "        */\n" +
+                    "        -   MijnProcedure\n" +
+                    "        -   AnotherMember   #and something about the member\n" +
                     "\n", text);
         });
     }
