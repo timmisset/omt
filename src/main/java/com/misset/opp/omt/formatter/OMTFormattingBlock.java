@@ -28,6 +28,29 @@ public class OMTFormattingBlock extends AbstractBlock {
         this.myNewChildIndent = omtFormattingContext.newChildIndent(node);
     }
 
+    private static int getNodeStartOffset(@NotNull ASTNode node) {
+        final CharSequence chars = node.getChars();
+        int i = 0;
+        while (chars.length() > i && chars.charAt(i) == ' ') {
+            i++;
+        }
+        return node.getStartOffset() + i;
+    }
+
+    private static int getNodeLength(@NotNull ASTNode node) {
+        CharSequence text = node.getChars();
+        if (text.length() == 0) {
+            return node.getStartOffset();
+        }
+        int last = text.length() - 1;
+        for (int i = last; i >= 0; i--) {
+            if (text.charAt(i) != '\n') {
+                return i + 1;
+            }
+        }
+        return text.length(); // empty lines only, return original
+    }
+
     @Override
     protected List<Block> buildChildren() {
         return buildChildren(formattingContext.getSpacingBuilder(), myNode);

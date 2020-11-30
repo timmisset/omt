@@ -9,6 +9,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
+import com.intellij.psi.impl.source.tree.FileElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
@@ -16,6 +17,7 @@ import com.intellij.psi.util.PsiUtilCore;
 import com.misset.opp.omt.OMTLanguage;
 import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.support.OMTTokenSets;
+import com.misset.opp.omt.psi.util.TokenFinderUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -39,6 +41,7 @@ public class OMTFormattingContext {
 
     private HashMap<ASTNode, Alignment> nodeAlignment = new HashMap<>();
 
+
     private final CodeStyleSettings settings;
     private final PsiFile file;
     private final SpacingBuilder spacingBuilder;
@@ -54,6 +57,8 @@ public class OMTFormattingContext {
         spacingBuilder = new SpacingBuilder(settings, OMTLanguage.INSTANCE)
                 .around(OMTTokenSets.ASSIGNMENT_OPERATORS)
                 .spaceIf(common.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+                .after(IMPORT_BLOCK).blankLines(1)
+                .after(PREFIX_BLOCK).blankLines(1)
         ;
     }
 
@@ -341,6 +346,9 @@ public class OMTFormattingContext {
 
 
     private Alignment alignEOLComment(ASTNode node) {
+        if (!TokenFinderUtil.SINGLETON.isStartOfLine(node)) {
+            return null;
+        } // only align applicable comments
         node = getEOLCommentSibling(node);
         return node != null ? computeAlignment(node) : null;
     }
@@ -379,9 +387,9 @@ public class OMTFormattingContext {
     }
 
     public Indent newChildIndent(ASTNode node) {
-        return isRootElement(node)
+        return node instanceof FileElement
                 ? Indent.getSpaceIndent(0, true)
-                : Indent.getNormalIndent();
+                : Indent.getNormalIndent(true);
     }
 }
 

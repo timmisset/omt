@@ -10,6 +10,10 @@ public interface OMTTokenSets {
             TokenType.WHITE_SPACE,
             INDENT_TOKEN,
             DEDENT_TOKEN,
+            INDENT2,
+            INDENT,
+            DEDENT2,
+            DEDENT,
             START_TOKEN,
             END_TOKEN,
             EMPTY_ARRAY
@@ -27,8 +31,7 @@ public interface OMTTokenSets {
             MODEL_ITEM_BLOCK,
             BLOCK_ENTRY,
             IMPORT,
-            PREFIX,
-            MEMBER_LIST
+            PREFIX
     );
     // SAME_LEVEL_ALIGNMENTS will be used to register an alignment if they are the first instance
     // in their group or otherwise use the sibling alignment of the same type

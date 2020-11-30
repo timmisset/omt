@@ -396,7 +396,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void setResolvedElementsForImport(PsiElement elementAtCaret, PsiElement originalElement) {
-        final Optional<OMTImport> importOptional = TokenFinderUtil.findImport(elementAtCaret);
+        final Optional<OMTImport> importOptional = TokenFinderUtil.SINGLETON.findImport(elementAtCaret);
         importOptional.ifPresent(
                 omtImport -> {
                     VirtualFile importedFile = importUtil.getImportedFile(omtImport, originalElement.getContainingFile().getVirtualFile());

@@ -107,12 +107,10 @@ public class CurieUtil {
             ((OMTFile) element.getContainingFile()).setRootBlock(prefixBlock);
         } else {
             OMTPrefix prefix = (OMTPrefix) OMTElementFactory.fromString(template, OMTPrefix.class, project);
-            final List<OMTPrefix> prefixList = prefixBlock.getPrefixList();
-            final OMTPrefix lastPrefix = prefixList.get(prefixList.size() - 1);
-            final PsiElement insertedPrefix = prefixBlock.addAfter(prefix, lastPrefix);
-            prefixBlock.addBefore(OMTElementFactory.createNewLine(project), insertedPrefix);
+            prefixBlock.addBefore(prefix, prefixBlock.getDedentToken());
         }
         CodeStyleManager.getInstance(project).reformat(prefixBlock);
+        prefixBlock.replace(OMTElementFactory.removeBlankLinesInside(prefixBlock, OMTPrefixBlock.class));
     }
 
     public void annotateCurieElement(OMTCurieElement curieElement, AnnotationHolder annotationHolder) {
