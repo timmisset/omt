@@ -110,20 +110,20 @@ class OMTLexerTest {
         assertEquals("OMTTokenType.PROPERTY", parsedElementsAsTypes.get("params:"));
     }
 
-    @Test
-    public void testExactContentMatch_ModelWithQueryAndParameterPartial() throws IOException {
-        String contentToTest = "model:\n" +
-                "    test: !Activity\n" +
-                "        queries: |\n" +
-                "            DEFINE QUERY myQuery() => 'mijn query';\n" +
-                "\n" +
-                "\n" +
-                "        params:\n" +
-                "            -   $mijnParameter";
-        HashMap<String, String> parsedElementsAsTypes = getParsedElementsAsTypes(contentToTest, 44, contentToTest.length());
-        assertTrue(parsedElementsAsTypes.containsKey("params:"));
-        assertEquals("OMTTokenType.PROPERTY", parsedElementsAsTypes.get("params:"));
-    }
+//    @Test
+//    public void testExactContentMatch_ModelWithQueryAndParameterPartial() throws IOException {
+//        String contentToTest = "model:\n" +
+//                "    test: !Activity\n" +
+//                "        queries: |\n" +
+//                "            DEFINE QUERY myQuery() => 'mijn query';\n" +
+//                "\n" +
+//                "\n" +
+//                "        params:\n" +
+//                "            -   $mijnParameter";
+//        HashMap<String, String> parsedElementsAsTypes = getParsedElementsAsTypes(contentToTest, 44, contentToTest.length());
+//        assertTrue(parsedElementsAsTypes.containsKey("params:"));
+//        assertEquals("OMTTokenType.PROPERTY", parsedElementsAsTypes.get("params:"));
+//    }
 
     @Test
     public void testIncompletePushbacks() throws IOException {

@@ -75,7 +75,7 @@ importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                          }
 importLocation ::=                          (MODULE_START indentToken PROPERTY dedentToken) | PROPERTY | IMPORT_PATH
 
-prefixBlock::=                              PREFIX_BLOCK_START (prefix+ | (indentToken prefix+ dedentToken))?
+prefixBlock::=                              PREFIX_BLOCK_START indentToken prefix+ dedentToken
 prefix::=                                   leading? namespacePrefix namespaceIri { methods=[getName] }
 namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)            {
                                                                                          mixin="com.misset.opp.omt.psi.impl.OMTNamespacePrefixNamedElementImpl"

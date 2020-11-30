@@ -1,4 +1,4 @@
-package com.misset.opp.omt;
+package com.misset.opp.omt.formatter;
 
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
@@ -31,17 +31,58 @@ class OMTEnterTypedHandlerTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void javaDocsStart() {
+        String content = "/**<caret>";
+        String documentText = configureHitEnterAndReturnDocumentText(content);
+        assertEquals("/**\n" +
+                "* ", documentText);
+    }
+
+    @Test
+    void javaDocsContent() {
+        String content = "/**\n" +
+                "* test<caret>";
+        String documentText = configureHitEnterAndReturnDocumentText(content);
+        assertEquals("/**\n" +
+                "* test\n" +
+                "* ", documentText);
+    }
+
+    @Test
+    void javaDocsContentClosed() {
+        String content = "/**\n" +
+                "* test<caret>\n" +
+                "*/";
+        String documentText = configureHitEnterAndReturnDocumentText(content);
+        assertEquals("/**\n" +
+                "* test\n" +
+                "* \n" +
+                "*/", documentText);
+    }
+
+    @Test
+    void memberListAfterParent() {
+        String content = "import:\n" +
+                "    'import.omt':<caret>\n" +
+                "";
+        String documentText = configureHitEnterAndReturnDocumentText(content);
+        assertEquals("import:\n" +
+                "    'import.omt':\n" +
+                //TODO: when indentation becomes configurable by the styling, this should be indented based on that setting
+                "    -   \n", documentText);
+    }
+
+    @Test
     void postProcessEnter_AddsBulletForImport() {
         String content = "import:\n" +
                 "    'import.omt':\n" +
                 "       -   gebeurtenisLocatieRelatieSoortGraph<caret>\n" +
                 "";
-        myFixture.configureByText("test.omt", content);
-        myFixture.type('\n');
+        String documentText = configureHitEnterAndReturnDocumentText(content);
         assertEquals("import:\n" +
                 "    'import.omt':\n" +
                 "       -   gebeurtenisLocatieRelatieSoortGraph\n" +
-                "       -   \n", myFixture.getFile().getText());
+                "       -   \n", documentText);
     }
 
     @Test
@@ -53,14 +94,13 @@ class OMTEnterTypedHandlerTest extends LightJavaCodeInsightFixtureTestCase {
                 "    'import2.omt':\n" +
                 "       -   gebeurtenisLocatieRelatieSoortGraph\n" +
                 "";
-        myFixture.configureByText("test.omt", content);
-        myFixture.type('\n');
+        String documentText = configureHitEnterAndReturnDocumentText(content);
         assertEquals("import:\n" +
                 "    'import.omt':\n" +
                 "       -   gebeurtenisLocatieRelatieSoortGraph\n" +
                 "       -   \n" +
                 "    'import2.omt':\n" +
-                "       -   gebeurtenisLocatieRelatieSoortGraph\n", myFixture.getFile().getText());
+                "       -   gebeurtenisLocatieRelatieSoortGraph\n", documentText);
     }
 
     @Test
@@ -69,12 +109,17 @@ class OMTEnterTypedHandlerTest extends LightJavaCodeInsightFixtureTestCase {
                 "    test: !Activity\n" +
                 "        params:\n" +
                 "            -   $variable<caret>";
-        myFixture.configureByText("test.omt", content);
-        myFixture.type('\n');
+        String documentText = configureHitEnterAndReturnDocumentText(content);
         assertEquals("model:\n" +
                 "    test: !Activity\n" +
                 "        params:\n" +
                 "            -   $variable\n" +
-                "            -   ", myFixture.getFile().getText());
+                "            -   ", documentText);
+    }
+
+    private String configureHitEnterAndReturnDocumentText(String content) {
+        myFixture.configureByText("test.omt", content);
+        myFixture.type('\n');
+        return myFixture.getEditor().getDocument().getText();
     }
 }

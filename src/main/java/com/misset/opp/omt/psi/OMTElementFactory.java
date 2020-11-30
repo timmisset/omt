@@ -148,7 +148,11 @@ public class OMTElementFactory {
         return PsiTreeUtil.findChildOfType(rootElement, getClass);
     }
 
-    public static void validateFile(String text, Project project) {
-        PsiElement rootElement = createFile(project, text);
+    public static PsiElement removeBlankLinesInside(PsiElement element, Class<? extends PsiElement> selectionClass) {
+        String replace = element.getText().replaceAll("(?:\\h*\\n)+", "\n");
+        if (!replace.equals(element.getText())) {
+            return OMTElementFactory.fromString(replace, selectionClass, element.getProject());
+        }
+        return element;
     }
 }

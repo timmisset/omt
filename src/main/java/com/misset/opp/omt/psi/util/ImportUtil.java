@@ -188,7 +188,7 @@ public class ImportUtil {
                 "        -   %s\n\n", importPath, importMember);
         Optional<OMTImportBlock> optionalImportBlock = targetFile.getSpecificBlock("import", OMTImportBlock.class);
         if (optionalImportBlock.isPresent()) {
-            final OMTImportBlock importBlock = optionalImportBlock.get();
+            OMTImportBlock importBlock = optionalImportBlock.get();
             final Optional<OMTImport> existingImport = importBlock.getImportList().stream().filter(omtImport -> sameImportLocation(omtImport, importPath)).findFirst();
             if (existingImport.isPresent()) {
                 // add member to existing import
@@ -203,10 +203,10 @@ public class ImportUtil {
             } else {
                 // add new import and member to existing import block
                 final OMTImport newImport = (OMTImport) OMTElementFactory.fromString(template, OMTImport.class, project);
-                final OMTImport lastImport = importBlock.getImportList().get(importBlock.getImportList().size() - 1);
-                importBlock.addAfter(newImport, lastImport);
+                importBlock.addBefore(newImport, importBlock.getDedentToken());
             }
             CodeStyleManager.getInstance(project).reformat(importBlock);
+            importBlock.replace(OMTElementFactory.removeBlankLinesInside(importBlock, OMTImportBlock.class));
         } else {
             // add new import block:
             OMTImportBlock importBlock = (OMTImportBlock) OMTElementFactory.fromString(template, OMTImportBlock.class, project);

@@ -1,4 +1,4 @@
-package com.misset.opp.omt;
+package com.misset.opp.omt.formatter;
 
 import com.intellij.application.options.CodeStyle;
 import com.intellij.openapi.command.WriteCommandAction;
@@ -193,7 +193,6 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
                         commonCodeStyleSettings ->
                                 commonCodeStyleSettings.getIndentOptions().INDENT_SIZE = 4));
     }
-
 
     private void setLanguageSettings(PsiFile file, Consumer<CommonCodeStyleSettings> languageSettings) {
         languageSettings.accept(CodeStyle.getLanguageSettings(file));

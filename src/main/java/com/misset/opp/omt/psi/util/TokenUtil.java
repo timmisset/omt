@@ -85,4 +85,11 @@ public class TokenUtil {
     }
 
 
+    public boolean isSequenceItemContainer(PsiElement elementAt) {
+        return elementAt instanceof OMTImport ||
+                elementAt instanceof OMTImportBlock ||
+                elementAt instanceof OMTSequence ||
+                elementAt instanceof OMTMemberListItem ||
+                elementAt instanceof OMTMemberList;
+    }
 }
