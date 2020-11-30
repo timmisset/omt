@@ -295,8 +295,8 @@ public class VariableUtil {
      * @param defineParam
      * @return
      */
-    public List<Resource> getType(OMTDefineParam defineParam) {
-        final Optional<OMTParameterAnnotation> parameterAnnotation = getTypeFromAnnotation(defineParam.getVariableList().get(0), defineParam.getParent());
+    public List<Resource> getType(OMTDefineParam defineParam, OMTVariable variable) {
+        final Optional<OMTParameterAnnotation> parameterAnnotation = getTypeFromAnnotation(variable, defineParam.getParent());
         return parameterAnnotation.isPresent() ? parameterAnnotation.get().getParameterWithType().getType() : new ArrayList<>();
     }
 
@@ -353,7 +353,7 @@ public class VariableUtil {
             if (variable.getParent() instanceof OMTParameterWithType) {
                 return getType((OMTParameterWithType) variable.getParent());
             } else if (variable.getParent() instanceof OMTDefineParam) {
-                return getType((OMTDefineParam) variable.getParent());
+                return getType((OMTDefineParam) variable.getParent(), variable);
             } else if (variable.getParent() instanceof OMTVariableAssignment) {
                 return getType((OMTVariableAssignment) variable.getParent());
             } else if (Arrays.asList(VARIABLES, PARAMS, BINDINGS).contains(modelUtil.getEntryBlockLabel(variable))) {

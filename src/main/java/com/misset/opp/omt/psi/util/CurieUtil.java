@@ -110,7 +110,7 @@ public class CurieUtil {
             prefixBlock.addBefore(prefix, prefixBlock.getDedentToken());
         }
         CodeStyleManager.getInstance(project).reformat(prefixBlock);
-        prefixBlock.replace(OMTElementFactory.removeBlankLinesInside(prefixBlock, OMTPrefixBlock.class));
+        prefixBlock.replace(OMTElementFactory.removeBlankLinesInside(prefixBlock, OMTPrefixBlock.class, "\n"));
     }
 
     public void annotateCurieElement(OMTCurieElement curieElement, AnnotationHolder annotationHolder) {
