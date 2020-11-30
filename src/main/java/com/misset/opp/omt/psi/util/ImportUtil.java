@@ -206,7 +206,7 @@ public class ImportUtil {
                 importBlock.addBefore(newImport, importBlock.getDedentToken());
             }
             CodeStyleManager.getInstance(project).reformat(importBlock);
-            importBlock.replace(OMTElementFactory.removeBlankLinesInside(importBlock, OMTImportBlock.class));
+            importBlock.replace(OMTElementFactory.removeBlankLinesInside(importBlock, OMTImportBlock.class, "\n"));
         } else {
             // add new import block:
             OMTImportBlock importBlock = (OMTImportBlock) OMTElementFactory.fromString(template, OMTImportBlock.class, project);

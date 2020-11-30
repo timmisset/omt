@@ -47,6 +47,10 @@ CURIE=                          ({NAME})?":"{SYMBOL}
 TYPED_VALUE=                    {STRING}"^^"({IRI}|{CURIE})
 IMPORT_PATH=                    (\.{1,2}[^:]*:)
 PROPERTY_KEY=                   {IMPORT_PATH} | (({STRING}|{NAME})({WHITE_SPACE}*)":")
+VARIABLENAME=                   "$"{NAME}
+// used to capture a valid parameter annotation in the Javadocs
+// makes sure incomplete annotations are parsed as regular javadocs comments
+ANNOTATE_PARAM=                 @param[\s]+\$[^ ]*[\s*]\([^)]*\)
 
 // YYINITIAL state can only have a limited selection of tokens that can trigger indentation
 INITIAL_TOKENS=                {PROPERTY_KEY} | "-" | {JDSTART}    // the valid tokens for
@@ -301,7 +305,7 @@ IElementType closeBracket() {
     "VAR"                                                           { return returnElement(OMTTypes.DECLARE_VAR); }
     "PREFIX"                                                        { return returnElement(OMTTypes.PREFIX_DEFINE_START); }
     ";"                                                             { return returnElement(OMTTypes.SEMICOLON); }
-    "$"{NAME}                                                       { return returnElement(OMTTypes.VARIABLE_NAME); }
+    {VARIABLENAME}                                                  { return returnElement(OMTTypes.VARIABLE_NAME); }
     "$_"                                                            { return returnElement(OMTTypes.IGNORE_VARIABLE_NAME); }
     "@"{NAME}                                                       { return returnElement(OMTTypes.COMMAND); }
     "!"{NAME}                                                       { return returnElement(OMTTypes.FLAG); }
@@ -382,7 +386,10 @@ IElementType closeBracket() {
 <JAVADOCS> {
     {JDEND}                                                         { setState(previousState); return returnElement(OMTTypes.JAVADOCS_END); }
     {JDCOMMENTLINE}                                                 { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
-    "@param"                                                        { setState(PARAM_ANNOTATION, false); return returnElement(OMTTypes.ANNOTATE_PARAMETER); }
+    {ANNOTATE_PARAM}                            {
+          yypushback(yylength()-6); // pushback anything but the @param
+          setState(PARAM_ANNOTATION, false);
+          return returnElement(OMTTypes.ANNOTATE_PARAMETER); }
 }
 <PARAM_ANNOTATION> {
     "$"{NAME}                                                       { return returnElement(OMTTypes.VARIABLE_NAME); }

@@ -148,10 +148,12 @@ public class OMTElementFactory {
         return PsiTreeUtil.findChildOfType(rootElement, getClass);
     }
 
-    public static PsiElement removeBlankLinesInside(PsiElement element, Class<? extends PsiElement> selectionClass) {
+    public static PsiElement removeBlankLinesInside(PsiElement element,
+                                                    Class<? extends PsiElement> selectionClass,
+                                                    String trailingSpace) {
         String replace = element.getText().replaceAll("(?:\\h*\\n)+", "\n");
         if (!replace.equals(element.getText())) {
-            return OMTElementFactory.fromString(replace, selectionClass, element.getProject());
+            return OMTElementFactory.fromString(replace + trailingSpace, selectionClass, element.getProject());
         }
         return element;
     }

@@ -55,8 +55,8 @@ public class OMTFormattingContext {
 
         CommonCodeStyleSettings common = settings.getCommonSettings(OMTLanguage.INSTANCE);
         spacingBuilder = new SpacingBuilder(settings, OMTLanguage.INSTANCE)
-                .around(OMTTokenSets.ASSIGNMENT_OPERATORS)
-                .spaceIf(common.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+                .around(OMTTokenSets.ASSIGNMENT_OPERATORS).spaceIf(common.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+                .before(NAMESPACE_IRI).spaces(4)
                 .after(IMPORT_BLOCK).blankLines(1)
                 .after(PREFIX_BLOCK).blankLines(1)
         ;
@@ -118,6 +118,8 @@ public class OMTFormattingContext {
             alignment = alignEOLComment(node);
         } else if (node.getTreeParent() != null && BLOCK == node.getTreeParent().getElementType()) {
             alignment = nodeAlignment.get(node.getTreeParent());
+        } else if (NAMESPACE_IRI == nodeType) {
+            alignment = alignNamespaceIri(node);
         }
         //        System.out.println(node.getText().substring(0, Math.min(10, node.getTextLength())) + " --> " + (alignment != null ? alignment.toString() : "null"));
         return alignment;
@@ -322,6 +324,23 @@ public class OMTFormattingContext {
     }
 
     /**
+     * @param namespaceIri
+     * @return
+     */
+    private Alignment alignNamespaceIri(ASTNode namespaceIri) {
+        if (namespaceIri.getElementType() != NAMESPACE_IRI) {
+            return null;
+        }
+        // get the prefixes:
+        ASTNode prefix = namespaceIri.getTreeParent();
+        final ASTNode firstPrefix = getFirstOfKindInParent(prefix.getTreeParent(), PREFIX);
+        final ASTNode[] children = firstPrefix.getChildren(TokenSet.create(NAMESPACE_IRI));
+        final ASTNode firstNamespaceIri = children[0];
+        return registerAlignmentAndReturn(firstNamespaceIri);
+
+    }
+
+    /**
      * Alignment of the Interpolated is based on the element types, STRING and INTERPOLATION_TEMPLATE ${}
      * It doens't check the content which is why something like an aligned Json structure with quotes
      * is only aligned if after the initial { } block, another new line is entered since that is considered
@@ -375,12 +394,18 @@ public class OMTFormattingContext {
     }
 
     private Alignment registerAlignmentAndReturn(ASTNode node) {
+        if(nodeAlignment.containsKey(node)) {
+            return nodeAlignment.get(node);
+        }
         Alignment alignment = Alignment.createAlignment();
         nodeAlignment.put(node, alignment);
         return alignment;
     }
 
     private Alignment getAlignmentAndRegisterSelf(ASTNode node, ASTNode registeredNode) {
+        if(nodeAlignment.containsKey(node)) {
+            return nodeAlignment.get(node);
+        }
         Alignment alignment = nodeAlignment.get(registeredNode);
         nodeAlignment.put(node, alignment);
         return alignment;

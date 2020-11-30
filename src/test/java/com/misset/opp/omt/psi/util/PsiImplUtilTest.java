@@ -226,6 +226,22 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void queryPathResolveToResource_ResolvesFromAnnotationMultiple() {
+        String content = "prefixes:\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "queries: |\n" +
+                "    /**\n" +
+                "    * @param $mijnParameterA (ont:ClassA)\n" +
+                "    * @param $mijnParameterB (ont:ClassB)\n" +
+                "    */\n" +
+                "    DEFINE QUERY myQuery($mijnParameterA, $mijnParameterB) => $mijnParameterB;";
+
+        OMTQuery query = parseQueryFromContent(content);
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
+    }
+
+    @Test
     void queryPathResolveToResource_ResolvesFromQuery() {
         String content = "queries: |\n" +
                 "    DEFINE QUERY myQuery($mijnParameter) => $mijnParameter / CEIL;\n" +
