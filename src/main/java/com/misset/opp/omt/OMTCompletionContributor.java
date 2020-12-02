@@ -9,10 +9,8 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.patterns.PlatformPatterns;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiErrorElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
+import com.intellij.psi.*;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.psi.*;
@@ -204,7 +202,35 @@ public class OMTCompletionContributor extends CompletionContributor {
             dummyPlaceHolder = placeHolder;
             context.setDummyIdentifier(placeHolder);
         }
+    }
 
+    private PsiElement checkSemicolon(PsiElement element) {
+        if (element.getNode().getElementType() != OMTTypes.SEMICOLON) {
+            return element;
+        } // only process when currently at semicolon
+        TokenSet skipElements = TokenSet.create(TokenType.WHITE_SPACE, OMTTypes.SEMICOLON);
+        while (element != null &&
+                skipElements.contains(element.getNode().getElementType())) {
+            element = element.getNode().getTreePrev().getPsi();
+        }
+        return element;
+    }
+
+    private PsiElement checkWrappers(PsiElement element) {
+        TokenSet wrapperElements = TokenSet.create(OMTTypes.SCRIPT_CONTENT, OMTTypes.SCRIPT_LINE);
+        while (element != null && wrapperElements.contains(element.getNode().getElementType())) {
+            element = element.getLastChild();
+        }
+        return element;
+    }
+
+    private PsiElement getUsableElement(PsiElement element) {
+        if (element == null) {
+            return null;
+        }
+        element = checkSemicolon(element);
+        element = checkWrappers(element);
+        return element;
     }
 
     /**
@@ -222,6 +248,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         dummyPlaceHolderSet = false;
 
         PsiElement elementAtCaret = context.getFile().findElementAt(context.getCaret().getOffset());
+        elementAtCaret = getUsableElement(elementAtCaret);
         if (elementAtCaret == null) { // EOF
             // no element at caret, use the DUMMY_ENTRY_VALUE
             final PsiElement lastChild = context.getFile().getLastChild();
@@ -235,6 +262,7 @@ public class OMTCompletionContributor extends CompletionContributor {
             setDummyPlaceHolder(DUMMY_ENTRY, context);
             return;
         }
+        elementAtCaret = getUsableElement(elementAtCaret);
         trySuggestionsForCurrentElementAt(elementAtCaret.getParent(), elementAtCaret, context);
     }
 

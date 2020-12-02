@@ -29,7 +29,7 @@ DIGIT=                          [0-9]
 STRING=                         (\"[^\"\\]*(\\.[^\"\\]*)*\")|(\'[^\'\\]*(\\.[^\'\\]*)*\')
 INTEGER=                        \-?([1-9][0-9]+|[0-9])
 DECIMAL=                        {INTEGER}\.[0-9]+
-BOOLEAN=                        "true"|"false"
+BOOLEAN=                        "true"|"false"|"TRUE"|"FALSE"
 NULL=                           "null"
 GLOBAL_VARIABLE=                \$username|\$medewerkerGraph|\$offline|\$mockvalue[0-9]+
 
