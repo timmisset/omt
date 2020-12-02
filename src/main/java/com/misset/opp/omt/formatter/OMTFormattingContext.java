@@ -7,7 +7,6 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
-import com.intellij.psi.impl.source.tree.FileElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
@@ -19,6 +18,7 @@ import com.misset.opp.omt.psi.util.TokenFinderUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
@@ -103,6 +103,8 @@ public class OMTFormattingContext {
         } else if (OMTTokenSets.CHOOSE_INNER.contains(node.getElementType())) {
             indent = Indent.getNormalIndent(true);
         } else if (SCRIPT_LINE == node.getElementType()) {
+            indent = Indent.getNormalIndent(false);
+        } else if (SIGNATURE_ARGUMENT == node.getElementType()) {
             indent = Indent.getNormalIndent(false);
         } else if (node.getTreeParent() != null && INTERPOLATED_STRING == node.getTreeParent().getElementType()) {
             indent = Indent.getNormalIndent(false);
@@ -426,9 +428,14 @@ public class OMTFormattingContext {
     }
 
     public Indent newChildIndent(ASTNode node) {
-        return node instanceof FileElement
-                ? Indent.getSpaceIndent(0, true)
-                : Indent.getNormalIndent(true);
+        final TokenSet indentNotRelativeToParent = TokenSet.create(SCRIPT, COMMAND_BLOCK, SIGNATURE);
+        if (node instanceof File) {
+            return Indent.getNoneIndent();
+        }
+        if (indentNotRelativeToParent.contains(node.getElementType())) {
+            return Indent.getNormalIndent(false);
+        }
+        return Indent.getNormalIndent(true);
     }
 
 

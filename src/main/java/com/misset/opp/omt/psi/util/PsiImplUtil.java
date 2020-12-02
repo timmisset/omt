@@ -470,9 +470,10 @@ public class PsiImplUtil {
 
     public static List<Resource> resolveToResource(OMTOperatorCall call, OMTQueryStep step, List<Resource> previousStep) {
         final OMTCallable callable = memberUtil.getCallable(call);
+        List<String> resolvableOperators = Arrays.asList("CAST", "PLUS", "MINUS");
         if (callable != null) {
-            if (callable.getName().equals("CAST")) {
-                return filter(step, getCastType(call));
+            if (resolvableOperators.contains(call.getName())) {
+                return filter(step, getFirstArgumentType(call));
             }
             return callable.returnsAny() ? previousStep : callable.getReturnType();
         }
@@ -509,14 +510,13 @@ public class PsiImplUtil {
         return resources;
     }
 
-    private static List<Resource> getCastType(OMTOperatorCall call) {
+    private static List<Resource> getFirstArgumentType(OMTOperatorCall call) {
         if (call.getSignature() != null) {
             final OMTSignatureArgument omtSignatureArgument = call.getSignature().getSignatureArgumentList().get(0);
             final List<Resource> resources = omtSignatureArgument.resolveToResource();
             return resources.isEmpty() ? projectUtil.getRDFModelUtil().getAnyTypeAsList() : resources;
         }
         return projectUtil.getRDFModelUtil().getAnyTypeAsList();
-
     }
 
     public static List<Resource> resolveToResource(OMTCurieConstantElement step) {
