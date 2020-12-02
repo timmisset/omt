@@ -128,7 +128,7 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
             case StandaloneQuery:
             case Procedure:
                 OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) this.element;
-                setName(modelItemBlock.getModelItemLabel().getPropertyLabel().getText());
+                setName(modelItemBlock.getName());
                 setParametersFromModelItem(modelItemBlock);
                 break;
 

@@ -160,13 +160,15 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     void setParametersFromModelItem(OMTModelItemBlock block) {
         Optional<OMTBlockEntry> params = modelUtil.getModelItemBlockEntry(block, "params");
-        if (!params.isPresent() || params.get().getSequence() == null) {
+        if (!params.isPresent()) {
+            return;
+        }
+        final OMTGenericBlock paramsBlock = (OMTGenericBlock) params.get();
+        if (paramsBlock.getSequence() == null) {
             return;
         }
 
-        params.ifPresent(omtBlockEntry -> omtBlockEntry
-                .getSequence()
-                .getSequenceItemList()
+        paramsBlock.getSequence().getSequenceItemList()
                 .stream()
                 .map(OMTSequenceItem::getScalarValue)
                 .filter(Objects::nonNull)
@@ -182,8 +184,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
                     if (sequenceItemValue.getVariableAssignment() != null) {
                         addParameter(new OMTParameterImpl(sequenceItemValue.getVariableAssignment()));
                     }
-                })
-        );
+                });
     }
 
     @Override

@@ -1,8 +1,6 @@
 package com.misset.opp.omt.formatter;
 
-import com.intellij.formatting.Alignment;
-import com.intellij.formatting.Indent;
-import com.intellij.formatting.SpacingBuilder;
+import com.intellij.formatting.*;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -19,9 +17,11 @@ import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.support.OMTTokenSets;
 import com.misset.opp.omt.psi.util.TokenFinderUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Optional;
 
 import static com.misset.opp.omt.psi.OMTIgnored.END_OF_LINE_COMMENT;
 import static com.misset.opp.omt.psi.OMTTypes.*;
@@ -39,27 +39,51 @@ import static com.misset.opp.omt.psi.OMTTypes.*;
  */
 public class OMTFormattingContext {
 
-    private HashMap<ASTNode, Alignment> nodeAlignment = new HashMap<>();
-
-
-    private final CodeStyleSettings settings;
-    private final PsiFile file;
+    private final HashMap<ASTNode, Alignment> nodeAlignment = new HashMap<>();
     private final SpacingBuilder spacingBuilder;
     private final Document document;
 
+    private final boolean indentSequenceBullets = false;
+
     public OMTFormattingContext(@NotNull CodeStyleSettings settings, @NotNull PsiFile file) {
-        this.settings = settings;
-        this.file = file;
         document = file.getVirtualFile() != null ?
                 FileDocumentManager.getInstance().getDocument(file.getVirtualFile()) : null;
 
         CommonCodeStyleSettings common = settings.getCommonSettings(OMTLanguage.INSTANCE);
         spacingBuilder = new SpacingBuilder(settings, OMTLanguage.INSTANCE)
                 .around(OMTTokenSets.ASSIGNMENT_OPERATORS).spaceIf(common.SPACE_AROUND_ASSIGNMENT_OPERATORS)
-                .before(NAMESPACE_IRI).spaces(4)
-                .after(IMPORT_BLOCK).blankLines(1)
-                .after(PREFIX_BLOCK).blankLines(1)
         ;
+    }
+
+    public Spacing computeSpacing(@NotNull Block parent, @Nullable Block child1, @NotNull Block child2) {
+        final Spacing spacing = spacingBuilder.getSpacing(parent, child1, child2);
+        if (spacing != null) {
+            return spacing;
+        }
+        //                .betweenInside(NAMESPACE_PREFIX, NAMESPACE_IRI, PREFIX).spaces(4)
+        if (isNodeType(parent, PREFIX) && isNodeType(child1, NAMESPACE_PREFIX) && isNodeType(child2, NAMESPACE_IRI)) {
+            // spacing between the prefix and iri depends on the size of the largest prefix:
+            final int maxLength = getMaxPrefixLength(((OMTFormattingBlock) parent).getNode());
+            final int spaces = maxLength + 4 - child1.getTextRange().getLength();
+            return Spacing.createSpacing(spaces, spaces, 0, false, 0);
+        }
+        return null;
+    }
+
+    private int getMaxPrefixLength(ASTNode prefix) {
+        final ASTNode prefixBlock = prefix.getTreeParent();
+        final Optional<Integer> max = Arrays.stream(prefixBlock.getChildren(TokenSet.create(PREFIX)))
+                .map(ASTNode::getFirstChildNode)
+                .map(ASTNode::getTextLength)
+                .max(Integer::compareTo);
+        return max.orElse(0);
+    }
+
+    private boolean isNodeType(Block block, IElementType elementType) {
+        if (block == null) {
+            return false;
+        }
+        return ((OMTFormattingBlock) block).getNode().getElementType() == elementType;
     }
 
     public Indent computeIndent(@NotNull ASTNode node) {
@@ -68,10 +92,10 @@ public class OMTFormattingContext {
         Indent indent = Indent.getNoneIndent();
         if (OMTTokenSets.ENTRIES.contains(nodeType) && !isRootElement(node)) {
             indent = Indent.getNormalIndent(true);
-        } else if (OMTTypes.MEMBER_LIST_ITEM == nodeType) {
-            indent = Indent.getNormalIndent(true); // TODO: Make optional based on a setting
-        } else if (SEQUENCE_ITEM == nodeType) {
-            indent = Indent.getNormalIndent(true); // TODO: Make optional based on a setting
+        } else if (indentSequenceBullets && OMTTypes.MEMBER_LIST_ITEM == nodeType) {
+            indent = Indent.getNormalIndent(true);
+        } else if (indentSequenceBullets && SEQUENCE_ITEM == nodeType) {
+            indent = Indent.getNormalIndent(true);
         } else if (OMTTokenSets.DEFINED_STATEMENTS.contains(nodeType)) { // Query and Command statements
             indent = Indent.getNormalIndent(false);
         } else if (isFirstIndentableQueryStep(node)) {
@@ -82,20 +106,19 @@ public class OMTFormattingContext {
             indent = Indent.getNormalIndent(false);
         } else if (node.getTreeParent() != null && INTERPOLATED_STRING == node.getTreeParent().getElementType()) {
             indent = Indent.getNormalIndent(false);
-        } else if (END_OF_LINE_COMMENT == node.getElementType()) {
+        } else if (END_OF_LINE_COMMENT == nodeType) {
             indent = indentEOLComment(node);
+        } else if (NAMESPACE_IRI == nodeType) {
+            indent = Indent.getNormalIndent();
         }
-//        System.out.println(node.getElementType().toString() + " -->  " + node.getText().substring(0, Math.min(node.getTextLength(), 10)) +
-//                " --> " + indent.toString() + " --> " + isFirstIndentableQueryStep(node));
         return indent;
-
     }
 
     public Alignment computeAlignment(@NotNull ASTNode node) {
         Alignment alignment = null;
         final IElementType nodeType = node.getElementType();
         if (OMTTokenSets.SAME_LEVEL_ALIGNMENTS.contains(nodeType)) {
-            alignment = registerAndReturnIfAnyOf(node, nodeType);
+            alignment = registerAndReturnIfAnyOf(node, OMTTokenSets.SAME_LEVEL_ALIGNMENTS.getTypes());
         } else if (OMTTokenSets.CONTAINERS.contains(nodeType)) {
             // align the container to their first child:
             final ASTNode[] children = node.getChildren(OMTTokenSets.SAME_LEVEL_ALIGNMENTS);
@@ -121,15 +144,11 @@ public class OMTFormattingContext {
         } else if (NAMESPACE_IRI == nodeType) {
             alignment = alignNamespaceIri(node);
         }
-        //        System.out.println(node.getText().substring(0, Math.min(10, node.getTextLength())) + " --> " + (alignment != null ? alignment.toString() : "null"));
         return alignment;
     }
 
     /**
      * Returns true if this element is part of the query but it's parent is not
-     *
-     * @param node
-     * @return
      */
     private boolean isTopLevelQuery(ASTNode node) {
         return OMTTokenSets.ALL_QUERY_TOKENS.contains(node.getElementType()) &&
@@ -148,8 +167,6 @@ public class OMTFormattingContext {
      * Check if it is the first indentable step in the query:
      * DEFINE QUERY myQuery => .. / .. /
      *     ..  <-- first indentable query step
-     * @param node
-     * @return
      */
     private boolean isFirstIndentableQueryStep(ASTNode node) {
         return node.getTreeParent() != null &&
@@ -167,9 +184,6 @@ public class OMTFormattingContext {
      * ..  / .. / ..
      * DEFINE QUERY myQuery => <-- root line
      * .. / .. / ..
-     *
-     * @param node
-     * @return
      */
     private int rootLineLevel(ASTNode node) {
         while (!isTopLevelQuery(node)) {
@@ -416,5 +430,7 @@ public class OMTFormattingContext {
                 ? Indent.getSpaceIndent(0, true)
                 : Indent.getNormalIndent(true);
     }
+
+
 }
 

@@ -131,7 +131,7 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
         ApplicationManager.getApplication().runReadAction(() -> {
             Optional<OMTBlockEntry> variables = modelUtil.getModelItemBlockEntry(variable, "variables");
             assertTrue(variables.isPresent());
-            assertEquals("variables", Objects.requireNonNull(variables.get().getPropertyLabel()).getPropertyLabelName());
+            assertEquals("variables", Objects.requireNonNull(((OMTGenericBlock) variables.get()).getPropertyLabel()).getPropertyLabelName());
         });
     }
 
@@ -325,7 +325,5 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
             assertTrue(modelUtil.isOntology(modelBlocks.get(1)));
         });
     }
-    
 
-    
 }

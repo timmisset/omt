@@ -47,7 +47,7 @@ public class ModelUtil {
     @Nullable
     public String getModelItemType(PsiElement element) {
         Optional<OMTModelItemBlock> modelItemBlock = getModelItemBlock(element);
-        return modelItemBlock.map(omtModelItemBlock -> omtModelItemBlock.getModelItemLabel().getModelItemTypeElement().getText().substring(1)).orElse(null);
+        return modelItemBlock.map(OMTModelItemBlock::getType).orElse(null);
     }
 
     public Optional<OMTBlockEntry> getModelItemBlockEntry(PsiElement element, String propertyLabel) {
@@ -83,19 +83,14 @@ public class ModelUtil {
     }
 
     private PsiElement getEntryBlockLabelElement(PsiElement element) {
-        if (element instanceof OMTModelItemBlock) {
-            return ((OMTModelItemBlock) element).getModelItemLabel().getPropertyLabel();
+        if (element == null) {
+            return null;
         }
         if (element instanceof OMTBlockEntry) {
             return ((OMTBlockEntry) element).getLabel();
         }
-        if (element == null) {
-            return null;
-        }
         return getEntryBlockLabelElement(PsiTreeUtil.findFirstParent(element,
                 parent -> parent instanceof OMTBlockEntry
-                        ||
-                        parent instanceof OMTModelItemBlock
         ));
     }
 
@@ -110,8 +105,15 @@ public class ModelUtil {
      * @return payload
      */
     public String getModelItemEntryLabel(PsiElement element) {
-        List<OMTBlockEntry> blockEntries = PsiTreeUtil.collectParents(element, OMTBlockEntry.class, false, parent -> parent instanceof OMTModelBlock);
-        OMTBlockEntry omtBlockEntry = blockEntries.get(blockEntries.size() - 1);
+        List<OMTBlockEntry> blockEntries = getAncestorEntries(element);
+        // blockEntries:
+        // last item = modelItem itself (Activity, Procedure etc)
+        // last item - 1 = entryblock (params, variables etc);
+        final int i = blockEntries.size() - 2;
+        if (i < 0) {
+            return null;
+        }
+        OMTBlockEntry omtBlockEntry = blockEntries.get(blockEntries.size() - 2);
 
         return getEntryBlockLabel(omtBlockEntry);
     }
@@ -148,6 +150,10 @@ public class ModelUtil {
     }
 
     public void annotateBlockEntry(OMTBlockEntry omtBlockEntry, AnnotationHolder holder) {
+        if (omtBlockEntry instanceof OMTModelItemBlock) {
+            // no annotation needed for OMTModelItemBlock
+            return;
+        }
         String label = getEntryBlockLabel(omtBlockEntry);
         PsiElement targetLabel = getEntryBlockLabelElement(omtBlockEntry);
 
@@ -157,7 +163,7 @@ public class ModelUtil {
 
         if (containerName != null && !keys.contains(label) && !isMapNode(container)) {
             String errorMessage = String.format("%s is not a known attribute for %s",
-                    getEntryBlockLabel(targetLabel), containerName);
+                    label, containerName);
 
             IntentionAction remove = removeIntention.getRemoveIntention(omtBlockEntry);
             holder.newAnnotation(HighlightSeverity.ERROR, errorMessage)
@@ -217,10 +223,7 @@ public class ModelUtil {
 
     private List<JsonObject> getAttributesBranch(PsiElement element) {
         List<JsonObject> branch = new ArrayList<>();
-        List<OMTBlockEntry> blockEntries = PsiTreeUtil.collectParents(element,
-                OMTBlockEntry.class, false,
-                parent -> parent == null || parent instanceof OMTFile || parent instanceof OMTModelBlock);
-
+        List<OMTBlockEntry> blockEntries = getAncestorEntries(element);
         OMTFile file = (OMTFile) element.getContainingFile();
         String modelItemLabel = file.isModuleFile() ? "module" : getModelItemType(element);
         JsonObject member = getAttributes(modelItemLabel);
@@ -326,7 +329,16 @@ public class ModelUtil {
      * @return
      */
     public int getModelDepth(PsiElement element) {
-        return PsiTreeUtil.collectParents(element, OMTBlockEntry.class, false, parent -> parent == null || parent instanceof OMTModelBlock).size();
+        int correction = 1; // correction 1 for the modelItem block itself, should not be counted
+        final List<OMTBlockEntry> ancestorEntries = getAncestorEntries(element);
+        if (element instanceof OMTBlockEntry && ancestorEntries.contains(element)) {
+            correction++;
+        }
+        return ancestorEntries.size() - correction;
+    }
+
+    private List<OMTBlockEntry> getAncestorEntries(PsiElement element) {
+        return PsiTreeUtil.collectParents(element, OMTBlockEntry.class, true, parent -> parent == null || parent instanceof OMTModelBlock);
     }
 
     /**

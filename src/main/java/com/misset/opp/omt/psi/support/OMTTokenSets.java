@@ -29,7 +29,14 @@ public interface OMTTokenSets {
     );
     TokenSet ENTRIES = TokenSet.create(
             MODEL_ITEM_BLOCK,
-            BLOCK_ENTRY,
+            GENERIC_BLOCK,
+            IMPORT_BLOCK,
+            EXPORT_BLOCK,
+            PREFIX_BLOCK,
+            QUERIES_BLOCK,
+            COMMANDS_BLOCK,
+            MODEL_BLOCK,
+            MODULE_BLOCK,
             IMPORT,
             PREFIX
     );

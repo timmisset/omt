@@ -92,6 +92,9 @@ public class OMTAnnotator implements Annotator {
             }
             queryUtil.annotateQueryStep((OMTQueryStep) element, holder);
         }
+        if (element instanceof OMTQueryPath) {
+            queryUtil.annotateQueryPath((OMTQueryPath) element, holder);
+        }
     }
 
 }

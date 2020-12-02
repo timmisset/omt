@@ -3,7 +3,6 @@ package com.misset.opp.omt.formatter;
 import com.intellij.formatting.Block;
 import com.intellij.formatting.Indent;
 import com.intellij.formatting.Spacing;
-import com.intellij.formatting.SpacingBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.formatter.common.AbstractBlock;
 import com.misset.opp.omt.psi.support.OMTTokenSets;
@@ -53,10 +52,10 @@ public class OMTFormattingBlock extends AbstractBlock {
 
     @Override
     protected List<Block> buildChildren() {
-        return buildChildren(formattingContext.getSpacingBuilder(), myNode);
+        return buildChildren(myNode);
     }
 
-    private List<Block> buildChildren(@NotNull SpacingBuilder spacingBuilder, @NotNull ASTNode node) {
+    private List<Block> buildChildren(@NotNull ASTNode node) {
         List<Block> blocks = new ArrayList<>();
         ASTNode child = node.getFirstChildNode();
         while (child != null) {
@@ -71,8 +70,9 @@ public class OMTFormattingBlock extends AbstractBlock {
     @Nullable
     @Override
     public Spacing getSpacing(@Nullable Block child1, @NotNull Block child2) {
-        return formattingContext.getSpacingBuilder().getSpacing(this, child1, child2);
+        return formattingContext.computeSpacing(this, child1, child2);
     }
+
 
     @Override
     public Indent getIndent() {
