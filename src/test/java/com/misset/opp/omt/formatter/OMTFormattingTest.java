@@ -48,6 +48,28 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @Test
+    void spacesBeforePrefixIriMultiple() {
+        String unformatted = "prefixes:\n" +
+                " abc: <http://www.test.com>\n" +
+                " def: <http://www.test.com>";
+        String formatted = "prefixes:\n" +
+                "    abc:    <http://www.test.com>\n" +
+                "    def:    <http://www.test.com>";
+        assertFormattingApplied(unformatted, formatted);
+    }
+
+    @Test
+    void spacesBeforePrefixIriMultipleWithLongPrefix() {
+        String unformatted = "prefixes:\n" +
+                " abc: <http://www.test.com>\n" +
+                " defghijkl: <http://www.test.com>";
+        String formatted = "prefixes:\n" +
+                "    abc:          <http://www.test.com>\n" +
+                "    defghijkl:    <http://www.test.com>";
+        assertFormattingApplied(unformatted, formatted);
+    }
+
+    @Test
     void testIndentationBlocks() {
         String unformatted = "model:\n" +
                 " Activiteit: !Activity\n" +
@@ -65,6 +87,23 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
                 "        onRun: |\n" +
                 "            'test';\n" +
                 "            'test2';\n";
+        assertFormattingApplied(unformatted, formatted);
+    }
+
+    @Test
+    void testIndentationBlocksModelWithSpecificBlock() {
+        String unformatted = "model:\n" +
+                " Verklaring: !Activity\n" +
+                "  title: Verklaring opnemen\n" +
+                "\n" +
+                "  queries: |\n" +
+                "    DEFINE QUERY query => '';";
+        String formatted = "model:\n" +
+                "    Verklaring: !Activity\n" +
+                "        title: Verklaring opnemen\n" +
+                "\n" +
+                "        queries: |\n" +
+                "            DEFINE QUERY query => '';";
         assertFormattingApplied(unformatted, formatted);
     }
 
@@ -201,7 +240,7 @@ public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
                 () -> codeStyleManager.reformatText(psiFile,
                         ContainerUtil.newArrayList(myFixture.getFile().getTextRange())
                 ));
-        assertEquals(formatted.trim(), psiFile.getText().trim());
+        assertEquals(formatted.trim(), myFixture.getEditor().getDocument().getText().trim());
     }
 
 }

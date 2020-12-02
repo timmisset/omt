@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
+import com.intellij.lang.ASTNode;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
@@ -271,4 +272,10 @@ public class QueryUtil {
     }
 
 
+    public void annotateQueryPath(OMTQueryPath queryPath, AnnotationHolder holder) {
+        final List<ASTNode> duplicateSiblings = TokenFinderUtil.SINGLETON.getDuplicateSiblings(queryPath.getNode(), OMTTypes.FORWARD_SLASH);
+        duplicateSiblings.forEach(
+                node -> holder.newAnnotation(HighlightSeverity.ERROR, "Unexpected token").range(node).create()
+        );
+    }
 }

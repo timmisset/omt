@@ -38,6 +38,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     private static final String DUMMY_PROPERTY = "DUMMYPROPERTYVALUE:";
     private static final String DUMMY_IMPORT = "- DUMMYIMPORT";
     private static final String DUMMY_QUERYSTEP = "DUMMY / ";
+    private static final String DUMMY_MODEL_ITEM_TYPE = "!DUMMY";
     private static final String DUMMY_ENTRY = String.format("%s %s", DUMMY_PROPERTY, DUMMY_SCALAR);
     private static final String SEMICOLON = ";";
     private static final String ATTRIBUTES = "attributes";
@@ -64,6 +65,8 @@ public class OMTCompletionContributor extends CompletionContributor {
     List<LookupElement> resolvedElements;
     List<String> resolvedSuggestions;
     private boolean isResolved;
+
+    private String dummyPlaceHolder = null;
 
     private final ModelUtil modelUtil = ModelUtil.SINGLETON;
     private VariableUtil variableUtil = VariableUtil.SINGLETON;
@@ -122,7 +125,10 @@ public class OMTCompletionContributor extends CompletionContributor {
                 }
                 // !ModelItemType
                 if (tokenUtil.isModelItemType(element)) {
-                    modelUtil.getModelRootItems().forEach(label -> result.addElement(LookupElementBuilder.create(label)));
+                    modelUtil.getModelRootItems()
+                            .stream()
+                            .map(label -> (dummyPlaceHolder.startsWith("!") ? "!" : "") + label)
+                            .forEach(label -> result.addElement(LookupElementBuilder.create(label)));
                 }
                 // entry: for a model item
                 if (tokenUtil.isProperty(element)) {
@@ -195,6 +201,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     private void setDummyPlaceHolder(String placeHolder, @NotNull CompletionInitializationContext context) {
         if (!dummyPlaceHolderSet) {
             dummyPlaceHolderSet = true;
+            dummyPlaceHolder = placeHolder;
             context.setDummyIdentifier(placeHolder);
         }
 
@@ -215,8 +222,16 @@ public class OMTCompletionContributor extends CompletionContributor {
         dummyPlaceHolderSet = false;
 
         PsiElement elementAtCaret = context.getFile().findElementAt(context.getCaret().getOffset());
-        if (elementAtCaret == null) {
+        if (elementAtCaret == null) { // EOF
             // no element at caret, use the DUMMY_ENTRY_VALUE
+            final PsiElement lastChild = context.getFile().getLastChild();
+            if (lastChild instanceof PsiErrorElement) {
+                List<String> expectedTypesAtDummyBlock = getExpectedTypesFromError((PsiErrorElement) lastChild);
+                if (!expectedTypesAtDummyBlock.isEmpty()) {
+                    setDummyContextFromExpectedList(expectedTypesAtDummyBlock, context, false, (PsiErrorElement) lastChild);
+                    return;
+                }
+            }
             setDummyPlaceHolder(DUMMY_ENTRY, context);
             return;
         }
@@ -224,8 +239,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void trySuggestionsForCurrentElementAt(PsiElement element, PsiElement elementAtCaret, CompletionInitializationContext context) {
-        if (element instanceof OMTBlockEntry ||
-                element instanceof OMTBlock ||
+        if (element instanceof OMTBlock ||
                 element instanceof OMTModelBlock ||
                 element instanceof OMTModelItemBlock) {
             setDummyPlaceHolder(DUMMY_ENTRY, context);
@@ -233,11 +247,16 @@ public class OMTCompletionContributor extends CompletionContributor {
         }
 
         // error in parsing, try to resolve it
-        if ((element instanceof OMTFile || element instanceof PsiErrorElement) &&
-                !getExpectedTypeAtOMTFile(elementAtCaret, false).isEmpty()) {
-            List<String> expectedTypesAtDummyBlock = getExpectedTypeAtOMTFile(elementAtCaret, false);
-            setDummyContextFromExpectedList(expectedTypesAtDummyBlock, context, hasValuePosition(elementAtCaret, context));
-            return;
+        if ((element instanceof OMTFile || element instanceof PsiErrorElement)) {
+            PsiErrorElement errorElement = getErrorElement(element);
+            if (errorElement == null) {
+                errorElement = getErrorElement(elementAtCaret);
+            }
+            List<String> expectedTypesAtDummyBlock = getExpectedTypesFromError(errorElement);
+            if (errorElement != null && !expectedTypesAtDummyBlock.isEmpty()) {
+                setDummyContextFromExpectedList(expectedTypesAtDummyBlock, context, hasValuePosition(elementAtCaret, context), errorElement);
+                return;
+            }
         }
 
         if (element instanceof OMTSequence &&
@@ -514,7 +533,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         resolvedSuggestions.add(title);
     }
 
-    private void setDummyContextFromExpectedList(List<String> expectedTypes, @NotNull CompletionInitializationContext context, boolean hasValuePosition) {
+    private void setDummyContextFromExpectedList(List<String> expectedTypes, @NotNull CompletionInitializationContext context, boolean hasValuePosition, @NotNull PsiErrorElement errorElement) {
         if (!hasValuePosition && (expectedTypes.contains("block entry") || expectedTypes.contains("block"))) {
             setDummyPlaceHolder(DUMMY_ENTRY, context);
             return;
@@ -532,6 +551,9 @@ public class OMTCompletionContributor extends CompletionContributor {
         if (expectedTypes.contains("import $")) {
             setDummyPlaceHolder(DUMMY_IMPORT, context);
         }
+        if (expectedTypes.contains("MODEL_ITEM_TYPE")) {
+            setDummyPlaceHolder(errorElement.getText().startsWith("!") ? DUMMY_SCALAR : DUMMY_MODEL_ITEM_TYPE, context);
+        }
     }
 
     private boolean hasValuePosition(@NotNull PsiElement element, @NotNull CompletionInitializationContext context) {
@@ -542,21 +564,30 @@ public class OMTCompletionContributor extends CompletionContributor {
 
     }
 
-    private List<String> getExpectedTypeAtOMTFile(PsiElement element, boolean reverse) {
+    private PsiErrorElement getErrorElement(PsiElement element) {
+        if (element instanceof PsiErrorElement) {
+            return (PsiErrorElement) element;
+        }
+        return getErrorElement(element, false);
+    }
+
+    private PsiErrorElement getErrorElement(PsiElement element, boolean reverse) {
         PsiElement sibling = reverse ? element.getPrevSibling() : element.getNextSibling();
         while (!(sibling instanceof PsiErrorElement) && sibling != null && sibling.getNextSibling() != null) {
             sibling = reverse ? sibling.getPrevSibling() : sibling.getNextSibling();
         }
-
-        if (reverse) {
-            return sibling instanceof PsiErrorElement ? getExpectedTypesFromError((PsiErrorElement) sibling) : new ArrayList<>();
-        } else {
-            return sibling instanceof PsiErrorElement ? getExpectedTypesFromError((PsiErrorElement) sibling) : getExpectedTypeAtOMTFile(element, true);
+        if (sibling == null && !reverse) {
+            return getErrorElement(element, true);
         }
+        return sibling instanceof PsiErrorElement ? (PsiErrorElement) sibling : null;
     }
 
     private List<String> getExpectedTypesFromError(PsiErrorElement errorElement) {
         List<String> expectedTypes = new ArrayList<>();
+        if (errorElement == null) {
+            return expectedTypes;
+        }
+
         String errorDescription = errorElement.getErrorDescription();
         Pattern pattern = Pattern.compile("\\<(.*?)\\>|OMTTokenType.([^ ]*)");
         Matcher matcher = pattern.matcher(errorDescription);

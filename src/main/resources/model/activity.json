@@ -71,6 +71,9 @@
       "actions": {
         "type": "ActionDef",
         "node": "map"
+      },
+      "reason": {
+        "node": "scalar"
       }
     }
   }

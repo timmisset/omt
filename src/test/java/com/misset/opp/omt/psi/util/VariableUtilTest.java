@@ -8,7 +8,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.psi.ExampleFiles;
-import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTGenericBlock;
 import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.psi.impl.BuiltInMember;
 import com.misset.opp.omt.psi.support.BuiltInType;
@@ -42,7 +42,7 @@ class VariableUtilTest extends LightJavaCodeInsightFixtureTestCase {
     @Mock
     AnnotationBuilder annotationBuilder;
     PsiElement rootBlock;
-    OMTBlockEntry onStartBlock;
+    OMTGenericBlock onStartBlock;
     private ExampleFiles exampleFiles;
 
     @BeforeEach
@@ -56,10 +56,9 @@ class VariableUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
         ApplicationManager.getApplication().runReadAction(() -> {
             onStartBlock = exampleFiles.getPsiElementFromRootDocument(
-                    OMTBlockEntry.class, rootBlock,
-                    omtBlockEntry ->
-                            omtBlockEntry.getPropertyLabel() != null &&
-                                    omtBlockEntry.getPropertyLabel().getPropertyLabelName().equals("onStart")
+                    OMTGenericBlock.class, rootBlock,
+                    genericBlock ->
+                            genericBlock.getPropertyLabel().getPropertyLabelName().equals("onStart")
             );
         });
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());

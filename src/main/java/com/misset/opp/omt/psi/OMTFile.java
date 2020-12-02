@@ -88,14 +88,10 @@ public class OMTFile extends PsiFileBase {
 
     public <T> Optional<T> getSpecificBlock(String name, Class<T> specificBlockClass) {
         Optional<OMTBlockEntry> blockEntry = getRootBlock(name);
-        if (blockEntry.isPresent() && blockEntry.get().getSpecificBlock() != null) {
-            PsiElement firstChild = blockEntry.get().getSpecificBlock().getFirstChild();
-            if (specificBlockClass.isAssignableFrom(firstChild.getClass())) {
-                return Optional.of(specificBlockClass.cast(firstChild));
-            }
+        if (blockEntry.isPresent() && specificBlockClass.isAssignableFrom(blockEntry.get().getClass())) {
+            return Optional.of(specificBlockClass.cast(blockEntry.get()));
         }
         return Optional.empty();
-
     }
 
     private HashMap<String, OMTExportMember> exportMembers = new HashMap<>();
@@ -223,9 +219,8 @@ public class OMTFile extends PsiFileBase {
 
         model.ifPresent(omtModelBlock -> omtModelBlock.getModelItemBlockList()
                 .forEach(omtModelItemBlock -> {
-                    String modelItemType = omtModelItemBlock.getModelItemLabel().getModelItemTypeElement().getText();
-                    if (modelItemType.equalsIgnoreCase("!ontology")) {
-                        String name = omtModelItemBlock.getModelItemLabel().getName();
+                    if (omtModelItemBlock.getType().equalsIgnoreCase("ontology")) {
+                        String name = omtModelItemBlock.getName();
                         name = name != null && name.endsWith(":") ? name.substring(0, name.length() - 1) : name;
                         ontologies.put(name, omtModelItemBlock);
                     }
@@ -240,32 +235,29 @@ public class OMTFile extends PsiFileBase {
         }
     }
 
-    public void setRootBlock(OMTPrefixBlock prefixBlock) {
+    public OMTPrefixBlock setRootBlock(OMTPrefixBlock prefixBlock) {
         if (prefixBlock == null) {
-            return;
+            return null;
         }
-        OMTBlockEntry prefixBlockAsEntry = (OMTBlockEntry) PsiTreeUtil.findFirstParent(prefixBlock, parent -> parent instanceof OMTBlockEntry);
-        setRootBlock(prefixBlockAsEntry, PREFIXES);
+        return setRootBlock(prefixBlock, PREFIXES);
     }
 
-    public void setRootBlock(OMTImportBlock importBlock) {
+    public OMTImportBlock setRootBlock(OMTImportBlock importBlock) {
         if (importBlock == null) {
-            return;
+            return null;
         }
-        OMTBlockEntry importBlockAsEntry = (OMTBlockEntry) PsiTreeUtil.findFirstParent(importBlock, parent -> parent instanceof OMTBlockEntry);
-        setRootBlock(importBlockAsEntry, IMPORT);
+        return setRootBlock(importBlock, IMPORT);
     }
 
-    private void setRootBlock(OMTBlockEntry blockEntry, String rootLabel) {
+    private <T> T setRootBlock(OMTBlockEntry blockEntry, String rootLabel) {
         Optional<OMTBlockEntry> rootBlock = getRootBlock(rootLabel);
         if (rootBlock.isPresent()) {
-            rootBlock.get().replace(blockEntry);
+            return (T) rootBlock.get().replace(blockEntry);
         } else {
             // always add the imports to the top of the page
             // add the parent (block entry) to the root block
-            getRoot().addBefore(blockEntry, getBeforeAnchor(rootLabel));
+            return (T) getRoot().addBefore(blockEntry, getBeforeAnchor(rootLabel));
         }
-        quickFormat();
     }
 
     /**
@@ -340,13 +332,13 @@ public class OMTFile extends PsiFileBase {
         Optional<OMTModelBlock> model = getSpecificBlock(MODEL, OMTModelBlock.class);
         model.ifPresent(omtModelBlock -> omtModelBlock.getModelItemBlockList().stream()
                 .map(omtModelItemBlock -> {
-                    String modelItemType = omtModelItemBlock.getModelItemLabel().getModelItemTypeElement().getText();
-                    switch (modelItemType.toLowerCase()) {
-                        case "!activity":
+                    String modelItemType = omtModelItemBlock.getType();
+                    switch (modelItemType.toUpperCase()) {
+                        case "ACTIVITY":
                             return new OMTExportMemberImpl(omtModelItemBlock, ExportMemberType.Activity);
-                        case "!procedure":
+                        case "PROCEDURE":
                             return new OMTExportMemberImpl(omtModelItemBlock, ExportMemberType.Procedure);
-                        case "!standalonequery":
+                        case "STANDALONEQUERY":
                             return new OMTExportMemberImpl(omtModelItemBlock, ExportMemberType.StandaloneQuery);
                         default:
                             return null;

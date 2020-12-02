@@ -1,10 +1,12 @@
 package com.misset.opp.omt.psi.util;
 
+import com.intellij.application.options.CodeStyle;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -17,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -101,15 +104,19 @@ public class CurieUtil {
         if (!addNamespaceIri.startsWith("<")) {
             addNamespaceIri = "<" + addNamespaceIri + ">";
         }
-        String template = String.format("prefixes: \n %s: %s\n\n", addNamespacePrefix, addNamespaceIri);
+        final int indent_size = Objects.requireNonNull(CodeStyle.getLanguageSettings(element.getContainingFile()).getIndentOptions()).INDENT_SIZE;
+        String indent = StringUtil.repeat(" ", indent_size);
+
+        String template = String.format("prefixes:\n%s%s: %s\n\n", indent, addNamespacePrefix, addNamespaceIri);
         if (prefixBlock == null) {
             prefixBlock = (OMTPrefixBlock) OMTElementFactory.fromString(template, OMTPrefixBlock.class, project);
-            ((OMTFile) element.getContainingFile()).setRootBlock(prefixBlock);
+            CodeStyleManager.getInstance(project).reformat(prefixBlock);
+            prefixBlock = ((OMTFile) element.getContainingFile()).setRootBlock(prefixBlock);
         } else {
             OMTPrefix prefix = (OMTPrefix) OMTElementFactory.fromString(template, OMTPrefix.class, project);
             prefixBlock.addBefore(prefix, prefixBlock.getDedentToken());
+            CodeStyleManager.getInstance(project).reformat(prefixBlock);
         }
-        CodeStyleManager.getInstance(project).reformat(prefixBlock);
         prefixBlock.replace(OMTElementFactory.removeBlankLinesInside(prefixBlock, OMTPrefixBlock.class, "\n"));
     }
 

@@ -268,50 +268,47 @@ public class PsiImplUtil {
     // BlockEntry
     // ////////////////////////////////////////////////////////////////////////////
     public static String getName(OMTBlockEntry blockEntry) {
-        PsiElement label = getLabel(blockEntry);
-        return label instanceof OMTPropertyLabel ? getPropertyLabelName((OMTPropertyLabel) label) : getName(blockEntry.getSpecificBlock());
+        return getPropertyLabelName(getLabel(blockEntry));
     }
 
     public static PsiElement getLabel(OMTBlockEntry blockEntry) {
-        return blockEntry.getSpecificBlock() != null ? blockEntry.getSpecificBlock().getFirstChild().getFirstChild() : blockEntry.getPropertyLabel();
+        if (blockEntry instanceof OMTSpecificBlock) {
+            return getLabel((OMTSpecificBlock) blockEntry);
+        }
+        if (blockEntry instanceof OMTModelItemBlock) {
+            return getLabel((OMTModelItemBlock) blockEntry);
+        }
+        if (blockEntry instanceof OMTGenericBlock) {
+            return getLabel((OMTGenericBlock) blockEntry);
+        }
+        return blockEntry.getBlockEntry() == null ? null : blockEntry.getBlockEntry().getLabel();
+    }
+
+    public static PsiElement getLabel(OMTModelItemBlock modelItemBlock) {
+        return modelItemBlock.getModelItemLabel().getPropertyLabel();
+    }
+
+    public static PsiElement getLabel(OMTSpecificBlock specificBlock) {
+        // a specific block (import, export, prefixes etc) always stars with the label
+        return specificBlock.getFirstChild();
+    }
+
+    public static OMTPropertyLabel getLabel(OMTGenericBlock genericBlock) {
+        return genericBlock.getPropertyLabel();
     }
 
     // ////////////////////////////////////////////////////////////////////////////
     // PropertyLabel
     // ////////////////////////////////////////////////////////////////////////////
     public static String getPropertyLabelName(OMTPropertyLabel propertyLabel) {
-        String propertyLabelText = propertyLabel.getText();
+        return getPropertyLabelName((PsiElement) propertyLabel);
+    }
+
+    private static String getPropertyLabelName(PsiElement element) {
+        String propertyLabelText = element.getText();
         return propertyLabelText.endsWith(":") ?
                 propertyLabelText.substring(0, propertyLabelText.length() - 1) :
                 propertyLabelText;
-    }
-
-    // ////////////////////////////////////////////////////////////////////////////
-    // Specific blocks
-    // ////////////////////////////////////////////////////////////////////////////
-    public static String getName(OMTSpecificBlock specificBlock) {
-        if (specificBlock == null) {
-            return "";
-        }
-        if (specificBlock.getCommandsBlock() != null) {
-            return "commands";
-        }
-        if (specificBlock.getExportBlock() != null) {
-            return "export";
-        }
-        if (specificBlock.getImportBlock() != null) {
-            return "import";
-        }
-        if (specificBlock.getModelBlock() != null) {
-            return "model";
-        }
-        if (specificBlock.getPrefixBlock() != null) {
-            return "prefixes";
-        }
-        if (specificBlock.getQueriesBlock() != null) {
-            return "queries";
-        }
-        return "unknown";
     }
 
     public static List<? extends PsiElement> getUsages(PsiElement element, Class<? extends PsiElement> usageClass) {
@@ -323,6 +320,11 @@ public class PsiImplUtil {
                         usageElement.getReference() != null &&
                         usageElement.getReference().resolve() == element
         ).collect(Collectors.toList());
+    }
+
+    public static String getType(OMTModelItemBlock modelItemBlock) {
+        final OMTModelItemTypeElement modelItemTypeElement = modelItemBlock.getModelItemLabel().getModelItemTypeElement();
+        return modelItemTypeElement.getText().substring(1); // return type without flag token
     }
 
     // ////////////////////////////////////////////////////////////////////////////

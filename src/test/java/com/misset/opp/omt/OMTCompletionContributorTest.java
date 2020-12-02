@@ -91,6 +91,13 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
     @Test
     void completionProvider_addsSuggestionsForModelItemType() {
         List<String> suggestions = getSuggestions("model:\n" +
+                "    MijnActiviteit: <caret>");
+        assertContainsElements(suggestions, "!Activity", "!Procedure", "!Ontology", "!Procedure", "!StandaloneQuery");
+    }
+
+    @Test
+    void completionProvider_addsSuggestionsForModelItemTypePartial() {
+        List<String> suggestions = getSuggestions("model:\n" +
                 "    MijnActiviteit: !<caret>");
         assertContainsElements(suggestions, "Activity", "Procedure", "Ontology", "Procedure", "StandaloneQuery");
     }

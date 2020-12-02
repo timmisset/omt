@@ -3,12 +3,11 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiFile;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTParameterWithType;
 import com.misset.opp.omt.psi.OMTQuery;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,13 +16,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
+class PsiImplUtilTest extends OMTTestSuite {
 
     private final ExampleFiles exampleFiles = new ExampleFiles(this, myFixture);
 
@@ -32,10 +30,9 @@ class PsiImplUtilTest extends LightJavaCodeInsightFixtureTestCase {
         super.setName("OMTPsiImplUtilTest");
         super.setUp();
 
-        myFixture.copyFileToProject(new File("src/test/resources/builtinOperators.ts").getAbsolutePath(), "builtinOperators.ts");
-        myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
+        setBuiltinOperators();
+        setOntologyModel();
 
-        ApplicationManager.getApplication().runReadAction(() -> ProjectUtil.SINGLETON.loadOntologyModel(getProject()));
     }
 
     @AfterEach

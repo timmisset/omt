@@ -23,7 +23,7 @@ indentToken ::=                             INDENT | INDENT2
 dedentToken ::=                             DEDENT | DEDENT2
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
 block ::=                                   leading? (blockEntry+ | (indentToken blockEntry+ dedentToken))
-blockEntry ::=                              leading? specificBlock | (leading? propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken))) {
+blockEntry ::=                              leading? (specificBlock | genericBlock) {
                                             methods=[ getName getLabel ]
 }
 propertyLabel ::=                           PROPERTY { methods=[getPropertyLabelName]}
@@ -37,13 +37,17 @@ scalarValue ::=                             parameterWithType | variableAssignme
 sequence ::=                                sequenceItem+ | (indentToken sequenceItem+ dedentToken)
 sequenceItem ::=                            leading? SEQUENCE_BULLET (scalarValue | block)?
 
+genericBlock ::=                            propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken)) {
+                                            extends=blockEntry
+}
+
 // SPECIFIC BLOCKS
 specificBlock ::=                          importBlock | exportBlock | prefixBlock | queriesBlock | commandsBlock | modelBlock | moduleBlock {
-                                                    methods=[getName]
-                                                }
+                                                    extends=blockEntry
+                                            }
 
 // sequences
-exportBlock ::=                             EXPORT_START memberList?
+exportBlock ::=                             EXPORT_START memberList? { extends=specificBlock }
 memberList ::=                              memberListItem+ | (indentToken memberListItem+ dedentToken?)
 memberListItem ::=                          (leading? SEQUENCE_BULLET member?) { methods=[getName] }
 member ::=                                  OPERATOR {
@@ -56,17 +60,19 @@ member ::=                                  OPERATOR {
 queriesBlock::=                             QUERY_BLOCK_START (PIPE defineQueryStatement*)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
+                                                                extends=specificBlock
                                                                 }
 commandsBlock::=                            COMMAND_BLOCK_START (PIPE defineCommandStatement*)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
+                                                                extends=specificBlock
                                                                 }
 
-moduleBlock::=                              leading? MODULE_NAME_START moduleName 
+moduleBlock::=                              MODULE_NAME_START moduleName  { extends=specificBlock }
 moduleName::=                               NAME | OPERATOR
 
 // maps
-importBlock ::=                             leading? IMPORT_START (indentToken import+ dedentToken)?
+importBlock ::=                             IMPORT_START (indentToken import+ dedentToken)? { extends=specificBlock }
 import ::=                                  leading? importSource memberList?
 importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                            mixin="com.misset.opp.omt.psi.impl.OMTImportNamedElementImpl"
@@ -75,7 +81,7 @@ importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                          }
 importLocation ::=                          (MODULE_START indentToken PROPERTY dedentToken) | PROPERTY | IMPORT_PATH
 
-prefixBlock::=                              PREFIX_BLOCK_START indentToken prefix+ dedentToken
+prefixBlock::=                              PREFIX_BLOCK_START indentToken prefix+ dedentToken { extends=specificBlock }
 prefix::=                                   leading? namespacePrefix namespaceIri { methods=[getName] }
 namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)            {
                                                                                          mixin="com.misset.opp.omt.psi.impl.OMTNamespacePrefixNamedElementImpl"
@@ -86,8 +92,8 @@ namespaceIri ::=                            IRI                                 
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix getAsResource getPrefixName]}
 curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FORWARD_SLASH) curieElement queryFilter* { extends=queryStep methods=[resolveToResource ]}
 
-modelBlock::=                               MODEL_BLOCK_START (indentToken modelItemBlock+ dedentToken)?
-modelItemBlock::=                           leading? modelItemLabel block?
+modelBlock::=                               MODEL_BLOCK_START (indentToken modelItemBlock+ dedentToken)? { extends=specificBlock }
+modelItemBlock::=                           leading? modelItemLabel block? {extends=blockEntry methods=[getType]}
 modelItemLabel::=                           propertyLabel modelItemTypeElement  {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
@@ -213,7 +219,7 @@ query     ::=                               queryPath | queryArray | booleanStat
 // For example, a queryArray can consist of 'a' | 'b' in which both 'a' and 'b' are encapsulated
 // into a queryPath and subsequently a queryStep
 // The queryPath is constructed using the Forward slash as delimiter a contains as many steps as possible
-queryPath ::=                               (curieConstantElement | queryStep) (FORWARD_SLASH queryStep)* { extends=query methods=[resolveToResource] }
+queryPath ::=                               (curieConstantElement | queryStep) (FORWARD_SLASH queryStep?)* { extends=query methods=[resolveToResource] }
 // The queryArray uses the PIPE symbol to split the array where both can be resolved separately
 queryArray ::=                              query (PIPE query)+ { extends=query methods=[resolveToResource] }
 // A booleanStatement works the same as the queryArray but using a BOOLEAN_OPERATOR
@@ -243,7 +249,7 @@ queryStep ::=                               leading? (queryReverseStep |
 queryReverseStep ::=                        CARET curieElement? stepDecorator? queryFilter* { methods = [ resolveToResource ] extends=queryStep}
 stepDecorator ::=                           ASTERIX | PLUS
 // a query filter is contained by brackets [] and should resolve to boolean
-queryFilter ::=                             BRACKET_OPEN query BRACKET_CLOSED
+queryFilter ::=                             BRACKET_OPEN query BRACKET_CLOSED | EMPTY_ARRAY
 
 // the subQuery encapsulated a query by PARENTHESES, it can be resolved as-is, for example in an equation
 // or be cast to a traverse-like behavior using the ASTERIX and PLUS appendixes
