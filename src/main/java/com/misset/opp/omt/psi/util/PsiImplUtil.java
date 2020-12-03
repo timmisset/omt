@@ -565,7 +565,12 @@ public class PsiImplUtil {
         if (previous == null) {
             // retrieve the previous value via the parent
             final PsiElement containingQueryStep = PsiTreeUtil.findFirstParent(
-                    step, parent -> parent != step && (parent instanceof OMTSubQuery || parent instanceof OMTQueryFilter));
+                    step, parent -> parent != step && (
+                            parent instanceof OMTSubQuery ||
+                                    parent instanceof OMTQueryFilter ||
+                                    parent instanceof OMTSignatureArgument
+                    )
+            );
             // retrieve via the subQuery:
             if (containingQueryStep instanceof OMTQueryFilter) {
                 final List<Resource> resources = ((OMTQueryStep) containingQueryStep.getParent()).resolveToResource(true, false);
