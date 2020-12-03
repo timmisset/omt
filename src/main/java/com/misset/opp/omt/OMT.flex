@@ -45,7 +45,7 @@ JDEND=                           \*\/ // all between /** and */
 NAME=                           {ALPHA}({ALPHA}|{DIGIT}|{UNDERSCORE})*
 CURIE=                          ({NAME})?":"{SYMBOL}
 TYPED_VALUE=                    {STRING}"^^"({IRI}|{CURIE})
-IMPORT_PATH=                    (\.{1,2}[^:]*:)
+IMPORT_PATH=                    (\.{1,2}\/[^:\n \[\]]+:)
 PROPERTY_KEY=                   {IMPORT_PATH} | (({STRING}|{NAME})({WHITE_SPACE}*)":")
 VARIABLENAME=                   "$"{NAME}
 // used to capture a valid parameter annotation in the Javadocs
@@ -286,7 +286,7 @@ IElementType closeBracket() {
           yypushback(currentNonWhiteSpaceSize());                   // pushback all to be processed in the INITIAL state
           return returnElement(TokenType.WHITE_SPACE);              // and return the END token
       }
-    ^{PROPERTY_KEY}                                           {    return exitScalar(); } // property_key at the start of a line can only be an exit of the Scalar
+    {PROPERTY_KEY}                                           {    return exitScalar(); } // property_key at the start of a line can only be an exit of the Scalar
 
     {GLOBAL_VARIABLE}                                         { return returnElement(OMTTypes.GLOBAL_VARIABLE_NAME); } // capture all whitespace
     {BOOLEAN}                                                 { return returnElement(OMTTypes.BOOLEAN); }
@@ -365,6 +365,9 @@ IElementType closeBracket() {
 
     // Javadocs in the Scalar are not indented but are anchored directly as leading block to the next Psi element
     {JDSTART}                                                       {
+                                                                        if(shouldExitScalar()) {
+                                                                                return exitScalar();
+                                                                        }
                                                                         setState(JAVADOCS);
                                                                         return returnElement(OMTTypes.JAVADOCS_START); // can be an indent/dedent token or JAVADOCS_START
                                                                     }
@@ -393,7 +396,10 @@ IElementType closeBracket() {
 }
 <PARAM_ANNOTATION> {
     "$"{NAME}                                                       { return returnElement(OMTTypes.VARIABLE_NAME); }
-    {NAME}":"                                                       { return returnElement(OMTTypes.PROPERTY); }
+    {NAME}":"                                                       {
+          yypushback(1);
+          return returnElement(OMTTypes.NAMESPACE); }
+    ":"                                                             { return returnElement(OMTTypes.COLON); }
     {NAME} | {SYMBOL}                                               { return returnElement(OMTTypes.NAMESPACE_MEMBER); }
     "("                                                             { return returnElement(OMTTypes.PARENTHESES_OPEN); }
     ")"                                                             { setState(JAVADOCS, false); return returnElement(OMTTypes.PARENTHESES_CLOSE); }

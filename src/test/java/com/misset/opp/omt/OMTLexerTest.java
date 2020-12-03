@@ -290,5 +290,21 @@ class OMTLexerTest {
         );
     }
 
+    @Test
+    void testJDCommentOnNewLine() {
+        String contentToTest = "import:\n" +
+                "    '@client/registratie/src/utils/bvh-nummer.queries.omt':\n" +
+                "    -   heeftBvhNummer\n" +
+                "\n" +
+                "/**\n" +
+                "* test\n" +
+                "*/\n" +
+                "prefixes:\n" +
+                "    rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>";
+        System.out.println(
+                String.join("\n", getElements(contentToTest))
+        );
+    }
+
 
 }

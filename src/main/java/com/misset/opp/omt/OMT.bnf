@@ -23,7 +23,7 @@ indentToken ::=                             INDENT | INDENT2
 dedentToken ::=                             DEDENT | DEDENT2
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
 block ::=                                   leading? (blockEntry+ | (indentToken blockEntry+ dedentToken))
-blockEntry ::=                              leading? (specificBlock | genericBlock) {
+blockEntry ::=                              specificBlock | genericBlock {
                                             methods=[ getName getLabel ]
 }
 propertyLabel ::=                           PROPERTY { methods=[getPropertyLabelName]}
@@ -37,7 +37,7 @@ scalarValue ::=                             parameterWithType | variableAssignme
 sequence ::=                                sequenceItem+ | (indentToken sequenceItem+ dedentToken)
 sequenceItem ::=                            leading? SEQUENCE_BULLET (scalarValue | block)?
 
-genericBlock ::=                            propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken)) {
+genericBlock ::=                            leading? propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken)) {
                                             extends=blockEntry
 }
 
@@ -47,7 +47,7 @@ specificBlock ::=                          importBlock | exportBlock | prefixBlo
                                             }
 
 // sequences
-exportBlock ::=                             EXPORT_START memberList? { extends=specificBlock }
+exportBlock ::=                             leading? EXPORT_START memberList? { extends=specificBlock }
 memberList ::=                              memberListItem+ | (indentToken memberListItem+ dedentToken?)
 memberListItem ::=                          (leading? SEQUENCE_BULLET member?) { methods=[getName] }
 member ::=                                  OPERATOR {
@@ -57,22 +57,22 @@ member ::=                                  OPERATOR {
                                                      }
 
 // scalars
-queriesBlock::=                             QUERY_BLOCK_START (PIPE defineQueryStatement*)? {
+queriesBlock::=                             leading? QUERY_BLOCK_START (PIPE defineQueryStatement*)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
                                                                 extends=specificBlock
                                                                 }
-commandsBlock::=                            COMMAND_BLOCK_START (PIPE defineCommandStatement*)? {
+commandsBlock::=                            leading? COMMAND_BLOCK_START (PIPE defineCommandStatement*)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
                                                                 extends=specificBlock
                                                                 }
 
-moduleBlock::=                              MODULE_NAME_START moduleName  { extends=specificBlock }
+moduleBlock::=                              leading? MODULE_NAME_START moduleName  { extends=specificBlock }
 moduleName::=                               NAME | OPERATOR
 
 // maps
-importBlock ::=                             IMPORT_START (indentToken import+ dedentToken)? { extends=specificBlock }
+importBlock ::=                             leading? IMPORT_START (indentToken import+ dedentToken)? { extends=specificBlock }
 import ::=                                  leading? importSource memberList?
 importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                            mixin="com.misset.opp.omt.psi.impl.OMTImportNamedElementImpl"
@@ -81,7 +81,7 @@ importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                          }
 importLocation ::=                          (MODULE_START indentToken PROPERTY dedentToken) | PROPERTY | IMPORT_PATH
 
-prefixBlock::=                              PREFIX_BLOCK_START indentToken prefix+ dedentToken { extends=specificBlock }
+prefixBlock::=                              leading? PREFIX_BLOCK_START indentToken prefix+ dedentToken { extends=specificBlock }
 prefix::=                                   leading? namespacePrefix namespaceIri { methods=[getName] }
 namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)            {
                                                                                          mixin="com.misset.opp.omt.psi.impl.OMTNamespacePrefixNamedElementImpl"
@@ -92,7 +92,7 @@ namespaceIri ::=                            IRI                                 
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix getAsResource getPrefixName]}
 curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FORWARD_SLASH) curieElement queryFilter* { extends=queryStep methods=[resolveToResource ]}
 
-modelBlock::=                               MODEL_BLOCK_START (indentToken modelItemBlock+ dedentToken)? { extends=specificBlock }
+modelBlock::=                               leading? MODEL_BLOCK_START (indentToken modelItemBlock+ dedentToken)? { extends=specificBlock }
 modelItemBlock::=                           leading? modelItemLabel block? {extends=blockEntry methods=[getType]}
 modelItemLabel::=                           propertyLabel modelItemTypeElement  {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
