@@ -1,10 +1,11 @@
-package com.misset.opp.omt;
+package com.misset.opp.omt.style;
 
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighter;
 import com.intellij.openapi.options.colors.AttributesDescriptor;
 import com.intellij.openapi.options.colors.ColorDescriptor;
 import com.intellij.openapi.options.colors.ColorSettingsPage;
+import com.misset.opp.omt.OMTIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,20 +14,16 @@ import java.util.Map;
 
 public class OMTColorSettingsPage implements ColorSettingsPage {
     private static final AttributesDescriptor[] DESCRIPTORS = new AttributesDescriptor[]{
-            new AttributesDescriptor("Separator", OMTSyntaxHighlighter.SEPARATOR),
             new AttributesDescriptor("Global Variable Type", OMTSyntaxHighlighter.GLOBAL_VARIABLE),
             new AttributesDescriptor("Item Type", OMTSyntaxHighlighter.ITEM_TYPE),
             new AttributesDescriptor("String", OMTSyntaxHighlighter.STRING),
             new AttributesDescriptor("Number", OMTSyntaxHighlighter.NUMBER),
             new AttributesDescriptor("Boolean, Null", OMTSyntaxHighlighter.CONSTANT),
             new AttributesDescriptor("Variable", OMTSyntaxHighlighter.VARIABLE),
-            new AttributesDescriptor("Bad Value", OMTSyntaxHighlighter.BAD_CHARACTER),
             new AttributesDescriptor("Comment Block", OMTSyntaxHighlighter.COMMENTBLOCK),
+            new AttributesDescriptor("Comment Line", OMTSyntaxHighlighter.COMMENTLINE),
             new AttributesDescriptor("Operator & Command Names", OMTSyntaxHighlighter.OPERATOR_OR_COMMAND),
-            new AttributesDescriptor("Curie and Prefixes", OMTSyntaxHighlighter.PREFIX),
-            new AttributesDescriptor("OWL Properties", OMTSyntaxHighlighter.OWLPROPERTY),
-
-
+            new AttributesDescriptor("Curies & IRIs", OMTSyntaxHighlighter.CURIE_IRI)
     };
 
     @Nullable
@@ -48,7 +45,7 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
                 "    '@client/some/src/thing.omt':\n" +
                 "    -   aCommand\n" +
                 "    -   anOperator\n" +
-                "    '../something/else.omt':\n" +
+                "    ../something/else.omt:\n" +
                 "    -   anotherCommand\n" +
                 "    -   anotherMethod\n" +
                 "\n" +
@@ -60,7 +57,7 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
                 "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#> // and about foaf\n" +
                 "\n" +
                 "model:\n" +
-                "    MijnActiviteit: !Activity\n //some comment about the activity" +
+                "    MijnActiviteit: !Activity\n //some comment about the activity\n" +
                 "        title: Mijn Activiteit\n" +
                 "\n" +
                 "        params:\n" +
@@ -68,13 +65,13 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
                 "        -   $paramB (foaf:SomethingElse)\n" +
                 "\n" +
                 "        queries: |\n" +
-                "            DEFINE QUERY myFirstQuery() => 'Hello world';\n" +
+                "            DEFINE QUERY myFirstQuery() => true;\n" +
                 "            /**\n" +
+                "            * mySecondQuery is used to ...\n" +
                 "            * @param $param1 (abc:Alpha)\n" +
                 "            */\n" +
                 "            DEFINE QUERY mySecondQuery($param1) => CONCAT('Hello ', $param1);\n" +
-                "            DEFINE QUERY myThirdQuery() => myFourthQuery();\n" +
-                "            DEFINE QUERY myFourthQuery() => myThirdQuery();\n" +
+                "            DEFINE QUERY myThirdQuery() => $medewerkerGraph;\n" +
                 "\n" +
                 "        variables:\n" +
                 "        -   $variableA\n" +
@@ -87,8 +84,8 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
                 "            -   $variableB / GRAPH\n" +
                 "\n" +
                 "        onStart: |\n" +
-                "            $variableA = 'waardeA';\n" +
-                "            $variableB = 'waardeB';\n" +
+                "            $variableA = 10;\n" +
+                "            $variableB = null;\n" +
                 "            VAR $declaredVariable = @CONCAT($variableA, $variableB);\n" +
                 "\n" +
                 "        payload:\n" +

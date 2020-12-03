@@ -2,6 +2,7 @@ package com.misset.opp.omt.psi.util;
 
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.TokenType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTCallable;
@@ -13,6 +14,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class PsiImplUtil {
@@ -273,28 +275,26 @@ public class PsiImplUtil {
 
     public static PsiElement getLabel(OMTBlockEntry blockEntry) {
         if (blockEntry instanceof OMTSpecificBlock) {
-            return getLabel((OMTSpecificBlock) blockEntry);
+            return blockEntry.getFirstChild() instanceof OMTLeading ?
+                    getSibling(blockEntry.getFirstChild(),
+                            element -> element.getNode().getElementType() != TokenType.WHITE_SPACE) :
+                    blockEntry.getFirstChild();
         }
         if (blockEntry instanceof OMTModelItemBlock) {
-            return getLabel((OMTModelItemBlock) blockEntry);
+            return ((OMTModelItemBlock) blockEntry).getModelItemLabel().getPropertyLabel();
         }
-        if (blockEntry instanceof OMTGenericBlock) {
-            return getLabel((OMTGenericBlock) blockEntry);
+        return ((OMTGenericBlock) blockEntry).getPropertyLabel();
+    }
+
+    public static PsiElement getSibling(@NotNull PsiElement element, Predicate<PsiElement> condition) {
+        element = element.getNextSibling();
+        while (element != null) {
+            if (condition.test(element)) {
+                return element;
+            }
+            element = element.getNextSibling();
         }
-        return blockEntry.getBlockEntry() == null ? null : blockEntry.getBlockEntry().getLabel();
-    }
-
-    public static PsiElement getLabel(OMTModelItemBlock modelItemBlock) {
-        return modelItemBlock.getModelItemLabel().getPropertyLabel();
-    }
-
-    public static PsiElement getLabel(OMTSpecificBlock specificBlock) {
-        // a specific block (import, export, prefixes etc) always stars with the label
-        return specificBlock.getFirstChild();
-    }
-
-    public static OMTPropertyLabel getLabel(OMTGenericBlock genericBlock) {
-        return genericBlock.getPropertyLabel();
+        return null;
     }
 
     // ////////////////////////////////////////////////////////////////////////////
