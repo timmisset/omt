@@ -64,6 +64,12 @@ public class OMTFile extends PsiFileBase {
         return PsiTreeUtil.getChildOfType(this, OMTBlock.class);
     }
 
+    public String resourcesAsTypes(List<Resource> resources) {
+        return resources.stream()
+                .map(this::resourceToCurie)
+                .collect(Collectors.joining(", "));
+    }
+
     public Optional<OMTBlockEntry> getRootBlock(String name) {
         OMTBlock rootBlock = PsiTreeUtil.getChildOfType(this, OMTBlock.class);
         if (rootBlock == null) {

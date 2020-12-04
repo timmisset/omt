@@ -60,16 +60,17 @@ public class OMTStartupActivity implements StartupActivity {
     }
 
     private void setFileListeners(@NotNull Project project) {
-        project.getMessageBus().connect().subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
-            @Override
-            public void after(@NotNull List<? extends VFileEvent> events) {
-                events
-                        .stream()
-                        .map(VFileEvent::getFile)
-                        .filter(Objects::nonNull)
-                        .forEach(virtualFile -> {
-                            switch (virtualFile.getName()) {
-                                case ProjectUtil.BUILTIN_COMMANDS:
+                project.getMessageBus().connect().subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
+                    @Override
+                    public void after(@NotNull List<? extends VFileEvent> events) {
+                        events
+                                .stream()
+                                .map(VFileEvent::getFile)
+                                .filter(Objects::nonNull)
+                                .filter(VirtualFile::isValid)
+                                .forEach(virtualFile -> {
+                                    switch (virtualFile.getName()) {
+                                        case ProjectUtil.BUILTIN_COMMANDS:
                                 case ProjectUtil.BUILTIN_HTTP_COMMANDS:
                                 case ProjectUtil.BUILTIN_JSON_PARSE_COMMAND:
                                 case ProjectUtil.BUILTIN_OPERATORS:
@@ -86,10 +87,11 @@ public class OMTStartupActivity implements StartupActivity {
                     return;
                 }
                 String extension = virtualFile.getExtension();
-                if (".ttl".equals(extension)) {
+                if ("ttl".equals(extension)) {
                     projectUtil.loadOntologyModel(project);
-                } else if (".omt".equals(extension)) {
+                } else if ("omt".equals(extension)) {
                     projectUtil.resetExportedMembers(
+
                             (OMTFile) PsiManager.getInstance(project).findFile(virtualFile)
                     );
                 }

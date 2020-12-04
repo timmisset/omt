@@ -225,7 +225,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
         OMTParameter finalParameter = parameter;
         AtomicReference<IncorrectSignatureArgument> exception = new AtomicReference<>();
-        queryUtil.validateType(
+        projectUtil.getRDFModelUtil().validateType(
                 parameterType, argument.resolveToResource(),
                 (acceptableTypes, argumentTypes) -> exception.set(new IncorrectSignatureArgument(finalParameter, acceptableTypes, argumentTypes))
         );

@@ -89,8 +89,15 @@ namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)        
                                                                                          methods=[getName setName getNameIdentifier]
                                                                                    }
 namespaceIri ::=                            IRI                                   { methods = [getName getNamespace] }
-curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       { methods = [getPrefix isDefinedByPrefix getAsResource getPrefixName]}
-curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FORWARD_SLASH) curieElement queryFilter* { extends=queryStep methods=[resolveToResource ]}
+curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       {
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
+                                                extends="com.misset.opp.omt.psi.resolvable.OMTCurieElementResolvableImpl"
+                                                methods = [getPrefix isDefinedByPrefix getAsResource getPrefixName]
+                                                }
+curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FORWARD_SLASH) curieElement queryFilter*
+{
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTQueryStepResolvable"
+                                                extends="com.misset.opp.omt.psi.resolvable.OMTCurieConstantElementResolvableImpl" }
 
 modelBlock::=                               leading? MODEL_BLOCK_START (indentToken modelItemBlock+ dedentToken)? { extends=specificBlock }
 modelItemBlock::=                           leading? modelItemLabel block? {extends=blockEntry methods=[getType]}
@@ -114,7 +121,10 @@ leading ::=                                 comment+
 // ////////////////////////////////////////////////////
 // ODT
 // ////////////////////////////////////////////////////
-constant_value ::=                          STRING | INTEGER | DECIMAL | NULL | BOOLEAN | TYPED_VALUE
+constant_value ::=                          STRING | INTEGER | DECIMAL | NULL | BOOLEAN | TYPED_VALUE {
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
+                                                extends="com.misset.opp.omt.psi.resolvable.OMTConstantValueResolvableImpl"
+}
 // a variable is declared using VAR and one or more variable names. Optionally an assignment is added
 // the assignment is deconstructed to the entire set of variables that is declared. i.e. VAR $a, $b = [1, 2]. $a == 1, $b == 2
 // or can be VAR $a = 1, $b = 2 etc. todo: check if this is actually true
@@ -144,7 +154,9 @@ parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEM
 // it can start on the same line and be restricted to that line (not required) or it can be started by the
 // literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and and 
 script ::=                                  PIPE (scriptLine+ | query)?
-commandBlock ::=                            CURLY_OPEN (script | scriptLine+)? CURLY_CLOSED { methods=[resolveToResource]}
+commandBlock ::=                            CURLY_OPEN (script | scriptLine+)? CURLY_CLOSED {
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
+                                                extends="com.misset.opp.omt.psi.resolvable.OMTCommandBlockResolvableImpl" }
 // a scriptline is contained by the addition of the semicolon at the end
 scriptLine ::=                              leading? ((scriptContent SEMICOLON+) | commandBlock | logicalBlock)
 // the contents of a script, contained by a scriptLine or Scalar
@@ -175,22 +187,26 @@ defineParam ::=                             PARENTHESES_OPEN (variable (COMMA va
 // MEMBER CALLS
 // A call to either an Operator or a Command. In case of the latter, it's always prefixed with @
 operatorCall ::=                            OPERATOR flagSignature? signature? {
-                                                             mixin="com.misset.opp.omt.psi.impl.OMTCallImpl"
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
-                                                             methods=[getName setName getNameIdentifier canCallOperator canCallCommand]
+                                                             extends="com.misset.opp.omt.psi.resolvable.OMTCallResolvableImpl"
+                                                             methods=[getName setName getNameIdentifier]
                                                            }
 commandCall ::=                             COMMAND flagSignature? signature?
                                                             {
-                                                             mixin="com.misset.opp.omt.psi.impl.OMTCallImpl"
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
-                                                             methods=[getName setName getNameIdentifier canCallOperator canCallCommand]
+                                                             extends="com.misset.opp.omt.psi.resolvable.OMTCallResolvableImpl"
+                                                             methods=[getName setName getNameIdentifier]
                                                            }
 signature ::=                               PARENTHESES_OPEN (signatureArgument (COMMA signatureArgument)*)? PARENTHESES_CLOSE {
                                                              methods=[numberOfParameters]
 }
-signatureArgument ::=                       resolvableValue | commandBlock { methods=[resolveToResource] }
+signatureArgument ::=                       resolvableValue | commandBlock {
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
+                                                extends="com.misset.opp.omt.psi.resolvable.OMTSignatureArgumentResolvableImpl" }
 flagSignature ::=                           FLAG
-resolvableValue ::=                         query | commandCall { methods=[resolveToResource]}
+resolvableValue ::=                         query | commandCall {
+                                              implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
+                                              extends="com.misset.opp.omt.psi.resolvable.OMTResolvableValueResolvableImpl" }
 logicalBlock ::=                            ifBlock commandBlock (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
 ifBlock ::=                                 IF_OPERATOR (query | (PARENTHESES_OPEN query PARENTHESES_CLOSE))
 elseBlock ::=                               ELSE_OPERATOR commandBlock
@@ -210,31 +226,50 @@ endPath ::=                                 END_OPERATOR
 // with regular bnf -> psi generation, the query would encapsulate the queryPath, ... items
 // by using the extension mechanism, it only becomes their superclass
 query     ::=                               queryPath | queryArray | booleanStatement | equationStatement
-                                            { methods = [
-                                            resolveToResource
-                                            filter
-                                            isBooleanType
-                                            getDefinedName ]  }
+                                            { methods = [getDefinedName ]
+                                              implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable" }
 // The queryPath is the base, eventually all queries will descent into a queryPath even for single steps
 // For example, a queryArray can consist of 'a' | 'b' in which both 'a' and 'b' are encapsulated
 // into a queryPath and subsequently a queryStep
 // The queryPath is constructed using the Forward slash as delimiter a contains as many steps as possible
-queryPath ::=                               (curieConstantElement | queryStep) (FORWARD_SLASH queryStep?)* { extends=query methods=[resolveToResource] }
+queryPath ::=                               (curieConstantElement | queryStep) (FORWARD_SLASH queryStep?)*
+{
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable"
+                                                mixin="com.misset.opp.omt.psi.resolvable.OMTQueryPathResolvableImpl"
+                                                extends=query}
 // The queryArray uses the PIPE symbol to split the array where both can be resolved separately
-queryArray ::=                              query (PIPE query)+ { extends=query methods=[resolveToResource] }
+queryArray ::=                              query (PIPE query)+
+{
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable"
+                                                mixin="com.misset.opp.omt.psi.resolvable.OMTQueryArrayResolvableImpl"
+                                                extends=query
+                                                }
 // A booleanStatement works the same as the queryArray but using a BOOLEAN_OPERATOR
 // When resolving, it should be checked that all parts of the query are resolved to boolean types
-booleanStatement ::=                        query (BOOLEAN_OPERATOR query)+ { extends=query methods=[resolveToResource filter] }
+booleanStatement ::=                        query (BOOLEAN_OPERATOR query)+
+{
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable"
+                                                mixin="com.misset.opp.omt.psi.resolvable.OMTBooleanStatementResolvableImpl"
+                                                extends=query}
 // The equationStatement uses a conditional operator (like ==, >=, <=) to split the statement
 // it only allows a left-hand and right-hand query, both should be resolved to boolean type
-equationStatement ::=                       query CONDITIONAL_OPERATOR query { extends=query methods=[resolveToResource filter getOpposite] }
+equationStatement ::=                       query CONDITIONAL_OPERATOR query
+{                                               methods=[getOpposite]
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable"
+                                                mixin="com.misset.opp.omt.psi.resolvable.OMTEquationStatementResolvableImpl"
+                                                extends=query
+                                                }
 // The negated statement detects the usage of the NOT operator
 // This can be used as '.. / NOT IN (...)' OR '.. / NOT'. In the former the negation is based on the subsequent
 // query whereas the latter it's based on the preceding query
 // NOTE: for some reason the 2 options need to be stated separately for the compiler to make sense of it
 // creation of a single negatedStatement with both options is not working
 // the leading statement is preferred
-negatedStep ::=                             NOT_OPERATOR query { extends=query }
+negatedStep ::=                             NOT_OPERATOR query {
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable"
+                                                mixin="com.misset.opp.omt.psi.resolvable.OMTNegatedStepResolvableImpl"
+                                                extends=query
+ }
 
 // a queryStep is anything that is acceptable between the / ... / FORWARD_SLASH delimiters in the query or
 // that add some additional behavior to the step (like a filter)
@@ -245,15 +280,27 @@ queryStep ::=                               leading? (queryReverseStep |
                                             chooseBlock | negatedStep | NOT_OPERATOR |
                                             subQuery)
                                             stepDecorator? queryFilter*
-                                            { methods = [ resolveToResource ]}
-queryReverseStep ::=                        CARET curieElement? stepDecorator? queryFilter* { methods = [ resolveToResource ] extends=queryStep}
+                                            {
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTQueryStepResolvable"
+                                                extends="com.misset.opp.omt.psi.resolvable.OMTQueryStepResolvableImpl" }
+queryReverseStep ::=                        CARET curieElement? stepDecorator? queryFilter*
+                                            {
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTQueryStepResolvable"
+                                                mixin="com.misset.opp.omt.psi.resolvable.OMTQueryReverseStepResolvableImpl"
+                                                extends=queryStep
+                                                }
 stepDecorator ::=                           ASTERIX | PLUS
 // a query filter is contained by brackets [] and should resolve to boolean
 queryFilter ::=                             BRACKET_OPEN query BRACKET_CLOSED | EMPTY_ARRAY
 
 // the subQuery encapsulated a query by PARENTHESES, it can be resolved as-is, for example in an equation
 // or be cast to a traverse-like behavior using the ASTERIX and PLUS appendixes
-subQuery ::=                                PARENTHESES_OPEN query PARENTHESES_CLOSE { extends=queryStep methods=[resolveToResource] }
+subQuery ::=                                PARENTHESES_OPEN query PARENTHESES_CLOSE
+                                            {
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTQueryStepResolvable"
+                                                mixin="com.misset.opp.omt.psi.resolvable.OMTSubQueryResolvableImpl"
+                                                extends=queryStep
+                                            }
 
 // the assignment statement is used to assign a value to a left-hand target, like a variable or a resolved resource iri
 // addTo and removeFrom are similar which will add/remove the item to/from the collection
