@@ -4,6 +4,7 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.annotations.QueryAnnotations;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.util.*;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +17,7 @@ public class OMTAnnotator implements Annotator {
     private static final ImportUtil importUtil = ImportUtil.SINGLETON;
     private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
     private static final ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
-    private static final QueryUtil queryUtil = QueryUtil.SINGLETON;
+    private static final QueryAnnotations queryAnnotations = QueryAnnotations.SINGLETON;
 
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
@@ -68,32 +69,32 @@ public class OMTAnnotator implements Annotator {
             variableUtil.annotateParameterWithType((OMTParameterWithType) element, holder);
         }
         if (element instanceof OMTAddToCollection) {
-            queryUtil.annotateAddToCollection((OMTAddToCollection) element, holder);
+            queryAnnotations.annotateAddToCollection((OMTAddToCollection) element, holder);
         }
         if (element instanceof OMTRemoveFromCollection) {
-            queryUtil.annotateRemoveFromCollection((OMTRemoveFromCollection) element, holder);
+            queryAnnotations.annotateRemoveFromCollection((OMTRemoveFromCollection) element, holder);
         }
         if (element instanceof OMTAssignmentStatement) {
-            queryUtil.annotateAssignmentStatement((OMTAssignmentStatement) element, holder);
+            queryAnnotations.annotateAssignmentStatement((OMTAssignmentStatement) element, holder);
         }
         if (element instanceof OMTEquationStatement) {
-            queryUtil.annotateEquationStatement((OMTEquationStatement) element, holder);
+            queryAnnotations.annotateEquationStatement((OMTEquationStatement) element, holder);
         }
         if (element instanceof OMTBooleanStatement) {
-            queryUtil.annotateBooleanStatement((OMTBooleanStatement) element, holder);
+            queryAnnotations.annotateBooleanStatement((OMTBooleanStatement) element, holder);
         }
         if (element instanceof OMTIfBlock) {
-            queryUtil.annotateIfBlock((OMTIfBlock) element, holder);
+            queryAnnotations.annotateIfBlock((OMTIfBlock) element, holder);
         }
 
         if (element instanceof OMTQueryStep) {
             if (element.getParent() instanceof OMTQueryReverseStep) {
                 return;
             }
-            queryUtil.annotateQueryStep((OMTQueryStep) element, holder);
+            queryAnnotations.annotateQueryStep((OMTQueryStep) element, holder);
         }
         if (element instanceof OMTQueryPath) {
-            queryUtil.annotateQueryPath((OMTQueryPath) element, holder);
+            queryAnnotations.annotateQueryPath((OMTQueryPath) element, holder);
         }
     }
 

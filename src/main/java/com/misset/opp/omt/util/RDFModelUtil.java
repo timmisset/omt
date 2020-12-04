@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -506,6 +507,49 @@ public class RDFModelUtil {
             description.append("</ul>");
         }
         return description.toString();
+    }
+
+    public void validateType(Resource resource, List<Resource> sender, BiConsumer<List<Resource>, List<Resource>> onFail) {
+        validateType(Collections.singletonList(resource), sender, onFail);
+    }
+
+
+    /**
+     * Validate if the type of the sender is acceptable by the receiver
+     *
+     * @param receiver
+     * @param sender
+     * @return
+     */
+    public void validateType(
+            List<Resource> receiver,
+            List<Resource> sender,
+            BiConsumer<List<Resource>, List<Resource>> onFail) {
+        // acceptable types for receiver
+        List<Resource> acceptableTypes = new ArrayList<>(receiver);
+        acceptableTypes.addAll(allSubClasses(receiver));
+
+        List<Resource> argumentTypes = new ArrayList<>(sender);
+        argumentTypes.addAll(allSubClasses(argumentTypes));
+        argumentTypes = getDistinctResources(getClasses(argumentTypes));
+
+        if (acceptableTypes.isEmpty() ||
+                argumentTypes.isEmpty() ||
+                acceptableTypes.stream().noneMatch(this::isClassOrType) ||
+                argumentTypes.stream().noneMatch(this::isClassOrType) ||
+                argumentTypes.contains(this.getAnyType())) {
+            // when the argument type cannot be resolved to specific class or type it's resolved to any
+            // which means we cannot validate the call
+            return;
+        }
+        for (Resource argumentType : argumentTypes) {
+            if (acceptableTypes.stream().anyMatch(resource ->
+                    areComparable(resource, argumentType)
+            )) {
+                return; // acceptable type found
+            }
+        }
+        onFail.accept(acceptableTypes, argumentTypes);
     }
 
     public Resource getResource(String iri) {

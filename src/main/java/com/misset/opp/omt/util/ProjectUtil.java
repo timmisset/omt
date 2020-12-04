@@ -59,6 +59,10 @@ public class ProjectUtil {
 
     private RDFModelUtil rdfModelUtil;
 
+    private void setStatusbarMessage(Project project, String message) {
+        getStatusBar(project).setInfo(String.format("OMT PLUGIN: %s", message));
+    }
+
     public RDFModelUtil getRDFModelUtil() {
         if (rdfModelUtil == null || !rdfModelUtil.isLoaded()) {
             rdfModelUtil = new RDFModelUtil(getOntologyModel());
@@ -107,7 +111,7 @@ public class ProjectUtil {
      */
     public void loadBuiltInMembers(Project project) {
         builtInUtil.reset();
-        WindowManager.getInstance().getStatusBar(project).setInfo("Loading BuiltIn Members of OMT");
+        setStatusbarMessage(project, "Loading BuiltIn Members of OMT");
 
         OMTSettingsState settings = OMTSettingsState.getInstance();
         VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
@@ -124,6 +128,7 @@ public class ProjectUtil {
     }
 
     public void loadOntologyModel(Project project) {
+        setStatusbarMessage(project, "Loading ontology");
         VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
         OMTSettingsState settings = OMTSettingsState.getInstance();
         VirtualFile virtualFile = getVirtualFileFromSettingOrVFS(virtualFileManager, project, "root.ttl", settings.ontologyModelRootPath);
@@ -137,6 +142,7 @@ public class ProjectUtil {
         }
         model = new RDFModelUtil(rootFolderPath).readModel();
         updateModelUtil();
+        setStatusbarMessage(project, "Finished loading ontology");
     }
 
     private void loadBuiltInMembersViaSettingsOrFromFilename(Project project,
@@ -172,12 +178,12 @@ public class ProjectUtil {
         Document document = fileDocumentManager.getDocument(virtualFile);
         if (document != null) {
             builtInUtil.reloadBuiltInFromDocument(document, type, project, this);
-            getStatusBar(project).setInfo(
+            setStatusbarMessage(project,
                     String.format("Finished loading %s", filename)
             );
             return true;
         } else {
-            getStatusBar(project).setInfo(
+            setStatusbarMessage(project,
                     String.format("Error loading %s", filename)
             );
             return false;
@@ -251,6 +257,9 @@ public class ProjectUtil {
      * @return
      */
     public void resetExportedMembers(OMTFile file) {
+        setStatusbarMessage(file.getProject(),
+                String.format("Resetting exporting members for %s", file.getName())
+        );
         removeExports(file);
         registerExports(file);
     }
@@ -258,6 +267,9 @@ public class ProjectUtil {
     public void analyzeFile(OMTFile file) {
         registerExports(file);
         registerPrefixes(file);
+        setStatusbarMessage(file.getProject(),
+                String.format("Finished analyzing %s", file.getName())
+        );
     }
 
     /**

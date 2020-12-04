@@ -77,8 +77,8 @@ class ProjectUtilTest extends LightJavaCodeInsightFixtureTestCase {
         );
         doReturn(document).when(fileDocumentManager).getDocument(eq(virtualFile));
         ApplicationManager.getApplication().runReadAction(() -> projectUtil.loadBuiltInMembers(getProject()));
-        verify(statusBar).setInfo("Finished loading builtinCommands.ts");
-        verify(statusBar).setInfo("Finished loading builtinOperators.ts");
+        verify(statusBar).setInfo("OMT PLUGIN: Finished loading builtinCommands.ts");
+        verify(statusBar).setInfo("OMT PLUGIN: Finished loading builtinOperators.ts");
     }
 
     @Test
@@ -87,8 +87,8 @@ class ProjectUtilTest extends LightJavaCodeInsightFixtureTestCase {
                 any(Project.class), anyString()
         );
         ApplicationManager.getApplication().runReadAction(() -> projectUtil.loadBuiltInMembers(getProject()));
-        verify(statusBar).setInfo("Error loading builtinCommands.ts");
-        verify(statusBar).setInfo("Error loading builtinOperators.ts");
+        verify(statusBar).setInfo("OMT PLUGIN: Error loading builtinCommands.ts");
+        verify(statusBar).setInfo("OMT PLUGIN: Error loading builtinOperators.ts");
     }
 
     @Test

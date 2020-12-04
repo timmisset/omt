@@ -95,7 +95,9 @@ class PsiImplUtilTest extends OMTTestSuite {
     }
 
     private List<Resource> resolve(OMTQuery query) {
-        return ApplicationManager.getApplication().runReadAction((Computable<List<Resource>>) query::resolveToResource);
+        return ApplicationManager.getApplication().runReadAction(
+                (Computable<List<Resource>>) query::resolveToResource
+        );
     }
 
     @ParameterizedTest

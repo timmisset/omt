@@ -1,76 +1,35 @@
 package com.misset.opp.omt.psi.util;
 
-import com.intellij.lang.ASTNode;
-import com.intellij.lang.annotation.AnnotationHolder;
-import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.util.ProjectUtil;
-import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-
-import static com.misset.opp.omt.psi.intentions.query.MergeFiltersIntention.getMergeFilterIntention;
-import static com.misset.opp.omt.psi.intentions.query.UnwrapIntention.getUnwrapIntention;
 
 public class QueryUtil {
     public static final QueryUtil SINGLETON = new QueryUtil();
     private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
 
-    public void annotateQueryStep(OMTQueryStep step, AnnotationHolder holder) {
-        final List<Resource> resources = step
-                .resolveToResource()
-                .stream()
-                .filter(resource -> projectUtil.getRDFModelUtil().isClassOrType(resource))
-                .collect(Collectors.toList());
-        if (resources.isEmpty()) {
-            validateQueryCurieElement(step, holder);
-        }
-        if (step.getQueryFilterList().size() > 1) {
-            holder.newAnnotation(
-                    HighlightSeverity.WARNING,
-                    "Multiple filter steps on the same step")
-                    .withFix(getMergeFilterIntention(step))
-                    .create();
-        }
-        // annotate the subquery
-        if (step instanceof OMTSubQuery) {
-            annotateSubQuery((OMTSubQuery) step, holder);
-        }
 
-        // if the step is decorated with an asterix or plus, check if this is acceptable
-        if (step.getStepDecorator() != null && step.getChildren()[0] instanceof OMTSubQuery) {
-            final OMTSubQuery subQuery = (OMTSubQuery) step.getChildren()[0];
-            if (!isDecoratable(subQuery.getQuery())) {
-                holder.newAnnotation(HighlightSeverity.ERROR,
-                        "Invalid decorator")
-                        .range(step.getStepDecorator())
-                        .create();
+    private static List<Resource> resolvePathPart(PsiElement part) {
+        if (part != null) {
+            if (part instanceof OMTQueryStep) {
+                return ((OMTQueryStep) part).resolveToResource();
+            }
+            if (part instanceof OMTQueryPath) {
+                return ((OMTQueryPath) part).resolveToResource();
+            }
+            if (part instanceof OMTEquationStatement) {
+                return ((OMTEquationStatement) part).resolveToResource();
             }
         }
-
-        holder.newAnnotation(
-                HighlightSeverity.INFORMATION,
-                String.format("Type(s): %s", resourcesAsTypes(resources, (OMTFile) step.getContainingFile()))
-        ).create();
+        return new ArrayList<>();
     }
 
-    public void annotateSubQuery(OMTSubQuery subQuery, AnnotationHolder holder) {
-        if (!wrappableStep(subQuery)) {
-            holder.newAnnotation(HighlightSeverity.WARNING,
-                    "Unnecessary wrapping of statement")
-                    .withFix(getUnwrapIntention(subQuery))
-                    .create();
-        }
-    }
-
-    private boolean wrappableStep(OMTSubQuery subQuery) {
+    public boolean isWrappableStep(OMTSubQuery subQuery) {
         if (isDecorated(subQuery)) {
             return true;
         }
@@ -84,13 +43,6 @@ public class QueryUtil {
         return subQuery.getParent() instanceof OMTQueryPath && subQuery.getParent().getParent() instanceof OMTNegatedStep;
     }
 
-    private boolean isDecoratable(OMTQuery step) {
-        if (step instanceof OMTBooleanStatement) {
-            return false;
-        }
-        return !(step instanceof OMTEquationStatement);
-    }
-
     private boolean isDecorated(OMTQueryStep step) {
         return getDecorator(step) != null;
     }
@@ -102,180 +54,47 @@ public class QueryUtil {
         return step.getParent() instanceof OMTQueryStep ? ((OMTQueryStep) step.getParent()).getStepDecorator() : null;
     }
 
-    public void validateQueryCurieElement(OMTQueryStep step, AnnotationHolder holder) {
-        List<Resource> previousStep = PsiImplUtil.getPreviousStep(step);
-        previousStep = previousStep.stream().filter(resource -> projectUtil.getRDFModelUtil().isClassOrType(resource)).collect(Collectors.toList());
-        if (previousStep.isEmpty()) {
-            return;
-        } // no error when type resolving has failed
-        if (step instanceof OMTCurieConstantElement) {
-            return;
+    public boolean isDecoratable(OMTQuery step) {
+        if (step instanceof OMTBooleanStatement) {
+            return false;
         }
-
-        if (step instanceof OMTQueryReverseStep) {
-            final OMTQueryReverseStep reverseStep = (OMTQueryReverseStep) step;
-            final OMTCurieElement curieElement = reverseStep.getQueryStep() != null ?
-                    reverseStep.getQueryStep().getCurieElement() : null;
-            if (curieElement != null) {
-                final List<Resource> resources = new ArrayList<>(projectUtil.getRDFModelUtil().listPredicatesForObjectClass(previousStep).keySet());
-                validatePredicates(resources, curieElement, previousStep, holder, "REVERSE");
-            }
-        } else {
-            final OMTCurieElement curieElement = step.getCurieElement();
-            if (!(step.getParent() instanceof OMTQueryReverseStep)) {
-                final List<Resource> resources = new ArrayList<>(projectUtil.getRDFModelUtil().listPredicatesForSubjectClass(previousStep).keySet());
-                validatePredicates(resources, curieElement, previousStep, holder, "FORWARD");
-            }
-        }
-    }
-
-    private void validatePredicates(List<Resource> resources, OMTCurieElement curieElement, List<Resource> previousStep, AnnotationHolder holder, String direction) {
-
-        boolean validPredicate = resources.stream().anyMatch(
-                resource -> curieElement != null && curieElement.getAsResource() != null && curieElement.getAsResource().equals(resource)
-        );
-        if (!validPredicate) {
-            annotateWrongPredicate(previousStep, curieElement, direction, holder);
-        }
-    }
-
-    private String resourcesAsTypes(List<Resource> resources, OMTFile file) {
-        return resources.stream()
-                .map(file::resourceToCurie)
-                .collect(Collectors.joining(", "));
-    }
-
-    private void annotateWrongPredicate(List<Resource> types, OMTCurieElement curieElement, String direction, AnnotationHolder holder) {
-        if (curieElement == null) {
-            return;
-        }
-        holder.newAnnotation(
-                HighlightSeverity.ERROR,
-                String.format("%s is not a known %s-path predicate for type(s): %s",
-                        curieElement.getAsResource(),
-                        direction,
-                        resourcesAsTypes(types, (OMTFile) curieElement.getContainingFile())
-                ))
-                .create();
-    }
-
-    public void annotateAddToCollection(OMTAddToCollection addToCollection, AnnotationHolder holder) {
-        final List<Resource> assignee = addToCollection.getQuery().resolveToResource();
-        final List<Resource> value = addToCollection.getResolvableValue().resolveToResource();
-        annotateAssignment(assignee, value, holder, addToCollection.getResolvableValue());
-    }
-
-    public void annotateRemoveFromCollection(OMTRemoveFromCollection removeFromCollection, AnnotationHolder holder) {
-        final List<Resource> assignee = removeFromCollection.getQuery().resolveToResource();
-        final List<Resource> value = removeFromCollection.getResolvableValue().resolveToResource();
-        annotateAssignment(assignee, value, holder, removeFromCollection.getResolvableValue());
-    }
-
-    public void annotateAssignmentStatement(OMTAssignmentStatement assignmentStatement, AnnotationHolder holder) {
-        final List<Resource> assignee = assignmentStatement.getQuery().resolveToResource();
-        final List<Resource> value = assignmentStatement.getResolvableValue().resolveToResource();
-        annotateAssignment(assignee, value, holder, assignmentStatement.getResolvableValue());
-    }
-
-    private void annotateAssignment(List<Resource> assignee, List<Resource> value, AnnotationHolder holder, PsiElement range) {
-        validateType(assignee, value,
-                (acceptableTypes, argumentTypes) ->
-                        holder.newAnnotation(HighlightSeverity.ERROR,
-                                String.format("Incorrect type, %s expected but value is of type: %s",
-                                        acceptableTypes.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")),
-                                        argumentTypes.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")))
-
-                        ).range(range).create());
-    }
-
-    public void annotateEquationStatement(OMTEquationStatement equationStatement, AnnotationHolder holder) {
-        final List<Resource> leftHand = equationStatement.getQueryList().get(0).resolveToResource();
-        final List<Resource> rightHand = equationStatement.getQueryList().get(1).resolveToResource();
-        validateType(leftHand, rightHand,
-                (acceptableTypes, argumentTypes) ->
-                        holder.newAnnotation(HighlightSeverity.ERROR,
-                                String.format("Incompatible types LEFT-HAND: %s, RIGHT-HAND %s",
-                                        acceptableTypes.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")),
-                                        argumentTypes.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")))
-
-                        ).create());
-    }
-
-
-    public void annotateIfBlock(OMTIfBlock omtIfBlock, AnnotationHolder holder) {
-        annotateBoolean(omtIfBlock.getQuery().resolveToResource(), holder, omtIfBlock.getQuery());
-    }
-
-    public void annotateBooleanStatement(OMTBooleanStatement booleanStatement, AnnotationHolder holder) {
-        booleanStatement.getQueryList().forEach(
-                query -> annotateBoolean(query.resolveToResource(), holder, query)
-        );
-
-    }
-
-    private void annotateBoolean(List<Resource> valueType, AnnotationHolder holder, PsiElement range) {
-        final Resource booleanType = projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource("boolean");
-        if (valueType == null || valueType.isEmpty()) {
-            return;
-        }
-        if (valueType.stream().noneMatch(
-                booleanType::equals
-        )) {
-            holder.newAnnotation(HighlightSeverity.ERROR,
-                    String.format("Expected boolean, got %s",
-                            valueType.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")))
-            ).range(range).create();
-        }
-    }
-
-    public void validateType(Resource resource, List<Resource> sender, BiConsumer<List<Resource>, List<Resource>> onFail) {
-        validateType(Collections.singletonList(resource), sender, onFail);
+        return !(step instanceof OMTEquationStatement);
     }
 
     /**
-     * Validate if the type of the sender is acceptable by the receiver
+     * Returns the previous step that is able to pass the type to the current step
+     * /ont:ClassA / rdf:type / CURRENT_STEP                will be the result of rdf:type which will get the result of /ont:ClassA
+     * /ont:ClassA / rdf:type / (CURRENT_STEP)*             will resolve to it's parent (Subquery) and then the previous step
+     * $myVariable [rdf:type == CURRENT_STEP]               CURRENT_STEP is the start of it's own query path, will return the types of the step that contains the filter
+     * $myVariable / SOME_OPERATOR(CURRENT_STEP)            Contained in a signature argument, cannot inherit types
      *
-     * @param receiver
-     * @param sender
+     * @param step
      * @return
      */
-    public void validateType(
-            List<Resource> receiver,
-            List<Resource> sender,
-            BiConsumer<List<Resource>, List<Resource>> onFail) {
-        final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
-        // acceptable types for receiver
-        List<Resource> acceptableTypes = new ArrayList<>(receiver);
-        acceptableTypes.addAll(rdfModelUtil.allSubClasses(receiver));
-
-        List<Resource> argumentTypes = new ArrayList<>(sender);
-        argumentTypes.addAll(rdfModelUtil.allSubClasses(argumentTypes));
-        argumentTypes = rdfModelUtil.getDistinctResources(rdfModelUtil.getClasses(argumentTypes));
-
-        if (acceptableTypes.isEmpty() ||
-                argumentTypes.isEmpty() ||
-                acceptableTypes.stream().noneMatch(rdfModelUtil::isClassOrType) ||
-                argumentTypes.stream().noneMatch(rdfModelUtil::isClassOrType) ||
-                argumentTypes.contains(rdfModelUtil.getAnyType())) {
-            // when the argument type cannot be resolved to specific class or type it's resolved to any
-            // which means we cannot validate the call
-            return;
-        }
-        for (Resource argumentType : argumentTypes) {
-            if (acceptableTypes.stream().anyMatch(resource ->
-                    projectUtil.getRDFModelUtil().areComparable(resource, argumentType)
-            )) {
-                return; // acceptable type found
+    public List<Resource> getPreviousStep(PsiElement step) {
+        PsiElement previous = PsiImplUtil.getPreviousSibling(step, OMTQueryPath.class, OMTQueryStep.class);
+        if (previous == null) {
+            // retrieve the previous value via the parent
+            final PsiElement container = PsiImplUtil.getParent(step, OMTSubQuery.class, OMTQueryFilter.class, OMTSignatureArgument.class);
+            if (container instanceof OMTQueryFilter) {
+                // resolve the filter
+                return getPreviousStep((OMTQueryFilter) container);
+            } else if (container instanceof OMTSubQuery) {
+                // resolve the step before the subquery
+                return getPreviousStep(container);
             }
+            // OMTSignatureArgument doesn't inherit values from it's previous step
+            return new ArrayList<>();
         }
-        onFail.accept(acceptableTypes, argumentTypes);
+        List<Resource> typesForStep = new ArrayList<>(resolvePathPart(previous));
+        typesForStep.addAll(projectUtil.getRDFModelUtil().allSubClasses(typesForStep));
+        return projectUtil.getRDFModelUtil().getDistinctResources(typesForStep);
     }
 
-
-    public void annotateQueryPath(OMTQueryPath queryPath, AnnotationHolder holder) {
-        final List<ASTNode> duplicateSiblings = TokenFinderUtil.SINGLETON.getDuplicateSiblings(queryPath.getNode(), OMTTypes.FORWARD_SLASH);
-        duplicateSiblings.forEach(
-                node -> holder.newAnnotation(HighlightSeverity.ERROR, "Unexpected token").range(node).create()
-        );
+    public List<Resource> getPreviousStep(OMTQueryFilter filter) {
+        final List<Resource> resources = ((OMTQueryStep) filter.getParent()).resolveToResource(true, false);
+        resources.addAll(projectUtil.getRDFModelUtil().allSubClasses(resources));
+        return projectUtil.getRDFModelUtil().getDistinctResources(resources);
     }
+
 }

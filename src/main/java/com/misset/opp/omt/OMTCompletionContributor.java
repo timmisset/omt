@@ -74,6 +74,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     private MemberUtil memberUtil = MemberUtil.SINGLETON;
     private CurieUtil curieUtil = CurieUtil.SINGLETON;
     private ImportUtil importUtil = ImportUtil.SINGLETON;
+    private QueryUtil queryUtil = QueryUtil.SINGLETON;
 
     /**
      * Generic completion that resolves the suggestion based on the cursor position
@@ -350,7 +351,7 @@ public class OMTCompletionContributor extends CompletionContributor {
 
     private void setQueryStepSuggestions(@NotNull OMTQueryStep queryStep, @NotNull PsiElement elementAt) {
         final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
-        List<Resource> previousStep = PsiImplUtil.getPreviousStep(queryStep);
+        List<Resource> previousStep = queryUtil.getPreviousStep(queryStep);
         if (previousStep.isEmpty()) {
             // start of the query:
             if (queryStep.getParent() instanceof OMTQueryPath) {
@@ -415,6 +416,12 @@ public class OMTCompletionContributor extends CompletionContributor {
             return;
         }
         final PsiFile containingFile = exportMember.getResolvingElement().getContainingFile();
+        if (containingFile == null || containingFile.getVirtualFile() == null) {
+            return;
+        }
+        if (!containingFile.isValid()) {
+            return;
+        }
 
         // filter out suggestions from mocha subfolders
         OMTSettingsState settings = OMTSettingsState.getInstance();
