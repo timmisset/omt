@@ -5,12 +5,13 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.ExportMemberType;
 import com.misset.opp.omt.psi.support.OMTExportMember;
-import com.misset.opp.omt.psi.util.ModelUtil;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.List;
 import java.util.Optional;
+
+import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
 /**
  * An exported member can be a wide variety of items, a Query or StandAlone query, both are considered Operator
@@ -20,9 +21,6 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
 
     private final PsiElement element;
     private final ExportMemberType type;
-
-    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private ModelUtil modelUtil = ModelUtil.SINGLETON;
 
     public OMTExportMemberImpl(PsiElement exportMemberPsi, ExportMemberType type) {
         super(type.name(), type == ExportMemberType.Command || type == ExportMemberType.Procedure || type == ExportMemberType.Activity);
@@ -82,7 +80,7 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
             case Query:
                 return
                         getReturnType().isEmpty() || getReturnType().get(0).equals(
-                                projectUtil.getRDFModelUtil().getAnyType()
+                                getRDFModelUtil().getAnyType()
                         );
         }
     }
@@ -92,7 +90,7 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
         switch (type) {
             case StandaloneQuery:
                 final OMTModelItemBlock standAloneQueryBlock = (OMTModelItemBlock) element;
-                final Optional<OMTBlockEntry> queryBlock = modelUtil.getModelItemBlockEntry(standAloneQueryBlock, "query");
+                final Optional<OMTBlockEntry> queryBlock = getModelUtil().getModelItemBlockEntry(standAloneQueryBlock, "query");
                 if (queryBlock.isPresent()) {
                     final OMTQuery query = PsiTreeUtil.findChildOfType(queryBlock.get(), OMTQuery.class);
                     return query != null ? query.resolveToResource() : super.getReturnType();
@@ -105,7 +103,7 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
 
             case Procedure:
                 final OMTModelItemBlock procedureBlock = (OMTModelItemBlock) element;
-                final Optional<OMTBlockEntry> onRun = modelUtil.getModelItemBlockEntry(procedureBlock, "onRun");
+                final Optional<OMTBlockEntry> onRun = getModelUtil().getModelItemBlockEntry(procedureBlock, "onRun");
                 if (onRun.isPresent()) {
                     final OMTReturnStatement returnStatement = PsiTreeUtil.findChildOfType(onRun.get(), OMTReturnStatement.class);
                     return returnStatement != null && returnStatement.getResolvableValue() != null ?

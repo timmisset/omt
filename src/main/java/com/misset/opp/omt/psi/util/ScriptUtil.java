@@ -17,8 +17,6 @@ import java.util.stream.Collectors;
 
 public class ScriptUtil {
 
-    public static final ScriptUtil SINGLETON = new ScriptUtil();
-
     public Optional<OMTScript> getScript(PsiElement element) {
         return Optional.ofNullable(PsiTreeUtil.getTopmostParentOfType(element, OMTScript.class));
     }

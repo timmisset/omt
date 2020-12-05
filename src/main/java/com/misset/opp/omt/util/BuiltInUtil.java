@@ -25,12 +25,10 @@ import java.util.stream.Collectors;
 
 public class BuiltInUtil {
 
-    private final static String COMMAND_NAME_PREFIX = "COMMAND";
-    private final static String OPERATOR_NAME_PREFIX = "OPERATOR";
+    private static final String COMMAND_NAME_PREFIX = "COMMAND";
+    private static final String OPERATOR_NAME_PREFIX = "OPERATOR";
 
-    public static BuiltInUtil SINGLETON = new BuiltInUtil();
-
-    private HashMap<String, BuiltInMember> builtInMembers = new HashMap<>();
+    private final HashMap<String, BuiltInMember> builtInMembers = new HashMap<>();
 
     public BuiltInMember getBuiltInMember(String name, BuiltInType type) {
         return builtInMembers.get(getIndexedName(name, type));

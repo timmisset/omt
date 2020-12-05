@@ -8,7 +8,7 @@ import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.psi.PsiElement;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.util.ProjectUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -19,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -28,7 +27,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
+class CurieUtilTest extends OMTTestSuite {
 
     @Mock
     AnnotationHolder annotationHolder;
@@ -37,9 +36,9 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
     @Spy
     ProjectUtil projectUtil;
 
-
     @InjectMocks
     CurieUtil curieUtil;
+
     private ExampleFiles exampleFiles;
     PsiElement rootBlock;
 
@@ -49,16 +48,18 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
     private OMTNamespacePrefix ghi;
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("CurieUtilTest");
         super.setUp();
-        exampleFiles = new ExampleFiles(this, myFixture);
-        MockitoAnnotations.initMocks(this);
-        myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
 
-        ApplicationManager.getApplication().runReadAction(() -> {
-            ProjectUtil.SINGLETON.loadOntologyModel(getProject());
-        });
+        exampleFiles = new ExampleFiles(this, myFixture);
+
+        MockitoAnnotations.openMocks(this);
+        setUtilMock(projectUtil);
+
+        setOntologyModel();
+
         rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());
         doReturn(annotationBuilder).when(annotationBuilder).range(any(PsiElement.class));
@@ -66,7 +67,8 @@ class CurieUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 

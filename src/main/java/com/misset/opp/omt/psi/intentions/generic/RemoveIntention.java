@@ -14,8 +14,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class RemoveIntention {
-    public static final RemoveIntention SINGLETON = new RemoveIntention();
-
     public IntentionAction getRemoveIntention(PsiElement element) {
         return getRemoveIntention(element, "Remove");
     }

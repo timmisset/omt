@@ -3,19 +3,18 @@ package com.misset.opp.omt.psi.impl;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.OMTDefineQueryStatement;
 import com.misset.opp.omt.psi.OMTModelItemBlock;
 import com.misset.opp.omt.psi.support.ExportMemberType;
-import com.misset.opp.omt.util.ProjectUtil;
 import com.misset.opp.omt.util.RDFModelUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
-class OMTExportMemberImplTest extends LightJavaCodeInsightFixtureTestCase {
+class OMTExportMemberImplTest extends OMTTestSuite {
 
     RDFModelUtil rdfModelUtil;
 
@@ -24,16 +23,8 @@ class OMTExportMemberImplTest extends LightJavaCodeInsightFixtureTestCase {
     protected void setUp() throws Exception {
         super.setName("OMTExportMemberImplTest");
         super.setUp();
-
-        myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
-//        myFixture.copyFileToProject(new File("src/test/resources/builtinOperators.ts").getAbsolutePath(), "builtinOperators.ts");
-//        myFixture.copyFileToProject(new File("src/test/resources/builtinCommands.ts").getAbsolutePath(), "builtinCommands.ts");
-        ApplicationManager.getApplication().runReadAction(() -> {
-            ProjectUtil.SINGLETON.loadOntologyModel(getProject());
-        });
-
-//        memberUtil = new MemberUtil();
-        rdfModelUtil = ProjectUtil.SINGLETON.getRDFModelUtil();
+        setOntologyModel();
+        rdfModelUtil = getRDFModelUtil();
 
     }
 

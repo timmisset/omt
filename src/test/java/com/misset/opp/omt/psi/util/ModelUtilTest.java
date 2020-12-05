@@ -7,7 +7,7 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.util.ProjectUtil;
@@ -26,7 +26,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
+class ModelUtilTest extends OMTTestSuite {
 
     @Mock
     AnnotationHolder annotationHolder;
@@ -48,11 +48,14 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
     private ExampleFiles exampleFiles;
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("ModelUtilTest");
         super.setUp();
         exampleFiles = new ExampleFiles(this, myFixture);
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
+
+        setUtilMock(projectUtil);
 
         rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
         ApplicationManager.getApplication().runReadAction(() -> {
@@ -66,7 +69,8 @@ class ModelUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 

@@ -1,21 +1,19 @@
-package com.misset.opp.omt.psi.resolvable;
+package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.psi.OMTCurieElement;
 import com.misset.opp.omt.psi.OMTQueryReverseStep;
 import com.misset.opp.omt.psi.impl.OMTQueryStepImpl;
-import com.misset.opp.omt.psi.util.QueryUtil;
-import com.misset.opp.omt.util.ProjectUtil;
 import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public abstract class OMTQueryReverseStepResolvableImpl extends OMTQueryStepImpl implements OMTQueryReverseStep {
+import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
+import static com.misset.opp.omt.psi.util.UtilManager.getQueryUtil;
 
-    private static final QueryUtil queryUtil = QueryUtil.SINGLETON;
-    private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+public abstract class OMTQueryReverseStepResolvableImpl extends OMTQueryStepImpl implements OMTQueryReverseStep {
 
     public OMTQueryReverseStepResolvableImpl(@NotNull ASTNode node) {
         super(node);
@@ -24,12 +22,12 @@ public abstract class OMTQueryReverseStepResolvableImpl extends OMTQueryStepImpl
 
     @Override
     public List<Resource> resolveToResource(boolean lookBack, boolean filter) {
-        List<Resource> resources = queryUtil.getPreviousStep(this);
+        List<Resource> resources = getQueryUtil().getPreviousStep(this);
         final OMTCurieElement curieElement = getCurieElement();
         if (curieElement == null) {
             return resources;
         }
-        final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
+        final RDFModelUtil rdfModelUtil = getProjectUtil().getRDFModelUtil();
         if (!rdfModelUtil.isTypePredicate(curieElement.getAsResource())) { // for a type predicate, resolve only to the given class
             resources = rdfModelUtil.allSuperClasses(resources);
         }

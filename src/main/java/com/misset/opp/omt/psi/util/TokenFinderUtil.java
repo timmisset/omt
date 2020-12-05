@@ -19,8 +19,6 @@ import java.util.Optional;
  */
 public class TokenFinderUtil {
 
-    public static final TokenFinderUtil SINGLETON = new TokenFinderUtil();
-
     public Optional<OMTImport> findImport(PsiElement sibling) {
         while (sibling != null && !(sibling instanceof OMTImport)) {
             sibling = sibling.getPrevSibling();

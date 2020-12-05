@@ -10,8 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class RenameVariableIntention {
 
-    public static final RenameVariableIntention SINGLETON = new RenameVariableIntention();
-
     public IntentionAction getRenameVariableIntention(OMTVariable variable, String newName) {
         return new IntentionAction() {
             @Override

@@ -1,4 +1,4 @@
-package com.misset.opp.omt.psi.resolvable;
+package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
@@ -7,9 +7,6 @@ import com.misset.opp.omt.psi.OMTNegatedStep;
 import com.misset.opp.omt.psi.OMTQuery;
 import com.misset.opp.omt.psi.OMTQueryPath;
 import com.misset.opp.omt.psi.impl.OMTQueryImpl;
-import com.misset.opp.omt.psi.util.QueryUtil;
-import com.misset.opp.omt.psi.util.TokenUtil;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,11 +14,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
+
 public abstract class OMTEquationStatementResolvableImpl extends OMTQueryImpl implements OMTEquationStatement {
 
-    private static final QueryUtil queryUtil = QueryUtil.SINGLETON;
-    private static final TokenUtil tokenUtil = TokenUtil.SINGLETON;
-    private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private static final String BOOLEAN = "boolean";
 
     public OMTEquationStatementResolvableImpl(@NotNull ASTNode node) {
@@ -35,7 +31,7 @@ public abstract class OMTEquationStatementResolvableImpl extends OMTQueryImpl im
 
     @Override
     public List<Resource> resolveToResource() {
-        return Collections.singletonList(projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
+        return Collections.singletonList(getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
     }
 
     @Override
@@ -48,7 +44,7 @@ public abstract class OMTEquationStatementResolvableImpl extends OMTQueryImpl im
         final OMTQuery query = getQueryList().get(0);
         final List<Resource> leftHand = query instanceof OMTQueryPath ? query.resolveToResource(false) : query.resolveToResource();
 
-        if (!leftHand.isEmpty() && projectUtil.getRDFModelUtil().isTypePredicate(leftHand.get(0))) {
+        if (!leftHand.isEmpty() && getRDFModelUtil().isTypePredicate(leftHand.get(0))) {
             // [rdf:type == ...]
             // now filter the resources based on the type
             PsiElement parent = getParent();

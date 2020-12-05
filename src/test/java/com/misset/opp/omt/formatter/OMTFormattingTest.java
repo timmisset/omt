@@ -16,13 +16,15 @@ import java.util.function.Consumer;
 public class OMTFormattingTest extends LightJavaCodeInsightFixtureTestCase {
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("OMTEnterTypedHandlerTest");
         super.setUp();
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 

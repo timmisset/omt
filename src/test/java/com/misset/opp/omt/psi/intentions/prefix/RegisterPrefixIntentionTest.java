@@ -4,19 +4,19 @@ import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
+import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
 import com.misset.opp.omt.psi.util.CurieUtil;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
-class RegisterPrefixIntentionTest {
+class RegisterPrefixIntentionTest extends OMTTestSuite {
 
     private final String IRI = "http://ontologie/";
 
@@ -31,9 +31,17 @@ class RegisterPrefixIntentionTest {
     IntentionAction intentionAction;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.initMocks(this);
+    @Override
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        setUtilMock(curieUtil);
         intentionAction = this.registerPrefixIntention.getRegisterPrefixIntention(omtNamespacePrefix, IRI);
+    }
+
+    @Override
+    @AfterEach
+    protected void tearDown() throws Exception {
+        super.tearDown();
     }
 
     @Test

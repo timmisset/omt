@@ -2,10 +2,10 @@ package com.misset.opp.omt.exceptions;
 
 public class NumberOfInputParametersMismatchException extends Exception {
 
-    private String name;
-    private int minExpected;
-    private int maxExpected;
-    private int found;
+    private final String name;
+    private final int minExpected;
+    private final int maxExpected;
+    private final int found;
 
     public NumberOfInputParametersMismatchException(String name, Integer minExpected, Integer maxExpected, Integer found) {
         super();
@@ -14,6 +14,7 @@ public class NumberOfInputParametersMismatchException extends Exception {
         this.maxExpected = maxExpected;
         this.found = found;
     }
+
     @Override
     public String getMessage() {
         return String.format("%s expects %s %s, found %s", name, getExpectedParams(), singleAmount() && minExpected == 1 ? "parameter" : "parameters", found);

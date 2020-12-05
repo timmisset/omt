@@ -5,7 +5,7 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveResult;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.util.ImportUtil;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 
-class MemberReferenceTest extends LightJavaCodeInsightFixtureTestCase {
+class MemberReferenceTest extends OMTTestSuite {
 
     @Mock
     MemberUtil memberUtil;
@@ -62,21 +62,30 @@ class MemberReferenceTest extends LightJavaCodeInsightFixtureTestCase {
     ExampleFiles exampleFiles;
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("MemberReferenceTest");
         super.setUp();
+
+        MockitoAnnotations.openMocks(this);
+        setUtilMock(memberUtil);
+        setUtilMock(importUtil);
+
         exampleFiles = new ExampleFiles(this, myFixture);
-        MockitoAnnotations.initMocks(this);
-        importMemberReference = new MemberReference(member, textRange, NamedMemberType.ImportingMember, memberUtil, importUtil);
-        exportMemberReference = new MemberReference(member, textRange, NamedMemberType.ExportingMember, memberUtil, importUtil);
-        modelItemReference = new MemberReference(modelItemLabel, textRange, NamedMemberType.ModelItem, memberUtil, importUtil);
-        defineNameReference = new MemberReference(defineName, textRange, NamedMemberType.DefineName, memberUtil, importUtil);
-        operatorCallReference = new MemberReference(operatorCall, textRange, NamedMemberType.OperatorCall, memberUtil, importUtil);
-        commandCallReference = new MemberReference(commandCall, textRange, NamedMemberType.CommandCall, memberUtil, importUtil);
+
+        importMemberReference = new MemberReference(member, textRange, NamedMemberType.ImportingMember);
+        exportMemberReference = new MemberReference(member, textRange, NamedMemberType.ExportingMember);
+        modelItemReference = new MemberReference(modelItemLabel, textRange, NamedMemberType.ModelItem);
+        defineNameReference = new MemberReference(defineName, textRange, NamedMemberType.DefineName);
+        operatorCallReference = new MemberReference(operatorCall, textRange, NamedMemberType.OperatorCall);
+        commandCallReference = new MemberReference(commandCall, textRange, NamedMemberType.CommandCall);
+
+
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 

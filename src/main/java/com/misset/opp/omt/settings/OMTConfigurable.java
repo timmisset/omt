@@ -3,13 +3,13 @@ package com.misset.opp.omt.settings;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.util.NlsContexts;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
+
 public class OMTConfigurable implements Configurable {
-    private static ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private OMTSettingsComponent settingsComponent;
 
     @Override
@@ -59,8 +59,8 @@ public class OMTConfigurable implements Configurable {
         settingsState.includeMochaFolderImportSuggestions = settingsComponent.getIncludeMochaFolderImportSuggestions();
 
         // will try to reload the builtin members from the new file locations
-        projectUtil.loadBuiltInMembers(ProjectManager.getInstance().getOpenProjects()[0]);
-        projectUtil.loadOntologyModel(ProjectManager.getInstance().getOpenProjects()[0]);
+        getProjectUtil().loadBuiltInMembers(ProjectManager.getInstance().getOpenProjects()[0]);
+        getProjectUtil().loadOntologyModel(ProjectManager.getInstance().getOpenProjects()[0]);
     }
 
     @Override

@@ -17,8 +17,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class AnnotateParameterIntention {
 
-    public static final AnnotateParameterIntention SINGLETON = new AnnotateParameterIntention();
-
     public IntentionAction getAnnotateParameterIntention(OMTDefineParam defineParam, String variableName, String type) {
         return new IntentionAction() {
             @Override

@@ -8,27 +8,24 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
-import com.misset.opp.omt.util.ProjectUtil;
 import com.sun.istack.Nullable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
+
 
 public class ModelUtil {
-
-    private final String ATTRIBUTES = "attributes";
-    private final String MAPOF = "mapOf";
-    private final String MAP = "map";
-    private final String NODE = "node";
-    private final String NAME = "name";
-    private final String TYPE = "type";
-    private final String DEF = "Def";
-
-    public static final ModelUtil SINGLETON = new ModelUtil();
-    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private RemoveIntention removeIntention = RemoveIntention.SINGLETON;
+    private static final String ATTRIBUTES = "attributes";
+    private static final String MAPOF = "mapOf";
+    private static final String MAP = "map";
+    private static final String NODE = "node";
+    private static final String NAME = "name";
+    private static final String TYPE = "type";
+    private static final String DEF = "Def";
+    private final RemoveIntention removeIntention = new RemoveIntention();
 
     /**
      * Returns the modelitem block containing the element, for example an Activity or Procedure block
@@ -119,13 +116,13 @@ public class ModelUtil {
     }
 
     private JsonObject getAttributes(String memberName) {
-        JsonObject parsedModel = projectUtil.getParsedModel();
+        JsonObject parsedModel = getProjectUtil().getParsedModel();
         boolean hasMember = parsedModel.has(memberName);
         return hasMember ? (JsonObject) parsedModel.get(memberName) : new JsonObject();
     }
 
     public List<String> getModelRootItems() {
-        return projectUtil.getParsedModel().entrySet().stream().map(
+        return getProjectUtil().getParsedModel().entrySet().stream().map(
                 entry -> entry
                         .getValue()
                         .getAsJsonObject())

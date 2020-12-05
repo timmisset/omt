@@ -1,39 +1,32 @@
 package com.misset.opp.omt;
 
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.psi.ExampleFiles;
-import com.misset.opp.omt.util.BuiltInUtil;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
 
-import java.io.File;
 import java.util.List;
 
-class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
+import static com.misset.opp.omt.psi.util.UtilManager.getBuiltinUtil;
+
+class OMTCompletionContributorTest extends OMTTestSuite {
 
     ExampleFiles exampleFiles;
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("OMTCompletionContributorTest");
         super.setUp();
-        MockitoAnnotations.initMocks(this);
-
-        myFixture.copyFileToProject(new File("src/test/resources/builtinCommands.ts").getAbsolutePath(), "builtinCommands.ts");
-        myFixture.copyFileToProject(new File("src/test/resources/builtinOperators.ts").getAbsolutePath(), "builtinOperators.ts");
-        myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
+        setBuiltinAndModel();
         exampleFiles = new ExampleFiles(this, myFixture);
 
-        ApplicationManager.getApplication().runReadAction(() -> ProjectUtil.SINGLETON.loadOntologyModel(getProject()));
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 
@@ -106,8 +99,8 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
     void completionProvider_addsSuggestionsForCommandInCommandBlock() {
         List<String> suggestions = getSuggestions("commands: |\n" +
                 "    DEFINE COMMAND myRootCommand() => { <caret> }");
-        assertContainsElements(suggestions, BuiltInUtil.SINGLETON.getBuiltInCommandsAsSuggestions());
-        assertDoesntContain(suggestions, BuiltInUtil.SINGLETON.getBuiltInOperatorsAsSuggestions());
+        assertContainsElements(suggestions, getBuiltinUtil().getBuiltInCommandsAsSuggestions());
+        assertDoesntContain(suggestions, getBuiltinUtil().getBuiltInOperatorsAsSuggestions());
         assertNotEmpty(suggestions);
     }
 
@@ -117,8 +110,8 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
                 "    MijnActiviteit: !Activity\n" +
                 "        onStart: |\n" +
                 "            @<caret>\n");
-        assertContainsElements(suggestions, BuiltInUtil.SINGLETON.getBuiltInCommandsAsSuggestions());
-        assertDoesntContain(suggestions, BuiltInUtil.SINGLETON.getBuiltInOperatorsAsSuggestions());
+        assertContainsElements(suggestions, getBuiltinUtil().getBuiltInCommandsAsSuggestions());
+        assertDoesntContain(suggestions, getBuiltinUtil().getBuiltInOperatorsAsSuggestions());
         assertNotEmpty(suggestions);
     }
 
@@ -129,8 +122,8 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
                 "        onStart: |\n" +
                 "            @myFirstCommand();\n" +
                 "            @<caret>\n");
-        assertContainsElements(suggestions, BuiltInUtil.SINGLETON.getBuiltInCommandsAsSuggestions());
-        assertDoesntContain(suggestions, BuiltInUtil.SINGLETON.getBuiltInOperatorsAsSuggestions());
+        assertContainsElements(suggestions, getBuiltinUtil().getBuiltInCommandsAsSuggestions());
+        assertDoesntContain(suggestions, getBuiltinUtil().getBuiltInOperatorsAsSuggestions());
         assertNotEmpty(suggestions);
     }
 
@@ -285,7 +278,7 @@ class OMTCompletionContributorTest extends LightJavaCodeInsightFixtureTestCase {
                 "            DEFINE QUERY mySecondQuery($param1) => <caret>\n");
 
         assertContainsElements(suggestions, "$param1", "myFirstQuery");
-        assertContainsElements(suggestions, BuiltInUtil.SINGLETON.getBuiltInOperatorsAsSuggestions());
+        assertContainsElements(suggestions, getBuiltinUtil().getBuiltInOperatorsAsSuggestions());
     }
 
     @Test

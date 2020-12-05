@@ -5,22 +5,12 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
-import com.misset.opp.omt.psi.util.CurieUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getCurieUtil;
+
 public class RegisterPrefixIntention {
-    public static final RegisterPrefixIntention SINGLETON = new RegisterPrefixIntention();
-
-    private final CurieUtil curieUtil;
-
-    public RegisterPrefixIntention() {
-        curieUtil = CurieUtil.SINGLETON;
-    }
-
-    public RegisterPrefixIntention(CurieUtil curieUtil) {
-        this.curieUtil = curieUtil;
-    }
 
     public IntentionAction getRegisterPrefixIntention(OMTNamespacePrefix namespacePrefix, String iri) {
         return new IntentionAction() {
@@ -45,7 +35,7 @@ public class RegisterPrefixIntention {
 
             @Override
             public void invoke(@NotNull Project project, Editor editor, PsiFile file) {
-                curieUtil.addPrefixToBlock(
+                getCurieUtil().addPrefixToBlock(
                         namespacePrefix, namespacePrefix.getName().trim(), iri
                 );
             }

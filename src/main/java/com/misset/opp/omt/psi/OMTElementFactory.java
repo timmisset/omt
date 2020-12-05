@@ -6,11 +6,8 @@ import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.PsiParserFacade;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTFileType;
-import com.misset.opp.omt.psi.util.CurieUtil;
 
 public class OMTElementFactory {
-    private static final CurieUtil curieUtil = CurieUtil.SINGLETON;
-
     public static OMTVariable createVariable(Project project, String name) {
         name = name.startsWith("$") ? name.substring(1) : name;
         OMTFile file = createFile(project, String.format("model:\n" +
@@ -116,12 +113,7 @@ public class OMTElementFactory {
             return block;
         }
         blockEntry.add(getWhiteSpaceElement(project, 1, "\n"));
-
-//        if (block.getDedentToken() != null) {
-//            block.addBefore(blockEntry, block.getDedentToken());
-//        } else {
         block.add(blockEntry);
-//        }
 
         return block;
     }

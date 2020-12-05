@@ -6,9 +6,6 @@ import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.util.QueryUtil;
-import com.misset.opp.omt.psi.util.TokenFinderUtil;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.ArrayList;
@@ -17,31 +14,16 @@ import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.intentions.query.MergeFiltersIntention.getMergeFilterIntention;
 import static com.misset.opp.omt.psi.intentions.query.UnwrapIntention.getUnwrapIntention;
+import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 public class QueryAnnotations {
-
-    public static QueryAnnotations SINGLETON = new QueryAnnotations();
-
-    private final ProjectUtil projectUtil;
-    private final QueryUtil queryUtil;
-
-    public QueryAnnotations() {
-        projectUtil = ProjectUtil.SINGLETON;
-        queryUtil = QueryUtil.SINGLETON;
-    }
-
-    public QueryAnnotations(ProjectUtil projectUtil, QueryUtil queryUtil) {
-        this.projectUtil = projectUtil;
-        this.queryUtil = queryUtil;
-    }
-
 
     public void annotateQueryStep(OMTQueryStep step, AnnotationHolder holder) {
         // resolve the querystep to a class or type
         final List<Resource> resources = step
                 .resolveToResource()
                 .stream()
-                .filter(resource -> projectUtil.getRDFModelUtil().isClassOrType(resource))
+                .filter(resource -> getRDFModelUtil().isClassOrType(resource))
                 .collect(Collectors.toList());
 
         // if none found, resolve it as a curie step
@@ -60,7 +42,7 @@ public class QueryAnnotations {
         // if the step is decorated with an asterix or plus, check if this is acceptable
         if (step.getStepDecorator() != null && step.getChildren()[0] instanceof OMTSubQuery) {
             final OMTSubQuery subQuery = (OMTSubQuery) step.getChildren()[0];
-            if (!queryUtil.isDecoratable(subQuery.getQuery())) {
+            if (!getQueryUtil().isDecoratable(subQuery.getQuery())) {
                 holder.newAnnotation(HighlightSeverity.ERROR,
                         "Invalid decorator")
                         .range(step.getStepDecorator())
@@ -88,7 +70,7 @@ public class QueryAnnotations {
     }
 
     public void annotateSubQuery(OMTSubQuery subQuery, AnnotationHolder holder) {
-        if (!queryUtil.isWrappableStep(subQuery)) {
+        if (!getQueryUtil().isWrappableStep(subQuery)) {
             holder.newAnnotation(HighlightSeverity.WARNING,
                     "Unnecessary wrapping of statement")
                     .withFix(getUnwrapIntention(subQuery))
@@ -97,8 +79,8 @@ public class QueryAnnotations {
     }
 
     public void annotateQueryCurieElement(OMTQueryStep step, AnnotationHolder holder) {
-        List<Resource> previousStep = queryUtil.getPreviousStep(step);
-        previousStep = previousStep.stream().filter(resource -> projectUtil.getRDFModelUtil().isClassOrType(resource)).collect(Collectors.toList());
+        List<Resource> previousStep = getQueryUtil().getPreviousStep(step);
+        previousStep = previousStep.stream().filter(resource -> getRDFModelUtil().isClassOrType(resource)).collect(Collectors.toList());
         if (previousStep.isEmpty()) {
             return;
         } // no error when type resolving has failed
@@ -111,13 +93,13 @@ public class QueryAnnotations {
             final OMTCurieElement curieElement = reverseStep.getQueryStep() != null ?
                     reverseStep.getQueryStep().getCurieElement() : null;
             if (curieElement != null) {
-                final List<Resource> resources = new ArrayList<>(projectUtil.getRDFModelUtil().listPredicatesForObjectClass(previousStep).keySet());
+                final List<Resource> resources = new ArrayList<>(getRDFModelUtil().listPredicatesForObjectClass(previousStep).keySet());
                 validatePredicates(resources, curieElement, previousStep, holder, "REVERSE");
             }
         } else {
             final OMTCurieElement curieElement = step.getCurieElement();
             if (!(step.getParent() instanceof OMTQueryReverseStep)) {
-                final List<Resource> resources = new ArrayList<>(projectUtil.getRDFModelUtil().listPredicatesForSubjectClass(previousStep).keySet());
+                final List<Resource> resources = new ArrayList<>(getRDFModelUtil().listPredicatesForSubjectClass(previousStep).keySet());
                 validatePredicates(resources, curieElement, previousStep, holder, "FORWARD");
             }
         }
@@ -166,7 +148,7 @@ public class QueryAnnotations {
     }
 
     private void annotateAssignment(List<Resource> assignee, List<Resource> value, AnnotationHolder holder, PsiElement range) {
-        projectUtil.getRDFModelUtil().validateType(assignee, value,
+        getRDFModelUtil().validateType(assignee, value,
                 (acceptableTypes, argumentTypes) ->
                         holder.newAnnotation(HighlightSeverity.ERROR,
                                 String.format("Incorrect type, %s expected but value is of type: %s",
@@ -179,7 +161,7 @@ public class QueryAnnotations {
     public void annotateEquationStatement(OMTEquationStatement equationStatement, AnnotationHolder holder) {
         final List<Resource> leftHand = equationStatement.getQueryList().get(0).resolveToResource();
         final List<Resource> rightHand = equationStatement.getQueryList().get(1).resolveToResource();
-        projectUtil.getRDFModelUtil().validateType(leftHand, rightHand,
+        getRDFModelUtil().validateType(leftHand, rightHand,
                 (acceptableTypes, argumentTypes) ->
                         holder.newAnnotation(HighlightSeverity.ERROR,
                                 String.format("Incompatible types LEFT-HAND: %s, RIGHT-HAND %s",
@@ -202,14 +184,14 @@ public class QueryAnnotations {
     }
 
     public void annotateQueryPath(OMTQueryPath queryPath, AnnotationHolder holder) {
-        final List<ASTNode> duplicateSiblings = TokenFinderUtil.SINGLETON.getDuplicateSiblings(queryPath.getNode(), OMTTypes.FORWARD_SLASH);
+        final List<ASTNode> duplicateSiblings = getTokenFinderUtil().getDuplicateSiblings(queryPath.getNode(), OMTTypes.FORWARD_SLASH);
         duplicateSiblings.forEach(
                 node -> holder.newAnnotation(HighlightSeverity.ERROR, "Unexpected token").range(node).create()
         );
     }
 
     private void annotateBoolean(List<Resource> valueType, AnnotationHolder holder, PsiElement range) {
-        final Resource booleanType = projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource("boolean");
+        final Resource booleanType = getRDFModelUtil().getPrimitiveTypeAsResource("boolean");
         if (valueType == null || valueType.isEmpty()) {
             return;
         }

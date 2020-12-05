@@ -6,7 +6,6 @@ import com.intellij.psi.TokenType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
@@ -16,15 +15,11 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
+import static com.misset.opp.omt.psi.util.UtilManager.*;
+
 public class PsiImplUtil {
 
     private static final String BOOLEAN = "boolean";
-
-    private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
-    private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private static final TokenUtil tokenUtil = TokenUtil.SINGLETON;
-    private static final MemberUtil memberUtil = MemberUtil.SINGLETON;
-    private static final QueryUtil queryUtil = QueryUtil.SINGLETON;
 
     // ////////////////////////////////////////////////////////////////////////////
     // Variable
@@ -49,7 +44,7 @@ public class PsiImplUtil {
 
     public static boolean isDeclaredVariable(OMTVariable variable) {
 
-        return variableUtil.isDeclaredVariable(variable);
+        return getVariableUtil().isDeclaredVariable(variable);
     }
 
     public static boolean isGlobalVariable(OMTVariable variable) {
@@ -239,7 +234,7 @@ public class PsiImplUtil {
                 curieElement.getPrefix().getNextSibling().getText()
         );
 
-        Model ontologyModel = projectUtil.getOntologyModel();
+        Model ontologyModel = getProjectUtil().getOntologyModel();
         return ontologyModel.getResource(resolvedIri);
     }
 
@@ -252,10 +247,10 @@ public class PsiImplUtil {
     public static Resource getAsResource(OMTParameterType parameterType) {
         if (parameterType.getNamespacePrefix() == null) {
             final String type = parameterType.getFirstChild().getText().trim();
-            return projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(type);
+            return getRDFModelUtil().getPrimitiveTypeAsResource(type);
         } else {
             final String iri = ((OMTFile) parameterType.getContainingFile()).curieToIri(parameterType.getText().trim());
-            return projectUtil.getRDFModelUtil().getResource(iri);
+            return getRDFModelUtil().getResource(iri);
         }
     }
 
@@ -374,26 +369,26 @@ public class PsiImplUtil {
         if (type.contains(":")) {
             final String prefixIri = ((OMTFile) element.getContainingFile()).getPrefixIri(type.split(":")[0]);
             final String iriAsString = String.format("%s%s", prefixIri, type.split(":")[1]);
-            return projectUtil.getRDFModelUtil().createResource(iriAsString);
+            return getRDFModelUtil().createResource(iriAsString);
         } else {
-            return projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(type);
+            return getRDFModelUtil().getPrimitiveTypeAsResource(type);
         }
     }
 
     public static List<Resource> getType(OMTVariable variable) {
-        return variableUtil.getType(variable);
+        return getVariableUtil().getType(variable);
     }
 
     public static List<Resource> getType(OMTParameterWithType parameterWithType) {
-        return variableUtil.getType(parameterWithType);
+        return getVariableUtil().getType(parameterWithType);
     }
 
     public static OMTVariableValue getValue(OMTVariable variable) {
-        return variableUtil.getValue(variable);
+        return getVariableUtil().getValue(variable);
     }
 
     public static List<OMTVariableAssignment> getAssignments(OMTVariable variable) {
-        return variableUtil.getAssignments(variable);
+        return getVariableUtil().getAssignments(variable);
     }
 
 }

@@ -6,67 +6,62 @@ import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.annotations.QueryAnnotations;
 import com.misset.opp.omt.psi.named.NamedMemberType;
-import com.misset.opp.omt.psi.util.*;
 import org.jetbrains.annotations.NotNull;
+
+import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 public class OMTAnnotator implements Annotator {
 
-    private static final ModelUtil modelUtil = ModelUtil.SINGLETON;
-    private static final CurieUtil curieUtil = CurieUtil.SINGLETON;
-    private static final MemberUtil memberUtil = MemberUtil.SINGLETON;
-    private static final ImportUtil importUtil = ImportUtil.SINGLETON;
-    private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
-    private static final ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
-    private static final QueryAnnotations queryAnnotations = QueryAnnotations.SINGLETON;
+    private static final QueryAnnotations queryAnnotations = new QueryAnnotations();
 
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
         if (element instanceof OMTVariable) {
-            variableUtil.annotateVariable((OMTVariable) element, holder);
+            getVariableUtil().annotateVariable((OMTVariable) element, holder);
         }
         if (element instanceof OMTNamespacePrefix) {
-            curieUtil.annotateNamespacePrefix((OMTNamespacePrefix) element, holder);
+            getCurieUtil().annotateNamespacePrefix((OMTNamespacePrefix) element, holder);
         }
         if (element instanceof OMTImport) {
-            importUtil.annotateImport((OMTImport) element, holder);
+            getImportUtil().annotateImport((OMTImport) element, holder);
         }
         if (element instanceof OMTImportSource) {
-            importUtil.annotateImportSource((OMTImportSource) element, holder);
+            getImportUtil().annotateImportSource((OMTImportSource) element, holder);
         }
         if (element instanceof OMTMember) {
             if (((OMTMember) element).getType() == NamedMemberType.ImportingMember) {
-                memberUtil.annotateImportedMember((OMTMember) element, holder);
+                getMemberUtil().annotateImportedMember((OMTMember) element, holder);
             }
         }
         if (element instanceof OMTDefineParam) {
-            variableUtil.annotateDefineParameter((OMTDefineParam) element, holder);
+            getVariableUtil().annotateDefineParameter((OMTDefineParam) element, holder);
         }
         if (element instanceof OMTCommandCall) {
-            memberUtil.annotateCall((OMTCommandCall) element, holder);
+            getMemberUtil().annotateCall((OMTCommandCall) element, holder);
         }
         if (element instanceof OMTOperatorCall) {
-            memberUtil.annotateCall((OMTOperatorCall) element, holder);
+            getMemberUtil().annotateCall((OMTOperatorCall) element, holder);
         }
         if (element instanceof OMTModelItemTypeElement) {
-            modelUtil.annotateModelItemType((OMTModelItemTypeElement) element, holder);
+            getModelUtil().annotateModelItemType((OMTModelItemTypeElement) element, holder);
         }
         if (element instanceof OMTBlockEntry) {
-            modelUtil.annotateBlockEntry((OMTBlockEntry) element, holder);
+            getModelUtil().annotateBlockEntry((OMTBlockEntry) element, holder);
         }
         if (element instanceof OMTBlock) {
-            modelUtil.annotateBlock((OMTBlock) element, holder);
+            getModelUtil().annotateBlock((OMTBlock) element, holder);
         }
         if (element instanceof OMTReturnStatement) {
-            scriptUtil.annotateFinalStatement(element, holder);
+            getScriptUtil().annotateFinalStatement(element, holder);
         }
         if (element instanceof OMTCurieElement) {
-            curieUtil.annotateCurieElement((OMTCurieElement) element, holder);
+            getCurieUtil().annotateCurieElement((OMTCurieElement) element, holder);
         }
         if (element instanceof OMTParameterType) {
-            curieUtil.annotateParameterType((OMTParameterType) element, holder);
+            getCurieUtil().annotateParameterType((OMTParameterType) element, holder);
         }
         if (element instanceof OMTParameterWithType) {
-            variableUtil.annotateParameterWithType((OMTParameterWithType) element, holder);
+            getVariableUtil().annotateParameterWithType((OMTParameterWithType) element, holder);
         }
         if (element instanceof OMTAddToCollection) {
             queryAnnotations.annotateAddToCollection((OMTAddToCollection) element, holder);
