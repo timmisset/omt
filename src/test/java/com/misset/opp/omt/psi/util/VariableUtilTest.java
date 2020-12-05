@@ -6,7 +6,7 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTGenericBlock;
 import com.misset.opp.omt.psi.OMTVariable;
@@ -27,7 +27,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class VariableUtilTest extends LightJavaCodeInsightFixtureTestCase {
+class VariableUtilTest extends OMTTestSuite {
 
     @Mock
     BuiltInUtil builtInUtil;
@@ -37,6 +37,7 @@ class VariableUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
     @InjectMocks
     VariableUtil variableUtil;
+
     @Mock
     AnnotationHolder annotationHolder;
     @Mock
@@ -46,11 +47,16 @@ class VariableUtilTest extends LightJavaCodeInsightFixtureTestCase {
     private ExampleFiles exampleFiles;
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("VariableUtilTest");
         super.setUp();
 
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
+
+        setUtilMock(builtInUtil);
+        setUtilMock(annotationUtil);
+
         exampleFiles = new ExampleFiles(this, myFixture);
         rootBlock = exampleFiles.getActivityWithVariables();
 
@@ -68,7 +74,8 @@ class VariableUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 

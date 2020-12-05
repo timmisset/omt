@@ -26,9 +26,7 @@ import static com.misset.opp.omt.psi.intentions.imports.UnwrapIntention.getUnwra
 
 public class ImportUtil {
 
-    public static final ImportUtil SINGLETON = new ImportUtil();
     private static final String MODULE = "module";
-
     private PsiManager psiManager;
 
     private PsiManager getPsiManager(Project project) {

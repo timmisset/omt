@@ -13,7 +13,6 @@ import static com.misset.opp.omt.psi.OMTTypes.*;
 public class TokenUtil {
 
     private static final String TRUE = "true";
-    public static TokenUtil SINGLETON = new TokenUtil();
 
     public boolean isModelItemType(PsiElement element) {
         return isToken(element, MODEL_ITEM_TYPE);

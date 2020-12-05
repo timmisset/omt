@@ -91,13 +91,13 @@ namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)        
 namespaceIri ::=                            IRI                                   { methods = [getName getNamespace] }
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
-                                                extends="com.misset.opp.omt.psi.resolvable.OMTCurieElementResolvableImpl"
+                                                extends="com.misset.opp.omt.psi.resolvable.impl.OMTCurieElementResolvableImpl"
                                                 methods = [getPrefix isDefinedByPrefix getAsResource getPrefixName]
                                                 }
 curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FORWARD_SLASH) curieElement queryFilter*
 {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTQueryStepResolvable"
-                                                extends="com.misset.opp.omt.psi.resolvable.OMTCurieConstantElementResolvableImpl" }
+                                                extends="com.misset.opp.omt.psi.resolvable.impl.OMTCurieConstantElementResolvableImpl" }
 
 modelBlock::=                               leading? MODEL_BLOCK_START (indentToken modelItemBlock+ dedentToken)? { extends=specificBlock }
 modelItemBlock::=                           leading? modelItemLabel block? {extends=blockEntry methods=[getType]}
@@ -123,7 +123,7 @@ leading ::=                                 comment+
 // ////////////////////////////////////////////////////
 constant_value ::=                          STRING | INTEGER | DECIMAL | NULL | BOOLEAN | TYPED_VALUE {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
-                                                extends="com.misset.opp.omt.psi.resolvable.OMTConstantValueResolvableImpl"
+                                                extends="com.misset.opp.omt.psi.resolvable.impl.OMTConstantValueResolvableImpl"
 }
 // a variable is declared using VAR and one or more variable names. Optionally an assignment is added
 // the assignment is deconstructed to the entire set of variables that is declared. i.e. VAR $a, $b = [1, 2]. $a == 1, $b == 2
@@ -156,7 +156,7 @@ parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEM
 script ::=                                  PIPE (scriptLine+ | query)?
 commandBlock ::=                            CURLY_OPEN (script | scriptLine+)? CURLY_CLOSED {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
-                                                extends="com.misset.opp.omt.psi.resolvable.OMTCommandBlockResolvableImpl" }
+                                                extends="com.misset.opp.omt.psi.resolvable.impl.OMTCommandBlockResolvableImpl" }
 // a scriptline is contained by the addition of the semicolon at the end
 scriptLine ::=                              leading? ((scriptContent SEMICOLON+) | commandBlock | logicalBlock)
 // the contents of a script, contained by a scriptLine or Scalar
@@ -188,13 +188,13 @@ defineParam ::=                             PARENTHESES_OPEN (variable (COMMA va
 // A call to either an Operator or a Command. In case of the latter, it's always prefixed with @
 operatorCall ::=                            OPERATOR flagSignature? signature? {
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
-                                                             extends="com.misset.opp.omt.psi.resolvable.OMTCallResolvableImpl"
+                                                             extends="com.misset.opp.omt.psi.resolvable.impl.OMTCallResolvableImpl"
                                                              methods=[getName setName getNameIdentifier]
                                                            }
 commandCall ::=                             COMMAND flagSignature? signature?
                                                             {
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
-                                                             extends="com.misset.opp.omt.psi.resolvable.OMTCallResolvableImpl"
+                                                             extends="com.misset.opp.omt.psi.resolvable.impl.OMTCallResolvableImpl"
                                                              methods=[getName setName getNameIdentifier]
                                                            }
 signature ::=                               PARENTHESES_OPEN (signatureArgument (COMMA signatureArgument)*)? PARENTHESES_CLOSE {
@@ -202,11 +202,11 @@ signature ::=                               PARENTHESES_OPEN (signatureArgument 
 }
 signatureArgument ::=                       resolvableValue | commandBlock {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
-                                                extends="com.misset.opp.omt.psi.resolvable.OMTSignatureArgumentResolvableImpl" }
+                                                extends="com.misset.opp.omt.psi.resolvable.impl.OMTSignatureArgumentResolvableImpl" }
 flagSignature ::=                           FLAG
 resolvableValue ::=                         query | commandCall {
                                               implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
-                                              extends="com.misset.opp.omt.psi.resolvable.OMTResolvableValueResolvableImpl" }
+                                              extends="com.misset.opp.omt.psi.resolvable.impl.OMTResolvableValueResolvableImpl" }
 logicalBlock ::=                            ifBlock commandBlock (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
 ifBlock ::=                                 IF_OPERATOR (query | (PARENTHESES_OPEN query PARENTHESES_CLOSE))
 elseBlock ::=                               ELSE_OPERATOR commandBlock
@@ -235,13 +235,13 @@ query     ::=                               queryPath | queryArray | booleanStat
 queryPath ::=                               (curieConstantElement | queryStep) (FORWARD_SLASH queryStep?)*
 {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable"
-                                                mixin="com.misset.opp.omt.psi.resolvable.OMTQueryPathResolvableImpl"
+                                                mixin="com.misset.opp.omt.psi.resolvable.impl.OMTQueryPathResolvableImpl"
                                                 extends=query}
 // The queryArray uses the PIPE symbol to split the array where both can be resolved separately
 queryArray ::=                              query (PIPE query)+
 {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable"
-                                                mixin="com.misset.opp.omt.psi.resolvable.OMTQueryArrayResolvableImpl"
+                                                mixin="com.misset.opp.omt.psi.resolvable.impl.OMTQueryArrayResolvableImpl"
                                                 extends=query
                                                 }
 // A booleanStatement works the same as the queryArray but using a BOOLEAN_OPERATOR
@@ -249,14 +249,14 @@ queryArray ::=                              query (PIPE query)+
 booleanStatement ::=                        query (BOOLEAN_OPERATOR query)+
 {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable"
-                                                mixin="com.misset.opp.omt.psi.resolvable.OMTBooleanStatementResolvableImpl"
+                                                mixin="com.misset.opp.omt.psi.resolvable.impl.OMTBooleanStatementResolvableImpl"
                                                 extends=query}
 // The equationStatement uses a conditional operator (like ==, >=, <=) to split the statement
 // it only allows a left-hand and right-hand query, both should be resolved to boolean type
 equationStatement ::=                       query CONDITIONAL_OPERATOR query
 {                                               methods=[getOpposite]
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable"
-                                                mixin="com.misset.opp.omt.psi.resolvable.OMTEquationStatementResolvableImpl"
+                                                mixin="com.misset.opp.omt.psi.resolvable.impl.OMTEquationStatementResolvableImpl"
                                                 extends=query
                                                 }
 // The negated statement detects the usage of the NOT operator
@@ -267,7 +267,7 @@ equationStatement ::=                       query CONDITIONAL_OPERATOR query
 // the leading statement is preferred
 negatedStep ::=                             NOT_OPERATOR query {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable"
-                                                mixin="com.misset.opp.omt.psi.resolvable.OMTNegatedStepResolvableImpl"
+                                                mixin="com.misset.opp.omt.psi.resolvable.impl.OMTNegatedStepResolvableImpl"
                                                 extends=query
  }
 
@@ -282,11 +282,11 @@ queryStep ::=                               leading? (queryReverseStep |
                                             stepDecorator? queryFilter*
                                             {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTQueryStepResolvable"
-                                                extends="com.misset.opp.omt.psi.resolvable.OMTQueryStepResolvableImpl" }
+                                                extends="com.misset.opp.omt.psi.resolvable.impl.OMTQueryStepResolvableImpl" }
 queryReverseStep ::=                        CARET curieElement? stepDecorator? queryFilter*
                                             {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTQueryStepResolvable"
-                                                mixin="com.misset.opp.omt.psi.resolvable.OMTQueryReverseStepResolvableImpl"
+                                                mixin="com.misset.opp.omt.psi.resolvable.impl.OMTQueryReverseStepResolvableImpl"
                                                 extends=queryStep
                                                 }
 stepDecorator ::=                           ASTERIX | PLUS
@@ -298,7 +298,7 @@ queryFilter ::=                             BRACKET_OPEN query BRACKET_CLOSED | 
 subQuery ::=                                PARENTHESES_OPEN query PARENTHESES_CLOSE
                                             {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTQueryStepResolvable"
-                                                mixin="com.misset.opp.omt.psi.resolvable.OMTSubQueryResolvableImpl"
+                                                mixin="com.misset.opp.omt.psi.resolvable.impl.OMTSubQueryResolvableImpl"
                                                 extends=queryStep
                                             }
 

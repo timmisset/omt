@@ -1,24 +1,18 @@
-package com.misset.opp.omt.psi.resolvable;
+package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.psi.OMTQueryPath;
 import com.misset.opp.omt.psi.OMTQueryStep;
 import com.misset.opp.omt.psi.impl.OMTQueryImpl;
-import com.misset.opp.omt.psi.util.QueryUtil;
-import com.misset.opp.omt.psi.util.TokenUtil;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class OMTQueryPathResolvableImpl extends OMTQueryImpl implements OMTQueryPath {
+import static com.misset.opp.omt.psi.util.UtilManager.getTokenUtil;
 
-    private static final QueryUtil queryUtil = QueryUtil.SINGLETON;
-    private static final TokenUtil tokenUtil = TokenUtil.SINGLETON;
-    private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private static final String BOOLEAN = "boolean";
+public abstract class OMTQueryPathResolvableImpl extends OMTQueryImpl implements OMTQueryPath {
 
     public OMTQueryPathResolvableImpl(@NotNull ASTNode node) {
         super(node);
@@ -29,7 +23,7 @@ public abstract class OMTQueryPathResolvableImpl extends OMTQueryImpl implements
         if (getQueryStepList().size() == 1) {
             return getQueryStepList().get(0).getNegatedStep() != null;
         } else {
-            return tokenUtil.isNotOperator(getLastChild().getFirstChild());
+            return getTokenUtil().isNotOperator(getLastChild().getFirstChild());
         }
     }
 

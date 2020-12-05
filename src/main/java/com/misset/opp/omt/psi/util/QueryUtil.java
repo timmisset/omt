@@ -3,17 +3,14 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
+
 public class QueryUtil {
-    public static final QueryUtil SINGLETON = new QueryUtil();
-    private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-
-
     private static List<Resource> resolvePathPart(PsiElement part) {
         if (part != null) {
             if (part instanceof OMTQueryStep) {
@@ -87,14 +84,14 @@ public class QueryUtil {
             return new ArrayList<>();
         }
         List<Resource> typesForStep = new ArrayList<>(resolvePathPart(previous));
-        typesForStep.addAll(projectUtil.getRDFModelUtil().allSubClasses(typesForStep));
-        return projectUtil.getRDFModelUtil().getDistinctResources(typesForStep);
+        typesForStep.addAll(getRDFModelUtil().allSubClasses(typesForStep));
+        return getRDFModelUtil().getDistinctResources(typesForStep);
     }
 
     public List<Resource> getPreviousStep(OMTQueryFilter filter) {
         final List<Resource> resources = ((OMTQueryStep) filter.getParent()).resolveToResource(true, false);
-        resources.addAll(projectUtil.getRDFModelUtil().allSubClasses(resources));
-        return projectUtil.getRDFModelUtil().getDistinctResources(resources);
+        resources.addAll(getRDFModelUtil().allSubClasses(resources));
+        return getRDFModelUtil().getDistinctResources(resources);
     }
 
 }

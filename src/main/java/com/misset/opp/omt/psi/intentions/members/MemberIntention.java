@@ -7,12 +7,9 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.util.IncorrectOperationException;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTExportMember;
-import com.misset.opp.omt.psi.util.ImportUtil;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -20,15 +17,15 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MemberIntention {
+import static com.misset.opp.omt.psi.util.UtilManager.getImportUtil;
+import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
 
-    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    public static MemberIntention SINGLETON = new MemberIntention();
+public class MemberIntention {
 
     public List<IntentionAction> getImportMemberIntentions(OMTCall call) {
         String _callname = call.getFirstChild().getText();
         final String callName = _callname.startsWith("@") ? _callname.substring(1) : _callname;
-        List<OMTExportMember> exportMembers = projectUtil.getExportMember(callName);
+        List<OMTExportMember> exportMembers = getProjectUtil().getExportMember(callName);
 
         List<IntentionAction> intentionActions = new ArrayList<>();
         exportMembers.forEach(exportMember -> {
@@ -54,7 +51,6 @@ public class MemberIntention {
     }
 
     private IntentionAction getImportIntention(String path, String name, PsiElement target) {
-        ImportUtil importUtil = ImportUtil.SINGLETON;
         return new IntentionAction() {
             @NotNull
             @Override
@@ -74,9 +70,9 @@ public class MemberIntention {
             }
 
             @Override
-            public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
+            public void invoke(@NotNull Project project, Editor editor, PsiFile file) {
                 String importPath = String.format("'%s':", path);
-                importUtil.addImportMemberToBlock(target, importPath, name);
+                getImportUtil().addImportMemberToBlock(target, importPath, name);
             }
 
             @Override

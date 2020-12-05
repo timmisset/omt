@@ -9,15 +9,13 @@ import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
-import com.misset.opp.omt.psi.util.ModelUtil;
-import com.misset.opp.omt.psi.util.QueryUtil;
-import com.misset.opp.omt.psi.util.VariableUtil;
-import com.misset.opp.omt.util.ProjectUtil;
 import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 public abstract class OMTCallableImpl implements OMTCallable {
 
@@ -32,15 +30,11 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     private String description;
 
-    private ModelUtil modelUtil = ModelUtil.SINGLETON;
-    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private VariableUtil variableUtil = VariableUtil.SINGLETON;
-    private QueryUtil queryUtil = QueryUtil.SINGLETON;
     private RDFModelUtil rdfModelUtil;
     public OMTCallableImpl(String type, boolean isCommand) {
         this.type = type;
         this.isCommand = isCommand;
-        JsonObject parsedModel = projectUtil.getParsedModel();
+        JsonObject parsedModel = getProjectUtil().getParsedModel();
         if (parsedModel.has(type)) {
             JsonObject modelItemType = parsedModel.getAsJsonObject(type);
             if (modelItemType.has("flags")) {
@@ -79,13 +73,6 @@ public abstract class OMTCallableImpl implements OMTCallable {
         this.localVariables.addAll(localVariables);
         this.flags.addAll(flags);
         this.returnType = returnType;
-    }
-
-    private RDFModelUtil getModelUtil() {
-        if (rdfModelUtil == null || !rdfModelUtil.isLoaded()) {
-            rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
-        }
-        return rdfModelUtil;
     }
 
     @Override
@@ -159,7 +146,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
     }
 
     void setParametersFromModelItem(OMTModelItemBlock block) {
-        Optional<OMTBlockEntry> params = modelUtil.getModelItemBlockEntry(block, "params");
+        Optional<OMTBlockEntry> params = getModelUtil().getModelItemBlockEntry(block, "params");
         if (!params.isPresent()) {
             return;
         }
@@ -225,7 +212,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
         OMTParameter finalParameter = parameter;
         AtomicReference<IncorrectSignatureArgument> exception = new AtomicReference<>();
-        projectUtil.getRDFModelUtil().validateType(
+        getRDFModelUtil().validateType(
                 parameterType, argument.resolveToResource(),
                 (acceptableTypes, argumentTypes) -> exception.set(new IncorrectSignatureArgument(finalParameter, acceptableTypes, argumentTypes))
         );
@@ -238,7 +225,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
         parameters.getVariableList().stream()
                 .map(OMTParameterImpl::new)
                 .forEach(omtParameter -> {
-                    variableUtil.getTypeFromAnnotation(omtParameter.getVariable(), parameters.getParent())
+                    getVariableUtil().getTypeFromAnnotation(omtParameter.getVariable(), parameters.getParent())
                             .ifPresent(omtParameterAnnotation -> omtParameter.setType(
                                     omtParameterAnnotation.getParameterWithType().getParameterType()
                             ));
@@ -284,7 +271,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     @Override
     public List<Resource> getReturnType() {
-        return Collections.singletonList(getModelUtil().getPrimitiveTypeAsResource(returnType));
+        return Collections.singletonList(getRDFModelUtil().getPrimitiveTypeAsResource(returnType));
     }
 
     @Override

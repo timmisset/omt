@@ -12,22 +12,18 @@ import com.misset.opp.omt.OMTLanguage;
 import com.misset.opp.omt.psi.impl.OMTExportMemberImpl;
 import com.misset.opp.omt.psi.support.ExportMemberType;
 import com.misset.opp.omt.psi.support.OMTExportMember;
-import com.misset.opp.omt.psi.util.ImportUtil;
-import com.misset.opp.omt.psi.util.ModelUtil;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.misset.opp.omt.psi.util.UtilManager.*;
+
 public class OMTFile extends PsiFileBase {
     public OMTFile(@NotNull FileViewProvider viewProvider) {
         super(viewProvider, OMTLanguage.INSTANCE);
     }
-
-    private static final ModelUtil modelUtil = ModelUtil.SINGLETON;
-    private static final ImportUtil importUtil = ImportUtil.SINGLETON;
 
     public static final String IMPORT = "import";
     public static final String QUERIES = "queries";
@@ -77,7 +73,7 @@ public class OMTFile extends PsiFileBase {
         }
         List<OMTBlockEntry> blockEntryList = rootBlock.getBlockEntryList();
         return blockEntryList.stream()
-                .filter(blockEntry -> modelUtil.getEntryBlockLabel(blockEntry).startsWith(name))
+                .filter(blockEntry -> getModelUtil().getEntryBlockLabel(blockEntry).startsWith(name))
                 .filter(Objects::nonNull)
                 .findFirst();
     }
@@ -133,7 +129,7 @@ public class OMTFile extends PsiFileBase {
         HashMap<OMTImport, VirtualFile> importHashmap = new HashMap<>();
         importBlock.get().getImportList()
                 .stream().filter(omtImport -> omtImport.getContainingFile().getVirtualFile() != null)
-                .forEach(omtImport -> importHashmap.put(omtImport, importUtil.getImportedFile(omtImport)));
+                .forEach(omtImport -> importHashmap.put(omtImport, getImportUtil().getImportedFile(omtImport)));
         return importHashmap;
     }
 
@@ -216,7 +212,7 @@ public class OMTFile extends PsiFileBase {
 
     public void updateMembers() {
         updateExportMembers();
-        ProjectUtil.SINGLETON.resetExportedMembers(this);
+        getProjectUtil().resetExportedMembers(this);
     }
 
     public Map<String, OMTModelItemBlock> getDeclaredOntologies() {

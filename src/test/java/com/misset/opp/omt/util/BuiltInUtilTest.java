@@ -47,7 +47,8 @@ public class BuiltInUtilTest extends LightJavaCodeInsightFixtureTestCase {
     BuiltInUtil builtInUtil;
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("BuiltInUtilTest");
         super.setUp();
         project = getProject();
@@ -56,7 +57,8 @@ public class BuiltInUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 

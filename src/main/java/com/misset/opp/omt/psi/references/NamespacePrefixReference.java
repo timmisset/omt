@@ -6,12 +6,13 @@ import com.misset.opp.omt.psi.OMTCurieElement;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
 import com.misset.opp.omt.psi.OMTParameterType;
 import com.misset.opp.omt.psi.OMTPrefix;
-import com.misset.opp.omt.psi.util.CurieUtil;
 import com.misset.opp.omt.psi.util.PsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+
+import static com.misset.opp.omt.psi.util.UtilManager.getCurieUtil;
 
 /**
  * The curie reference resolves to the declaration of the curie prefix in either the prefixes: node or
@@ -23,8 +24,6 @@ public class NamespacePrefixReference extends PsiReferenceBase<PsiElement> imple
         super(namespacePrefix, textRange);
     }
 
-    private static final CurieUtil curieUtil = CurieUtil.SINGLETON;
-
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
@@ -35,10 +34,10 @@ public class NamespacePrefixReference extends PsiReferenceBase<PsiElement> imple
             definedByPrefix = Optional.of((OMTPrefix) myElement.getParent());
         }
         if (namespacePrefix.getParent() instanceof OMTCurieElement) {
-            definedByPrefix = curieUtil.getDefinedByPrefix((OMTCurieElement) myElement.getParent());
+            definedByPrefix = getCurieUtil().getDefinedByPrefix((OMTCurieElement) myElement.getParent());
         }
         if (namespacePrefix.getParent() instanceof OMTParameterType) {
-            definedByPrefix = curieUtil.getDefinedByPrefix((OMTParameterType) myElement.getParent());
+            definedByPrefix = getCurieUtil().getDefinedByPrefix((OMTParameterType) myElement.getParent());
         }
 
         return definedByPrefix

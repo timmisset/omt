@@ -31,6 +31,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getBuiltinUtil;
 import static util.Helper.getResources;
 
 public class ProjectUtil {
@@ -43,12 +44,9 @@ public class ProjectUtil {
     public static final String BUILTIN_HTTP_COMMANDS = "http-commands.ts";
     public static final String BUILTIN_JSON_PARSE_COMMAND = "json-parse-command.ts";
 
-    public static final ProjectUtil SINGLETON = new ProjectUtil();
-
     private Model model;
     private WindowManager windowManager;
     private FileDocumentManager fileDocumentManager;
-    private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
 
     public ProjectUtil() {
         if (ApplicationManager.getApplication() != null) {
@@ -59,8 +57,12 @@ public class ProjectUtil {
 
     private RDFModelUtil rdfModelUtil;
 
-    private void setStatusbarMessage(Project project, String message) {
-        getStatusBar(project).setInfo(String.format("OMT PLUGIN: %s", message));
+    public void setStatusbarMessage(Project project, String message) {
+        final StatusBar statusBar = getStatusBar(project);
+        if (statusBar == null) {
+            return;
+        }
+        statusBar.setInfo(String.format("OMT PLUGIN: %s", message));
     }
 
     public RDFModelUtil getRDFModelUtil() {
@@ -81,7 +83,7 @@ public class ProjectUtil {
     }
 
     public StatusBar getStatusBar(Project project) {
-        return windowManager.getStatusBar(project);
+        return windowManager != null ? windowManager.getStatusBar(project) : null;
     }
 
     public FileDocumentManager getFileDocumentManager() {
@@ -110,7 +112,7 @@ public class ProjectUtil {
      * Tries to load all built-in commands and operators that can be retrieved from the BuiltInUtil
      */
     public void loadBuiltInMembers(Project project) {
-        builtInUtil.reset();
+        getBuiltinUtil().reset();
         setStatusbarMessage(project, "Loading BuiltIn Members of OMT");
 
         OMTSettingsState settings = OMTSettingsState.getInstance();
@@ -177,7 +179,7 @@ public class ProjectUtil {
     private boolean loadBuiltInMembersFile(VirtualFile virtualFile, Project project, String filename, BuiltInType type) {
         Document document = fileDocumentManager.getDocument(virtualFile);
         if (document != null) {
-            builtInUtil.reloadBuiltInFromDocument(document, type, project, this);
+            getBuiltinUtil().reloadBuiltInFromDocument(document, type, project, this);
             setStatusbarMessage(project,
                     String.format("Finished loading %s", filename)
             );

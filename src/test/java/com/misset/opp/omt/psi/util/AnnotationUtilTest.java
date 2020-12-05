@@ -6,7 +6,7 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTVariable;
 import org.junit.jupiter.api.AfterEach;
@@ -18,12 +18,12 @@ import org.mockito.MockitoAnnotations;
 import java.util.List;
 import java.util.Objects;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getAnnotationUtil;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class AnnotationUtilTest extends LightJavaCodeInsightFixtureTestCase {
+class AnnotationUtilTest extends OMTTestSuite {
 
-    private static final AnnotationUtil annotationUtil = AnnotationUtil.SINGLETON;
     private ExampleFiles exampleFiles;
     @Mock
     AnnotationHolder annotationHolder;
@@ -35,7 +35,8 @@ class AnnotationUtilTest extends LightJavaCodeInsightFixtureTestCase {
     private OMTVariable undeclaredVariable;
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("AnnotationUtilTest");
         super.setUp();
 
@@ -68,14 +69,15 @@ class AnnotationUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 
     @Test
     void annotateUsageThrowsNotUsedAnnotation() {
         ApplicationManager.getApplication().runReadAction(() -> {
-            annotationUtil.annotateUsage(unusedVariable, OMTVariable.class, annotationHolder);
+            getAnnotationUtil().annotateUsage(unusedVariable, OMTVariable.class, annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.WARNING), eq("$unusedVariable is never used"));
             verify(annotationBuilder, times(1)).create();
         });
@@ -84,7 +86,7 @@ class AnnotationUtilTest extends LightJavaCodeInsightFixtureTestCase {
     @Test
     void annotateUsageDoesNotThrowUnusedAnnotation() {
         ApplicationManager.getApplication().runReadAction(() -> {
-            annotationUtil.annotateUsage(usedVariableDeclaration, OMTVariable.class, annotationHolder);
+            getAnnotationUtil().annotateUsage(usedVariableDeclaration, OMTVariable.class, annotationHolder);
             verify(annotationBuilder, times(0)).create();
         });
     }
@@ -92,7 +94,7 @@ class AnnotationUtilTest extends LightJavaCodeInsightFixtureTestCase {
     @Test
     void annotateOrigin() {
         ApplicationManager.getApplication().runReadAction(() -> {
-            annotationUtil.annotateOrigin(undeclaredVariable, annotationHolder);
+            getAnnotationUtil().annotateOrigin(undeclaredVariable, annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("$undeclaredVariable is not declared"));
             verify(annotationBuilder, times(1)).create();
         });

@@ -11,8 +11,6 @@ import java.util.List;
 
 public class AnnotationUtil {
 
-    public static final AnnotationUtil SINGLETON = new AnnotationUtil();
-
     /**
      * Generic method to check if the declaration of an element (variable, prefix etc) is ever referred to by another element
      *
@@ -24,7 +22,7 @@ public class AnnotationUtil {
         AnnotationBuilder annotationBuilder = annotateUsageGetBuilder(element, usageClass, holder);
         if (annotationBuilder != null) {
             annotationBuilder
-                    .withFix(RemoveIntention.SINGLETON.getRemoveIntention(element))
+                    .withFix(new RemoveIntention().getRemoveIntention(element))
                     .create();
         }
     }
@@ -62,7 +60,7 @@ public class AnnotationUtil {
         if (element.getReference() != null && element.getReference().resolve() == null) {
             return holder.newAnnotation(HighlightSeverity.ERROR, String.format("%s is not declared", element.getText()))
                     .range(element)
-                    .withFix(RemoveIntention.SINGLETON.getRemoveIntention(element));
+                    .withFix(new RemoveIntention().getRemoveIntention(element));
         }
         return null;
     }

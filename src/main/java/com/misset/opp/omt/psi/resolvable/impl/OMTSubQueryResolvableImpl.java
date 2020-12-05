@@ -1,4 +1,4 @@
-package com.misset.opp.omt.psi.resolvable;
+package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.psi.OMTSubQuery;

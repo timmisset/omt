@@ -33,8 +33,8 @@ public class RDFModelUtil {
     public final Supplier<Resource> OWL_CLASS = () -> this.model.createResource("http://www.w3.org/2002/07/owl#Class");
     public final Supplier<Resource> NODE_SHAPE = () -> this.model.createResource("http://www.w3.org/ns/shacl#NodeShape");
 
-    private static HashMap<Resource, List<Resource>> predicateObjects = new HashMap<>();
-    private static HashMap<Resource, List<Resource>> predicateSubjects = new HashMap<>();
+    private static final HashMap<Resource, List<Resource>> predicateObjects = new HashMap<>();
+    private static final HashMap<Resource, List<Resource>> predicateSubjects = new HashMap<>();
 
     public RDFModelUtil(String rootFolder) {
         this.rootFolder = rootFolder;

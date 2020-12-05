@@ -17,12 +17,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
+
 /**
  * Run the initial analysis on the project files after the Project has started
  */
 public class OMTStartupActivity implements StartupActivity {
-
-    private final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
 
     @Override
     public void runActivity(@NotNull Project project) {
@@ -30,14 +30,14 @@ public class OMTStartupActivity implements StartupActivity {
 
             // the builtin members are loaded directly from the project content
             // file changes result in reloading the loadBuiltInMembers
-            projectUtil.loadBuiltInMembers(project);
+            getProjectUtil().loadBuiltInMembers(project);
             setFileListeners(project);
 
             // parse the OMT Model, this is currently a static resource in the project
-            projectUtil.getParsedModel();
+            getProjectUtil().getParsedModel();
 
             // load the ontology model
-            projectUtil.loadOntologyModel(project);
+            getProjectUtil().loadOntologyModel(project);
 
             // finally, analyze all OMT files for exporting members and prefixess
             analyzeAllOMTFiles(project);
@@ -51,12 +51,12 @@ public class OMTStartupActivity implements StartupActivity {
         FilenameIndex.getAllFilesByExt(project, "omt")
                 .forEach(virtualFile -> {
                             if (!processedPaths.contains(virtualFile.getPath())) {
-                                projectUtil.analyzeFile((OMTFile) psiManager.findFile(virtualFile));
+                                getProjectUtil().analyzeFile((OMTFile) psiManager.findFile(virtualFile));
                                 processedPaths.add(virtualFile.getPath());
                             }
                         }
                 );
-        projectUtil.getStatusBar(project).setInfo("Analyzed " + processedPaths.size() + " file(s)");
+        getProjectUtil().setStatusbarMessage(project, "Analyzed " + processedPaths.size() + " file(s)");
     }
 
     private void setFileListeners(@NotNull Project project) {
@@ -74,7 +74,7 @@ public class OMTStartupActivity implements StartupActivity {
                                 case ProjectUtil.BUILTIN_HTTP_COMMANDS:
                                 case ProjectUtil.BUILTIN_JSON_PARSE_COMMAND:
                                 case ProjectUtil.BUILTIN_OPERATORS:
-                                    projectUtil.loadBuiltInMembers(project);
+                                    getProjectUtil().loadBuiltInMembers(project);
                                     return;
                                 default:
                                     byExtension(virtualFile);
@@ -88,9 +88,9 @@ public class OMTStartupActivity implements StartupActivity {
                 }
                 String extension = virtualFile.getExtension();
                 if ("ttl".equals(extension)) {
-                    projectUtil.loadOntologyModel(project);
+                    getProjectUtil().loadOntologyModel(project);
                 } else if ("omt".equals(extension)) {
-                    projectUtil.resetExportedMembers(
+                    getProjectUtil().resetExportedMembers(
 
                             (OMTFile) PsiManager.getInstance(project).findFile(virtualFile)
                     );

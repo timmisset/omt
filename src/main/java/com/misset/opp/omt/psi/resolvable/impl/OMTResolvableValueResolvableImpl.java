@@ -1,19 +1,18 @@
-package com.misset.opp.omt.psi.resolvable;
+package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.psi.OMTResolvableValue;
 import com.misset.opp.omt.psi.support.OMTCallable;
-import com.misset.opp.omt.psi.util.MemberUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Objects;
 
-public abstract class OMTResolvableValueResolvableImpl extends ASTWrapperPsiElement implements OMTResolvableValue {
+import static com.misset.opp.omt.psi.util.UtilManager.getMemberUtil;
 
-    private static final MemberUtil memberUtil = MemberUtil.SINGLETON;
+public abstract class OMTResolvableValueResolvableImpl extends ASTWrapperPsiElement implements OMTResolvableValue {
 
     public OMTResolvableValueResolvableImpl(@NotNull ASTNode node) {
         super(node);
@@ -24,7 +23,7 @@ public abstract class OMTResolvableValueResolvableImpl extends ASTWrapperPsiElem
         if (getQuery() != null) {
             return getQuery().resolveToResource();
         } else {
-            final OMTCallable callable = memberUtil.getCallable(Objects.requireNonNull(getCommandCall()));
+            final OMTCallable callable = getMemberUtil().getCallable(Objects.requireNonNull(getCommandCall()));
             return callable.getReturnType();
         }
     }

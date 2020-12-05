@@ -5,11 +5,12 @@ import com.intellij.psi.*;
 import com.intellij.util.IncorrectOperationException;
 import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.psi.util.PsiImplUtil;
-import com.misset.opp.omt.psi.util.VariableUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+
+import static com.misset.opp.omt.psi.util.UtilManager.getVariableUtil;
 
 /**
  * The referencing part of IntelliJ is kind of vague in the tutorial. For now it appears to work when the concept of usage -> declaration
@@ -19,9 +20,7 @@ import java.util.Optional;
  */
 public class VariableReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
 
-    private static final VariableUtil variableUtil = VariableUtil.SINGLETON;
-
-    private OMTVariable variable;
+    private final OMTVariable variable;
 
     /**
      * The reference created for this variable usage
@@ -37,7 +36,7 @@ public class VariableReference extends PsiReferenceBase<PsiElement> implements P
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
-        Optional<OMTVariable> declaredByVariable = variableUtil.getDeclaredByVariable(variable);
+        Optional<OMTVariable> declaredByVariable = getVariableUtil().getDeclaredByVariable(variable);
         return declaredByVariable
                 .map(omtVariable -> new ResolveResult[]{new PsiElementResolveResult(omtVariable)})
                 .orElseGet(() -> new ResolveResult[0]);

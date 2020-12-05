@@ -20,15 +20,15 @@ import com.misset.opp.omt.psi.OMTJdComment;
 import com.misset.opp.omt.psi.OMTMemberListItem;
 import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.support.OMTTokenSets;
-import com.misset.opp.omt.psi.util.TokenFinderUtil;
-import com.misset.opp.omt.psi.util.TokenUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getTokenFinderUtil;
+import static com.misset.opp.omt.psi.util.UtilManager.getTokenUtil;
+
 public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
 
-    private TokenUtil tokenUtil = TokenUtil.SINGLETON;
     private PsiDocumentManager documentManager = null;
 
     private PsiElement elementAtCaretOnEnter;
@@ -54,10 +54,10 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
         }
 
         PsiElement sibling = elementAt;
-        while (sibling != null && tokenUtil.isWhiteSpace(sibling)) {
+        while (sibling != null && getTokenUtil().isWhiteSpace(sibling)) {
             sibling = sibling.getPrevSibling();
         }
-        if (tokenUtil.isSequenceItemContainer(elementAt) && !hasEmptySequenceItem(elementAt)) {
+        if (getTokenUtil().isSequenceItemContainer(elementAt) && !hasEmptySequenceItem(elementAt)) {
             insert(editor, "-", getSequenceBulletTrailingSpace(sibling), caretOffset);
             assureIndentation(elementAt, editor.getDocument(), caretOffset);
             return Result.Stop;
@@ -134,7 +134,7 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
             return 3;
         } // default indentation of 4 - 1 for the leading "-"
         final PsiElement whiteSpace = sequenceItem.getFirstChild() != null ? sequenceItem.getFirstChild().getNextSibling() : null;
-        if (whiteSpace != null && tokenUtil.isWhiteSpace(whiteSpace)) {
+        if (whiteSpace != null && getTokenUtil().isWhiteSpace(whiteSpace)) {
             return whiteSpace.getTextLength();
         }
 
@@ -142,9 +142,8 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
     }
 
     private void assureIndentation(PsiElement anchor, Document document, int caretOffset) {
-        final TokenFinderUtil tokenFinderUtil = TokenFinderUtil.SINGLETON;
-        final int containerOffset = tokenFinderUtil.getLineOffset(anchor, document);
-        final int lineOffset = tokenFinderUtil.getLineOffset(caretOffset, document);
+        final int containerOffset = getTokenFinderUtil().getLineOffset(anchor, document);
+        final int lineOffset = getTokenFinderUtil().getLineOffset(caretOffset, document);
         if (lineOffset < containerOffset) {
             document.insertString(caretOffset, StringUtil.repeat(" ", containerOffset - lineOffset));
         }

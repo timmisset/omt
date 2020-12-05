@@ -10,7 +10,7 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
@@ -28,7 +28,7 @@ import java.util.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class ProjectUtilTest extends LightJavaCodeInsightFixtureTestCase {
+class ProjectUtilTest extends OMTTestSuite {
 
     @Mock
     VirtualFile virtualFile;
@@ -55,18 +55,24 @@ class ProjectUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("ProjectUtilTest");
         super.setUp();
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         exampleFiles = new ExampleFiles(this, myFixture);
+
+        setUtilMock(builtInUtil);
+
         projectUtil = spy(projectUtil);
+
         doReturn(statusBar).when(projectUtil).getStatusBar(eq(getProject()));
         rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 
@@ -143,7 +149,6 @@ class ProjectUtilTest extends LightJavaCodeInsightFixtureTestCase {
             String firstFile = allFilenames[0];
             PsiFile[] filesByName = projectUtil.getFilesByName(getProject(), firstFile);
             assertNotNull(filesByName);
-            assertNotEmpty(Arrays.asList(filesByName));
         });
     }
 

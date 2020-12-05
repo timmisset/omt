@@ -1,22 +1,18 @@
-package com.misset.opp.omt.psi.resolvable;
+package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.psi.OMTNegatedStep;
 import com.misset.opp.omt.psi.impl.OMTQueryImpl;
-import com.misset.opp.omt.psi.util.QueryUtil;
-import com.misset.opp.omt.psi.util.TokenUtil;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
+
 public abstract class OMTNegatedStepResolvableImpl extends OMTQueryImpl implements OMTNegatedStep {
 
-    private static final QueryUtil queryUtil = QueryUtil.SINGLETON;
-    private static final TokenUtil tokenUtil = TokenUtil.SINGLETON;
-    private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private static final String BOOLEAN = "boolean";
 
     public OMTNegatedStepResolvableImpl(@NotNull ASTNode node) {
@@ -30,7 +26,7 @@ public abstract class OMTNegatedStepResolvableImpl extends OMTQueryImpl implemen
 
     @Override
     public List<Resource> resolveToResource() {
-        return Collections.singletonList(projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
+        return Collections.singletonList(getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
     }
 
     @Override

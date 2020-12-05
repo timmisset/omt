@@ -26,7 +26,8 @@ class PsiImplUtilTest extends OMTTestSuite {
     private final ExampleFiles exampleFiles = new ExampleFiles(this, myFixture);
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("OMTPsiImplUtilTest");
         super.setUp();
 
@@ -36,7 +37,8 @@ class PsiImplUtilTest extends OMTTestSuite {
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 

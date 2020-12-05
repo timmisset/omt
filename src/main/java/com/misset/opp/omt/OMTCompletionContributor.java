@@ -17,11 +17,7 @@ import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.support.OMTExportMember;
-import com.misset.opp.omt.psi.util.*;
 import com.misset.opp.omt.settings.OMTSettingsState;
-import com.misset.opp.omt.util.BuiltInUtil;
-import com.misset.opp.omt.util.ProjectUtil;
-import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,6 +25,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 public class OMTCompletionContributor extends CompletionContributor {
 
@@ -65,16 +63,6 @@ public class OMTCompletionContributor extends CompletionContributor {
     private boolean isResolved;
 
     private String dummyPlaceHolder = null;
-
-    private final ModelUtil modelUtil = ModelUtil.SINGLETON;
-    private VariableUtil variableUtil = VariableUtil.SINGLETON;
-    private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
-    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private TokenUtil tokenUtil = TokenUtil.SINGLETON;
-    private MemberUtil memberUtil = MemberUtil.SINGLETON;
-    private CurieUtil curieUtil = CurieUtil.SINGLETON;
-    private ImportUtil importUtil = ImportUtil.SINGLETON;
-    private QueryUtil queryUtil = QueryUtil.SINGLETON;
 
     /**
      * Generic completion that resolves the suggestion based on the cursor position
@@ -119,36 +107,36 @@ public class OMTCompletionContributor extends CompletionContributor {
                     return;
                 }
 
-                while (tokenUtil.isWhiteSpace(element) && element != null) {
+                while (getTokenUtil().isWhiteSpace(element) && element != null) {
                     element = element.getParent();
                 }
                 // !ModelItemType
-                if (tokenUtil.isModelItemType(element)) {
-                    modelUtil.getModelRootItems()
+                if (getTokenUtil().isModelItemType(element)) {
+                    getModelUtil().getModelRootItems()
                             .stream()
                             .map(label -> (dummyPlaceHolder.startsWith("!") ? "!" : "") + label)
                             .forEach(label -> result.addElement(LookupElementBuilder.create(label)));
                 }
                 // entry: for a model item
-                if (tokenUtil.isProperty(element)) {
+                if (getTokenUtil().isProperty(element)) {
                     setAttributeSuggestions(element, true);
                     result.addAllElements(resolvedElements);
                     return;
                 }
-                if (tokenUtil.isCommand(element)) {
+                if (getTokenUtil().isCommand(element)) {
                     setResolvedElementsForCommand(element);
                     result.addAllElements(resolvedElements);
                     return;
                 }
-                if (tokenUtil.isOperator(element)) {
-                    if (tokenUtil.isMemberImport(element)) {
+                if (getTokenUtil().isOperator(element)) {
+                    if (getTokenUtil().isMemberImport(element)) {
                         setResolvedElementsForImport(
                                 PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTImport),
                                 parameters.getOriginalPosition());
                         result.addAllElements(resolvedElements);
                         return;
                     }
-                    if (element != null && tokenUtil.isParameterType(element.getParent())) {
+                    if (element != null && getTokenUtil().isParameterType(element.getParent())) {
                         setResolvedElementsForClasses(element);
                         result.addAllElements(resolvedElements);
                         return;
@@ -156,9 +144,9 @@ public class OMTCompletionContributor extends CompletionContributor {
                     setResolvedElementsForOperator(element);
                     resolvedElements.forEach(result::addElement);
                 }
-                if (tokenUtil.isNamespaceMember(element)) {
+                if (getTokenUtil().isNamespaceMember(element)) {
                     assert element != null;
-                    if (tokenUtil.isParameterType(element.getParent())) {
+                    if (getTokenUtil().isParameterType(element.getParent())) {
                         setResolvedElementsForClasses(element);
                         result.addAllElements(resolvedElements);
                     } else if (element.getParent() instanceof OMTCurieElement &&
@@ -173,8 +161,8 @@ public class OMTCompletionContributor extends CompletionContributor {
 
     // add completion in the OMT model based on the Json attributes
     private void setAttributeSuggestions(PsiElement element, boolean atParent) {
-        JsonObject json = atParent ? modelUtil.getJsonAtDepth(element, modelUtil.getModelDepth(element) - 1) :
-                modelUtil.getJson(element);
+        JsonObject json = atParent ? getModelUtil().getJsonAtDepth(element, getModelUtil().getModelDepth(element) - 1) :
+                getModelUtil().getJson(element);
         List<String> existingSiblingEntryLabels = getExistingSiblingEntryLabels(element);
         if (json != null && json.has(ATTRIBUTES)) {
 
@@ -193,7 +181,7 @@ public class OMTCompletionContributor extends CompletionContributor {
             return Collections.emptyList();
         }
         List<String> entryList = new ArrayList<>();
-        container.getBlockEntryList().forEach(blockEntry -> entryList.add(modelUtil.getEntryBlockLabel(blockEntry)));
+        container.getBlockEntryList().forEach(blockEntry -> entryList.add(getModelUtil().getEntryBlockLabel(blockEntry)));
         return entryList;
     }
 
@@ -289,8 +277,8 @@ public class OMTCompletionContributor extends CompletionContributor {
         }
 
         if (element instanceof OMTSequence &&
-                modelUtil.getJson(element) != null &&
-                modelUtil.getJson(element).has(ATTRIBUTES)) {
+                getModelUtil().getJson(element) != null &&
+                getModelUtil().getJson(element).has(ATTRIBUTES)) {
             // A sequence item that can destructed into separate entries
             setAttributeSuggestions(element, false);
             isResolved = true;
@@ -309,7 +297,7 @@ public class OMTCompletionContributor extends CompletionContributor {
             // scalar value as a block is not enough for useful completion:
             // check to see if there are children that can be used
             Arrays.stream(element.getChildren()).forEach(child -> {
-                if (!(tokenUtil.isWhiteSpace(child))) {
+                if (!(getTokenUtil().isWhiteSpace(child))) {
                     trySuggestionsForCurrentElementAt(child, elementAtCaret, context);
                 }
             });
@@ -341,7 +329,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     private boolean setEquationStepSuggestions(@NotNull OMTEquationStatement equationStep, @NotNull OMTQuery query) {
         final List<Resource> resources = equationStep.getOpposite(query).resolveToResource();
         if (!resources.isEmpty()) {
-            projectUtil.getRDFModelUtil().getComparableOptions(resources).forEach(
+            getRDFModelUtil().getComparableOptions(resources).forEach(
                     resource -> setCurieSuggestion(query, resource, false, EQUATION_PRIORITY)
             );
             return true;
@@ -350,8 +338,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void setQueryStepSuggestions(@NotNull OMTQueryStep queryStep, @NotNull PsiElement elementAt) {
-        final RDFModelUtil rdfModelUtil = projectUtil.getRDFModelUtil();
-        List<Resource> previousStep = queryUtil.getPreviousStep(queryStep);
+        List<Resource> previousStep = getQueryUtil().getPreviousStep(queryStep);
         if (previousStep.isEmpty()) {
             // start of the query:
             if (queryStep.getParent() instanceof OMTQueryPath) {
@@ -359,9 +346,9 @@ public class OMTCompletionContributor extends CompletionContributor {
             }
         } else {
             // part of a query flow
-            rdfModelUtil.listPredicatesForSubjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, false,
+            getRDFModelUtil().listPredicatesForSubjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, false,
                     PREDICATE_FORWARD_PRIORITY));
-            rdfModelUtil.listPredicatesForObjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, true,
+            getRDFModelUtil().listPredicatesForObjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(elementAt, resource, true,
                     PREDICATE_REVERSE_PRIORITY));
         }
 
@@ -375,37 +362,37 @@ public class OMTCompletionContributor extends CompletionContributor {
         }
 
         // check if there are local variables available, they also have the highest suggestion priority
-        variableUtil.getLocalVariables(elementAt).forEach(
+        getVariableUtil().getLocalVariables(elementAt).forEach(
                 (variableName, provider) -> addPriorityElement(variableName, LOCAL_VARIABLE_PRIORITY)
         );
 
         // then the declared variables available at the point of completion
-        variableUtil.getDeclaredVariables(elementAt).forEach(
+        getVariableUtil().getDeclaredVariables(elementAt).forEach(
                 omtVariable -> addPriorityElement(omtVariable.getName(), DECLARED_VARIABLE_PRIORITY)
         );
 
         // then the commands provided by this file
         // first the ones within the same modelItem:
-        modelUtil.getModelItemBlock(elementAt).ifPresent(omtModelItemBlock ->
+        getModelUtil().getModelItemBlock(elementAt).ifPresent(omtModelItemBlock ->
                 PsiTreeUtil.findChildrenOfType(omtModelItemBlock, definedType)
                         .forEach(omtDefinedStatement -> {
                                     if (!PsiTreeUtil.isContextAncestor(omtDefinedStatement, elementAt, true)) {
                                         addPriorityElement(
-                                                memberUtil.parseDefinedToCallable(omtDefinedStatement.getDefineName()).getAsSuggestion(), DEFINED_STATEMENT_PRIORITY);
+                                                getMemberUtil().parseDefinedToCallable(omtDefinedStatement.getDefineName()).getAsSuggestion(), DEFINED_STATEMENT_PRIORITY);
                                     }
                                 }
                         ));
 
         if (definedType == OMTDefineCommandStatement.class) {
-            modelUtil.getLocalCommands(elementAt).forEach(
+            getModelUtil().getLocalCommands(elementAt).forEach(
                     command -> addPriorityElement(String.format("@%s()", command), LOCAL_COMMAND_PRIORITY)
             );
         }
-        builtInUtil.getBuiltInSuggestions(builtInType)
+        getBuiltinUtil().getBuiltInSuggestions(builtInType)
                 .forEach(suggestion -> addPriorityElement(suggestion, BUILTIN_MEMBER_PRIORITY, suggestion, (context, item) -> {
                         },
                         "", builtInType.name()));
-        projectUtil.getExportedMembers(builtInType == BuiltInType.Command).forEach(
+        getProjectUtil().getExportedMembers(builtInType == BuiltInType.Command).forEach(
                 this::setImportMemberSuggestion
         );
         isResolved = true;
@@ -440,26 +427,26 @@ public class OMTCompletionContributor extends CompletionContributor {
                 (context, item) -> {
                     OMTFile omtFile = (OMTFile) context.getFile();
                     if (!omtFile.hasImportFor(exportMember)) {
-                        List<String> importPaths = importUtil.getImportPaths(exportMember, omtFile);
+                        List<String> importPaths = getImportUtil().getImportPaths(exportMember, omtFile);
                         if (!importPaths.isEmpty()) {
                             String importPath = importPaths.get(0);
-                            importUtil.addImportMemberToBlock(context.getFile(), importPath, exportMember.getName());
+                            getImportUtil().addImportMemberToBlock(context.getFile(), importPath, exportMember.getName());
                         }
                     }
                 }, path, exportMember.getCallableType());
     }
 
     private void setResolvedElementsForImport(PsiElement elementAtCaret, PsiElement originalElement) {
-        final Optional<OMTImport> importOptional = TokenFinderUtil.SINGLETON.findImport(elementAtCaret);
+        final Optional<OMTImport> importOptional = getTokenFinderUtil().findImport(elementAtCaret);
         importOptional.ifPresent(
                 omtImport -> {
-                    VirtualFile importedFile = importUtil.getImportedFile(omtImport, originalElement.getContainingFile().getVirtualFile());
+                    VirtualFile importedFile = getImportUtil().getImportedFile(omtImport, originalElement.getContainingFile().getVirtualFile());
                     OMTFile omtFile = importedFile == null ? null : (OMTFile) PsiManager.getInstance(elementAtCaret.getProject()).findFile(importedFile);
                     if (omtFile == null) {
                         return;
                     } // cannot find imported file
 
-                    final List<String> existingImports = importUtil.getImportedMemberNames(omtImport);
+                    final List<String> existingImports = getImportUtil().getImportedMemberNames(omtImport);
                     omtFile.getExportedMembers().values().stream()
                             .filter(exportMember -> !existingImports.contains(exportMember.getName()))
                             .forEach(this::setResolvedElementsForImport);
@@ -474,7 +461,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     }
 
     private void setResolvedElementsForClasses(PsiElement element) {
-        projectUtil.getRDFModelUtil().getAllClasses().stream().filter(resource -> resource.getURI() != null).forEach(
+        getProjectUtil().getRDFModelUtil().getAllClasses().stream().filter(resource -> resource.getURI() != null).forEach(
                 resource -> setCurieSuggestion(element, resource, false, CLASSES_PRIORITY)
         );
         Arrays.asList("string", "integer", "boolean", "date").forEach(
@@ -496,9 +483,9 @@ public class OMTCompletionContributor extends CompletionContributor {
         if (reverse) {
             title = "^" + title;
             curieElement = "^" + curieElement;
-            resolvesTo = projectUtil.getRDFModelUtil().getPredicateSubjects(resource, false);
+            resolvesTo = getRDFModelUtil().getPredicateSubjects(resource, false);
         } else {
-            resolvesTo = projectUtil.getRDFModelUtil().getPredicateObjects(resource, false);
+            resolvesTo = getRDFModelUtil().getPredicateObjects(resource, false);
         }
 
 
@@ -506,20 +493,20 @@ public class OMTCompletionContributor extends CompletionContributor {
                         // if the iri is not registered in the page, do it
                         ApplicationManager.getApplication().runWriteAction(() -> {
                             if (registerPrefix.get()) {
-                                curieUtil.addPrefixToBlock(context.getFile(),
+                                getCurieUtil().addPrefixToBlock(context.getFile(),
                                         item.getLookupString().split(":")[0].substring(reverse ? 1 : 0),
                                         resource.getNameSpace());
                             }
                         }),
                 null,
-                !resolvesTo.isEmpty() && !projectUtil.getRDFModelUtil().isTypePredicate(resource) ? omtFile.resourceToCurie(resolvesTo.get(0)) : null);
+                !resolvesTo.isEmpty() && !getRDFModelUtil().isTypePredicate(resource) ? omtFile.resourceToCurie(resolvesTo.get(0)) : null);
     }
 
     private String getPrefixSuggestion(Resource resource) {
         if (resource.getNameSpace() == null) {
             return resource.getURI();
         }
-        List<OMTPrefix> knownPrefixes = projectUtil.getKnownPrefixes(resource.getNameSpace());
+        List<OMTPrefix> knownPrefixes = getProjectUtil().getKnownPrefixes(resource.getNameSpace());
         if (!knownPrefixes.isEmpty()) {
             return knownPrefixes.get(0).getNamespacePrefix().getName() + ":" + resource.getLocalName();
         }

@@ -6,7 +6,7 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTReturnStatement;
 import com.misset.opp.omt.psi.OMTScript;
@@ -24,7 +24,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class ScriptUtilTest extends LightJavaCodeInsightFixtureTestCase {
+class ScriptUtilTest extends OMTTestSuite {
 
     @Mock
     AnnotationHolder annotationHolder;
@@ -39,12 +39,13 @@ class ScriptUtilTest extends LightJavaCodeInsightFixtureTestCase {
     private ExampleFiles exampleFiles;
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("ModelUtilTest");
         super.setUp();
 
         exampleFiles = new ExampleFiles(this, myFixture);
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         rootBlock = exampleFiles.getProcedureWithScript();
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());
         doReturn(annotationBuilder).when(annotationBuilder).range(any(PsiElement.class));
@@ -52,7 +53,8 @@ class ScriptUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 

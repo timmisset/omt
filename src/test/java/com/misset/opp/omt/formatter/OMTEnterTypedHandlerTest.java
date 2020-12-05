@@ -16,7 +16,8 @@ class OMTEnterTypedHandlerTest extends LightJavaCodeInsightFixtureTestCase {
     OMTEnterTypedHandler omtEnterTypedHandler;
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("OMTEnterTypedHandlerTest");
         super.setUp();
 
@@ -26,7 +27,8 @@ class OMTEnterTypedHandlerTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 

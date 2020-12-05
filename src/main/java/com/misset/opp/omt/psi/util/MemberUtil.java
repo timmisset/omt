@@ -19,21 +19,16 @@ import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
 import com.misset.opp.omt.psi.intentions.members.MemberIntention;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.support.*;
-import com.misset.opp.omt.util.BuiltInUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+import static com.misset.opp.omt.psi.util.UtilManager.*;
+
 public class MemberUtil {
 
-    private ModelUtil modelUtil = ModelUtil.SINGLETON;
-    private ImportUtil importUtil = ImportUtil.SINGLETON;
-    private ScriptUtil scriptUtil = ScriptUtil.SINGLETON;
-    private BuiltInUtil builtInUtil = BuiltInUtil.SINGLETON;
-    private MemberIntention memberIntention = MemberIntention.SINGLETON;
-    private RemoveIntention removeIntention = RemoveIntention.SINGLETON;
-
-    public static final MemberUtil SINGLETON = new MemberUtil();
+    private final MemberIntention memberIntention = new MemberIntention();
+    private final RemoveIntention removeIntention = new RemoveIntention();
 
     /**
      * Returns the PsiElement which contains the declaration for this call
@@ -89,7 +84,7 @@ public class MemberUtil {
                                 member.getName().trim().equals(nameIdentifier))
                 .findFirst();
         if (importedMember.isPresent()) {
-            return importUtil.resolveImportMember(importedMember.get());
+            return getImportUtil().resolveImportMember(importedMember.get());
         } else {
             return Optional.empty();
         }
@@ -204,7 +199,7 @@ public class MemberUtil {
         // in which case the call must be resolved
 
         // check attribute type:
-        JsonObject json = modelUtil.getJson(call);
+        JsonObject json = getModelUtil().getJson(call);
         String type = json != null && json.has("type") ? json.get("type").getAsString() : "unknown";
         switch (type) {
             case "string":
@@ -229,13 +224,13 @@ public class MemberUtil {
             return false;
         }
 
-        List<String> localCommands = modelUtil.getLocalCommands(call);
+        List<String> localCommands = getModelUtil().getLocalCommands(call);
         if (localCommands.contains(call.getName())) {
             holder.newAnnotation(HighlightSeverity.INFORMATION, String.format("%s is available as local command", call.getName())).range(call).create();
 
             // check if final statement:
             if (Arrays.asList("DONE", "CANCEL").contains(getCallName(call))) {
-                scriptUtil.annotateFinalStatement(call, holder);
+                getScriptUtil().annotateFinalStatement(call, holder);
             }
             return true;
         }
@@ -243,7 +238,7 @@ public class MemberUtil {
     }
 
     public OMTCallable getCallable(OMTCall call) {
-        BuiltInMember builtInMember = builtInUtil.getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
+        BuiltInMember builtInMember = getBuiltinUtil().getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
         if (builtInMember != null) {
             return builtInMember;
         }
@@ -255,7 +250,7 @@ public class MemberUtil {
     }
 
     private boolean annotateAsBuiltInMember(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {
-        BuiltInMember builtInMember = builtInUtil.getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
+        BuiltInMember builtInMember = getBuiltinUtil().getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
         if (builtInMember != null) {
             // is a builtIn member, annotate:
             holder.newAnnotation(HighlightSeverity.INFORMATION, builtInMember.shortDescription())
@@ -272,7 +267,7 @@ public class MemberUtil {
         PsiElement nameIdentifier = call.getNameIdentifier();
         OMTExportMember asExportMember = memberToExportMember(resolved);
         if (asExportMember == null) {
-            if (modelUtil.isOntology(resolved)) {
+            if (getModelUtil().isOntology(resolved)) {
                 return;
             }
             holder.newAnnotation(HighlightSeverity.ERROR,
@@ -293,7 +288,7 @@ public class MemberUtil {
         try {
             callable.validateSignature(call);
         } catch (NumberOfInputParametersMismatchException | CallCallableMismatchException e) {
-            JsonObject attributes = modelUtil.getJson(call);
+            JsonObject attributes = getModelUtil().getJson(call);
             if (attributes.has("namedReference") && attributes.get("namedReference").getAsBoolean()) {
                 return;
             }
@@ -335,7 +330,7 @@ public class MemberUtil {
     private PsiElement getContainingElement(PsiElement resolvedToElement) {
         // there are 2 options, either the call resolves to a modelItem or to a defined statement
         return resolvedToElement instanceof OMTModelItemLabel ?
-                modelUtil.getModelItemBlock(resolvedToElement).orElse(null) :
+                getModelUtil().getModelItemBlock(resolvedToElement).orElse(null) :
                 resolvedToElement.getParent();
     }
 
@@ -380,7 +375,7 @@ public class MemberUtil {
 
             case ModelItem:
                 OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) getContainingElement(element);
-                switch (modelUtil.getModelItemType(modelItemBlock)) {
+                switch (getModelUtil().getModelItemType(modelItemBlock)) {
                     case "Activity":
                         return new OMTExportMemberImpl(modelItemBlock, ExportMemberType.Activity);
                     case "Procedure":

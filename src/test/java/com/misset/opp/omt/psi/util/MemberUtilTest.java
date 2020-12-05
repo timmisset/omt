@@ -8,7 +8,7 @@ import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
@@ -39,7 +39,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
+class MemberUtilTest extends OMTTestSuite {
 
     private static String SHORT_DESCRIPTION = "Short description";
     private static String HTML_DESCRIPTION = "HTML description";
@@ -73,11 +73,16 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
     PsiElement rootBlock;
 
     @BeforeEach
-    void setUpSuite() throws Exception {
+    @Override
+    public void setUp() throws Exception {
         super.setName("MemberUtilTest");
         super.setUp();
 
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
+        setUtilMock(builtInUtil);
+        setUtilMock(modelUtil);
+        setUtilMock(scriptUtil);
+        setUtilMock(importUtil);
 
         exampleFiles = new ExampleFiles(this, myFixture);
         rootBlock = exampleFiles.getActivityWithMembers();
@@ -91,7 +96,8 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
     }
 
     @AfterEach
-    void tearDownSuite() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 
@@ -414,7 +420,6 @@ class MemberUtilTest extends LightJavaCodeInsightFixtureTestCase {
 
             memberUtil.annotateCall(call, annotationHolder);
             verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("Mijn could not be resolved"));
-            verify(memberIntention, times(1)).getImportMemberIntentions(eq(call));
         });
     }
 

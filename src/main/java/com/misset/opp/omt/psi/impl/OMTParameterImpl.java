@@ -7,8 +7,8 @@ import com.misset.opp.omt.psi.support.OMTParameter;
 import org.jetbrains.annotations.Nullable;
 
 public class OMTParameterImpl implements OMTParameter {
-    private static String REST = "rest";
-    private static String OPTIONAL = "optional";
+    private static final String REST = "rest";
+    private static final String OPTIONAL = "optional";
 
     private OMTVariable variable;
     private Object defaultValue;

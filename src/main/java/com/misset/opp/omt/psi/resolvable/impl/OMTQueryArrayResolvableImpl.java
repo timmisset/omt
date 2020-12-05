@@ -1,12 +1,9 @@
-package com.misset.opp.omt.psi.resolvable;
+package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.psi.OMTQuery;
 import com.misset.opp.omt.psi.OMTQueryArray;
 import com.misset.opp.omt.psi.impl.OMTQueryImpl;
-import com.misset.opp.omt.psi.util.QueryUtil;
-import com.misset.opp.omt.psi.util.TokenUtil;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,12 +11,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public abstract class OMTQueryArrayResolvableImpl extends OMTQueryImpl implements OMTQueryArray {
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
-    private static final QueryUtil queryUtil = QueryUtil.SINGLETON;
-    private static final TokenUtil tokenUtil = TokenUtil.SINGLETON;
-    private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
-    private static final String BOOLEAN = "boolean";
+public abstract class OMTQueryArrayResolvableImpl extends OMTQueryImpl implements OMTQueryArray {
 
     public OMTQueryArrayResolvableImpl(@NotNull ASTNode node) {
         super(node);
@@ -36,7 +30,7 @@ public abstract class OMTQueryArrayResolvableImpl extends OMTQueryImpl implement
                 .map(OMTQuery::resolveToResource)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
-        return projectUtil.getRDFModelUtil().getDistinctResources(resources);
+        return getRDFModelUtil().getDistinctResources(resources);
     }
 
     @Override

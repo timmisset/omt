@@ -12,8 +12,6 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.intentions.prefix.RegisterPrefixIntention;
-import com.misset.opp.omt.util.ProjectUtil;
-import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,13 +21,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.misset.opp.omt.psi.util.UtilManager.*;
+
 public class CurieUtil {
 
-    public static CurieUtil SINGLETON = new CurieUtil();
-
-    private static final AnnotationUtil annotationUtil = AnnotationUtil.SINGLETON;
-    private static final RegisterPrefixIntention registerPrefixIntention = RegisterPrefixIntention.SINGLETON;
-    private ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+    private final RegisterPrefixIntention registerPrefixIntention = new RegisterPrefixIntention();
 
     public Optional<OMTPrefix> getDefinedByPrefix(OMTParameterType parameterType) {
         // Otherwise the main prefixes block:
@@ -67,10 +63,10 @@ public class CurieUtil {
 
     public void annotateNamespacePrefix(@NotNull OMTNamespacePrefix namespacePrefix, @NotNull AnnotationHolder holder) {
         if (namespacePrefix.getParent() instanceof OMTPrefix) {
-            annotationUtil.annotateUsage(namespacePrefix, OMTNamespacePrefix.class, holder);
+            getAnnotationUtil().annotateUsage(namespacePrefix, OMTNamespacePrefix.class, holder);
         } else {
-            List<OMTPrefix> knownPrefixes = projectUtil.getKnownPrefixes(namespacePrefix.getName());
-            AnnotationBuilder annotationBuilder = annotationUtil.annotateOriginGetBuilder(namespacePrefix, holder);
+            List<OMTPrefix> knownPrefixes = getProjectUtil().getKnownPrefixes(namespacePrefix.getName());
+            AnnotationBuilder annotationBuilder = getAnnotationUtil().annotateOriginGetBuilder(namespacePrefix, holder);
 
             if (annotationBuilder != null) {
                 if (!knownPrefixes.isEmpty()) {
@@ -129,9 +125,8 @@ public class CurieUtil {
     }
 
     private void annotateAsResource(Resource resource, AnnotationHolder annotationHolder) {
-        RDFModelUtil rdfModelUtil = new RDFModelUtil(projectUtil.getOntologyModel());
         annotationHolder.newAnnotation(HighlightSeverity.INFORMATION, resource.toString())
-                .tooltip(rdfModelUtil.describeResource(resource))
+                .tooltip(getRDFModelUtil().describeResource(resource))
                 .create();
     }
 }

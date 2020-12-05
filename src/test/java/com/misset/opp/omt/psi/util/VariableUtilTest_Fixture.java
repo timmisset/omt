@@ -5,26 +5,23 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.psi.OMTVariableAssignment;
-import com.misset.opp.omt.util.ProjectUtil;
-import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 import static com.misset.opp.omt.psi.util.VariableUtil.NO_TYPE_SPECIFIED;
 
-public class VariableUtilTest_Fixture extends LightJavaCodeInsightFixtureTestCase {
+public class VariableUtilTest_Fixture extends OMTTestSuite {
 
-    RDFModelUtil rdfModelUtil;
     VariableUtil variableUtil;
 
     @Override
@@ -32,13 +29,9 @@ public class VariableUtilTest_Fixture extends LightJavaCodeInsightFixtureTestCas
     protected void setUp() throws Exception {
         super.setName("OMTExportMemberImplTest");
         super.setUp();
+        setOntologyModel();
+        variableUtil = new VariableUtil();
 
-        myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
-        ApplicationManager.getApplication().runReadAction(() -> {
-            ProjectUtil.SINGLETON.loadOntologyModel(getProject());
-        });
-        rdfModelUtil = ProjectUtil.SINGLETON.getRDFModelUtil();
-        variableUtil = VariableUtil.SINGLETON;
     }
 
     @Override
@@ -52,7 +45,7 @@ public class VariableUtilTest_Fixture extends LightJavaCodeInsightFixtureTestCas
         assertContainsElements(getVariableType("model:\n" +
                 "   activiteit: !Activity\n" +
                 "       params:\n" +
-                "           - $param1 (string)\n"), rdfModelUtil.getPrimitiveTypeAsResource("string"));
+                "           - $param1 (string)\n"), getRDFModelUtil().getPrimitiveTypeAsResource("string"));
     }
 
     @Test
@@ -62,7 +55,7 @@ public class VariableUtilTest_Fixture extends LightJavaCodeInsightFixtureTestCas
                         "   * @param $param1 (string)\n" +
                         "   */\n" +
                         "   DEFINE QUERY myQuery($param1) => $param1;\n"),
-                rdfModelUtil.getPrimitiveTypeAsResource("string"));
+                getRDFModelUtil().getPrimitiveTypeAsResource("string"));
     }
 
     @Test
@@ -70,7 +63,7 @@ public class VariableUtilTest_Fixture extends LightJavaCodeInsightFixtureTestCas
         assertContainsElements(getVariableType("model:\n" +
                 "   activiteit: !Activity\n" +
                 "       onStart: |\n" +
-                "           VAR $variable = 'test';\n"), rdfModelUtil.getPrimitiveTypeAsResource("string"));
+                "           VAR $variable = 'test';\n"), getRDFModelUtil().getPrimitiveTypeAsResource("string"));
     }
 
     @Test
@@ -80,7 +73,7 @@ public class VariableUtilTest_Fixture extends LightJavaCodeInsightFixtureTestCas
                 "       onStart: |\n" +
                 "           VAR $variable = null;\n" +
                 "           $variable = 'test';\n" +
-                "           @LOG($variable);\n"), rdfModelUtil.getPrimitiveTypeAsResource("string"));
+                "           @LOG($variable);\n"), getRDFModelUtil().getPrimitiveTypeAsResource("string"));
     }
 
     @Test

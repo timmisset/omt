@@ -1,9 +1,8 @@
-package com.misset.opp.omt.psi.resolvable;
+package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.psi.OMTBooleanStatement;
 import com.misset.opp.omt.psi.impl.OMTQueryImpl;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,9 +10,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
+
 public abstract class OMTBooleanStatementResolvableImpl extends OMTQueryImpl implements OMTBooleanStatement {
 
-    private static final ProjectUtil projectUtil = ProjectUtil.SINGLETON;
     private static final String BOOLEAN = "boolean";
 
     public OMTBooleanStatementResolvableImpl(@NotNull ASTNode node) {
@@ -27,7 +27,7 @@ public abstract class OMTBooleanStatementResolvableImpl extends OMTQueryImpl imp
 
     @Override
     public List<Resource> resolveToResource() {
-        return Collections.singletonList(projectUtil.getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
+        return Collections.singletonList(getRDFModelUtil().getPrimitiveTypeAsResource(BOOLEAN));
     }
 
     @Override

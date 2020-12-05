@@ -9,16 +9,15 @@ import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.named.OMTMemberNamedElement;
 import com.misset.opp.omt.psi.references.MemberReference;
-import com.misset.opp.omt.psi.util.MemberUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static com.misset.opp.omt.psi.util.UtilManager.getMemberUtil;
 
 public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement implements OMTMemberNamedElement {
     public OMTMemberNamedElementImpl(@NotNull ASTNode node) {
         super(node);
     }
-
-    protected static MemberUtil memberUtil = MemberUtil.SINGLETON;
 
     private PsiElement getPsi() {
         return getNode().getPsi();
@@ -30,7 +29,7 @@ public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement imp
     @Override
     public NamedMemberType getType() {
         if (type == null) {
-            type = memberUtil.getNamedMemberType(getPsi());
+            type = getMemberUtil().getNamedMemberType(getPsi());
         }
         return type;
     }

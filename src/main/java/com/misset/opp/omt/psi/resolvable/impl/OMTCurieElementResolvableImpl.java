@@ -1,19 +1,18 @@
-package com.misset.opp.omt.psi.resolvable;
+package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.psi.OMTCurieElement;
 import com.misset.opp.omt.psi.OMTQueryStep;
-import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
 
-public abstract class OMTCurieElementResolvableImpl extends ASTWrapperPsiElement implements OMTCurieElement {
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
-    private static ProjectUtil projectUtil = ProjectUtil.SINGLETON;
+public abstract class OMTCurieElementResolvableImpl extends ASTWrapperPsiElement implements OMTCurieElement {
 
     public OMTCurieElementResolvableImpl(@NotNull ASTNode node) {
         super(node);
@@ -28,7 +27,7 @@ public abstract class OMTCurieElementResolvableImpl extends ASTWrapperPsiElement
 
         return step.getParent().getFirstChild().equals(step) ?
                 Collections.singletonList(getAsResource()) :
-                projectUtil.getRDFModelUtil().getPredicateObjects(getAsResource());
+                getRDFModelUtil().getPredicateObjects(getAsResource());
     }
 
 }

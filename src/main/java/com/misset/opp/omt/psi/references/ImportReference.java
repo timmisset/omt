@@ -5,13 +5,12 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.misset.opp.omt.psi.OMTImport;
 import com.misset.opp.omt.psi.OMTImportSource;
-import com.misset.opp.omt.psi.util.ImportUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ImportReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
-    private static final ImportUtil importUtil = ImportUtil.SINGLETON;
+import static com.misset.opp.omt.psi.util.UtilManager.getImportUtil;
 
+public class ImportReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
     public ImportReference(@NotNull OMTImportSource importSource, TextRange textRange) {
         super(importSource, textRange);
     }
@@ -19,7 +18,7 @@ public class ImportReference extends PsiReferenceBase<PsiElement> implements Psi
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
-        VirtualFile importedFile = importUtil.getImportedFile((OMTImport) myElement.getParent());
+        VirtualFile importedFile = getImportUtil().getImportedFile((OMTImport) myElement.getParent());
         if (importedFile == null) {
             return ResolveResult.EMPTY_ARRAY;
         }
