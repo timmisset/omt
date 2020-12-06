@@ -23,7 +23,7 @@
         <annotator language="OMT" implementationClass="com.misset.opp.omt.OMTAnnotator"/>
         <completion.contributor language="OMT"
                                 order="first"
-                                implementationClass="com.misset.opp.omt.OMTCompletionContributor"/>
+                                implementationClass="com.misset.opp.omt.completion.OMTCompletionContributor"/>
         <lang.findUsagesProvider language="OMT"
                                  implementationClass="com.misset.opp.omt.OMTFindUsageProvider"/>
         <postStartupActivity implementation="com.misset.opp.omt.OMTStartupActivity"/>

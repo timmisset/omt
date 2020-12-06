@@ -1,4 +1,4 @@
-package com.misset.opp.omt;
+package com.misset.opp.omt.completion;
 
 import com.google.gson.JsonObject;
 import com.intellij.codeInsight.completion.*;
@@ -68,7 +68,8 @@ public class OMTCompletionContributor extends CompletionContributor {
      * Generic completion that resolves the suggestion based on the cursor position
      */
     public OMTCompletionContributor() {
-        extend(CompletionType.BASIC, PlatformPatterns.psiElement(), getCompletionProvider());
+        //extend(CompletionType.BASIC, PlatformPatterns.psiElement(), getCompletionProvider());
+        extend(CompletionType.BASIC, PlatformPatterns.psiElement(OMTTypes.MODEL_ITEM_TYPE), ModelItemCompletion.getCompletionProvider());
     }
 
     private void resolveErrorElement(PsiErrorElement element) {
@@ -222,38 +223,44 @@ public class OMTCompletionContributor extends CompletionContributor {
         return element;
     }
 
-    /**
-     * This method is used to check if the current caret position can be used to determine the type of completion
-     * that can be expected. Since IntelliJ will actually parse the document with a placeholder and resolve that
-     * placeholder to a PsiElement, the correct template must be used or the Lexer or Grammar will throw
-     *
-     * @param context
-     */
     @Override
     public void beforeCompletion(@NotNull CompletionInitializationContext context) {
-        isResolved = false;
-        resolvedElements = new ArrayList<>();
-        resolvedSuggestions = new ArrayList<>();
-        dummyPlaceHolderSet = false;
 
-        PsiElement elementAtCaret = context.getFile().findElementAt(context.getCaret().getOffset());
-        elementAtCaret = getUsableElement(elementAtCaret);
-        if (elementAtCaret == null) { // EOF
-            // no element at caret, use the DUMMY_ENTRY_VALUE
-            final PsiElement lastChild = context.getFile().getLastChild();
-            if (lastChild instanceof PsiErrorElement) {
-                List<String> expectedTypesAtDummyBlock = getExpectedTypesFromError((PsiErrorElement) lastChild);
-                if (!expectedTypesAtDummyBlock.isEmpty()) {
-                    setDummyContextFromExpectedList(expectedTypesAtDummyBlock, context, false, (PsiErrorElement) lastChild);
-                    return;
-                }
-            }
-            setDummyPlaceHolder(DUMMY_ENTRY, context);
-            return;
-        }
-        elementAtCaret = getUsableElement(elementAtCaret);
-        trySuggestionsForCurrentElementAt(elementAtCaret.getParent(), elementAtCaret, context);
+        super.beforeCompletion(context);
     }
+
+    //    /**
+//     * This method is used to check if the current caret position can be used to determine the type of completion
+//     * that can be expected. Since IntelliJ will actually parse the document with a placeholder and resolve that
+//     * placeholder to a PsiElement, the correct template must be used or the Lexer or Grammar will throw
+//     *
+//     * @param context
+//     */
+//    @Override
+//    public void beforeCompletion(@NotNull CompletionInitializationContext context) {
+//        isResolved = false;
+//        resolvedElements = new ArrayList<>();
+//        resolvedSuggestions = new ArrayList<>();
+//        dummyPlaceHolderSet = false;
+//
+//        PsiElement elementAtCaret = context.getFile().findElementAt(context.getCaret().getOffset());
+//        elementAtCaret = getUsableElement(elementAtCaret);
+//        if (elementAtCaret == null) { // EOF
+//            // no element at caret, use the DUMMY_ENTRY_VALUE
+//            final PsiElement lastChild = context.getFile().getLastChild();
+//            if (lastChild instanceof PsiErrorElement) {
+//                List<String> expectedTypesAtDummyBlock = getExpectedTypesFromError((PsiErrorElement) lastChild);
+//                if (!expectedTypesAtDummyBlock.isEmpty()) {
+//                    setDummyContextFromExpectedList(expectedTypesAtDummyBlock, context, false, (PsiErrorElement) lastChild);
+//                    return;
+//                }
+//            }
+//            setDummyPlaceHolder(DUMMY_ENTRY, context);
+//            return;
+//        }
+//        elementAtCaret = getUsableElement(elementAtCaret);
+//        trySuggestionsForCurrentElementAt(elementAtCaret.getParent(), elementAtCaret, context);
+//    }
 
     private void trySuggestionsForCurrentElementAt(PsiElement element, PsiElement elementAtCaret, CompletionInitializationContext context) {
         if (element instanceof OMTBlock ||
