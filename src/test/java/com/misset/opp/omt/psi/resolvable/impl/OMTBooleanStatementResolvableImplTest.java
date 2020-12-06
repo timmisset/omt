@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.resolvable.impl;
 
+import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.OMTQuery;
 import com.misset.opp.omt.psi.impl.OMTBooleanStatementImpl;
@@ -24,6 +25,12 @@ class OMTBooleanStatementResolvableImplTest extends OMTTestSuite {
     @BeforeEach
     public void setUp() {
         booleanStatement = mock(OMTBooleanStatementImpl.class, InvocationOnMock::callRealMethod);
+    }
+
+    @Test
+    void canBeInstantiated() {
+        booleanStatement = new OMTBooleanStatementImpl(mock(ASTNode.class));
+        assertNotNull(booleanStatement);
     }
 
     @Test

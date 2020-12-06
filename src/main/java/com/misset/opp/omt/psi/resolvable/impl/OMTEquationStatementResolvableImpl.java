@@ -50,9 +50,8 @@ public abstract class OMTEquationStatementResolvableImpl extends OMTQueryImpl im
             PsiElement parent = getParent();
             boolean isNegated = parent instanceof OMTNegatedStep;
             List<Resource> rightHand = getQueryList().get(1).resolveToResource();
-            final List<String> resourcesToCheck = rightHand.stream().map(Resource::toString).collect(Collectors.toList());
             return resources.stream().filter(
-                    resource -> isNegated != resourcesToCheck.contains(resource.toString())
+                    resource -> isNegated != rightHand.contains(resource)
             ).collect(Collectors.toList());
         }
         return resources;

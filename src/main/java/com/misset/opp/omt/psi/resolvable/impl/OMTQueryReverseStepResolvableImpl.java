@@ -10,15 +10,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
 import static com.misset.opp.omt.psi.util.UtilManager.getQueryUtil;
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
 public abstract class OMTQueryReverseStepResolvableImpl extends OMTQueryStepImpl implements OMTQueryReverseStep {
 
     public OMTQueryReverseStepResolvableImpl(@NotNull ASTNode node) {
         super(node);
     }
-
 
     @Override
     public List<Resource> resolveToResource(boolean lookBack, boolean filter) {
@@ -27,8 +26,9 @@ public abstract class OMTQueryReverseStepResolvableImpl extends OMTQueryStepImpl
         if (curieElement == null) {
             return resources;
         }
-        final RDFModelUtil rdfModelUtil = getProjectUtil().getRDFModelUtil();
-        if (!rdfModelUtil.isTypePredicate(curieElement.getAsResource())) { // for a type predicate, resolve only to the given class
+        final RDFModelUtil rdfModelUtil = getRDFModelUtil();
+        if (!rdfModelUtil.isTypePredicate(curieElement.getAsResource())) {
+            // For rdf:type, only resolve for the provided resources. If not, also add the superClasses for all resources
             resources = rdfModelUtil.allSuperClasses(resources);
         }
         List<Resource> resolvedResources = resources.isEmpty() ?
