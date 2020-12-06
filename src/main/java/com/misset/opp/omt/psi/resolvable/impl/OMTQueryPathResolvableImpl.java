@@ -67,7 +67,7 @@ public abstract class OMTQueryPathResolvableImpl extends OMTQueryImpl implements
             return new ArrayList<>();
         }
         if (queryStep.getNegatedStep() != null) {
-            return queryStep.getNegatedStep().getQuery().filter(resources);
+            return queryStep.getNegatedStep().filter(resources);
         }
         return resources;
     }

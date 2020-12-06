@@ -20,11 +20,10 @@ public abstract class OMTResolvableValueResolvableImpl extends ASTWrapperPsiElem
 
     @Override
     public List<Resource> resolveToResource() {
-        if (getQuery() != null) {
-            return getQuery().resolveToResource();
-        } else {
+        if (getQuery() == null) {
             final OMTCallable callable = getMemberUtil().getCallable(Objects.requireNonNull(getCommandCall()));
             return callable.getReturnType();
         }
+        return getQuery().resolveToResource();
     }
 }

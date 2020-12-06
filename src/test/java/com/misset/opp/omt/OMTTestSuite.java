@@ -1,32 +1,75 @@
 package com.misset.opp.omt;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.misset.opp.omt.psi.util.*;
 import com.misset.opp.omt.util.BuiltInUtil;
 import com.misset.opp.omt.util.ProjectUtil;
 import com.misset.opp.omt.util.RDFModelUtil;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.function.Predicate;
 
 import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
 
+    protected static final String XSD_BOOLEAN = "http://www.w3.org/2001/XMLSchema#boolean";
+    protected static final String XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
+    protected static final String XSD_INTEGER = "http://www.w3.org/2001/XMLSchema#int";
+    protected static final String XSD_DOUBLE = "http://www.w3.org/2001/XMLSchema#double";
+    protected static final String RDF_TYPE = "http://www.w3.org/2001/XMLSchema#double";
+    private MockedStatic<PsiTreeUtil> psiTreeUtil;
+
+    protected Resource rdfType(Model model) {
+        return model.createResource(RDF_TYPE);
+    }
+
+    protected Resource xsdBoolean(Model model) {
+        return model.createResource(XSD_BOOLEAN);
+    }
+
+    protected Resource xsdString(Model model) {
+        return model.createResource(XSD_STRING);
+    }
+
+    protected Resource xsdInteger(Model model) {
+        return model.createResource(XSD_INTEGER);
+    }
+
     private MockedStatic<UtilManager> utilManager;
+
+    protected Resource xsdDouble(Model model) {
+        return model.createResource(XSD_DOUBLE);
+    }
 
     @Override
     protected void tearDown() throws Exception {
         if (utilManager != null && !utilManager.isClosed()) {
             utilManager.close();
         }
+        if (psiTreeUtil != null && !psiTreeUtil.isClosed()) {
+            psiTreeUtil.close();
+        }
         if (myFixture != null) {
             super.tearDown();
         }
     }
 
+    protected MockedStatic<PsiTreeUtil> getPsiTreeUtilMock() {
+        if (psiTreeUtil == null || psiTreeUtil.isClosed()) {
+            psiTreeUtil = Mockito.mockStatic(PsiTreeUtil.class);
+        }
+        return psiTreeUtil;
+    }
 
     protected void setOntologyModel() {
         myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
@@ -130,8 +173,34 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         utilManager.when(UtilManager::getAnnotationUtil).thenReturn(annotationUtil);
     }
 
+    protected void setUtilMock(QueryUtil queryUtil) {
+        validateMock(queryUtil);
+        utilManager.when(UtilManager::getQueryUtil).thenReturn(queryUtil);
+    }
+
+    protected void setUtilMock(TokenUtil tokenUtil) {
+        validateMock(tokenUtil);
+        utilManager.when(UtilManager::getTokenUtil).thenReturn(tokenUtil);
+    }
+
     private void validateMock(Object mockInstance) {
         assertNotNull("Mock has not been created yet", mockInstance);
         startUtilMock();
+    }
+
+    protected <T> T fromContent(String content, Class<? extends PsiElement> clazz) {
+        return fromContent(content, clazz, item -> true);
+    }
+
+    protected <T> T fromContent(String content, Class<? extends PsiElement> clazz, Predicate<T> condition) {
+        assertNotNull("Fixture is not created, run setup", myFixture);
+        final PsiFile psiFile = myFixture.configureByText("test.omt", content);
+
+        final Collection<PsiElement> allPsiElement =
+                PsiTreeUtil.findChildrenOfType(psiFile, clazz);
+        return allPsiElement.stream()
+                .map(element -> (T) element)
+                .filter(element -> condition.test(element))
+                .findFirst().orElse(null);
     }
 }
