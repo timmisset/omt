@@ -140,6 +140,7 @@ public class ModelUtil {
                     .range(omtModelItemTypeElement)
                     .create();
         }
+
     }
 
     public void annotateBlock(OMTBlock block, AnnotationHolder holder) {
