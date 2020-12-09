@@ -8,7 +8,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.*;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -69,7 +68,9 @@ public class OMTCompletionContributor extends CompletionContributor {
      */
     public OMTCompletionContributor() {
         //extend(CompletionType.BASIC, PlatformPatterns.psiElement(), getCompletionProvider());
-        extend(CompletionType.BASIC, PlatformPatterns.psiElement(OMTTypes.MODEL_ITEM_TYPE), ModelItemCompletion.getCompletionProvider());
+        ModelItemCompletion.register(this);
+        ModelCompletion.register(this);
+        QueryStepCompletion.register(this);
     }
 
     private void resolveErrorElement(PsiErrorElement element) {
@@ -225,8 +226,16 @@ public class OMTCompletionContributor extends CompletionContributor {
 
     @Override
     public void beforeCompletion(@NotNull CompletionInitializationContext context) {
+        final String identifier = new PlaceholderProvider(context).getIdentifier();
+        if (identifier != null) {
+            context.setDummyIdentifier(identifier);
+        }
+    }
 
-        super.beforeCompletion(context);
+    @Override
+    public void duringCompletion(@NotNull CompletionInitializationContext context) {
+
+        super.duringCompletion(context);
     }
 
     //    /**

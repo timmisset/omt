@@ -430,4 +430,8 @@ public class VariableUtil {
             holder.newAnnotation(HighlightSeverity.ERROR, "No type specified").create();
         }
     }
+
+    public List<String> getGlobalVariables() {
+        return Arrays.asList("$username", "$medewerkerGraph", "$offline");
+    }
 }
