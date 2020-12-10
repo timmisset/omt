@@ -1,4 +1,4 @@
-package com.misset.opp.omt.completion;
+package com.misset.opp.omt.completion.model;
 
 import com.google.gson.JsonObject;
 import com.intellij.codeInsight.completion.CompletionParameters;
@@ -10,6 +10,8 @@ import com.intellij.patterns.PsiElementPattern;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
+import com.misset.opp.omt.completion.OMTCompletion;
+import com.misset.opp.omt.completion.OMTCompletionContributor;
 import com.misset.opp.omt.psi.OMTBlock;
 import com.misset.opp.omt.psi.OMTBlockEntry;
 import com.misset.opp.omt.psi.OMTSequenceItem;

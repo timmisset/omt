@@ -1,4 +1,4 @@
-package com.misset.opp.omt.completion;
+package com.misset.opp.omt.completion.model;
 
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionProvider;
@@ -6,6 +6,8 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.util.ProcessingContext;
+import com.misset.opp.omt.completion.OMTCompletion;
+import com.misset.opp.omt.completion.OMTCompletionContributor;
 import com.misset.opp.omt.psi.OMTTypes;
 import org.jetbrains.annotations.NotNull;
 

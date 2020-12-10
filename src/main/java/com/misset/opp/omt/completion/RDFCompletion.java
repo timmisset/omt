@@ -22,7 +22,7 @@ public abstract class RDFCompletion extends OMTCompletion {
         );
     }
 
-    private void setCurieSuggestion(PsiElement elementAt, Resource resource, boolean reverse, int priority) {
+    protected void setCurieSuggestion(PsiElement elementAt, Resource resource, boolean reverse, int priority) {
         OMTFile omtFile = (OMTFile) elementAt.getContainingFile();
         String curieElement = omtFile.resourceToCurie(resource);
         String title = curieElement;

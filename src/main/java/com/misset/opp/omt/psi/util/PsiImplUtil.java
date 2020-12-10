@@ -10,6 +10,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -389,6 +390,24 @@ public class PsiImplUtil {
 
     public static List<OMTVariableAssignment> getAssignments(OMTVariable variable) {
         return getVariableUtil().getAssignments(variable);
+    }
+
+    public static List<OMTBlockEntry> getBlockEntryList(OMTBlock block) {
+        if (block instanceof OMTIndentedBlock) {
+            return ((OMTIndentedBlock) block).getBlockEntryList();
+        }
+        if (block instanceof OMTRootBlock) {
+            return ((OMTRootBlock) block).getBlockEntryList();
+        }
+        return new ArrayList<>();
+    }
+
+    public static OMTBlock getBlock(OMTGenericBlock genericBlock) {
+        return genericBlock.getIndentedBlock();
+    }
+
+    public static OMTBlock getBlock(OMTModelItemBlock modelItemBlock) {
+        return modelItemBlock.getIndentedBlock();
     }
 
 }

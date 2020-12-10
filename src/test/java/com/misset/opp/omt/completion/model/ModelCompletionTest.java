@@ -1,5 +1,6 @@
-package com.misset.opp.omt.completion;
+package com.misset.opp.omt.completion.model;
 
+import com.misset.opp.omt.completion.OMTCompletionTestSuite;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,14 @@ class ModelCompletionTest extends OMTCompletionTestSuite {
                 "   mijnActiviteit: !Activity\n" +
                 "       <caret>";
         assertCompletionContains(content, "params:", "title:", "variables:");
+    }
+
+    @Test
+    void modelNewEntryIndentation() {
+        String content = "model:\n" +
+                "   mijnActiviteit: !Activity\n" +
+                "   <caret>";
+        assertCompletionNotContains(content, "params:", "title:", "variables:");
     }
 
     @Test
@@ -58,6 +67,7 @@ class ModelCompletionTest extends OMTCompletionTestSuite {
                 "       variables:\n" +
                 "           - <caret>";
         assertCompletionContains(content, "name:", "value:", "onChange:");
+
     }
 
     @Test
@@ -71,6 +81,7 @@ class ModelCompletionTest extends OMTCompletionTestSuite {
         final List<String> completionLookupElements = getCompletionLookupElements(content);
         assertContainsElements(completionLookupElements, "value:", "onChange:");
         assertDoesntContain(completionLookupElements, "name:");
+        assertCompletionDoesntContainBuiltinOperators(completionLookupElements);
     }
 }
 

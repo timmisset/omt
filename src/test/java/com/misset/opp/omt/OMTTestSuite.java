@@ -212,4 +212,11 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         return String.format("test-%s.omt", LocalDateTime.now().getNano());
     }
 
+    protected String withPrefixes(String content) {
+        return String.format("prefixes:\n" +
+                "   ont:     <http://ontologie#>\n" +
+                "   rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "\n" +
+                "%s", content);
+    }
 }

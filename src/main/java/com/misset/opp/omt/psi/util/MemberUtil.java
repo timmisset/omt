@@ -6,7 +6,6 @@ import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
@@ -22,6 +21,7 @@ import com.misset.opp.omt.psi.support.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.util.UtilManager.*;
 
@@ -41,13 +41,16 @@ public class MemberUtil {
      * @return
      */
     public Optional<PsiElement> getDeclaringMember(OMTCall call) {
-        OMTDefinedStatement definedStatement = getDefinedStatement(call);
-        if (definedStatement != null) {
-            // check if the member is declared before it's used, which is a requirement for an OperatorCall
-            return isCallBeforeDefine(call, definedStatement) ? Optional.empty() : Optional.of(definedStatement);
-        }
-
         String callName = getCallName(call);
+        OMTDefinedStatement definedStatement = getAccessibleDefinedStatements(call)
+                .stream()
+                .filter(statement -> statement.getDefineName().getName().equals(callName))
+                .filter(statement -> (statement.isCommand() && call.isCommandCall()) || (statement.isQuery() && call.isOperatorCall()))
+                .findFirst()
+                .orElse(null);
+        if (definedStatement != null) {
+            return Optional.of(definedStatement);
+        }
 
         // check if it's part of this page's exports:
         OMTFile currentFile = (OMTFile) call.getContainingFile();
@@ -95,65 +98,53 @@ public class MemberUtil {
         return call.isCommandCall() && name.startsWith("@") ? name.substring(1) : name;
     }
 
-    /**
-     * Checks if the call is made before the operator is defined
-     * This means that when this method returns true, the call is not resolvable to the definition
-     *
-     * @param call   - operatorCall or commandCall
-     * @param define - definedQueryStatement or definedCommandStatement
-     * @return
-     */
-    private boolean isCallBeforeDefine(OMTCall call, PsiElement define) {
-        PsiElement callContainingElement = getCallContainingElement(call);
-
-        if (callContainingElement.getParent() == define.getParent()) {
-            // call is part of the same block as the parent:
-            return callContainingElement.getStartOffsetInParent() <= define.getStartOffsetInParent();
-        } else {
-            // check if the defined statement block is part of the file root,
-            // in which case it's always accessible
-            if (((OMTFile) define.getContainingFile()).isPartOfRootBlock(define)) {
-                return false;
-            }
-
-            // else, check if they are part of the same model item, in which case the defined statement is also accessible
-            PsiElement callModelBlock = PsiTreeUtil.findFirstParent(call, parent -> parent instanceof OMTModelItemBlock);
-            PsiElement defineModelBlock = PsiTreeUtil.findFirstParent(define, parent -> parent instanceof OMTModelItemBlock);
-            return callModelBlock != defineModelBlock;
-        }
-    }
-
-    private PsiElement getCallContainingElement(PsiElement call) {
-        // the call depth depends on the origin:
-        PsiElement containingElement = PsiTreeUtil.getTopmostParentOfType(call, OMTDefineQueryStatement.class);
+    private PsiElement getComparableContainer(PsiElement element) {
+        // the element depth depends on the origin:
+        PsiElement containingElement = PsiTreeUtil.getTopmostParentOfType(element, OMTDefinedStatement.class);
         if (containingElement == null) {
-            containingElement = PsiTreeUtil.getTopmostParentOfType(call, OMTDefineCommandStatement.class);
+            containingElement = PsiTreeUtil.getTopmostParentOfType(element, OMTScriptLine.class);
         }
         if (containingElement == null) {
-            containingElement = PsiTreeUtil.getTopmostParentOfType(call, OMTScriptLine.class);
-        }
-        if (containingElement == null) {
-            containingElement = PsiTreeUtil.getTopmostParentOfType(call, OMTBlockEntry.class);
+            containingElement = PsiTreeUtil.getTopmostParentOfType(element, OMTBlockEntry.class);
         }
 
         return containingElement;
     }
 
-    /**
-     * Returns the defined statement corresponding to the call name
-     * It doesn't validate that the defined statement precedes the call
-     *
-     * @param call
-     * @return
-     */
-    private OMTDefinedStatement getDefinedStatement(OMTCall call) {
+    private boolean isComparableContainer(PsiElement element) {
+        return element instanceof OMTDefinedStatement ||
+                element instanceof OMTScriptLine ||
+                element instanceof OMTBlockEntry;
+    }
 
-        PsiFile containingFile = call.getContainingFile();
-        ArrayList<OMTDefinedStatement> omtDefinedStatements = new ArrayList<>(PsiTreeUtil.findChildrenOfType(containingFile, OMTDefinedStatement.class));
-        return omtDefinedStatements.stream()
-                .filter(omtDefinedStatement ->
-                                omtDefinedStatement.getDefineName().getName().equals(getCallName(call))
-                ).findFirst().orElse(null);
+    public List<OMTDefinedStatement> getAccessibleDefinedStatements(PsiElement element) {
+        final Collection<OMTDefinedStatement> allDefinedStatements = PsiTreeUtil.findChildrenOfType(element.getContainingFile(), OMTDefinedStatement.class);
+        // the container for this element that determines the accessibility level
+        final PsiElement comparableContainer = getComparableContainer(element);
+
+        return allDefinedStatements.stream().filter(
+                definedStatement -> isAccessible(definedStatement, comparableContainer)
+        ).collect(Collectors.toList());
+    }
+
+    private boolean isAccessible(OMTDefinedStatement definedStatement, PsiElement comparableContainer) {
+        assert isComparableContainer(comparableContainer);
+
+        if (definedStatement.getParent() == comparableContainer.getParent()) {
+            // comparable container and defined statement are part of the same block
+            // DEFINE QUERY A => ...
+            // DEFINE QUERY B => ...
+            // A is accessible for B, but B not for A.
+            return definedStatement.getStartOffsetInParent() < comparableContainer.getStartOffsetInParent();
+        }
+        // comparable container and defined statement are not part of the same block
+        if (((OMTFile) definedStatement.getContainingFile()).isPartOfRootBlock(definedStatement)) {
+            // if the defined statement is part of the root block,
+            return true;
+        }
+        // finally, check if the container and defined statement are part of the same model item (Activity, Component etc)
+        // in which case the defined statement is available to all members of that model item
+        return getModelUtil().getModelItemBlock(definedStatement).orElse(null) == getModelUtil().getModelItemBlock(comparableContainer).orElse(null);
     }
 
     public void annotateCall(@NotNull OMTCall call, @NotNull AnnotationHolder holder) {

@@ -4,13 +4,15 @@ import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.psi.PsiElement;
+import com.misset.opp.omt.psi.support.OMTDefinedStatement;
+import com.misset.opp.omt.psi.util.MemberUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getVariableUtil;
+import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 public abstract class OMTCompletion {
 
@@ -98,5 +100,22 @@ public abstract class OMTCompletion {
         setResolvedElementsForLocalVariables(element);
         setResolvedElementsForDeclaredVariables(element);
         setResolvedElementsForGlobalVariables(element);
+    }
+
+    protected void setResolvedElementsForDefinedQueries(PsiElement element) {
+        final MemberUtil memberUtil = getMemberUtil();
+        memberUtil.getAccessibleDefinedStatements(element)
+                .stream()
+                .filter(OMTDefinedStatement::isQuery)
+                .map(
+                        definedStatement -> memberUtil.parseDefinedToCallable(definedStatement.getDefineName()).getAsSuggestion()
+                ).forEach(
+                suggestion -> addPriorityElement(suggestion, DEFINED_STATEMENT_PRIORITY)
+        );
+    }
+
+    protected void setResolvedElementsForBuiltinOperators() {
+        getBuiltinUtil().getBuiltInOperatorsAsSuggestions()
+                .forEach(suggestion -> addPriorityElement(suggestion, BUILTIN_MEMBER_PRIORITY));
     }
 }
