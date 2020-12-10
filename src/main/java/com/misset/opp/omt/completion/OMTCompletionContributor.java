@@ -12,6 +12,13 @@ import com.intellij.psi.*;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
+import com.misset.opp.omt.completion.model.CommandBlockCompletion;
+import com.misset.opp.omt.completion.model.ModelCompletion;
+import com.misset.opp.omt.completion.model.ModelItemCompletion;
+import com.misset.opp.omt.completion.model.QueryBlockCompletion;
+import com.misset.opp.omt.completion.query.QueryFilterStepCompletion;
+import com.misset.opp.omt.completion.query.QueryFirstStepCompletion;
+import com.misset.opp.omt.completion.query.QueryNextStepCompletion;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
@@ -70,7 +77,11 @@ public class OMTCompletionContributor extends CompletionContributor {
         //extend(CompletionType.BASIC, PlatformPatterns.psiElement(), getCompletionProvider());
         ModelItemCompletion.register(this);
         ModelCompletion.register(this);
-        QueryStepCompletion.register(this);
+        QueryBlockCompletion.register(this);
+        CommandBlockCompletion.register(this);
+        QueryFirstStepCompletion.register(this);
+        QueryNextStepCompletion.register(this);
+        QueryFilterStepCompletion.register(this);
     }
 
     private void resolveErrorElement(PsiErrorElement element) {

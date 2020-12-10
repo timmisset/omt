@@ -1,5 +1,6 @@
-package com.misset.opp.omt.completion;
+package com.misset.opp.omt.completion.model;
 
+import com.misset.opp.omt.completion.OMTCompletionTestSuite;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
