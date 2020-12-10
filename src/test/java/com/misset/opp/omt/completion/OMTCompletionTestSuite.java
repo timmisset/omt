@@ -68,7 +68,14 @@ public class OMTCompletionTestSuite extends OMTTestSuite {
     }
 
     protected void assertCompletionContainsClasses(List<String> completionResult) {
-        assertContainsElements(completionResult, "http://ontologie#ClassA", "http://ontologie#ClassB", "http://ontologie#ClassC");
+        Arrays.stream(new String[]{"ClassA", "ClassB", "ClassC"})
+                .forEach(
+                        className -> assertTrue(completionResult
+                                .stream()
+                                .anyMatch(s ->
+                                        s.equals(String.format("http://ontologie#%s", className)) ||
+                                                s.equals(String.format("ont:%s", className)))
+                        ));
     }
 
 }

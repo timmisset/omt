@@ -86,6 +86,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         QueryNextStepCompletion.register(this);
         QueryFilterStepCompletion.register(this);
         QueryEquationStatementCompletion.register(this);
+        ParameterTypeCompletion.register(this);
     }
 
 
@@ -113,20 +114,13 @@ public class OMTCompletionContributor extends CompletionContributor {
                         result.addAllElements(resolvedElements);
                         return;
                     }
-                    if (element != null && getTokenUtil().isParameterType(element.getParent())) {
-                        setResolvedElementsForClasses(element);
-                        result.addAllElements(resolvedElements);
-                        return;
-                    }
+
                     setResolvedElementsForOperator(element);
                     resolvedElements.forEach(result::addElement);
                 }
                 if (getTokenUtil().isNamespaceMember(element)) {
                     assert element != null;
-                    if (getTokenUtil().isParameterType(element.getParent())) {
-                        setResolvedElementsForClasses(element);
-                        result.addAllElements(resolvedElements);
-                    } else if (element.getParent() instanceof OMTCurieElement &&
+                    if (element.getParent() instanceof OMTCurieElement &&
                             element.getParent().getParent() instanceof OMTQueryStep) {
                         setQueryStepSuggestions((OMTQueryStep) element.getParent().getParent(), element);
                         result.addAllElements(resolvedElements);

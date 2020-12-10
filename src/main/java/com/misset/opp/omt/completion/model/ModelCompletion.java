@@ -12,10 +12,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.completion.OMTCompletion;
 import com.misset.opp.omt.completion.OMTCompletionContributor;
-import com.misset.opp.omt.psi.OMTBlock;
-import com.misset.opp.omt.psi.OMTBlockEntry;
-import com.misset.opp.omt.psi.OMTSequenceItem;
-import com.misset.opp.omt.psi.OMTTypes;
+import com.misset.opp.omt.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -51,6 +48,8 @@ public class ModelCompletion extends OMTCompletion {
                         PlatformPatterns.psiElement(OMTTypes.PROPERTY)              // or the PROVIDE_MODEL_ENTRY (MODEL: ENTRY)
                 ).inside(
                         PlatformPatterns.psiElement(OMTSequenceItem.class)
+                ).andNot(
+                        PlatformPatterns.psiElement().inside(OMTParameterWithType.class)
                 );
         completionContributor.extend(CompletionType.BASIC, sequencePattern, new ModelCompletion().getCompletionProvider(false));
     }
