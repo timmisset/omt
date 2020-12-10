@@ -57,7 +57,7 @@ public abstract class OMTQueryPathResolvableImpl extends OMTQueryImpl implements
     @Override
     public List<Resource> resolveToResource() {
         // lookback when there is more than one step in this query
-        return resolveToResource(getQueryStepList().size() > 1);
+        return resolveToResource(true);
     }
 
     @Override

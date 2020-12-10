@@ -1,6 +1,7 @@
 package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.OMTNegatedStep;
 import com.misset.opp.omt.psi.OMTQuery;
@@ -84,7 +85,7 @@ class OMTQueryPathResolvableImplTest extends OMTTestSuite {
     }
 
     @Test
-    void resolveToResourceUsesLookbackWhenMoreThan1StepInPath() {
+    void resolveToResourceUsesLookback() {
         doReturn(null).when(queryPath).resolveToResource(anyBoolean());
         doReturn(Arrays.asList(mock(OMTQueryStep.class), mock(OMTQueryStep.class))).when(queryPath).getQueryStepList();
         queryPath.resolveToResource();
@@ -92,15 +93,8 @@ class OMTQueryPathResolvableImplTest extends OMTTestSuite {
     }
 
     @Test
-    void resolveToResourceDoesNotUseLookbackWhen1StepInPath() {
-        doReturn(null).when(queryPath).resolveToResource(anyBoolean());
-        doReturn(Arrays.asList(mock(OMTQueryStep.class))).when(queryPath).getQueryStepList();
-        queryPath.resolveToResource();
-        verify(queryPath).resolveToResource(eq(false));
-    }
-
-    @Test
     void resolveToResourceReturnsEmptyListWhenNoSteps() {
+        doReturn(mock(PsiElement.class)).when(queryPath).getParent();
         doReturn(Collections.emptyList()).when(queryPath).getQueryStepList();
         assertEquals(Collections.EMPTY_LIST, queryPath.resolveToResource());
     }

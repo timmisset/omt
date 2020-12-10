@@ -2,8 +2,11 @@ package com.misset.opp.omt.completion;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.psi.OMTEquationStatement;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
+import com.misset.opp.omt.psi.OMTQuery;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.Arrays;
@@ -20,6 +23,21 @@ public abstract class RDFCompletion extends OMTCompletion {
         Arrays.asList("string", "integer", "boolean", "date").forEach(
                 type -> addPriorityElement("string", 1)
         );
+    }
+
+    protected void setResolvedElementsForComparableTypes(PsiElement element) {
+        final OMTQuery query = (OMTQuery) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTQuery && parent.getParent() instanceof OMTEquationStatement);
+        if (query == null) {
+            return;
+        }
+
+        final OMTEquationStatement equationStatement = (OMTEquationStatement) query.getParent();
+        final List<Resource> resources = equationStatement.getOpposite(query).resolveToResource();
+        if (!resources.isEmpty()) {
+            getRDFModelUtil().getComparableOptions(resources).forEach(
+                    resource -> setCurieSuggestion(query, resource, false, EQUATION_PRIORITY)
+            );
+        }
     }
 
     protected void setCurieSuggestion(PsiElement elementAt, Resource resource, boolean reverse, int priority) {

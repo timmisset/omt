@@ -11,25 +11,26 @@ import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.completion.OMTCompletionContributor;
 import org.jetbrains.annotations.NotNull;
 
-public class QueryFirstStepCompletion extends QueryCompletion {
+/**
+ * The EquationStatement completion will do a type-check on the other side of the equation
+ * When this can be resolved to a specific type or class it will show comparable options
+ * This extends to showing potential implementations for a class
+ */
+public class QueryEquationStatementCompletion extends QueryCompletion {
 
     public static void register(OMTCompletionContributor completionContributor) {
-        final ElementPattern<PsiElement> pattern =
-                PlatformPatterns.psiElement().inside(FIRST_QUERY_STEP_PATTERN).andNot(
-                        PlatformPatterns.psiElement().inside(FILTER_STEP_PATTERN)
-                );
+        final ElementPattern<PsiElement> pattern = PlatformPatterns.psiElement().inside(EQUATION_STATEMENT_PATTERN);
         completionContributor.extend(CompletionType.BASIC, pattern,
-                new QueryFirstStepCompletion().getCompletionProvider());
+                new QueryEquationStatementCompletion().getCompletionProvider());
     }
 
     public CompletionProvider<CompletionParameters> getCompletionProvider() {
         return new CompletionProvider<CompletionParameters>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
-                // The first step of the query will suggest starting points of the query
                 PsiElement element = parameters.getPosition();
-                // all classes and types, which can be traversed using: /ont:ClassA / ^rdf:type ...
-                setResolvedElementsForClasses(element);
+
+                setResolvedElementsForComparableTypes(element);
                 // all known variables at this point
                 setResolvedElementsForVariables(element);
                 // all accessible queries
