@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-class QueryFilterStepCompletionTest extends OMTCompletionTestSuite {
+class QueryEquationStatementCompletionTest extends OMTCompletionTestSuite {
 
     @BeforeEach
     @Override
@@ -23,23 +23,14 @@ class QueryFilterStepCompletionTest extends OMTCompletionTestSuite {
     }
 
     @Test
-    void queryFilterFirstStep() {
+    void equationStatement() {
         String content = "queries: |\n" +
-                "   DEFINE QUERY myQuery => /ont:ClassA [<caret>]";
+                "   DEFINE QUERY myQuery => /ont:ClassC [rdf:type == <caret>]";
         final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
         assertCompletionContainsBuiltinOperators(completionLookupElements);
         assertCompletionContainsGlobalVariables(completionLookupElements);
-        assertContainsElements(completionLookupElements, "ont:booleanProperty", "ont:classProperty", "ont:stringProperty", "rdf:type");
+        assertContainsElements(completionLookupElements, "ont:ClassCImpl", "ont:ClassCImpl");
     }
 
-    @Test
-    void queryFilterNextStep() {
-        String content = "queries: |\n" +
-                "   DEFINE QUERY myQuery => /ont:ClassA [ont:booleanProperty / <caret>]";
-        final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
-        assertCompletionContainsBuiltinOperators(completionLookupElements);
-        assertCompletionDoesntGlobalVariables(completionLookupElements);
-        assertContainsElements(completionLookupElements, "^ont:booleanProperty", "^rdf:type");
-    }
 }
 

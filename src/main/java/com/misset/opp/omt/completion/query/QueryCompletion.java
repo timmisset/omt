@@ -5,6 +5,7 @@ import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.completion.RDFCompletion;
+import com.misset.opp.omt.psi.OMTEquationStatement;
 import com.misset.opp.omt.psi.OMTQueryFilter;
 import com.misset.opp.omt.psi.OMTQueryPath;
 import com.misset.opp.omt.psi.OMTQueryStep;
@@ -18,6 +19,8 @@ import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 public abstract class QueryCompletion extends RDFCompletion {
 
     protected static final ElementPattern<OMTQueryPath> QUERY_PATH_PATTERN = PlatformPatterns.psiElement(OMTQueryPath.class);
+    protected static final ElementPattern<OMTEquationStatement> EQUATION_STATEMENT_PATTERN =
+            PlatformPatterns.psiElement(OMTEquationStatement.class);
     protected static final ElementPattern<OMTQueryStep> FIRST_QUERY_STEP_PATTERN =
             PlatformPatterns.psiElement(OMTQueryStep.class).atStartOf(QUERY_PATH_PATTERN);
     protected static final ElementPattern<OMTQueryStep> NEXT_QUERY_STEP_PATTERN =

@@ -64,3 +64,7 @@ ont:ClassCImpl
   rdf:type ont:ClassC ;
   ont:omschrijving "Test"^^xsd:string ;
 .
+ont:ClassCImpl2
+  rdf:type ont:ClassC ;
+  ont:omschrijving "Test 2"^^xsd:string ;
+.

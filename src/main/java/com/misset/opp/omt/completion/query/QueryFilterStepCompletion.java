@@ -18,9 +18,9 @@ public class QueryFilterStepCompletion extends QueryCompletion {
     // it's a filter the context is known (/pol:Class)
 
     public static void register(OMTCompletionContributor completionContributor) {
-        final ElementPattern<PsiElement> pattern = PlatformPatterns.psiElement().inside(FIRST_FILTER_STEP_PATTERN).andNot(
-                PlatformPatterns.psiElement().inside(NEXT_QUERY_STEP_PATTERN)
-        );
+        final ElementPattern<PsiElement> pattern = PlatformPatterns.psiElement().inside(FIRST_FILTER_STEP_PATTERN)
+                .andNot(PlatformPatterns.psiElement().inside(NEXT_QUERY_STEP_PATTERN))
+                .andNot(PlatformPatterns.psiElement().inside(EQUATION_STATEMENT_PATTERN));
         completionContributor.extend(CompletionType.BASIC, pattern,
                 new QueryFilterStepCompletion().getCompletionProvider());
     }

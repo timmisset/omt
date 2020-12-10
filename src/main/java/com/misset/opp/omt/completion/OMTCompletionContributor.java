@@ -8,14 +8,17 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.*;
-import com.intellij.psi.tree.TokenSet;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.completion.model.CommandBlockCompletion;
 import com.misset.opp.omt.completion.model.ModelCompletion;
 import com.misset.opp.omt.completion.model.ModelItemCompletion;
 import com.misset.opp.omt.completion.model.QueryBlockCompletion;
+import com.misset.opp.omt.completion.query.QueryEquationStatementCompletion;
 import com.misset.opp.omt.completion.query.QueryFilterStepCompletion;
 import com.misset.opp.omt.completion.query.QueryFirstStepCompletion;
 import com.misset.opp.omt.completion.query.QueryNextStepCompletion;
@@ -82,27 +85,9 @@ public class OMTCompletionContributor extends CompletionContributor {
         QueryFirstStepCompletion.register(this);
         QueryNextStepCompletion.register(this);
         QueryFilterStepCompletion.register(this);
+        QueryEquationStatementCompletion.register(this);
     }
 
-    private void resolveErrorElement(PsiErrorElement element) {
-        final List<String> expectedTypesFromError = getExpectedTypesFromError(element);
-        if (expectedTypesFromError.contains("define query statement")) {
-            addQueryExamples();
-        }
-        if (expectedTypesFromError.contains("define command statement")) {
-            addCommandExamples();
-        }
-    }
-
-    private void addQueryExamples() {
-        resolvedElements.add(LookupElementBuilder.create("DEFINE QUERY"));
-        resolvedElements.add(LookupElementBuilder.create("DEFINE QUERY myQuery() => 'hello world';"));
-    }
-
-    private void addCommandExamples() {
-        resolvedElements.add(LookupElementBuilder.create("DEFINE COMMAND"));
-        resolvedElements.add(LookupElementBuilder.create("DEFINE COMMAND myCommand() => { @LOG('hello world'); }"));
-    }
 
     private CompletionProvider<CompletionParameters> getCompletionProvider() {
         return new CompletionProvider<CompletionParameters>() {
@@ -114,28 +99,7 @@ public class OMTCompletionContributor extends CompletionContributor {
                 }
 
                 PsiElement element = parameters.getPosition();
-                if (element.getParent() instanceof PsiErrorElement) {
-                    resolveErrorElement((PsiErrorElement) element.getParent());
-                    result.addAllElements(resolvedElements);
-                    return;
-                }
 
-                while (getTokenUtil().isWhiteSpace(element) && element != null) {
-                    element = element.getParent();
-                }
-                // !ModelItemType
-                if (getTokenUtil().isModelItemType(element)) {
-                    getModelUtil().getModelRootItems()
-                            .stream()
-                            .map(label -> (dummyPlaceHolder.startsWith("!") ? "!" : "") + label)
-                            .forEach(label -> result.addElement(LookupElementBuilder.create(label)));
-                }
-                // entry: for a model item
-                if (getTokenUtil().isProperty(element)) {
-                    setAttributeSuggestions(element, true);
-                    result.addAllElements(resolvedElements);
-                    return;
-                }
                 if (getTokenUtil().isCommand(element)) {
                     setResolvedElementsForCommand(element);
                     result.addAllElements(resolvedElements);
@@ -206,35 +170,6 @@ public class OMTCompletionContributor extends CompletionContributor {
         }
     }
 
-    private PsiElement checkSemicolon(PsiElement element) {
-        if (element.getNode().getElementType() != OMTTypes.SEMICOLON) {
-            return element;
-        } // only process when currently at semicolon
-        TokenSet skipElements = TokenSet.create(TokenType.WHITE_SPACE, OMTTypes.SEMICOLON);
-        while (element != null &&
-                skipElements.contains(element.getNode().getElementType())) {
-            element = element.getNode().getTreePrev().getPsi();
-        }
-        return element;
-    }
-
-    private PsiElement checkWrappers(PsiElement element) {
-        TokenSet wrapperElements = TokenSet.create(OMTTypes.SCRIPT_CONTENT, OMTTypes.SCRIPT_LINE);
-        while (element != null && wrapperElements.contains(element.getNode().getElementType())) {
-            element = element.getLastChild();
-        }
-        return element;
-    }
-
-    private PsiElement getUsableElement(PsiElement element) {
-        if (element == null) {
-            return null;
-        }
-        element = checkSemicolon(element);
-        element = checkWrappers(element);
-        return element;
-    }
-
     @Override
     public void beforeCompletion(@NotNull CompletionInitializationContext context) {
         final String identifier = new PlaceholderProvider(context).getIdentifier();
@@ -242,45 +177,6 @@ public class OMTCompletionContributor extends CompletionContributor {
             context.setDummyIdentifier(identifier);
         }
     }
-
-    @Override
-    public void duringCompletion(@NotNull CompletionInitializationContext context) {
-
-        super.duringCompletion(context);
-    }
-
-    //    /**
-//     * This method is used to check if the current caret position can be used to determine the type of completion
-//     * that can be expected. Since IntelliJ will actually parse the document with a placeholder and resolve that
-//     * placeholder to a PsiElement, the correct template must be used or the Lexer or Grammar will throw
-//     *
-//     * @param context
-//     */
-//    @Override
-//    public void beforeCompletion(@NotNull CompletionInitializationContext context) {
-//        isResolved = false;
-//        resolvedElements = new ArrayList<>();
-//        resolvedSuggestions = new ArrayList<>();
-//        dummyPlaceHolderSet = false;
-//
-//        PsiElement elementAtCaret = context.getFile().findElementAt(context.getCaret().getOffset());
-//        elementAtCaret = getUsableElement(elementAtCaret);
-//        if (elementAtCaret == null) { // EOF
-//            // no element at caret, use the DUMMY_ENTRY_VALUE
-//            final PsiElement lastChild = context.getFile().getLastChild();
-//            if (lastChild instanceof PsiErrorElement) {
-//                List<String> expectedTypesAtDummyBlock = getExpectedTypesFromError((PsiErrorElement) lastChild);
-//                if (!expectedTypesAtDummyBlock.isEmpty()) {
-//                    setDummyContextFromExpectedList(expectedTypesAtDummyBlock, context, false, (PsiErrorElement) lastChild);
-//                    return;
-//                }
-//            }
-//            setDummyPlaceHolder(DUMMY_ENTRY, context);
-//            return;
-//        }
-//        elementAtCaret = getUsableElement(elementAtCaret);
-//        trySuggestionsForCurrentElementAt(elementAtCaret.getParent(), elementAtCaret, context);
-//    }
 
     private void trySuggestionsForCurrentElementAt(PsiElement element, PsiElement elementAtCaret, CompletionInitializationContext context) {
         if (element instanceof OMTBlock ||

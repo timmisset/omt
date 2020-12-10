@@ -18,6 +18,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * CommandBlockCompletion will show templates that can be used for completions
+ */
 public class CommandBlockCompletion extends OMTCompletion {
     private static final String SIMPLE_TEMPLATE = "DEFINE COMMAND yourCommandName => { RETURN true; }";
     private static final String PARAMETER_TEMPLATE = "DEFINE COMMAND yourCommandName($param) => { RETURN $param; }";
