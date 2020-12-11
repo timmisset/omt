@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -389,6 +388,14 @@ public class RDFModelUtil {
         return model.createResource(String.format("%s%s", XSD, name));
     }
 
+    public Resource getBooleanType() {
+        return getPrimitiveTypeAsResource("boolean");
+    }
+
+    public Resource getStringType() {
+        return getPrimitiveTypeAsResource("string");
+    }
+
     public List<Resource> getPrimitiveTypeAsResourceList(String name) {
         return Collections.singletonList(getPrimitiveTypeAsResource(name));
     }
@@ -509,30 +516,46 @@ public class RDFModelUtil {
         return description.toString();
     }
 
-    public void validateType(Resource resource, List<Resource> sender, BiConsumer<List<Resource>, List<Resource>> onFail) {
-        validateType(Collections.singletonList(resource), sender, onFail);
-    }
-
-
     /**
-     * Validate if the type of the sender is acceptable by the receiver
+     * Returns a copy of the input and all subclasses
      *
-     * @param receiver
-     * @param sender
+     * @param resources
      * @return
      */
-    public void validateType(
-            List<Resource> receiver,
-            List<Resource> sender,
-            BiConsumer<List<Resource>, List<Resource>> onFail) {
-        // acceptable types for receiver
-        List<Resource> acceptableTypes = new ArrayList<>(receiver);
-        acceptableTypes.addAll(allSubClasses(receiver));
+    public List<Resource> appendAllSubclasses(List<Resource> resources) {
+        List<Resource> allTypes = new ArrayList<>(resources);
+        allTypes.addAll(allSubClasses(resources));
+        return getDistinctResources(allTypes);
+    }
 
-        List<Resource> argumentTypes = new ArrayList<>(sender);
-        argumentTypes.addAll(allSubClasses(argumentTypes));
-        argumentTypes = getDistinctResources(getClasses(argumentTypes));
+    public List<Resource> appendAllSubclasses(Resource resource) {
+        return appendAllSubclasses(Collections.singletonList(resource));
+    }
 
+    /**
+     * Returns a copy of the input, all subclasses and implementations of those classes
+     *
+     * @param resources
+     * @return
+     */
+    public List<Resource> appendAllSubclassesAndImplementations(List<Resource> resources) {
+        List<Resource> allTypes = new ArrayList<>(resources);
+        allTypes.addAll(allSubClasses(allTypes));
+        return getDistinctResources(getClasses(allTypes));
+    }
+
+    /**
+     * Validate if the 2 collections with types are compatible
+     * For acceptableTypes, run it through the appendSubclasses first, to make sure it contains all acceptable subtypes also
+     * For argumentTypes, run it through the appendAllSubclassesAndImplementations first
+     *
+     * @param acceptableTypes
+     * @param argumentTypes
+     * @return
+     */
+    public boolean validateType(
+            List<Resource> acceptableTypes,
+            List<Resource> argumentTypes) {
         if (acceptableTypes.isEmpty() ||
                 argumentTypes.isEmpty() ||
                 acceptableTypes.stream().noneMatch(this::isClassOrType) ||
@@ -540,16 +563,16 @@ public class RDFModelUtil {
                 argumentTypes.contains(this.getAnyType())) {
             // when the argument type cannot be resolved to specific class or type it's resolved to any
             // which means we cannot validate the call
-            return;
+            return true;
         }
         for (Resource argumentType : argumentTypes) {
             if (acceptableTypes.stream().anyMatch(resource ->
                     areComparable(resource, argumentType)
             )) {
-                return; // acceptable type found
+                return true; // acceptable type found
             }
         }
-        onFail.accept(acceptableTypes, argumentTypes);
+        return false;
     }
 
     public Resource getResource(String iri) {

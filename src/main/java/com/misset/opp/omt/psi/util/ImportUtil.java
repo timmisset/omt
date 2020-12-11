@@ -99,21 +99,28 @@ public class ImportUtil {
         return String.format("frontend/libs/%s/src/%s.module.omt", module, module);
     }
 
+    public OMTFile getFile(OMTImport omtImport) {
+        return getFile(omtImport, omtImport.getContainingFile());
+    }
+
+    public OMTFile getFile(OMTImport omtImport, PsiFile originalFile) {
+        VirtualFile importedFile = getImportedFile(omtImport, originalFile.getVirtualFile());
+        return importedFile != null ? (OMTFile) getPsiManager(omtImport.getProject()).findFile(importedFile) : null;
+    }
+
     public void annotateImport(OMTImport omtImport, AnnotationHolder holder) {
-        VirtualFile importedFile = getImportedFile(omtImport);
-        if (importedFile == null) {
+        final OMTFile omtFile = getFile(omtImport);
+        if (omtFile == null) {
             holder.newAnnotation(HighlightSeverity.ERROR,
                     String.format("%s could not be resolved to a file", omtImport.getImportSource().getText()))
                     .range(omtImport)
                     .create();
         } else {
-            OMTFile exportingFile = (OMTFile) getPsiManager(omtImport.getProject()).findFile(importedFile);
             if (omtImport.getMemberList() != null) {
                 omtImport.getMemberList().getMemberListItemList().forEach(omtMemberListItem -> {
                     String memberName = omtMemberListItem.getName().trim();
-                    if (exportingFile != null &&
-                            omtMemberListItem.getMember() != null &&
-                            !exportingFile.getExportedMember(memberName).isPresent()) {
+                    if (omtMemberListItem.getMember() != null &&
+                            !omtFile.getExportedMember(memberName).isPresent()) {
                         holder.newAnnotation(HighlightSeverity.ERROR,
                                 String.format("%s is not an exported member of %s", memberName, omtImport.getImportSource().getText()))
                                 .range(omtMemberListItem.getMember())
