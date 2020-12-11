@@ -23,14 +23,29 @@ class QueryEquationStatementCompletionTest extends OMTCompletionTestSuite {
     }
 
     @Test
-    void equationStatement() {
+    void equationStatementImplementation() {
         String content = "queries: |\n" +
                 "   DEFINE QUERY myQuery => /ont:ClassC [rdf:type == <caret>]";
         final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
-        assertCompletionContainsBuiltinOperators(completionLookupElements);
         assertCompletionContainsGlobalVariables(completionLookupElements);
-        assertContainsElements(completionLookupElements, "ont:ClassCImpl", "ont:ClassCImpl");
+        assertContainsElements(completionLookupElements, "ont:ClassCImpl", "ont:ClassCImpl2");
     }
 
+    @Test
+    void equationStatementTypeCheck() {
+        String content = "" +
+                "queries:|\n" +
+                "   DEFINE QUERY query => 'test';\n" +
+                "   DEFINE QUERY query2 => 12;\n" +
+                "\n" +
+                "commands: |\n" +
+                "   DEFINE COMMAND myCommand => {\n" +
+                "       IF 'x' == <caret>\n" +
+                "   }";
+        final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
+        assertCompletionContainsGlobalVariables(completionLookupElements);
+        assertContainsElements(completionLookupElements, "query");
+        assertDoesntContain(completionLookupElements, "query2");
+    }
 }
 

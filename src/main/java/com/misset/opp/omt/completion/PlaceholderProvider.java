@@ -3,6 +3,7 @@ package com.misset.opp.omt.completion;
 import com.intellij.codeInsight.completion.CompletionInitializationContext;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.TokenType;
 import com.misset.opp.omt.psi.OMTBlock;
 import com.misset.opp.omt.psi.OMTBlockEntry;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +26,6 @@ public class PlaceholderProvider {
     private static final String PROVIDE_MODEL_ENTRY = "MODEL: ENTRY";
     private static final String PROVIDE_QUERY = "Operator();";
 
-
     private final CompletionInitializationContext context;
     private PsiElement elementAtCaret;
     private PsiElement contextElement;
@@ -42,24 +42,24 @@ public class PlaceholderProvider {
             return context.getDummyIdentifier();
         }
         // check if the file has an error in the grammar parser before completion
-        if (hasErrorState()) {
+        if (hasErrorState() && setFromErrorState()) {
             // try to resolve it, only if the error element is close to the caret so it can be safely assumed
             // the placeholder will provide the missing element in the grammar
-            if (setFromErrorState()) {
-                return placeholder;
-            }
+            return placeholder;
         }
         if (provideModelEntry()) {
-            // Model or Block entry at the start of the line, set an entry placeholder
+            // Model or Block entry at the start of the line (including indentation), set an entry placeholder
             return PROVIDE_MODEL_ENTRY;
         }
-
         return context.getDummyIdentifier();
     }
 
     private boolean provideModelEntry() {
-        return (startOfLine() && contextElement.getParent() instanceof OMTBlockEntry) ||
-                (startOfLine() && contextElement.getParent() instanceof OMTBlock);
+        final PsiElement elementParent = contextElement.getParent();
+        return startOfLine() && (
+                elementParent instanceof OMTBlockEntry ||
+                        elementParent instanceof OMTBlock               // includes all block types
+        );
     }
 
     private boolean hasErrorState() {
@@ -115,10 +115,14 @@ public class PlaceholderProvider {
     }
 
     private boolean startOfLine() {
-        return contextElement != null &&
-                contextElement.getNode() != null &&
-                contextElement.getNode().getTreePrev() != null &&
-                contextElement.getNode().getTreePrev().getText().equals("\n");
+        PsiElement el = contextElement.getPrevSibling();
+        while (el != null && !el.getText().startsWith("\n")) {
+            if (el.getNode().getElementType() != TokenType.WHITE_SPACE) {
+                return false;
+            }
+            el = el.getPrevSibling();
+        }
+        return true;
     }
 
     private void setElementAtCaret() {

@@ -7,9 +7,20 @@ import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.patterns.ElementPattern;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.completion.OMTCompletionContributor;
+import com.misset.opp.omt.psi.OMTEquationStatement;
+import com.misset.opp.omt.psi.OMTQuery;
+import com.misset.opp.omt.psi.support.OMTCallable;
+import com.misset.opp.omt.util.RDFModelUtil;
+import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.function.Predicate;
+
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
 /**
  * The EquationStatement completion will do a type-check on the other side of the equation
@@ -30,13 +41,26 @@ public class QueryEquationStatementCompletion extends QueryCompletion {
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                 PsiElement element = parameters.getPosition();
 
-                setResolvedElementsForComparableTypes(element);
+                // get the query of <caret> side of the equation
+                final OMTQuery query = (OMTQuery) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTQuery && parent.getParent() instanceof OMTEquationStatement);
+                if (query == null) {
+                    return;
+                }
+
+                final OMTEquationStatement equationStatement = (OMTEquationStatement) query.getParent();
+                final List<Resource> resources = equationStatement.getOpposite(query).resolveToResource();
+
+                final RDFModelUtil rdfModelUtil = getRDFModelUtil();
+                final Predicate<OMTCallable> acceptsInput = callable -> rdfModelUtil.validateType(resources, callable.getReturnType());
+
+                // set the comparable types from the
+                setResolvedElementsForComparableTypes(element, resources);
                 // all known variables at this point
                 setResolvedElementsForVariables(element);
                 // all accessible queries
-                setResolvedElementsForDefinedQueries(element);
+                setResolvedElementsForDefinedQueries(element, acceptsInput);
                 // all builtin operators
-                setResolvedElementsForBuiltinOperators();
+                setResolvedElementsForBuiltinOperators(acceptsInput);
 
                 complete(result);
             }

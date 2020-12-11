@@ -3,7 +3,12 @@ package com.misset.opp.omt.completion;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.patterns.ElementPattern;
+import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
+import com.misset.opp.omt.psi.OMTImportBlock;
+import com.misset.opp.omt.psi.OMTMemberListItem;
+import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.util.MemberUtil;
 import org.jetbrains.annotations.NotNull;
@@ -11,10 +16,16 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 public abstract class OMTCompletion {
+
+    protected static final ElementPattern<OMTMemberListItem> IMPORT_MEMBER_PATTERN =
+            PlatformPatterns.psiElement(OMTMemberListItem.class).inside(
+                    OMTImportBlock.class
+            );
 
     protected final String ATTRIBUTES = "attributes";
 
@@ -90,7 +101,7 @@ public abstract class OMTCompletion {
         );
     }
 
-    protected void setResolvedElementsForGlobalVariables(PsiElement element) {
+    protected void setResolvedElementsForGlobalVariables() {
         getVariableUtil().getGlobalVariables().forEach(
                 omtVariable -> addPriorityElement(omtVariable, DECLARED_VARIABLE_PRIORITY)
         );
@@ -99,23 +110,55 @@ public abstract class OMTCompletion {
     protected void setResolvedElementsForVariables(PsiElement element) {
         setResolvedElementsForLocalVariables(element);
         setResolvedElementsForDeclaredVariables(element);
-        setResolvedElementsForGlobalVariables(element);
+        setResolvedElementsForGlobalVariables();
+    }
+
+    protected void setResolvedElementsForDefinedQueries(PsiElement element, Predicate<OMTCallable> typeCheck) {
+        setResolvedElementsForDefined(element, OMTDefinedStatement::isQuery, typeCheck);
     }
 
     protected void setResolvedElementsForDefinedQueries(PsiElement element) {
+        setResolvedElementsForDefined(element, OMTDefinedStatement::isQuery, callable -> true);
+    }
+
+    protected void setResolvedElementsForDefinedCommands(PsiElement element, Predicate<OMTCallable> typeCheck) {
+        setResolvedElementsForDefined(element, OMTDefinedStatement::isCommand, typeCheck);
+    }
+
+    protected void setResolvedElementsForDefinedCommands(PsiElement element) {
+        setResolvedElementsForDefined(element, OMTDefinedStatement::isCommand, callable -> true);
+    }
+
+    private void setResolvedElementsForDefined(PsiElement element,
+                                               Predicate<OMTDefinedStatement> condition,
+                                               Predicate<OMTCallable> typeCheck) {
         final MemberUtil memberUtil = getMemberUtil();
         memberUtil.getAccessibleDefinedStatements(element)
                 .stream()
-                .filter(OMTDefinedStatement::isQuery)
-                .map(
-                        definedStatement -> memberUtil.parseDefinedToCallable(definedStatement.getDefineName()).getAsSuggestion()
-                ).forEach(
-                suggestion -> addPriorityElement(suggestion, DEFINED_STATEMENT_PRIORITY)
-        );
+                .filter(condition)
+                .map(definedStatement -> memberUtil.parseDefinedToCallable(definedStatement.getDefineName()))
+                .filter(typeCheck)
+                .map(OMTCallable::getAsSuggestion)
+                .forEach(
+                        suggestion -> addPriorityElement(suggestion, DEFINED_STATEMENT_PRIORITY)
+                );
     }
 
     protected void setResolvedElementsForBuiltinOperators() {
-        getBuiltinUtil().getBuiltInOperatorsAsSuggestions()
+        setResolvedElementsForBuiltinOperators(callable -> true);
+    }
+
+    protected void setResolvedElementsForBuiltinCommands() {
+        setResolvedElementsForBuiltinCommands(callable -> true);
+    }
+
+    protected void setResolvedElementsForBuiltinOperators(Predicate<OMTCallable> condition) {
+        getBuiltinUtil().getBuiltInOperatorsAsSuggestions(condition)
+                .forEach(suggestion -> addPriorityElement(suggestion, BUILTIN_MEMBER_PRIORITY));
+    }
+
+    protected void setResolvedElementsForBuiltinCommands(Predicate<OMTCallable> condition) {
+        getBuiltinUtil().getBuiltInCommandsAsSuggestions(condition)
                 .forEach(suggestion -> addPriorityElement(suggestion, BUILTIN_MEMBER_PRIORITY));
     }
 }

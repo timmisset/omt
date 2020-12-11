@@ -1,6 +1,7 @@
 package com.misset.opp.omt.completion;
 
 import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.psi.PsiFile;
 import com.misset.opp.omt.OMTTestSuite;
 
 import java.util.Arrays;
@@ -30,7 +31,12 @@ public class OMTCompletionTestSuite extends OMTTestSuite {
     }
 
     protected List<String> getCompletionLookupElements(String content) {
-        myFixture.configureByText(getFileName(), content);
+        // we need to create real files for the import completions to work, they require relative lookups to determine
+        // the imported file
+        final PsiFile psiFile = myFixture.addFileToProject(String.format("tmp/%s", getFileName()), content);
+        // then set the fixture on the added file
+        myFixture.configureFromExistingVirtualFile(psiFile.getVirtualFile());
+        // finally run the completions
         final LookupElement[] lookupElements = myFixture.completeBasic();
         return parseSuggestions(lookupElements);
     }
@@ -47,20 +53,32 @@ public class OMTCompletionTestSuite extends OMTTestSuite {
         assertContainsElements(completionResult, "$username", "$medewerkerGraph", "$offline");
     }
 
-    protected void assertCompletionDoesntGlobalVariables(List<String> completionResult) {
+    protected void assertCompletionNOTContainsGlobalVariables(List<String> completionResult) {
         assertDoesntContain(completionResult, "$username", "$medewerkerGraph", "$offline");
     }
 
-    protected void assertCompletionDoesntContainBuiltinOperators(List<String> completionResult) {
+    protected void assertCompletionNOTContainsBuiltinOperators(List<String> completionResult) {
         final List<String> builtInOperatorsAsSuggestions = getBuiltinUtil().getBuiltInOperatorsAsSuggestions();
         assertNotEmpty(builtInOperatorsAsSuggestions);
         assertDoesntContain(completionResult, builtInOperatorsAsSuggestions);
+    }
+
+    protected void assertCompletionNOTContainsBuiltinCommands(List<String> completionResult) {
+        final List<String> builtInCommandsAsSuggestions = getBuiltinUtil().getBuiltInCommandsAsSuggestions();
+        assertNotEmpty(builtInCommandsAsSuggestions);
+        assertDoesntContain(completionResult, builtInCommandsAsSuggestions);
     }
 
     protected void assertCompletionContainsBuiltinOperators(List<String> completionResult) {
         final List<String> builtInOperatorsAsSuggestions = getBuiltinUtil().getBuiltInOperatorsAsSuggestions();
         assertNotEmpty(builtInOperatorsAsSuggestions);
         assertContainsElements(completionResult, builtInOperatorsAsSuggestions);
+    }
+
+    protected void assertCompletionContainsBuiltinCommands(List<String> completionResult) {
+        final List<String> builtInCommandsAsSuggestions = getBuiltinUtil().getBuiltInCommandsAsSuggestions();
+        assertNotEmpty(builtInCommandsAsSuggestions);
+        assertContainsElements(completionResult, builtInCommandsAsSuggestions);
     }
 
     protected void assertCompletionContainsClasses(String content) {

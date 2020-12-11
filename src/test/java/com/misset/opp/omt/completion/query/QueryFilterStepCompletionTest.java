@@ -28,6 +28,7 @@ class QueryFilterStepCompletionTest extends OMTCompletionTestSuite {
                 "   DEFINE QUERY myQuery => /ont:ClassA [<caret>]";
         final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
         assertCompletionContainsBuiltinOperators(completionLookupElements);
+        assertCompletionNOTContainsBuiltinCommands(completionLookupElements);
         assertCompletionContainsGlobalVariables(completionLookupElements);
         assertContainsElements(completionLookupElements, "ont:booleanProperty", "ont:classProperty", "ont:stringProperty", "rdf:type");
     }
@@ -38,7 +39,8 @@ class QueryFilterStepCompletionTest extends OMTCompletionTestSuite {
                 "   DEFINE QUERY myQuery => /ont:ClassA [ont:booleanProperty / <caret>]";
         final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
         assertCompletionContainsBuiltinOperators(completionLookupElements);
-        assertCompletionDoesntGlobalVariables(completionLookupElements);
+        assertCompletionNOTContainsBuiltinCommands(completionLookupElements);
+        assertCompletionNOTContainsGlobalVariables(completionLookupElements);
         assertContainsElements(completionLookupElements, "^ont:booleanProperty", "^rdf:type");
     }
 }

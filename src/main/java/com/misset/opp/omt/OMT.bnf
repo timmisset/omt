@@ -32,14 +32,14 @@ propertyLabel ::=                           PROPERTY { methods=[getPropertyLabel
 
 // a scalar single statement (multiline optional) following a property label
 scalar ::=                                  comment? scalarValue
-scalarValue ::=                             parameterWithType | variableAssignment | block | nakedString | query | script
+scalarValue ::=                             parameterWithType | variableAssignment | indentedBlock | nakedString | query | script
 
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indented, it must dedent
 sequence ::=                                sequenceItem+ | (indentToken sequenceItem+ dedentToken)
 sequenceItem ::=                            leading? SEQUENCE_BULLET (scalarValue | block)?
 
-genericBlock ::=                            leading? propertyLabel ((indentedBlock | sequence | scalar) | (indentToken (sequence | scalar) dedentToken)) {
+genericBlock ::=                            leading? propertyLabel ((indentedBlock | sequence | scalar) | (indentToken (sequence | scalar) dedentToken))? {
                                             extends=blockEntry
                                             methods=[getBlock]
 }
@@ -161,7 +161,7 @@ commandBlock ::=                            CURLY_OPEN (script | scriptLine+)? C
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
                                                 extends="com.misset.opp.omt.psi.resolvable.impl.OMTCommandBlockResolvableImpl" }
 // a scriptline is contained by the addition of the semicolon at the end
-scriptLine ::=                              leading? ((scriptContent SEMICOLON+) | commandBlock | logicalBlock)
+scriptLine ::=                              leading? ((scriptContent SEMICOLON*) | commandBlock | logicalBlock)
 // the contents of a script, contained by a scriptLine or Scalar
 scriptContent ::=                           declareVariable | variableAssignment | definePrefix | commandCall | assignmentStatement |
                                             addToCollection | removeFromCollection | logicalBlock | returnStatement | query
@@ -210,7 +210,7 @@ flagSignature ::=                           FLAG
 resolvableValue ::=                         query | commandCall {
                                               implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
                                               extends="com.misset.opp.omt.psi.resolvable.impl.OMTResolvableValueResolvableImpl" }
-logicalBlock ::=                            ifBlock commandBlock (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
+logicalBlock ::=                            ifBlock commandBlock? (ELSE_OPERATOR ifBlock commandBlock?)* elseBlock?
 ifBlock ::=                                 IF_OPERATOR (query | (PARENTHESES_OPEN query PARENTHESES_CLOSE))
 elseBlock ::=                               ELSE_OPERATOR commandBlock
 returnStatement ::=                         RETURN_OPERATOR resolvableValue?

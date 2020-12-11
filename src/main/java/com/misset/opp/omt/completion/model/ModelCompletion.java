@@ -68,7 +68,9 @@ public class ModelCompletion extends OMTCompletion {
     private void setAttributeSuggestions(PsiElement element, boolean fromBlockParent) {
         // the element is the placeholder that will be replaced by the completion
         // therefore, retrieve the json of the elements parent to determine the applicable fields
-        JsonObject json = getModelUtil().getJson(fromBlockParent ? getBlockParent(element) : element);
+        JsonObject json = fromBlockParent ?
+                getModelUtil().getJsonAtParentLevel(element) :
+                getModelUtil().getJson(element);
         List<String> existingSiblingEntryLabels = getExistingSiblingEntryLabels(element);
         if (json != null && json.has(ATTRIBUTES)) {
 

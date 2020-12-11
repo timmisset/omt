@@ -300,6 +300,10 @@ public class ModelUtil {
         return getJsonAtDepth(element, getModelDepth(element));
     }
 
+    public JsonObject getJsonAtParentLevel(PsiElement element) {
+        return getJsonAtDepth(element, getModelDepth(element) - 1);
+    }
+
     /**
      * use depth: -1 to get the last item in the tree
      * only use this to get the exact modeltree information

@@ -27,11 +27,36 @@ class ModelCompletionTest extends OMTCompletionTestSuite {
         String content = "model:\n" +
                 "   mijnActiviteit: !Activity\n" +
                 "       <caret>";
-        assertCompletionContains(content, "params:", "title:", "variables:");
+        final List<String> completionLookupElements = getCompletionLookupElements(content);
+        assertContainsElements(completionLookupElements, "params:", "title:", "variables:");
+        assertCompletionNOTContainsBuiltinOperators(completionLookupElements);
     }
 
     @Test
-    void modelNewEntryIndentation() {
+    void modelNewEntryOnIndentedBlock() {
+        String content = "model:\n" +
+                "   mijnActiviteit: !Activity\n" +
+                "       graphs:\n" +
+                "           <caret>";
+        final List<String> completionLookupElements = getCompletionLookupElements(content);
+        assertContainsElements(completionLookupElements, "edit:", "live:");
+        assertCompletionNOTContainsBuiltinOperators(completionLookupElements);
+    }
+
+    @Test
+    void modelNewEntryAfterIndentedBlock() {
+        String content = "model:\n" +
+                "   mijnActiviteit: !Activity\n" +
+                "       graphs:\n" +
+                "       <caret>";
+        final List<String> completionLookupElements = getCompletionLookupElements(content);
+        assertContainsElements(completionLookupElements, "params:", "title:", "variables:");
+        assertDoesntContain(completionLookupElements, "edit:", "live:");
+        assertCompletionNOTContainsBuiltinOperators(completionLookupElements);
+    }
+
+    @Test
+    void modelNewEntryNoIndentation() {
         String content = "model:\n" +
                 "   mijnActiviteit: !Activity\n" +
                 "   <caret>";
@@ -81,7 +106,7 @@ class ModelCompletionTest extends OMTCompletionTestSuite {
         final List<String> completionLookupElements = getCompletionLookupElements(content);
         assertContainsElements(completionLookupElements, "value:", "onChange:");
         assertDoesntContain(completionLookupElements, "name:");
-        assertCompletionDoesntContainBuiltinOperators(completionLookupElements);
+        assertCompletionNOTContainsBuiltinOperators(completionLookupElements);
     }
 }
 

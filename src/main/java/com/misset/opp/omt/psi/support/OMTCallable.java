@@ -45,6 +45,16 @@ public interface OMTCallable {
 
     void validateSignatureArgument(int index, OMTSignatureArgument argument) throws IncorrectSignatureArgument;
 
+    boolean acceptsArgument(int index, OMTSignatureArgument argument);
+
+    boolean acceptsArgument(int index, List<Resource> resources);
+
+    OMTParameter getParameter(int index);
+
+    Resource getParameterType(int index);
+
+    List<Resource> getAcceptableArgumentType(int index);
+
     String htmlDescription();
 
     String shortDescription();
