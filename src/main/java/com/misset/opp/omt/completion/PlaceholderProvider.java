@@ -14,6 +14,17 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * The PlaceholderProvider determines a valid placeholder based on the current caret position and possible
+ * error state the grammar parser might be in.
+ * IntelliJ inserts a placeholder on the place of caret when completion is triggered to have an anchor
+ * that can be used for completion. By default, the IntelliJRulezzzzz placeholder is used. However, in our
+ * grammar parser that token is not always valid. This provider will replace the default token with
+ * specific placeholders: PROVIDE_...
+ * <p>
+ * Try not to add any more complexity to this class, it's usually possible to change the flexibility of the
+ * grammar parser instead.
+ */
 public class PlaceholderProvider {
 
     private static final String EXPECTED_MODEL_ITEM_TYPE = "MODEL_ITEM_TYPE";
