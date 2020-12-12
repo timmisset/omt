@@ -13,7 +13,6 @@ import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.misset.opp.omt.psi.util.UtilManager.*;
 
@@ -194,31 +193,50 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     @Override
     public void validateSignatureArgument(int index, OMTSignatureArgument argument) throws IncorrectSignatureArgument {
+        List<Resource> acceptableTypes = getAcceptableArgumentType(index);
+        List<Resource> argumentTypes = getRDFModelUtil().appendAllSubclassesAndImplementations(argument.resolveToResource());
+        if (!getRDFModelUtil().validateType(acceptableTypes, argumentTypes)) {
+            throw new IncorrectSignatureArgument(getParameter(index), acceptableTypes, argumentTypes);
+        }
+    }
+
+    @Override
+    public boolean acceptsArgument(int index, OMTSignatureArgument argument) {
+        return acceptsArgument(index, argument.resolveToResource());
+    }
+
+    @Override
+    public boolean acceptsArgument(int index, List<Resource> resources) {
+        List<Resource> acceptableTypes = getAcceptableArgumentType(index);
+        List<Resource> argumentTypes = getRDFModelUtil().appendAllSubclassesAndImplementations(resources);
+        return getRDFModelUtil().validateType(acceptableTypes, argumentTypes);
+    }
+
+    @Override
+    public OMTParameter getParameter(int index) {
         OMTParameter parameter = index <= parameterList.size() - 1 ? parameterList.get(index) : null;
         if (parameter == null && hasRest()) {
             parameter = parameterList.get(parameterList.size() - 1);
         }
-        if (parameter == null) {
-            return;
-        } // cannot determine parameter, the validateSignature will catch this
+        return parameter;
+    }
 
-        if (parameter.getType() == null) {
-            return;
+    @Override
+    public Resource getParameterType(int index) {
+        final OMTParameter parameter = getParameter(index);
+        if (parameter == null || parameter.getType() == null || parameter.getType().getAsResource() == null) {
+            return null;
         }
-        final Resource parameterType = parameter.getType().getAsResource();
+        return parameter.getType().getAsResource();
+    }
+
+    @Override
+    public List<Resource> getAcceptableArgumentType(int index) {
+        final Resource parameterType = getParameterType(index);
         if (parameterType == null) {
-            return;
-        } // could not resolve the type to a Resource, for now, just leave it
-
-        OMTParameter finalParameter = parameter;
-        AtomicReference<IncorrectSignatureArgument> exception = new AtomicReference<>();
-        getRDFModelUtil().validateType(
-                parameterType, argument.resolveToResource(),
-                (acceptableTypes, argumentTypes) -> exception.set(new IncorrectSignatureArgument(finalParameter, acceptableTypes, argumentTypes))
-        );
-        if (exception.get() != null) {
-            throw exception.get();
+            return getRDFModelUtil().getAnyTypeAsList();
         }
+        return getRDFModelUtil().appendAllSubclasses(parameterType);
     }
 
     void setParametersFromDefined(OMTDefineParam parameters) {

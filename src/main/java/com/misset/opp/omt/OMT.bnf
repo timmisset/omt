@@ -17,12 +17,14 @@
 }
 
 // the end of the file (or the entire file) can be a (set of) comment(s)
-OMTFile ::= leading? block? 
+OMTFile ::= leading? rootBlock?
 
 indentToken ::=                             INDENT | INDENT2
 dedentToken ::=                             DEDENT | DEDENT2
 // a block is a yaml block consisting of a propertyLabel (key): and a sequence, a map or a scalar
-block ::=                                   leading? (blockEntry+ | (indentToken blockEntry+ dedentToken))
+block ::=                                   rootBlock | indentedBlock { methods=[getBlockEntryList]}
+rootBlock ::=                               blockEntry+ { extends=block }
+indentedBlock ::=                           indentToken blockEntry+ dedentToken { extends=block }
 blockEntry ::=                              specificBlock | genericBlock {
                                             methods=[ getName getLabel ]
 }
@@ -30,15 +32,16 @@ propertyLabel ::=                           PROPERTY { methods=[getPropertyLabel
 
 // a scalar single statement (multiline optional) following a property label
 scalar ::=                                  comment? scalarValue
-scalarValue ::=                             parameterWithType | variableAssignment | block | nakedString | query | script
+scalarValue ::=                             parameterWithType | variableAssignment | indentedBlock | nakedString | query | script
 
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indented, it must dedent
 sequence ::=                                sequenceItem+ | (indentToken sequenceItem+ dedentToken)
 sequenceItem ::=                            leading? SEQUENCE_BULLET (scalarValue | block)?
 
-genericBlock ::=                            leading? propertyLabel ((block | sequence | scalar) | (indentToken (block | sequence | scalar) dedentToken)) {
+genericBlock ::=                            leading? propertyLabel ((indentedBlock | sequence | scalar) | (indentToken (sequence | scalar) dedentToken))? {
                                             extends=blockEntry
+                                            methods=[getBlock]
 }
 
 // SPECIFIC BLOCKS
@@ -100,7 +103,7 @@ curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FOR
                                                 extends="com.misset.opp.omt.psi.resolvable.impl.OMTCurieConstantElementResolvableImpl" }
 
 modelBlock::=                               leading? MODEL_BLOCK_START (indentToken modelItemBlock+ dedentToken)? { extends=specificBlock }
-modelItemBlock::=                           leading? modelItemLabel block? {extends=blockEntry methods=[getType]}
+modelItemBlock::=                           leading? modelItemLabel indentedBlock? {extends=blockEntry methods=[getType getBlock]}
 modelItemLabel::=                           propertyLabel modelItemTypeElement  {
                                                                                  mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
@@ -158,7 +161,7 @@ commandBlock ::=                            CURLY_OPEN (script | scriptLine+)? C
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
                                                 extends="com.misset.opp.omt.psi.resolvable.impl.OMTCommandBlockResolvableImpl" }
 // a scriptline is contained by the addition of the semicolon at the end
-scriptLine ::=                              leading? ((scriptContent SEMICOLON+) | commandBlock | logicalBlock)
+scriptLine ::=                              leading? ((scriptContent SEMICOLON*) | commandBlock | logicalBlock)
 // the contents of a script, contained by a scriptLine or Scalar
 scriptContent ::=                           declareVariable | variableAssignment | definePrefix | commandCall | assignmentStatement |
                                             addToCollection | removeFromCollection | logicalBlock | returnStatement | query
@@ -173,7 +176,7 @@ defineName ::=                              NAME | OPERATOR    {
                                                            implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                            methods=[getName setName getNameIdentifier]
                                                          }
-defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA query SEMICOLON+ {
+defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA query SEMICOLON* {
                                                             implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
                                                             extends="com.misset.opp.omt.psi.impl.OMTDefinedStatementImpl"
                                             }
@@ -207,7 +210,7 @@ flagSignature ::=                           FLAG
 resolvableValue ::=                         query | commandCall {
                                               implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
                                               extends="com.misset.opp.omt.psi.resolvable.impl.OMTResolvableValueResolvableImpl" }
-logicalBlock ::=                            ifBlock commandBlock (ELSE_OPERATOR ifBlock commandBlock)* elseBlock?
+logicalBlock ::=                            ifBlock commandBlock? (ELSE_OPERATOR ifBlock commandBlock?)* elseBlock?
 ifBlock ::=                                 IF_OPERATOR (query | (PARENTHESES_OPEN query PARENTHESES_CLOSE))
 elseBlock ::=                               ELSE_OPERATOR commandBlock
 returnStatement ::=                         RETURN_OPERATOR resolvableValue?

@@ -6,7 +6,10 @@ import com.misset.opp.omt.psi.OMTCommandCall;
 import com.misset.opp.omt.psi.OMTElementFactory;
 import com.misset.opp.omt.psi.OMTOperatorCall;
 import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.support.OMTCallable;
 import org.jetbrains.annotations.NotNull;
+
+import static com.misset.opp.omt.psi.util.UtilManager.getMemberUtil;
 
 public abstract class OMTCallImpl extends OMTMemberNamedElementImpl implements OMTCall {
 
@@ -59,5 +62,9 @@ public abstract class OMTCallImpl extends OMTMemberNamedElementImpl implements O
         return isCommandCall();
     }
 
+    @Override
+    public OMTCallable getCallable() {
+        return getMemberUtil().getCallable(this);
+    }
 
 }

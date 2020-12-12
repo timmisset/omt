@@ -115,8 +115,7 @@ class ImportUtilTest extends OMTTestSuite {
             OMTFile mockFile = mock(OMTFile.class);
             ImportUtil spyOnImportUtil = spy(importUtil);
 
-            doReturn(virtualFile).when(spyOnImportUtil).getImportedFile(eq(omtImport));
-            doReturn(mockFile).when(psiManager).findFile(eq(virtualFile));
+            doReturn(mockFile).when(spyOnImportUtil).getFile(eq(omtImport));
             doReturn(Optional.empty()).when(mockFile).getExportedMember(eq("MijnProcedure"));
 
             spyOnImportUtil.annotateImport(omtImport, annotationHolder);

@@ -32,6 +32,10 @@ public class VariableUtil {
     private static final String NAME = "name";
     public static final String NO_TYPE_SPECIFIED = "No type specified";
 
+    private static final String GLOBAL_VARIABLE_USERNAME = "$username";
+    private static final String GLOBAL_VARIABLE_MEDEWERKERGRAPH = "$medewerkerGraph";
+    private static final String GLOBAL_VARIABLE_OFFLINE = "$offline";
+
     public Optional<OMTVariable> getFirstAppearance(OMTVariable variable, PsiElement container) {
         return PsiTreeUtil.findChildrenOfType(container, OMTVariable.class).stream()
                 .filter(scriptVariable -> scriptVariable.getText().equals(variable.getText()))
@@ -382,9 +386,6 @@ public class VariableUtil {
 
     /**
      * Returns the value of variable from the closest assignment
-     *
-     * @param variable
-     * @return
      */
     public OMTVariableValue getValue(OMTVariable variable) {
         final List<OMTVariableAssignment> assignments = getAssignments(variable);
@@ -427,7 +428,24 @@ public class VariableUtil {
 
     public void annotateParameterWithType(OMTParameterWithType parameterWithType, AnnotationHolder holder) {
         if (parameterWithType.getParameterType() == null) {
-            holder.newAnnotation(HighlightSeverity.ERROR, "No type specified").create();
+            holder.newAnnotation(HighlightSeverity.ERROR, NO_TYPE_SPECIFIED).create();
         }
+    }
+
+    public List<String> getGlobalVariables() {
+        return Arrays.asList(GLOBAL_VARIABLE_USERNAME, GLOBAL_VARIABLE_MEDEWERKERGRAPH, GLOBAL_VARIABLE_OFFLINE);
+    }
+
+    public List<String> getGlobalVariables(Resource type) {
+        if (type.equals(getRDFModelUtil().getAnyType())) {
+            return Arrays.asList(GLOBAL_VARIABLE_USERNAME, GLOBAL_VARIABLE_MEDEWERKERGRAPH, GLOBAL_VARIABLE_OFFLINE);
+        }
+        if (type.equals(getRDFModelUtil().getBooleanType())) {
+            return Collections.singletonList(GLOBAL_VARIABLE_OFFLINE);
+        }
+        if (type.equals(getRDFModelUtil().getStringType())) {
+            return Collections.singletonList(GLOBAL_VARIABLE_USERNAME);
+        }
+        return Collections.emptyList();
     }
 }

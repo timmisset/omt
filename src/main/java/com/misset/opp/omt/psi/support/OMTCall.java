@@ -18,4 +18,6 @@ public interface OMTCall extends OMTMemberNamedElement, OMTResolvableResource {
     OMTSignature getSignature();
 
     OMTFlagSignature getFlagSignature();
+
+    OMTCallable getCallable();
 }

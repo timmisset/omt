@@ -15,6 +15,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.function.Predicate;
 
@@ -160,7 +161,10 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
 
     protected void setUtilMock(ModelUtil modelUtil) {
         validateMock(modelUtil);
-        utilManager.when(UtilManager::getModelUtil).thenReturn(modelUtil);
+        utilManager.when(UtilManager::getModelUtil).then((invocationOnMock) -> {
+            System.out.println("returning mock");
+            return modelUtil;
+        });
     }
 
     protected void setUtilMock(ScriptUtil scriptUtil) {
@@ -202,5 +206,17 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
                 .map(element -> (T) element)
                 .filter(element -> condition.test(element))
                 .findFirst().orElse(null);
+    }
+
+    protected String getFileName() {
+        return String.format("test-%s.omt", LocalDateTime.now().getNano());
+    }
+
+    protected String withPrefixes(String content) {
+        return String.format("prefixes:\n" +
+                "   ont:     <http://ontologie#>\n" +
+                "   rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "\n" +
+                "%s", content);
     }
 }

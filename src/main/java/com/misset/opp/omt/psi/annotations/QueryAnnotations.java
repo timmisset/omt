@@ -147,30 +147,31 @@ public class QueryAnnotations {
         annotateAssignment(assignee, value, holder, assignmentStatement.getResolvableValue());
     }
 
-    private void annotateAssignment(List<Resource> assignee, List<Resource> value, AnnotationHolder holder, PsiElement range) {
-        getRDFModelUtil().validateType(assignee, value,
-                (acceptableTypes, argumentTypes) ->
-                        holder.newAnnotation(HighlightSeverity.ERROR,
-                                String.format("Incorrect type, %s expected but value is of type: %s",
-                                        acceptableTypes.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")),
-                                        argumentTypes.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")))
-
-                        ).range(range).create());
+    private void annotateAssignment(List<Resource> assignee, List<Resource> value, AnnotationHolder holder, PsiElement target) {
+        assignee = getRDFModelUtil().appendAllSubclassesAndImplementations(assignee);
+        value = getRDFModelUtil().appendAllSubclassesAndImplementations(value);
+        final boolean compatibleTypes = getRDFModelUtil().validateType(assignee, value);
+        if (!compatibleTypes) {
+            setIncompatibleTypes(assignee, value, holder, target);
+        }
     }
 
     public void annotateEquationStatement(OMTEquationStatement equationStatement, AnnotationHolder holder) {
-        final List<Resource> leftHand = equationStatement.getQueryList().get(0).resolveToResource();
-        final List<Resource> rightHand = equationStatement.getQueryList().get(1).resolveToResource();
-        getRDFModelUtil().validateType(leftHand, rightHand,
-                (acceptableTypes, argumentTypes) ->
-                        holder.newAnnotation(HighlightSeverity.ERROR,
-                                String.format("Incompatible types LEFT-HAND: %s, RIGHT-HAND %s",
-                                        acceptableTypes.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")),
-                                        argumentTypes.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")))
-
-                        ).create());
+        annotateAssignment(
+                equationStatement.getQueryList().get(0).resolveToResource(),
+                equationStatement.getQueryList().get(1).resolveToResource(),
+                holder,
+                equationStatement);
     }
 
+    private void setIncompatibleTypes(List<Resource> leftHand, List<Resource> rightHand, AnnotationHolder holder, PsiElement target) {
+        holder.newAnnotation(HighlightSeverity.ERROR,
+                String.format("Incompatible types LEFT-HAND: %s, RIGHT-HAND %s",
+                        leftHand.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")),
+                        rightHand.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")))
+
+        ).range(target).create();
+    }
 
     public void annotateIfBlock(OMTIfBlock omtIfBlock, AnnotationHolder holder) {
         annotateBoolean(omtIfBlock.getQuery().resolveToResource(), holder, omtIfBlock.getQuery());
