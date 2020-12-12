@@ -5,6 +5,7 @@ import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.patterns.PlatformPatterns;
+import com.intellij.patterns.PsiElementPattern;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.completion.OMTCompletionContributor;
@@ -14,7 +15,8 @@ public class QueryNextStepCompletion extends QueryCompletion {
 
     public static void register(OMTCompletionContributor completionContributor) {
 
-        completionContributor.extend(CompletionType.BASIC, PlatformPatterns.psiElement().inside(NEXT_QUERY_STEP_PATTERN),
+        final PsiElementPattern.Capture<PsiElement> pattern = PlatformPatterns.psiElement().inside(NEXT_QUERY_STEP_PATTERN);
+        completionContributor.extend(CompletionType.BASIC, pattern,
                 new QueryNextStepCompletion().getCompletionProvider());
     }
 

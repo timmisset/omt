@@ -74,7 +74,7 @@ class ModelCompletionTest extends OMTCompletionTestSuite {
     }
 
     @Test
-    void modelNewEntryWithoutExistingKeys() {
+    void modelNewEntryWithExistingKeys() {
         String content = "model:\n" +
                 "   mijnActiviteit: !Activity\n" +
                 "       title: Titel\n" +
@@ -91,12 +91,13 @@ class ModelCompletionTest extends OMTCompletionTestSuite {
                 "       title: Titel\n" +
                 "       variables:\n" +
                 "           - <caret>";
-        assertCompletionContains(content, "name:", "value:", "onChange:");
-
+        final List<String> completionLookupElements = getCompletionLookupElements(content);
+        assertContainsElements(completionLookupElements, "name:", "value:", "onChange:");
+        assertCompletionNOTContainsBuiltinOperators(completionLookupElements);
     }
 
     @Test
-    void modelDestructedElementWithoutExistingKeys() {
+    void modelDestructedElementWithExistingKeys() {
         String content = "model:\n" +
                 "   mijnActiviteit: !Activity\n" +
                 "       title: Titel\n" +
