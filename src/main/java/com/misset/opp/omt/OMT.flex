@@ -257,7 +257,7 @@ IElementType closeBracket() {
     {PROPERTY_KEY}                                            { return dent(OMTTypes.PROPERTY); }
 
     // The YAML flag in OMT is only used to typecast the modelitem
-    "!"{NAME}                                                 { return returnElement(OMTTypes.MODEL_ITEM_TYPE); }
+    "!"+{NAME}                                                 { return returnElement(OMTTypes.MODEL_ITEM_TYPE); }
 
     // A sequence bullet to identify a sequence item
     // the parser will collect them into a sequence

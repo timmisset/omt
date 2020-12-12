@@ -140,6 +140,7 @@ public class ModelUtil {
                     .range(omtModelItemTypeElement)
                     .create();
         }
+
     }
 
     public void annotateBlock(OMTBlock block, AnnotationHolder holder) {
@@ -297,6 +298,10 @@ public class ModelUtil {
 
     public JsonObject getJsonAtElementLevel(PsiElement element) {
         return getJsonAtDepth(element, getModelDepth(element));
+    }
+
+    public JsonObject getJsonAtParentLevel(PsiElement element) {
+        return getJsonAtDepth(element, getModelDepth(element) - 1);
     }
 
     /**

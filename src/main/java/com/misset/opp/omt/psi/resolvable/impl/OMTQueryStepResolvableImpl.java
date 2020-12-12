@@ -2,8 +2,12 @@ package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.psi.OMTCurieConstantElement;
 import com.misset.opp.omt.psi.OMTQueryFilter;
 import com.misset.opp.omt.psi.OMTQueryStep;
+import com.misset.opp.omt.psi.OMTTypes;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -49,7 +53,7 @@ public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement im
             resources = getVariable().getType();
         } else if (getCurieElement() != null) {
             List<Resource> previousStep = getQueryUtil().getPreviousStep(this);
-            if (lookBack && !previousStep.isEmpty()) {
+            if (doLookBack(lookBack) && !previousStep.isEmpty()) {
                 return getRDFModelUtil().listObjectsWithSubjectPredicate(previousStep, getCurieElement().getAsResource());
             }
             return getCurieElement().resolveToResource();
@@ -57,6 +61,27 @@ public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement im
             return getOperatorCall().resolveToResource();
         }
         return filter ? filter(resources) : resources;
+    }
+
+    private boolean doLookBack(boolean lookbackRequest) {
+        return lookbackRequest && canLookBack();
+    }
+
+    protected boolean canLookBack() {
+        if (this instanceof OMTCurieConstantElement) {
+            return false;
+        }
+        if (!firstStepInParent()) {
+            return true;
+        }
+        final PsiElement prevLeaf = PsiTreeUtil.prevLeaf(this, true);
+
+        return prevLeaf == null || prevLeaf.getNode().getElementType() != OMTTypes.FORWARD_SLASH;
+
+    }
+
+    protected boolean firstStepInParent() {
+        return getParent() != null && getTextOffset() == getParent().getTextOffset();
     }
 
 }

@@ -11,6 +11,7 @@ import com.misset.opp.omt.psi.impl.BuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTCallableImpl;
 import com.misset.opp.omt.psi.impl.OMTParameterImpl;
 import com.misset.opp.omt.psi.support.BuiltInType;
+import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
 import org.commonmark.html.HtmlRenderer;
 import org.commonmark.node.Node;
@@ -19,6 +20,7 @@ import org.commonmark.parser.Parser;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -35,21 +37,27 @@ public class BuiltInUtil {
     }
 
     public List<String> getBuiltInOperatorsAsSuggestions() {
+        return getBuiltInOperatorsAsSuggestions(callable -> true);
+    }
+
+    public List<String> getBuiltInOperatorsAsSuggestions(Predicate<OMTCallable> condition) {
         return builtInMembers.values().stream()
                 .filter(OMTCallableImpl::isOperator)
+                .filter(condition)
                 .map(OMTCallableImpl::getAsSuggestion)
                 .collect(Collectors.toList());
     }
 
     public List<String> getBuiltInCommandsAsSuggestions() {
-        return builtInMembers.values().stream()
-                .filter(OMTCallableImpl::isCommand)
-                .map(OMTCallableImpl::getAsSuggestion)
-                .collect(Collectors.toList());
+        return getBuiltInCommandsAsSuggestions(callable -> true);
     }
 
-    public List<String> getBuiltInSuggestions(BuiltInType type) {
-        return type == BuiltInType.Command ? getBuiltInCommandsAsSuggestions() : getBuiltInOperatorsAsSuggestions();
+    public List<String> getBuiltInCommandsAsSuggestions(Predicate<OMTCallable> condition) {
+        return builtInMembers.values().stream()
+                .filter(OMTCallableImpl::isCommand)
+                .filter(condition)
+                .map(OMTCallableImpl::getAsSuggestion)
+                .collect(Collectors.toList());
     }
 
     public boolean isCommand(BuiltInType type) {
