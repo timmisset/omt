@@ -32,22 +32,22 @@ public abstract class OMTCompletion {
     /**
      * The higher the priority number, the higher it gets listed
      */
-    protected final int MODEL_ITEM_TYPE_PRIORITY = 13;
-    protected final int ATTRIBUTES_PRIORITY = 12;              // model entry attributes
-    protected final int EQUATION_PRIORITY = 11;                // the other side of the equation, shows a limited set of options based on the resolved type of the other side
-    protected final int CLASSES_PRIORITY = 10;                  // list with available classes
-    protected final int PREDICATE_FORWARD_PRIORITY = 9;
-    protected final int PREDICATE_REVERSE_PRIORITY = 8;
-    protected final int LOCAL_VARIABLE_PRIORITY = 7;
-    protected final int DECLARED_VARIABLE_PRIORITY = 6;
-    protected final int GLOBAL_VARIABLE_PRIORITY = 5;
-    protected final int DEFINED_STATEMENT_PRIORITY = 4;
-    protected final int LOCAL_COMMAND_PRIORITY = 3;
-    protected final int BUILTIN_MEMBER_PRIORITY = 2;
-    protected final int IMPORTABLE_MEMBER_PRIORITY = 1;
+    protected static final int MODEL_ITEM_TYPE_PRIORITY = 13;
+    protected static final int ATTRIBUTES_PRIORITY = 12;              // model entry attributes
+    protected static final int EQUATION_PRIORITY = 11;                // the other side of the equation, shows a limited set of options based on the resolved type of the other side
+    protected static final int CLASSES_PRIORITY = 10;                  // list with available classes
+    protected static final int PREDICATE_FORWARD_PRIORITY = 9;
+    protected static final int PREDICATE_REVERSE_PRIORITY = 8;
+    protected static final int LOCAL_VARIABLE_PRIORITY = 7;
+    protected static final int DECLARED_VARIABLE_PRIORITY = 6;
+    protected static final int GLOBAL_VARIABLE_PRIORITY = 5;
+    protected static final int DEFINED_STATEMENT_PRIORITY = 4;
+    protected static final int LOCAL_COMMAND_PRIORITY = 3;
+    protected static final int BUILTIN_MEMBER_PRIORITY = 2;
+    protected static final int IMPORTABLE_MEMBER_PRIORITY = 1;
 
-    private List<LookupElement> resolvedElements = new ArrayList<>();
-    private List<String> resolvedSuggestions = new ArrayList<>();
+    private final List<LookupElement> resolvedElements = new ArrayList<>();
+    private final List<String> resolvedSuggestions = new ArrayList<>();
 
     public CompletionProvider<CompletionParameters> getCompletionProvider() {
         return null;
@@ -103,7 +103,7 @@ public abstract class OMTCompletion {
 
     protected void setResolvedElementsForGlobalVariables() {
         getVariableUtil().getGlobalVariables().forEach(
-                omtVariable -> addPriorityElement(omtVariable, DECLARED_VARIABLE_PRIORITY)
+                omtVariable -> addPriorityElement(omtVariable, GLOBAL_VARIABLE_PRIORITY)
         );
     }
 
