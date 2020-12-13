@@ -1,4 +1,4 @@
-package com.misset.opp.omt.psi.support;
+package com.misset.opp.omt.formatter;
 
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.TokenSet;
@@ -6,6 +6,16 @@ import com.intellij.psi.tree.TokenSet;
 import static com.misset.opp.omt.psi.OMTTypes.*;
 
 public interface OMTTokenSets {
+    // tokenset that is used to determine next child indentation
+    TokenSet INCOMPLETE = TokenSet.create(
+            MODEL_ITEM_LABEL,
+            MODEL_ITEM_BLOCK,
+            PROPERTY_LABEL,
+            SEQUENCE,
+            MEMBER_LIST,
+            IMPORT_LOCATION
+    );
+
     TokenSet WHITESPACE = TokenSet.create(
             TokenType.WHITE_SPACE,
             INDENT_TOKEN,

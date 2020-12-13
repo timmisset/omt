@@ -292,7 +292,11 @@ queryReverseStep ::=                        CARET curieElement? stepDecorator? q
                                                 mixin="com.misset.opp.omt.psi.resolvable.impl.OMTQueryReverseStepResolvableImpl"
                                                 extends=queryStep
                                                 }
-stepDecorator ::=                           ASTERIX | PLUS
+// Decorators for the query steps, can be added to individual steps or subqueries
+// QUESTION_MARK ?  == 0 or 1
+// PLUS +           == 1 or more
+// ASTERIX          == 0 or more
+stepDecorator ::=                           ASTERIX | PLUS | QUESTION_MARK
 // a query filter is contained by brackets [] and should resolve to boolean
 queryFilter ::=                             BRACKET_OPEN query BRACKET_CLOSED | EMPTY_ARRAY
 

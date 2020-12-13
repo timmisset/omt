@@ -359,6 +359,7 @@ IElementType closeBracket() {
     "-="                                                            { return returnElement(OMTTypes.REMOVE); }
     "`"                                                             { return startBacktick(); }
     "*"                                                             { return returnElement(OMTTypes.ASTERIX); }
+    "?"                                                             { return returnElement(OMTTypes.QUESTION_MARK); }
     // Its not required to encapsulate an interpolated string with backticks. To support this, the SCALAR state itself can also
     // capture backtick template blocks ${...}
     "${"                                                            { setTemplateInScalar(true); return returnElement(OMTTypes.TEMPLATE_OPEN); }

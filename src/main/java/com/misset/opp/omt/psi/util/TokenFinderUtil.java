@@ -5,9 +5,9 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
+import com.misset.opp.omt.formatter.OMTTokenSets;
 import com.misset.opp.omt.psi.OMTImport;
 import com.misset.opp.omt.psi.OMTIndentToken;
-import com.misset.opp.omt.psi.support.OMTTokenSets;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

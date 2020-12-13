@@ -5,7 +5,7 @@ import com.intellij.formatting.Indent;
 import com.intellij.formatting.Spacing;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.formatter.common.AbstractBlock;
-import com.misset.opp.omt.psi.support.OMTTokenSets;
+import com.misset.opp.omt.psi.OMTSpecificBlock;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,29 +25,6 @@ public class OMTFormattingBlock extends AbstractBlock {
         this.formattingContext = omtFormattingContext;
         this.indent = formattingContext.computeIndent(node);
         this.myNewChildIndent = omtFormattingContext.newChildIndent(node);
-    }
-
-    private static int getNodeStartOffset(@NotNull ASTNode node) {
-        final CharSequence chars = node.getChars();
-        int i = 0;
-        while (chars.length() > i && chars.charAt(i) == ' ') {
-            i++;
-        }
-        return node.getStartOffset() + i;
-    }
-
-    private static int getNodeLength(@NotNull ASTNode node) {
-        CharSequence text = node.getChars();
-        if (text.length() == 0) {
-            return node.getStartOffset();
-        }
-        int last = text.length() - 1;
-        for (int i = last; i >= 0; i--) {
-            if (text.charAt(i) != '\n') {
-                return i + 1;
-            }
-        }
-        return text.length(); // empty lines only, return original
     }
 
     @Override
@@ -73,7 +50,6 @@ public class OMTFormattingBlock extends AbstractBlock {
         return formattingContext.computeSpacing(this, child1, child2);
     }
 
-
     @Override
     public Indent getIndent() {
         return indent;
@@ -82,6 +58,15 @@ public class OMTFormattingBlock extends AbstractBlock {
     @Override
     public boolean isLeaf() {
         return false;
+    }
+
+    @Override
+    public boolean isIncomplete() {
+        if (OMTTokenSets.INCOMPLETE.contains(getNode().getElementType()) ||
+                getNode().getPsi() instanceof OMTSpecificBlock) {
+            return true;
+        }
+        return super.isIncomplete();
     }
 
     @Nullable
