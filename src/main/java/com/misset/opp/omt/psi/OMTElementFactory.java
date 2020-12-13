@@ -36,11 +36,6 @@ public class OMTElementFactory {
         return PsiTreeUtil.findChildOfType(firstChild, OMTMember.class);
     }
 
-    /**
-     * @param curie   - entire curie => some:thing
-     * @param project
-     * @return
-     */
     public static OMTNamespacePrefix createNamespacePrefix(Project project, String curie) {
         OMTFile file = createFile(project, String.format("prefixes:\n" +
                 "    %s:    <http://ontologie.alfabet.nl/alfabet#>\n" +

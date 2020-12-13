@@ -96,9 +96,6 @@ public class RDFModelUtil {
 
     /**
      * Returns the predicate types and all their subclasses
-     *
-     * @param predicate
-     * @return
      */
     public List<Resource> getPredicateObjects(Resource predicate, boolean includeSubclasses) {
         final List<Resource> objects = new ArrayList<>(predicateObjects.getOrDefault(predicate, new ArrayList<>()));
@@ -123,9 +120,6 @@ public class RDFModelUtil {
 
     /**
      * Will return the sh:properties of this resource or its parent classes
-     *
-     * @param resource
-     * @return
      */
     public HashMap<Statement, Resource> getShaclProperties(Resource resource) {
         HashMap<Statement, Resource> statementMap = new HashMap<>();
@@ -148,9 +142,6 @@ public class RDFModelUtil {
 
     /**
      * Returns the parent classes of this resource (if any)
-     *
-     * @param resource
-     * @return
      */
     public List<Resource> getClassLineage(Resource resource) {
         List<Resource> lineage = new ArrayList<>();
@@ -301,10 +292,6 @@ public class RDFModelUtil {
 
     /**
      * Returns the classes that point to the given class using the specified predicate, traversing the shacl structure
-     *
-     * @param predicate
-     * @param object
-     * @return
      */
     public List<Resource> listSubjectsWithPredicateObjectClass(Resource predicate, Resource object) {
         if (isTypePredicate(predicate)) {
@@ -484,9 +471,6 @@ public class RDFModelUtil {
      * <ul>
      * <li>referedByClass (viaPredicate)</li>
      * </ul>
-     *
-     * @param resource
-     * @return
      */
     private String describeClass(Resource resource) {
         StringBuilder description = new StringBuilder();
@@ -518,9 +502,6 @@ public class RDFModelUtil {
 
     /**
      * Returns a copy of the input and all subclasses
-     *
-     * @param resources
-     * @return
      */
     public List<Resource> appendAllSubclasses(List<Resource> resources) {
         List<Resource> allTypes = new ArrayList<>(resources);
@@ -534,9 +515,6 @@ public class RDFModelUtil {
 
     /**
      * Returns a copy of the input, all subclasses and implementations of those classes
-     *
-     * @param resources
-     * @return
      */
     public List<Resource> appendAllSubclassesAndImplementations(List<Resource> resources) {
         List<Resource> allTypes = new ArrayList<>(resources);
@@ -548,10 +526,6 @@ public class RDFModelUtil {
      * Validate if the 2 collections with types are compatible
      * For acceptableTypes, run it through the appendSubclasses first, to make sure it contains all acceptable subtypes also
      * For argumentTypes, run it through the appendAllSubclassesAndImplementations first
-     *
-     * @param acceptableTypes
-     * @param argumentTypes
-     * @return
      */
     public boolean validateType(
             List<Resource> acceptableTypes,

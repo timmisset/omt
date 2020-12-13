@@ -36,9 +36,6 @@ public class MemberUtil {
      * When the call points to an imported member it will try to resolve to it's original declaration in the external file,
      * otherwise it will resolve to the import statement.
      * The declaration of the operator must precede it's call to it, not only upstream but also within the same declaration block
-     *
-     * @param call
-     * @return
      */
     public Optional<PsiElement> getDeclaringMember(OMTCall call) {
         String callName = getCallName(call);
@@ -72,10 +69,6 @@ public class MemberUtil {
     /**
      * Method that will look for any corresponding import member based on this elements containing file
      * and nameIdentifier
-     *
-     * @param element
-     * @param nameIdentifier
-     * @return
      */
     public Optional<PsiElement> getDeclaringMemberFromImport(PsiElement element, String nameIdentifier) {
         OMTFile containingFile = (OMTFile) element.getContainingFile();
@@ -316,9 +309,6 @@ public class MemberUtil {
      * of the procedure since that is were we want to navigation to go to.
      * This method helps to obtain the containing element of the name. For a modelItem it will get the ModelItem from the label.
      * For a query or command statement it will return the statement from the definedNamed
-     *
-     * @param resolvedToElement
-     * @return
      */
     private PsiElement getContainingElement(PsiElement resolvedToElement) {
         // there are 2 options, either the call resolves to a modelItem or to a defined statement

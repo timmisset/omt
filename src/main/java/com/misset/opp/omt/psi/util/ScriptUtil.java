@@ -28,9 +28,6 @@ public class ScriptUtil {
     /**
      * Returns all items in the script which are accessible to the element, meaning they are not contained
      * within other { } blocks and are listed above the provided element
-     *
-     * @param element
-     * @return
      */
     public <T> List<T> getAccessibleElements(PsiElement element, Class<T> type) {
         List<T> items = new ArrayList<>();

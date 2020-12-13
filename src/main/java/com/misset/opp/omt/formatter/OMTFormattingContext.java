@@ -284,10 +284,6 @@ public class OMTFormattingContext {
      * Checks if the provided node is the first instance in the entry or anchor
      * If true, it creates a new alignment that it and all subsequent elements of the same
      * type(s) are anchored to
-     *
-     * @param node
-     * @param types
-     * @return
      */
     private Alignment registerAndReturnIfAnyOf(ASTNode node, IElementType... types) {
         if (nodeAlignment.containsKey(node)) {
@@ -307,9 +303,6 @@ public class OMTFormattingContext {
      * WHEN =>
      * OTHERWISE =>
      * END
-     *
-     * @param node
-     * @return
      */
     private Alignment alignChooseBlock(ASTNode node) {
         if (CHOOSE_OPERATOR == node.getElementType()) {
@@ -328,8 +321,6 @@ public class OMTFormattingContext {
 
     /**
      * All JavaDocs are aligned to the Start element
-     * @param node
-     * @return
      */
     private Alignment alignJavaDocs(ASTNode node) {
         if (JAVADOCS_START == node.getElementType()) {
@@ -349,10 +340,6 @@ public class OMTFormattingContext {
         }
     }
 
-    /**
-     * @param namespaceIri
-     * @return
-     */
     private Alignment alignNamespaceIri(ASTNode namespaceIri) {
         if (namespaceIri.getElementType() != NAMESPACE_IRI) {
             return null;
@@ -360,6 +347,9 @@ public class OMTFormattingContext {
         // get the prefixes:
         ASTNode prefix = namespaceIri.getTreeParent();
         final ASTNode firstPrefix = getFirstOfKindInParent(prefix.getTreeParent(), PREFIX);
+        if (firstPrefix == null) {
+            return null;
+        }
         final ASTNode[] children = firstPrefix.getChildren(TokenSet.create(NAMESPACE_IRI));
         final ASTNode firstNamespaceIri = children[0];
         return registerAlignmentAndReturn(firstNamespaceIri);
@@ -371,9 +361,6 @@ public class OMTFormattingContext {
      * It doens't check the content which is why something like an aligned Json structure with quotes
      * is only aligned if after the initial { } block, another new line is entered since that is considered
      * the first part element.
-     *
-     * @param node
-     * @return
      */
     private Alignment alignInterpolatedString(ASTNode node) {
         if (STRING == node.getElementType() ||

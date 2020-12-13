@@ -64,9 +64,6 @@ public class QueryUtil {
      * /ont:ClassA / rdf:type / (CURRENT_STEP)*             will resolve to it's parent (Subquery) and then the previous step
      * $myVariable [rdf:type == CURRENT_STEP]               CURRENT_STEP is the start of it's own query path, will return the types of the step that contains the filter
      * $myVariable / SOME_OPERATOR(CURRENT_STEP)            Contained in a signature argument, cannot inherit types
-     *
-     * @param step
-     * @return
      */
     public List<Resource> getPreviousStep(PsiElement step) {
         PsiElement previous = PsiImplUtil.getPreviousSibling(step, OMTQueryPath.class, OMTQueryStep.class);

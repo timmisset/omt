@@ -225,9 +225,6 @@ public class PsiImplUtil {
 
     /**
      * Returns the curie resolved to the full iri as a Resource in the loaded ontology model
-     *
-     * @param curieElement
-     * @return
      */
     public static Resource getAsResource(OMTCurieElement curieElement) {
         String resolvedIri = String.format("%s%s",
@@ -241,9 +238,6 @@ public class PsiImplUtil {
 
     /**
      * Returns the curie resolved to the full iri as a Resource in the loaded ontology model
-     *
-     * @param parameterType
-     * @return
      */
     public static Resource getAsResource(OMTParameterType parameterType) {
         if (parameterType.getNamespacePrefix() == null) {

@@ -254,9 +254,6 @@ public class ProjectUtil {
 
     /**
      * Resets the index with exported members based on changes made in this file
-     *
-     * @param file
-     * @return
      */
     public void resetExportedMembers(OMTFile file) {
         setStatusbarMessage(file.getProject(),

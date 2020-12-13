@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -153,38 +152,6 @@ public class ImportUtil {
         resetImportBlock(element, importPath, importMember);
     }
 
-    /**
-     * Returns a @client and relative import options for the exporting member in the context of the importing file
-     * if the file already contains one of the options, that will be the only one showing
-     *
-     * @param exportMember
-     * @param importingFile
-     * @return
-     */
-    public List<String> getImportPaths(OMTExportMember exportMember, OMTFile importingFile) {
-        OMTFile exportingFile = (OMTFile) exportMember.getResolvingElement().getContainingFile();
-        String exportPath = exportingFile.getVirtualFile().getPath();
-
-        String importFilePath = importingFile.getVirtualFile().getPath();
-
-        Path relativize = new File(importFilePath).getParentFile().toPath().relativize(new File(exportPath).toPath());
-        exportPath = exportPath.replace("\\", "/");
-        String clientPath = "@client" + exportPath.substring(exportPath.indexOf("/frontend/libs") + "/frontend/libs".length());
-        if (importingFile.hasImport(clientPath)) {
-            return Collections.singletonList(clientPath);
-        }
-
-        String relativePath = relativize.toString().replace("\\", "/");
-        if (!relativePath.startsWith(".")) {
-            relativePath = "./" + relativePath;
-        }
-        if (importingFile.hasImport(relativePath)) {
-            return Collections.singletonList(relativePath);
-        }
-
-        return Arrays.asList(clientPath, relativePath);
-    }
-
     private void resetImportBlock(PsiElement element, String importPath, String importMember) {
         OMTFile targetFile = (OMTFile) element.getContainingFile();
         Project project = element.getProject();
@@ -245,10 +212,6 @@ public class ImportUtil {
                     .withFix(getUnwrapIntention(importSource))
                     .create();
         }
-    }
-
-    public List<String> getImportedMemberNames(@NotNull OMTImport omtImport) {
-        return getImportedMembers(omtImport).stream().map(OMTMember::getName).collect(Collectors.toList());
     }
 
     public List<OMTMember> getImportedMembers(@NotNull OMTImport omtImport) {

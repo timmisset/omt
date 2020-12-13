@@ -104,7 +104,7 @@ public class BuiltInUtil {
     }
 
     private JsonObject parseBlock(String blockToParse, BuiltInType type) {
-        JsonParser parser = new JsonParser();
+
         blockToParse = blockToParse.replaceAll("\\/\\/.*", ""); // remove the comments
         blockToParse = blockToParse.replaceAll("factory.*", ""); // remove the factor property
         if (type == BuiltInType.Command) {
@@ -118,7 +118,8 @@ public class BuiltInUtil {
             }
         }
         blockToParse = blockToParse.replaceAll("([,\\s]+})", "}"); // remove trailing commas
-        return (JsonObject) parser.parse(blockToParse);
+
+        return JsonParser.parseString(blockToParse).getAsJsonObject();
     }
 
     public void reset() {
