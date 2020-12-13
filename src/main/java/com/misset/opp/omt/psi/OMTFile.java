@@ -157,8 +157,6 @@ public class OMTFile extends PsiFileBase {
      * Root queries and commands are available as well as OMT model items: Activity, Procedure and StandAloneQuery
      * They are available as OMTExportMembers which can resolve to the PsiElement that defines them but have additional
      * resolve functions such as the type, number of expected parameters etc
-     *
-     * @return
      */
     public HashMap<String, OMTExportMember> getExportedMembers() {
         initExportMembers();
@@ -264,9 +262,6 @@ public class OMTFile extends PsiFileBase {
 
     /**
      * Checks if this file already has an import for this exporting member
-     *
-     * @param exportMember
-     * @return
      */
     public boolean hasImportFor(OMTExportMember exportMember) {
         Optional<OMTBlockEntry> imports = getRootBlock(IMPORT);

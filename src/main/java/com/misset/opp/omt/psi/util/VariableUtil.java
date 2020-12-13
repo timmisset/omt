@@ -44,8 +44,6 @@ public class VariableUtil {
 
     /**
      * Returns the declared variables available at the position of this specific element
-     * @param element
-     * @return
      */
     public List<OMTVariable> getDeclaredVariables(PsiElement element) {
         // Get the declared variable from the script
@@ -164,9 +162,6 @@ public class VariableUtil {
 
     /**
      * Returns a list of variables that are locally available for the element
-     *
-     * @param element
-     * @return
      */
     public HashMap<String, String> getLocalVariables(@NotNull PsiElement element) {
         HashMap<String, String> localVariables = new HashMap<>();
@@ -288,9 +283,6 @@ public class VariableUtil {
 
     /**
      * Retrieves the parameter type for the parameter define statement via the annotation (if available)
-     *
-     * @param defineParam
-     * @return
      */
     public List<Resource> getType(OMTDefineParam defineParam, OMTVariable variable) {
         final Optional<OMTParameterAnnotation> parameterAnnotation = getTypeFromAnnotation(variable, defineParam.getParent());

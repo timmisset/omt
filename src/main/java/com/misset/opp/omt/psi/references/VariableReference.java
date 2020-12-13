@@ -24,9 +24,6 @@ public class VariableReference extends PsiReferenceBase<PsiElement> implements P
 
     /**
      * The reference created for this variable usage
-     *
-     * @param variable
-     * @param textRange
      */
     public VariableReference(@NotNull OMTVariable variable, TextRange textRange) {
         super(variable, textRange);

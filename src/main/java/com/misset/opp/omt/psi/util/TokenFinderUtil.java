@@ -31,10 +31,6 @@ public class TokenFinderUtil {
 
     /**
      * Returns the line position of the token
-     *
-     * @param element
-     * @param document
-     * @return
      */
     public int getLineOffset(PsiElement element, Document document) {
         if (element.getFirstChild() instanceof OMTIndentToken) {

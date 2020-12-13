@@ -13,10 +13,6 @@ public class AnnotationUtil {
 
     /**
      * Generic method to check if the declaration of an element (variable, prefix etc) is ever referred to by another element
-     *
-     * @param element
-     * @param usageClass
-     * @param holder
      */
     public void annotateUsage(PsiElement element, Class<? extends PsiElement> usageClass, @NotNull AnnotationHolder holder) {
         AnnotationBuilder annotationBuilder = annotateUsageGetBuilder(element, usageClass, holder);
@@ -38,9 +34,6 @@ public class AnnotationUtil {
     /**
      * Generic method to check if the element, as an usage of a variable, or a prefix etc, can resolve to it's original declaration
      * This is used to check that variables are declared, prefixes are mapped etc
-     *
-     * @param element
-     * @param holder
      */
     public void annotateOrigin(PsiElement element, @NotNull AnnotationHolder holder) {
         AnnotationBuilder annotationBuilder = annotateOriginGetBuilder(element, holder);
@@ -52,9 +45,6 @@ public class AnnotationUtil {
     /**
      * Generic method to check if the element, as an usage of a variable, or a prefix etc, can resolve to it's original declaration
      * This is used to check that variables are declared, prefixes are mapped etc
-     *
-     * @param element
-     * @param holder
      */
     public AnnotationBuilder annotateOriginGetBuilder(PsiElement element, @NotNull AnnotationHolder holder) {
         if (element.getReference() != null && element.getReference().resolve() == null) {

@@ -90,10 +90,11 @@ public class OMTStartupActivity implements StartupActivity {
                 if ("ttl".equals(extension)) {
                     getProjectUtil().loadOntologyModel(project);
                 } else if ("omt".equals(extension)) {
-                    getProjectUtil().resetExportedMembers(
-
-                            (OMTFile) PsiManager.getInstance(project).findFile(virtualFile)
-                    );
+                    final OMTFile file = (OMTFile) PsiManager.getInstance(project).findFile(virtualFile);
+                    if (file == null) {
+                        return;
+                    }
+                    getProjectUtil().resetExportedMembers(file);
                 }
             }
         });

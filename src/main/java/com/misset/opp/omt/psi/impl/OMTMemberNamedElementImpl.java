@@ -83,7 +83,10 @@ public abstract class OMTMemberNamedElementImpl extends ASTWrapperPsiElement imp
     }
 
     private PsiReference toReference(OMTModelItemLabel modelItemLabel) {
-        TextRange propertyLabelTextRange = TextRange.from(modelItemLabel.getNameIdentifier().getStartOffsetInParent(), modelItemLabel.getName().length());
+        TextRange propertyLabelTextRange = TextRange.from(
+                modelItemLabel.getNameIdentifier().getStartOffsetInParent(),
+                modelItemLabel.getName() != null ? modelItemLabel.getName().length() : 0
+        );
         return new MemberReference(modelItemLabel, propertyLabelTextRange, getType());
     }
 }

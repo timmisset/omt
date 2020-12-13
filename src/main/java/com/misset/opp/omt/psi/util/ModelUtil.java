@@ -31,9 +31,6 @@ public class ModelUtil {
 
     /**
      * Returns the modelitem block containing the element, for example an Activity or Procedure block
-     *
-     * @param element
-     * @return
      */
     public Optional<OMTModelItemBlock> getModelItemBlock(PsiElement element) {
         if (element instanceof OMTModelItemBlock) {
@@ -72,9 +69,6 @@ public class ModelUtil {
      * MyActivity: !Activity
      * payload:
      * myPayloadParameter: myValue
-     *
-     * @param element - myValue
-     * @return myPayloadParameter
      */
     public String getEntryBlockLabel(PsiElement element) {
         PsiElement labelElement = getEntryBlockLabelElement(element);
@@ -99,9 +93,6 @@ public class ModelUtil {
      * MyActivity: !Activity
      * payload:
      * myPayloadParameter: myValue
-     *
-     * @param element - myValue
-     * @return payload
      */
     public String getModelItemEntryLabel(PsiElement element) {
         List<OMTBlockEntry> blockEntries = getAncestorEntries(element);
@@ -291,8 +282,6 @@ public class ModelUtil {
      * When the input element is a (scalar) value, it returns the properties / type of that value
      * to get the entry block attributes instead, use getJsonAttributes
      *
-     * @param element
-     * @return
      */
     public JsonObject getJson(PsiElement element) {
         return getJsonAtDepth(element, -1);
@@ -311,10 +300,6 @@ public class ModelUtil {
      * only use this to get the exact modeltree information
      * for example, to get the Payload: mapOf PayloadPropertyDef information (combine with getModelDepth)
      * To know what attributes a payload property has, use getJson instead
-     *
-     * @param element
-     * @param depth
-     * @return
      */
     public JsonObject getJsonAtDepth(PsiElement element, int depth) {
         List<JsonObject> attributesBranch = getAttributesBranch(element);
@@ -328,9 +313,6 @@ public class ModelUtil {
      * returns the level this item has in the model by looking at the entryblock
      * 0 based, meaning an entry at the model root,like title, will receive level 0.
      * a payload item will receive 1 etc
-     *
-     * @param element
-     * @return
      */
     public int getModelDepth(PsiElement element) {
         int correction = 1; // correction 1 for the modelItem block itself, should not be counted
@@ -350,9 +332,6 @@ public class ModelUtil {
      * JSON attributes collection based on the property keys used in the block entries
      * <p>
      * When the input element is a (scalar) value, it returns the attributes of the entry block
-     *
-     * @param element
-     * @return
      */
     @NotNull
     public JsonObject getJsonAttributes(PsiElement element) {

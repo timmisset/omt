@@ -12,6 +12,7 @@ import com.misset.opp.omt.psi.OMTQueryFilter;
 import com.misset.opp.omt.psi.OMTQueryStep;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MergeFiltersIntention {
@@ -38,6 +39,7 @@ public class MergeFiltersIntention {
             public void invoke(@NotNull Project project, Editor editor, PsiFile file) {
                 final String joinedFilter = step.getQueryFilterList().stream()
                         .map(OMTQueryFilter::getQuery)
+                        .filter(Objects::nonNull)
                         .map(PsiElement::getText)
                         .collect(Collectors.joining(" AND "));
                 final OMTQueryFilter filter = (OMTQueryFilter) OMTElementFactory.fromString(String.format("queries: |\n" +
