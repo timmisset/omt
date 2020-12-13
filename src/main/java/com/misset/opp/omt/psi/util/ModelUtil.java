@@ -2,9 +2,11 @@ package com.misset.opp.omt.psi.util;//package com.misset.opp.omt.domain.util;
 
 import com.google.gson.JsonObject;
 import com.intellij.codeInsight.intention.IntentionAction;
+import com.intellij.lang.ASTNode;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
@@ -371,5 +373,31 @@ public class ModelUtil {
     public boolean isOntology(PsiElement element) {
         return element instanceof OMTModelItemBlock &&
                 getModelItemType(element).equals("Ontology");
+    }
+
+    public boolean isSequenceNode(ASTNode node) {
+        final IElementType elementType = node.getElementType();
+        final IElementType parentType = node.getTreeParent() != null ? node.getTreeParent().getElementType() : null;
+        if (elementType == OMTTypes.PROPERTY_LABEL || parentType == OMTTypes.PROPERTY_LABEL) {
+            PsiElement psiElement = node.getPsi();
+            final OMTPropertyLabel propertyLabel = node.getElementType() == OMTTypes.PROPERTY ?
+                    (OMTPropertyLabel) psiElement.getParent() :
+                    (OMTPropertyLabel) node.getPsi();
+            final String propertyLabelName = propertyLabel.getPropertyLabelName();
+            final JsonObject parentJson = UtilManager.getModelUtil().getJsonAtParentLevel(psiElement);
+            final JsonObject attributes = parentJson.getAsJsonObject(ATTRIBUTES);
+            if (attributes == null || attributes.isJsonNull() || !attributes.has(propertyLabelName)) {
+                return false;
+            }
+
+            final JsonObject entryDetails = attributes.getAsJsonObject(propertyLabelName);
+            return entryDetails.has("node") &&
+                    entryDetails.get("node").getAsString().equals("sequence");
+        }
+        return false;
+    }
+
+    public boolean isImportNode(ASTNode node) {
+        return PsiTreeUtil.findFirstParent(node.getPsi(), element -> element instanceof OMTImport) != null;
     }
 }

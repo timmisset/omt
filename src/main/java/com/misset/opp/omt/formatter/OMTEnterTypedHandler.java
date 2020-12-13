@@ -11,21 +11,17 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.OMTLanguage;
-import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTJdComment;
-import com.misset.opp.omt.psi.OMTMemberListItem;
+import com.misset.opp.omt.psi.OMTSequenceItem;
 import com.misset.opp.omt.psi.OMTTypes;
-import com.misset.opp.omt.psi.support.OMTTokenSets;
+import com.misset.opp.omt.settings.OMTCodeStyleSettings;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
-
-import static com.misset.opp.omt.psi.util.UtilManager.getTokenFinderUtil;
-import static com.misset.opp.omt.psi.util.UtilManager.getTokenUtil;
+import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
 
 public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
 
@@ -36,57 +32,34 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
 
     @Override
     public Result postProcessEnter(@NotNull PsiFile file, @NotNull Editor editor, @NotNull DataContext dataContext) {
-        if (!(file instanceof OMTFile)) { // disable for now, doesn't seem to work with the formatted blocks
+
+        if (elementAtCaretOnEnter == null) {
             return Result.Continue;
         }
         editor.getCaretModel().getOffset();
         documentManager = PsiDocumentManager.getInstance(file.getProject());
         int caretOffset = editor.getCaretModel().getOffset();
 
-        indentationOnNewLineInRootLevelCorrection(file, editor, caretOffset);
-
         // get the usuable element at the caret
         PsiElement elementAt = getElementAtCaret(file, caretOffset);
 
         if (isInJavaDocs(elementAt)) {
-            insert(editor, "* ", 0, caretOffset);
+            insert(editor, " * ", caretOffset);
+            if (addJavaDocsClosure()) {
+                insert(editor, "\n */", caretOffset + 3, false);
+            }
             return Result.Stop;
         }
-
-        PsiElement sibling = elementAt;
-        while (sibling != null && getTokenUtil().isWhiteSpace(sibling)) {
-            sibling = sibling.getPrevSibling();
-        }
-        if (getTokenUtil().isSequenceItemContainer(elementAt) && !hasEmptySequenceItem(elementAt)) {
-            insert(editor, "-", getSequenceBulletTrailingSpace(sibling), caretOffset);
-            assureIndentation(elementAt, editor.getDocument(), caretOffset);
+        if (setBullet()) {
+            insert(editor, "-" + getAfterSequenceBulletSpacing(file), caretOffset);
             return Result.Stop;
         }
 
         return Result.Continue;
     }
 
-    /**
-     * This method is required to correct for indentation on empty lines after a root level key:
-     * import:<caret>
-     * is anchoring to the PsiFile instead of the block which causes a space(0) indentation
-     *
-     * @param file
-     * @param editor
-     * @param caretOffset
-     */
-    private void indentationOnNewLineInRootLevelCorrection(PsiFile file, Editor editor, int caretOffset) {
-        // check for indentation in new line
-        int lineNumber = editor.getDocument().getLineNumber(caretOffset);
-        int lineOffset = editor.getDocument().getLineStartOffset(lineNumber);
-        int previousLineOffset = editor.getDocument().getLineStartOffset(lineNumber - 1);
-        if (!isInJavaDocs(null) && lineOffset == caretOffset && lineOffset - previousLineOffset > 1) {
-            // this is an issue with rootblock indentation, something wrong in the block formation probably
-            // but I can't seem to find the cause. For now, add the indentation manually:
-            int indentSize = Objects.requireNonNull(CodeStyle.getLanguageSettings(file, OMTLanguage.INSTANCE).getIndentOptions()).INDENT_SIZE;
-            editor.getDocument().insertString(caretOffset, StringUtil.repeat(" ", indentSize));
-            editor.getCaretModel().moveToOffset(caretOffset + indentSize);
-        }
+    private boolean addJavaDocsClosure() {
+        return PsiTreeUtil.findFirstParent(elementAtCaretOnEnter, element -> element instanceof OMTJdComment) == null;
     }
 
     private boolean isInJavaDocs(PsiElement elementAt) {
@@ -95,62 +68,73 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
                 (elementAt != null && PsiTreeUtil.findFirstParent(elementAt, parent -> parent instanceof OMTJdComment) != null);
     }
 
+    private boolean setBullet() {
+        return getModelUtil().isImportNode(elementAtCaretOnEnter.getNode()) ||
+                getModelUtil().isSequenceNode(elementAtCaretOnEnter.getNode()) || isSequenceItem();
+    }
+
+    private boolean isAtBullet() {
+        return elementAtCaretOnEnter != null &&
+                elementAtCaretOnEnter.getNode().getElementType() == OMTTypes.SEQUENCE_BULLET;
+    }
+
+    private boolean isSequenceItem() {
+        return PsiTreeUtil.findFirstParent(elementAtCaretOnEnter, element -> element instanceof OMTSequenceItem) != null;
+    }
+
+    private String getAfterSequenceBulletSpacing(PsiFile file) {
+        final OMTCodeStyleSettings codeStyleSettings = CodeStyle.getCustomSettings(file, OMTCodeStyleSettings.class);
+        if (codeStyleSettings.INDENT_AFTER_SEQUENCE_VALUE) {
+            final CommonCodeStyleSettings languageSettings = CodeStyle.getLanguageSettings(file);
+            if (languageSettings.getIndentOptions() == null) {
+                return " ";
+            }
+            final int indent_size = languageSettings.getIndentOptions().INDENT_SIZE;
+            return StringUtil.repeat(" ", indent_size - 1);
+        }
+        return " ";
+
+    }
+
     private PsiElement getElementAtCaret(PsiFile file, int caretOffset) {
         PsiElement elementAt = file.findElementAt(caretOffset);
         while (caretOffset > 0 && elementAt == null) {
             caretOffset -= 1;
             elementAt = file.findElementAt(caretOffset);
         }
-        while (elementAt != null && OMTTokenSets.WHITESPACE.contains(elementAt.getNode().getElementType())) {
-            elementAt = elementAt.getParent();
+        if (elementAt != null && OMTTokenSets.WHITESPACE.contains(elementAt.getNode().getElementType())) {
+            elementAt = PsiTreeUtil.prevLeaf(elementAt, true);
         }
         return elementAt;
     }
 
-
     @Override
     public Result preprocessEnter(@NotNull PsiFile file, @NotNull Editor editor, @NotNull Ref<Integer> caretOffset, @NotNull Ref<Integer> caretAdvance, @NotNull DataContext dataContext, EditorActionHandler originalHandler) {
-        // TODO: Check for sequence bullet indentation
         elementAtCaretOnEnter = getElementAtCaret(file, caretOffset.get());
         nodeTypeAtCaretOnEnter = elementAtCaretOnEnter != null ? elementAtCaretOnEnter.getNode().getElementType() : null;
+
+        if (isAtBullet()) {
+            editor.getDocument().replaceString(
+                    elementAtCaretOnEnter.getTextOffset(),
+                    caretOffset.get(),
+                    StringUtil.repeat(" ", caretOffset.get() - elementAtCaretOnEnter.getTextOffset())
+            );
+            return Result.Stop;
+        }
         return Result.Continue;
     }
 
-    private void insert(Editor editor, String token, int spacesAfterInsert, int caretOffset) {
+    private void insert(Editor editor, String token, int caretOffset) {
+        insert(editor, token, caretOffset, true);
+    }
+
+    private void insert(Editor editor, String text, int caretOffset, boolean moveToEndOfInsertedText) {
         final Document document = editor.getDocument();
         documentManager.doPostponedOperationsAndUnblockDocument(document);
-        String insertedString = String.format("%s%s",
-                token,
-                StringUtil.repeat(" ", spacesAfterInsert));
-
-        document.insertString(caretOffset, insertedString);
+        document.insertString(caretOffset, text);
         documentManager.commitDocument(document);
-        editor.getCaretModel().moveToOffset(caretOffset + insertedString.length());
-    }
-
-    private int getSequenceBulletTrailingSpace(PsiElement container) {
-        final OMTMemberListItem sequenceItem = PsiTreeUtil.findChildOfType(container, OMTMemberListItem.class);
-        if (sequenceItem == null) {
-            return 3;
-        } // default indentation of 4 - 1 for the leading "-"
-        final PsiElement whiteSpace = sequenceItem.getFirstChild() != null ? sequenceItem.getFirstChild().getNextSibling() : null;
-        if (whiteSpace != null && getTokenUtil().isWhiteSpace(whiteSpace)) {
-            return whiteSpace.getTextLength();
+        if (moveToEndOfInsertedText) {
+            editor.getCaretModel().moveToOffset(caretOffset + text.length());
         }
-
-        return 3;
-    }
-
-    private void assureIndentation(PsiElement anchor, Document document, int caretOffset) {
-        final int containerOffset = getTokenFinderUtil().getLineOffset(anchor, document);
-        final int lineOffset = getTokenFinderUtil().getLineOffset(caretOffset, document);
-        if (lineOffset < containerOffset) {
-            document.insertString(caretOffset, StringUtil.repeat(" ", containerOffset - lineOffset));
-        }
-    }
-
-    private boolean hasEmptySequenceItem(PsiElement container) {
-        final String text = container.getText().trim();
-        return text.length() > 0 && text.endsWith("-");
     }
 }

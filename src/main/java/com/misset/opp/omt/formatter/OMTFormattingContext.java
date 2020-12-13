@@ -1,8 +1,10 @@
 package com.misset.opp.omt.formatter;
 
+import com.intellij.application.options.CodeStyle;
 import com.intellij.formatting.*;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.impl.DocumentImpl;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
@@ -13,17 +15,17 @@ import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiUtilCore;
 import com.misset.opp.omt.OMTLanguage;
 import com.misset.opp.omt.psi.OMTTypes;
-import com.misset.opp.omt.psi.support.OMTTokenSets;
+import com.misset.opp.omt.settings.OMTCodeStyleSettings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
 
 import static com.misset.opp.omt.psi.OMTIgnored.END_OF_LINE_COMMENT;
 import static com.misset.opp.omt.psi.OMTTypes.*;
+import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
 import static com.misset.opp.omt.psi.util.UtilManager.getTokenFinderUtil;
 
 /**
@@ -43,13 +45,18 @@ public class OMTFormattingContext {
     private final SpacingBuilder spacingBuilder;
     private final Document document;
 
-    private final boolean indentSequenceBullets = false;
+    private final static TokenSet indentNotRelativeToParent = TokenSet.create(SCRIPT, COMMAND_BLOCK, SIGNATURE);
+
+    private final CommonCodeStyleSettings common;
+    private final OMTCodeStyleSettings customCodeStyleSettings;
 
     public OMTFormattingContext(@NotNull CodeStyleSettings settings, @NotNull PsiFile file) {
         document = file.getVirtualFile() != null ?
-                FileDocumentManager.getInstance().getDocument(file.getVirtualFile()) : null;
+                FileDocumentManager.getInstance().getDocument(file.getVirtualFile()) :
+                new DocumentImpl(file.getText());
 
-        CommonCodeStyleSettings common = settings.getCommonSettings(OMTLanguage.INSTANCE);
+        common = settings.getCommonSettings(OMTLanguage.INSTANCE);
+        customCodeStyleSettings = settings.getCustomSettings(OMTCodeStyleSettings.class);
         spacingBuilder = new SpacingBuilder(settings, OMTLanguage.INSTANCE)
                 .around(OMTTokenSets.ASSIGNMENT_OPERATORS).spaceIf(common.SPACE_AROUND_ASSIGNMENT_OPERATORS)
         ;
@@ -60,14 +67,20 @@ public class OMTFormattingContext {
         if (spacing != null) {
             return spacing;
         }
-        //                .betweenInside(NAMESPACE_PREFIX, NAMESPACE_IRI, PREFIX).spaces(4)
         if (isNodeType(parent, PREFIX) && isNodeType(child1, NAMESPACE_PREFIX) && isNodeType(child2, NAMESPACE_IRI)) {
             // spacing between the prefix and iri depends on the size of the largest prefix:
             final int maxLength = getMaxPrefixLength(((OMTFormattingBlock) parent).getNode());
-            final int spaces = maxLength + 4 - child1.getTextRange().getLength();
+            final int spaces = maxLength + getIndentSize() - child1.getTextRange().getLength();
             return Spacing.createSpacing(spaces, spaces, 0, false, 0);
         }
+        spacingBuilder.afterInside(SEQUENCE_BULLET, TokenSet.create(
+                SEQUENCE_ITEM, MEMBER_LIST_ITEM
+        )).spaces(customCodeStyleSettings.INDENT_AFTER_SEQUENCE_VALUE ? getIndentSize() : 1);
         return null;
+    }
+
+    private int getIndentSize() {
+        return common.getIndentOptions() != null ? common.getIndentOptions().INDENT_SIZE : 4;
     }
 
     private int getMaxPrefixLength(ASTNode prefix) {
@@ -92,9 +105,9 @@ public class OMTFormattingContext {
         Indent indent = Indent.getNoneIndent();
         if (OMTTokenSets.ENTRIES.contains(nodeType) && !isRootElement(node)) {
             indent = Indent.getNormalIndent(true);
-        } else if (indentSequenceBullets && OMTTypes.MEMBER_LIST_ITEM == nodeType) {
+        } else if (customCodeStyleSettings.INDENT_SEQUENCE_VALUE && OMTTypes.MEMBER_LIST_ITEM == nodeType) {
             indent = Indent.getNormalIndent(true);
-        } else if (indentSequenceBullets && SEQUENCE_ITEM == nodeType) {
+        } else if (customCodeStyleSettings.INDENT_SEQUENCE_VALUE && SEQUENCE_ITEM == nodeType) {
             indent = Indent.getNormalIndent(true);
         } else if (OMTTokenSets.DEFINED_STATEMENTS.contains(nodeType)) { // Query and Command statements
             indent = Indent.getNormalIndent(false);
@@ -195,7 +208,6 @@ public class OMTFormattingContext {
         while (OMTTokenSets.SKIPPABLE_CONTAINERS.contains(container.getElementType())) {
             container = container.getTreeParent();
         }
-
         return document.getLineNumber(container.getStartOffset());
     }
 
@@ -316,8 +328,6 @@ public class OMTFormattingContext {
 
     /**
      * All JavaDocs are aligned to the Start element
-     * The
-     *
      * @param node
      * @return
      */
@@ -428,16 +438,25 @@ public class OMTFormattingContext {
     }
 
     public Indent newChildIndent(ASTNode node) {
-        final TokenSet indentNotRelativeToParent = TokenSet.create(SCRIPT, COMMAND_BLOCK, SIGNATURE);
-        if (node instanceof File) {
+        if (isFileNode(node)) {
             return Indent.getNoneIndent();
         }
-        if (indentNotRelativeToParent.contains(node.getElementType())) {
-            return Indent.getNormalIndent(false);
+        if (getModelUtil().isSequenceNode(node) || getModelUtil().isImportNode(node)) {
+            final OMTCodeStyleSettings codeStyleSettings = CodeStyle.getCustomSettings(node.getPsi().getContainingFile(), OMTCodeStyleSettings.class);
+            if (!codeStyleSettings.INDENT_SEQUENCE_VALUE) {
+                return Indent.getNoneIndent();
+            } else {
+                return Indent.getNormalIndent(true);
+            }
         }
-        return Indent.getNormalIndent(true);
+        return Indent.getNormalIndent(
+                !indentNotRelativeToParent.contains(node.getElementType())
+        );
     }
 
+    private boolean isFileNode(ASTNode node) {
+        return node.getTreeParent() == null;
+    }
 
 }
 

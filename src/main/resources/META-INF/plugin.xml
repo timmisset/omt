@@ -21,6 +21,9 @@
         <enterHandlerDelegate implementation="com.misset.opp.omt.formatter.OMTEnterTypedHandler"/>
         <colorSettingsPage implementation="com.misset.opp.omt.style.OMTColorSettingsPage"/>
         <annotator language="OMT" implementationClass="com.misset.opp.omt.OMTAnnotator"/>
+        <codeStyleSettingsProvider implementation="com.misset.opp.omt.settings.OMTCodeStyleSettingsProvider"/>
+        <langCodeStyleSettingsProvider
+                implementation="com.misset.opp.omt.settings.OMTLanguageCodeStyleSettingsProvider"/>
         <completion.contributor language="OMT"
                                 order="first"
                                 implementationClass="com.misset.opp.omt.completion.OMTCompletionContributor"/>
