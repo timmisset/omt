@@ -51,8 +51,6 @@ public class ImportCompletion extends RDFCompletion {
                 file.getExportedMembers().values().stream()
                         .filter(exportMember -> !existingImports.contains(exportMember.getName()))
                         .forEach(exportMember -> addPriorityElement(exportMember.getName(), IMPORTABLE_MEMBER_PRIORITY));
-                // all classes and types, which can be traversed using: /ont:ClassA / ^rdf:type ...
-                setResolvedElementsForClasses(element);
 
                 complete(result);
             }

@@ -99,10 +99,12 @@ public class MemberUtil {
     }
 
     private PsiElement getComparableContainer(PsiElement element) {
-        // the element depth depends on the origin:
         PsiElement containingElement = PsiTreeUtil.getTopmostParentOfType(element, OMTDefinedStatement.class);
         if (containingElement == null) {
             containingElement = PsiTreeUtil.getTopmostParentOfType(element, OMTScriptLine.class);
+        }
+        if (containingElement == null) {
+            containingElement = PsiTreeUtil.getTopmostParentOfType(element, OMTModelItemBlock.class);
         }
         if (containingElement == null) {
             containingElement = PsiTreeUtil.getTopmostParentOfType(element, OMTBlockEntry.class);

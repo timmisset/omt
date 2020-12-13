@@ -49,6 +49,7 @@ class ImportCompletionTest extends OMTCompletionTestSuite {
         final List<String> completionLookupElements = getCompletionLookupElements(content);
         assertContainsElements(completionLookupElements, "myQuery2");
         assertDoesntContain(completionLookupElements, "myQuery");
+        assertEquals(1, completionLookupElements.size());
     }
 
 }
