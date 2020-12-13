@@ -12,14 +12,11 @@ import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTExportMember;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.intentions.imports.UnwrapIntention.getUnwrapIntention;
 
@@ -212,13 +209,5 @@ public class ImportUtil {
                     .withFix(getUnwrapIntention(importSource))
                     .create();
         }
-    }
-
-    public List<OMTMember> getImportedMembers(@NotNull OMTImport omtImport) {
-        return omtImport.getMemberList() == null ? Collections.emptyList() :
-                omtImport.getMemberList().getMemberListItemList()
-                        .stream()
-                        .map(OMTMemberListItem::getMember)
-                        .collect(Collectors.toList());
     }
 }
