@@ -103,7 +103,7 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
             elementAt = file.findElementAt(caretOffset);
         }
         if (elementAt != null && OMTTokenSets.WHITESPACE.contains(elementAt.getNode().getElementType())) {
-            elementAt = PsiTreeUtil.prevLeaf(elementAt, true);
+            elementAt = PsiTreeUtil.prevLeaf(elementAt);
         }
         return elementAt;
     }

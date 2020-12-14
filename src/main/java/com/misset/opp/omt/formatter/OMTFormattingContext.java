@@ -57,25 +57,46 @@ public class OMTFormattingContext {
 
         common = settings.getCommonSettings(OMTLanguage.INSTANCE);
         customCodeStyleSettings = settings.getCustomSettings(OMTCodeStyleSettings.class);
-        spacingBuilder = new SpacingBuilder(settings, OMTLanguage.INSTANCE)
-                .around(OMTTokenSets.ASSIGNMENT_OPERATORS).spaceIf(common.SPACE_AROUND_ASSIGNMENT_OPERATORS)
-        ;
+        spacingBuilder = getDefaultSpacingBuilder(settings);
+
+    }
+
+    private SpacingBuilder getDefaultSpacingBuilder(@NotNull CodeStyleSettings settings) {
+        return new SpacingBuilder(settings, OMTLanguage.INSTANCE)
+                // assignment operators (=, ==, +=, -=)
+                .around(OMTTokenSets.ASSIGNMENT_OPERATORS)
+                .spaceIf(common.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+                // after sequence bullet
+                .afterInside(SEQUENCE_BULLET, TokenSet.create(SEQUENCE_ITEM, MEMBER_LIST_ITEM))
+                .spaces(customCodeStyleSettings.INDENT_AFTER_SEQUENCE_VALUE ? getIndentSize() : 1)
+                // inside curieConstantElement
+                .betweenInside(FORWARD_SLASH, CURIE_ELEMENT, CURIE_CONSTANT_ELEMENT)
+                .spaces(0)
+                // inside QueryPath between steps
+                .aroundInside(FORWARD_SLASH, QUERY_PATH)
+                .spaces(1)
+                // between rootblocks
+                .betweenInside(OMTTokenSets.ROOTBLOCK_ENTRIES, OMTTokenSets.ROOTBLOCK_ENTRIES, ROOT_BLOCK)
+                .blankLines(1)
+                // between modelItems
+                .between(MODEL_ITEM_BLOCK, MODEL_ITEM_BLOCK).blankLines(1)
+
+                ;
     }
 
     public Spacing computeSpacing(@NotNull Block parent, @Nullable Block child1, @NotNull Block child2) {
+        // spacing default from the SpacingBuilder
         final Spacing spacing = spacingBuilder.getSpacing(parent, child1, child2);
         if (spacing != null) {
             return spacing;
         }
+
         if (isNodeType(parent, PREFIX) && isNodeType(child1, NAMESPACE_PREFIX) && isNodeType(child2, NAMESPACE_IRI)) {
             // spacing between the prefix and iri depends on the size of the largest prefix:
             final int maxLength = getMaxPrefixLength(((OMTFormattingBlock) parent).getNode());
             final int spaces = maxLength + getIndentSize() - child1.getTextRange().getLength();
             return Spacing.createSpacing(spaces, spaces, 0, false, 0);
         }
-        spacingBuilder.afterInside(SEQUENCE_BULLET, TokenSet.create(
-                SEQUENCE_ITEM, MEMBER_LIST_ITEM
-        )).spaces(customCodeStyleSettings.INDENT_AFTER_SEQUENCE_VALUE ? getIndentSize() : 1);
         return null;
     }
 

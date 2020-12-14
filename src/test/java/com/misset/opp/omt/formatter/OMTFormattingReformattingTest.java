@@ -176,11 +176,11 @@ class OMTFormattingReformattingTest extends OMTFormattingTest {
         String formatted = "queries: |\n" +
                 "    DEFINE QUERY query($param) =>\n" +
                 "        'test'\n" +
-                "        /   CHOOSE\n" +
-                "                WHEN 'a == a' => 'a' /\n" +
-                "                    FIRST\n" +
-                "                OTHERWISE => null\n" +
-                "            END ;";
+                "        / CHOOSE\n" +
+                "              WHEN 'a == a' => 'a' /\n" +
+                "                  FIRST\n" +
+                "              OTHERWISE => null\n" +
+                "          END ;";
         assertFormattingApplied(unformatted, formatted);
     }
 

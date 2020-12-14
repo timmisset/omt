@@ -15,6 +15,13 @@ public interface OMTTokenSets {
             MEMBER_LIST,
             IMPORT_LOCATION
     );
+    TokenSet ROOTBLOCK_ENTRIES = TokenSet.create(
+            IMPORT_BLOCK,
+            PREFIX_BLOCK,
+            QUERIES_BLOCK,
+            COMMANDS_BLOCK,
+            MODEL_BLOCK
+    );
 
     TokenSet WHITESPACE = TokenSet.create(
             TokenType.WHITE_SPACE,
