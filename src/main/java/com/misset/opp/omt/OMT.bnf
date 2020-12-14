@@ -60,12 +60,12 @@ member ::=                                  OPERATOR {
                                                      }
 
 // scalars
-queriesBlock::=                             leading? QUERY_BLOCK_START (PIPE defineQueryStatement*)? {
+queriesBlock::=                             leading? QUERY_BLOCK_START (PIPE? defineQueryStatement*)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
                                                                 extends=specificBlock
                                                                 }
-commandsBlock::=                            leading? COMMAND_BLOCK_START (PIPE defineCommandStatement*)? {
+commandsBlock::=                            leading? COMMAND_BLOCK_START (PIPE? defineCommandStatement*)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 methods=[getStatements]
                                                                 extends=specificBlock
@@ -164,7 +164,7 @@ commandBlock ::=                            CURLY_OPEN (script | scriptLine+)? C
 scriptLine ::=                              leading? ((scriptContent SEMICOLON*) | commandBlock | logicalBlock)
 // the contents of a script, contained by a scriptLine or Scalar
 scriptContent ::=                           declareVariable | variableAssignment | definePrefix | commandCall | assignmentStatement |
-                                            addToCollection | removeFromCollection | logicalBlock | returnStatement | query
+                                            addToCollection | removeFromCollection | returnStatement | query
 
 // DEFINED MEMBERS
 // ODT Members are Operator and Commands, both can be created by a DEFINE statement

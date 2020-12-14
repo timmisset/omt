@@ -74,7 +74,7 @@ public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement im
         if (!firstStepInParent()) {
             return true;
         }
-        final PsiElement prevLeaf = PsiTreeUtil.prevLeaf(this, true);
+        final PsiElement prevLeaf = PsiTreeUtil.prevVisibleLeaf(this);
 
         return prevLeaf == null || prevLeaf.getNode().getElementType() != OMTTypes.FORWARD_SLASH;
 

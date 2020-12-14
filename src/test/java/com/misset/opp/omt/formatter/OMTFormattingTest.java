@@ -27,7 +27,7 @@ public abstract class OMTFormattingTest extends OMTTestSuite {
     }
 
     protected void assertFormattingApplied(String unformatted, String formatted, Consumer<PsiFile> preformattingFile) {
-        final PsiFile psiFile = myFixture.configureByText("test.omt", unformatted);
+        final PsiFile psiFile = myFixture.configureByText(getFileName(), unformatted);
         preformattingFile.accept(psiFile);
         CodeStyleManager codeStyleManager = CodeStyleManager.getInstance(myFixture.getProject());
         WriteCommandAction.runWriteCommandAction(getProject(),
@@ -38,7 +38,7 @@ public abstract class OMTFormattingTest extends OMTTestSuite {
     }
 
     protected String configureHitEnterAndReturnDocumentText(String content, Consumer<PsiFile> psiFile) {
-        final PsiFile configuredFile = myFixture.configureByText("test.omt", content);
+        final PsiFile configuredFile = myFixture.configureByText(getFileName(), content);
         psiFile.accept(configuredFile);
         myFixture.type('\n');
         return myFixture.getEditor().getDocument().getText();

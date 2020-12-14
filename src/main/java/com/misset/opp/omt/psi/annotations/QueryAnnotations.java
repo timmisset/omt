@@ -1,6 +1,5 @@
 package com.misset.opp.omt.psi.annotations;
 
-import com.intellij.lang.ASTNode;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.util.TextRange;
@@ -14,9 +13,10 @@ import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.intentions.query.MergeFiltersIntention.getMergeFilterIntention;
 import static com.misset.opp.omt.psi.intentions.query.UnwrapIntention.getUnwrapIntention;
-import static com.misset.opp.omt.psi.util.UtilManager.*;
+import static com.misset.opp.omt.psi.util.UtilManager.getQueryUtil;
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
-public class QueryAnnotations {
+public class QueryAnnotations extends OMTAnnotations {
 
     public void annotateQueryStep(OMTQueryStep step, AnnotationHolder holder) {
         // resolve the querystep to a class or type
@@ -79,6 +79,7 @@ public class QueryAnnotations {
     }
 
     public void annotateQueryCurieElement(OMTQueryStep step, AnnotationHolder holder) {
+
         List<Resource> previousStep = getQueryUtil().getPreviousStep(step);
         previousStep = previousStep.stream().filter(resource -> getRDFModelUtil().isClassOrType(resource)).collect(Collectors.toList());
         if (previousStep.isEmpty()) {
@@ -173,36 +174,18 @@ public class QueryAnnotations {
         ).range(target).create();
     }
 
-    public void annotateIfBlock(OMTIfBlock omtIfBlock, AnnotationHolder holder) {
-        annotateBoolean(omtIfBlock.getQuery().resolveToResource(), holder, omtIfBlock.getQuery());
-    }
-
     public void annotateBooleanStatement(OMTBooleanStatement booleanStatement, AnnotationHolder holder) {
         booleanStatement.getQueryList().forEach(
                 query -> annotateBoolean(query.resolveToResource(), holder, query)
         );
-
     }
 
-    public void annotateQueryPath(OMTQueryPath queryPath, AnnotationHolder holder) {
-        final List<ASTNode> duplicateSiblings = getTokenFinderUtil().getDuplicateSiblings(queryPath.getNode(), OMTTypes.FORWARD_SLASH);
-        duplicateSiblings.forEach(
-                node -> holder.newAnnotation(HighlightSeverity.ERROR, "Unexpected token").range(node).create()
-        );
-    }
-
-    private void annotateBoolean(List<Resource> valueType, AnnotationHolder holder, PsiElement range) {
-        final Resource booleanType = getRDFModelUtil().getPrimitiveTypeAsResource("boolean");
-        if (valueType == null || valueType.isEmpty()) {
-            return;
-        }
-        if (valueType.stream().noneMatch(
-                booleanType::equals
-        )) {
-            holder.newAnnotation(HighlightSeverity.ERROR,
-                    String.format("Expected boolean, got %s",
-                            valueType.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")))
-            ).range(range).create();
+    public void annotateSemicolonForDefinedQueryStatement(OMTDefineQueryStatement statement, AnnotationHolder holder) {
+        if (!statement.getText().trim().endsWith(";")) {
+            holder
+                    .newAnnotation(HighlightSeverity.ERROR, "; expected")
+                    .range(statement)
+                    .create();
         }
     }
 }
