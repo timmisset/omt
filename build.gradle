@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.0'
+version '2.0.1'
 
 sourceCompatibility = 1.8
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -42,10 +42,7 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-      RDF Ontology is included in most parts of the validation and completion providers. Typing is checked where possible,
-      resolves to an 'any' type for unknown or unresovable query-steps to prevent false-positive error annotations. 
-      Annotation of parameters is possible (and suggested with light warnings) which will help to resolve the types. 
-      Formatter is implemented, mostly based on YAML style, it also adds some formatting within queries.
+      Improved formatter for blank lines and spaces
       """
 }
 tasks{
