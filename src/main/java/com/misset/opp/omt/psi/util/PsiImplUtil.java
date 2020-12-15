@@ -300,18 +300,6 @@ public class PsiImplUtil {
                 propertyLabelText.substring(0, propertyLabelText.length() - 1) :
                 propertyLabelText;
     }
-
-    public static List<? extends PsiElement> getUsages(PsiElement element, Class<? extends PsiElement> usageClass) {
-        return PsiTreeUtil.findChildrenOfType(
-                element.getContainingFile(),
-                usageClass
-        ).stream().filter(
-                usageElement -> usageElement != element &&
-                        usageElement.getReference() != null &&
-                        usageElement.getReference().resolve() == element
-        ).collect(Collectors.toList());
-    }
-
     public static String getType(OMTModelItemBlock modelItemBlock) {
         final OMTModelItemTypeElement modelItemTypeElement = modelItemBlock.getModelItemLabel().getModelItemTypeElement();
         return modelItemTypeElement.getText().substring(1); // return type without flag token

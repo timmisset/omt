@@ -21,8 +21,7 @@ public class OMTAnnotator implements Annotator {
     private static final QueryAnnotations queryAnnotations = new QueryAnnotations();
     private static final ScriptAnnotations scriptAnnotations = new ScriptAnnotations();
 
-    @Override
-    public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
+    private void doAnnoation(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
         if (element instanceof LeafPsiElement) {
             annotateLeaf(element, holder);
             return;
@@ -124,6 +123,11 @@ public class OMTAnnotator implements Annotator {
             }
             queryAnnotations.annotateQueryStep((OMTQueryStep) element, holder);
         }
+    }
+
+    @Override
+    public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
+        doAnnoation(element, holder);
     }
 
     private void annotateLeaf(PsiElement element, AnnotationHolder holder) {

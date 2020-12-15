@@ -8,16 +8,15 @@ import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.search.searches.ReferencesSearch;
+import com.intellij.util.Query;
 import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.util.ProjectUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.mockito.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -138,10 +137,15 @@ class CurieUtilTest extends OMTTestSuite {
     void annotateNamespacePrefixThrowsNotUsedAnnotation() {
         final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
         ApplicationManager.getApplication().runReadAction(() -> {
-            loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
-            curieUtil.annotateNamespacePrefix(def, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.WARNING), eq("def: is never used"));
-            verify(annotationBuilder, times(1)).create();
+            try (MockedStatic<ReferencesSearch> searchMockedStatic = mockStatic(ReferencesSearch.class)) {
+                final Query mock = mock(Query.class);
+                doReturn(false).when(mock).anyMatch(any());
+                searchMockedStatic.when(() -> ReferencesSearch.search(any(PsiElement.class))).thenReturn(mock);
+                loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
+                curieUtil.annotateNamespacePrefix(def, annotationHolder);
+                verify(annotationHolder).newAnnotation(eq(HighlightSeverity.WARNING), eq("def: is never used"));
+                verify(annotationBuilder, times(1)).create();
+            }
         });
     }
 
@@ -149,9 +153,14 @@ class CurieUtilTest extends OMTTestSuite {
     void annotateNamespacePrefixDoesNotThrowNotUsedAnnotation() {
         final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
         ApplicationManager.getApplication().runReadAction(() -> {
-            loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
-            curieUtil.annotateNamespacePrefix(abcDeclared, annotationHolder);
-            verify(annotationBuilder, times(0)).create();
+            try (MockedStatic<ReferencesSearch> searchMockedStatic = mockStatic(ReferencesSearch.class)) {
+                final Query mock = mock(Query.class);
+                doReturn(true).when(mock).anyMatch(any());
+                searchMockedStatic.when(() -> ReferencesSearch.search(any(PsiElement.class))).thenReturn(mock);
+                loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
+                curieUtil.annotateNamespacePrefix(abcDeclared, annotationHolder);
+                verify(annotationBuilder, times(0)).create();
+            }
         });
     }
 
