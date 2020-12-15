@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -28,12 +29,25 @@ public class RDFModelUtil {
      */
     public static final Property RDF_TYPE = new PropertyImpl("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
     private final String rootFolder;
-    Model model;
-    public final Supplier<Resource> OWL_CLASS = () -> this.model.createResource("http://www.w3.org/2002/07/owl#Class");
-    public final Supplier<Resource> NODE_SHAPE = () -> this.model.createResource("http://www.w3.org/ns/shacl#NodeShape");
+
+    public static final Function<Model, Resource> OWL_CLASS = (Model model) -> model.createResource("http://www.w3.org/2002/07/owl#Class");
+    public static final Function<Model, Resource> NODE_SHAPE = (Model model) -> model.createResource("http://www.w3.org/ns/shacl#NodeShape");
 
     private static final HashMap<Resource, List<Resource>> predicateObjects = new HashMap<>();
     private static final HashMap<Resource, List<Resource>> predicateSubjects = new HashMap<>();
+    // The ontology is completely refreshed when a change is made to the ttl files in the project
+    // while this doesn't happen the same ontology queries will always return the same result
+    final Map<String, Object> cache = new HashMap<>();
+    private Resource owlClass;
+    private Resource nodeShape;
+    private Model model;
+
+    private Resource getOwlClass() {
+        if (owlClass == null) {
+            owlClass = OWL_CLASS.apply(model);
+        }
+        return owlClass;
+    }
 
     public RDFModelUtil(String rootFolder) {
         this.rootFolder = rootFolder;
@@ -121,7 +135,7 @@ public class RDFModelUtil {
     /**
      * Will return the sh:properties of this resource or its parent classes
      */
-    public HashMap<Statement, Resource> getShaclProperties(Resource resource) {
+    public Map<Statement, Resource> getShaclProperties(Resource resource) {
         HashMap<Statement, Resource> statementMap = new HashMap<>();
         if (resource == null) {
             return statementMap;
@@ -137,34 +151,6 @@ public class RDFModelUtil {
             statementMap.putAll(getShaclProperties(superClassResource));
         }
         return statementMap;
-    }
-
-
-    /**
-     * Returns the parent classes of this resource (if any)
-     */
-    public List<Resource> getClassLineage(Resource resource) {
-        List<Resource> lineage = new ArrayList<>();
-        lineage.add(resource);
-        resource.listProperties(RDFS_SUBCLASS).toList()
-                .stream().filter(statement -> statement.getObject() != null && statement.getObject().asResource() != resource)
-                .forEach(
-                        statement -> lineage.addAll(getClassLineage(statement.getObject().asResource()))
-                );
-        return lineage;
-    }
-
-    public boolean isClassOrType(Resource resource) {
-        if (resource == null) {
-            return false;
-        }
-        final List<Statement> statementList = resource.listProperties(RDF_TYPE).toList();
-        for (Statement statement : statementList) {
-            if (statement.getObject().asResource().toString().equals(OWL_CLASS.get().toString())) {
-                return true;
-            }
-        }
-        return isPrimitiveType(resource);
     }
 
     public List<Resource> getAllClasses() {
@@ -246,7 +232,7 @@ public class RDFModelUtil {
         if (classResource == null) {
             return implementation;
         }
-        if (classResource.equals(OWL_CLASS.get()) || classResource.equals(NODE_SHAPE.get())) {
+        if (classResource.equals(getOwlClass()) || classResource.equals(getNodeShape())) {
             return implementation;
         }
         return classResource;
@@ -254,17 +240,6 @@ public class RDFModelUtil {
 
     public List<Resource> getClasses(List<Resource> implementantions) {
         return implementantions.stream().map(this::getClass).collect(Collectors.toList());
-    }
-
-
-    public boolean isClassResource(Resource resource) {
-        StmtIterator stmtIterator = resource.listProperties(RDF_TYPE);
-        while (stmtIterator.hasNext()) {
-            if (stmtIterator.nextStatement().getObject().asResource().equals(OWL_CLASS.get())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public boolean hasPredicate(Resource subject, Resource predicate) {
@@ -455,47 +430,12 @@ public class RDFModelUtil {
         return resource.toString();
     }
 
-    /**
-     * <p>Class:&nbsp;<strong>myClass</strong></p>
-     * <p>Parent lineage:</p>
-     * <ul>
-     * <li>First parent</li>
-     * <li>Grandparent</li>
-     * </ul>
-     * <p>Predicates:</p>
-     * <ul>
-     * <li>myPredicate (typeOfPredicate)</li>
-     * <li>mySecondPredicate (typeOfPredicate)</li>
-     * </ul>
-     * <p>Referred to by:</p>
-     * <ul>
-     * <li>referedByClass (viaPredicate)</li>
-     * </ul>
-     */
-    private String describeClass(Resource resource) {
-        StringBuilder description = new StringBuilder();
-
-        description.append(String.format("<p>Class:&nbsp;<strong>%s</strong></p>", resource.getLocalName()));
-        List<Resource> classLineage = getClassLineage(resource);
-        if (classLineage.size() > 1) {
-            List<Resource> superClasses = classLineage.subList(1, classLineage.size() - 1);
-            description.append("<p>Parent lineage:</p>");
-            description.append("<ul>");
-            superClasses.forEach(superClass ->
-                    description.append(String.format("<li>%s:%s (%s)</li>", superClass.getModel().getNsURIPrefix(superClass.getNameSpace()), superClass.getLocalName(), superClass.toString()))
-            );
-            description.append("</ul>");
-        }
-        HashMap<Statement, Resource> shaclProperties = getShaclProperties(resource);
-        if (!shaclProperties.isEmpty()) {
-            description.append("<p>Predicates:</p>");
-            description.append("<ul>");
-            shaclProperties.forEach((statement, fromResource) -> {
-                Resource predicate = statement.getProperty(SHACL_PATH).getObject().asResource();
-                description.append(String.format("<li>%s:%s (%s)</li>",
-                        statement.getModel().getNsURIPrefix(predicate.getNameSpace()), predicate.getLocalName(), fromResource.getLocalName()));
-            });
-            description.append("</ul>");
+    public boolean isClassResource(Resource resource) {
+        StmtIterator stmtIterator = resource.listProperties(RDF_TYPE);
+        while (stmtIterator.hasNext()) {
+            if (stmtIterator.nextStatement().getObject().asResource().equals(getOwlClass())) {
+                return true;
+            }
         }
         return description.toString();
     }

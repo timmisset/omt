@@ -63,7 +63,7 @@ public class CurieUtil {
 
     public void annotateNamespacePrefix(@NotNull OMTNamespacePrefix namespacePrefix, @NotNull AnnotationHolder holder) {
         if (namespacePrefix.getParent() instanceof OMTPrefix) {
-            getAnnotationUtil().annotateUsage(namespacePrefix, OMTNamespacePrefix.class, holder);
+            getAnnotationUtil().annotateUsage(namespacePrefix, holder);
         } else {
             List<OMTPrefix> knownPrefixes = getProjectUtil().getKnownPrefixes(namespacePrefix.getName());
             AnnotationBuilder annotationBuilder = getAnnotationUtil().annotateOriginGetBuilder(namespacePrefix, holder);

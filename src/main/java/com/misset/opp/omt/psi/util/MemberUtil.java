@@ -6,6 +6,8 @@ import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
@@ -414,22 +416,22 @@ public class MemberUtil {
         if (importedMember.getReference() == null) {
             return;
         }
-        PsiElement reference = importedMember.getReference().resolve();
-        if (reference != null) {
-            List<PsiElement> elements = new ArrayList<>(PsiTreeUtil.findChildrenOfType(importedMember.getContainingFile(), OMTCall.class));
-            elements.addAll(PsiTreeUtil.findChildrenOfType(importedMember.getContainingFile(), OMTMember.class));
-
-            for (PsiElement element : elements) {
-                if (element.getReference() != null &&
-                        element != importedMember &&
-                        element.getReference().isReferenceTo(reference)) {
-                    return;
-                }
-            }
-            // import is not used:
-            holder.newAnnotation(HighlightSeverity.WARNING, String.format(
-                    "%s is not used", importedMember.getName()
-            )).withFix(removeIntention.getRemoveIntention(importedMember.getParent())).create();
+        final PsiFile currentFile = importedMember.getContainingFile();
+        PsiElement resolvedElement = importedMember.getReference().resolve();
+        if (resolvedElement == null) {
+            return;
         }
+
+        if (ReferencesSearch.search(resolvedElement)
+                .anyMatch(
+                        psiReference -> psiReference.getElement().getContainingFile() == currentFile &&
+                                importedMember != psiReference.getElement()
+                )) {
+            return;
+        }
+        // import is not used:
+        holder.newAnnotation(HighlightSeverity.WARNING, String.format(
+                "%s is not used", importedMember.getName()
+        )).withFix(removeIntention.getRemoveIntention(importedMember.getParent())).create();
     }
 }

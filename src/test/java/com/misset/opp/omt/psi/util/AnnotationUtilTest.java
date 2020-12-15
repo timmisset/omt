@@ -6,6 +6,8 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.search.searches.ReferencesSearch;
+import com.intellij.util.Query;
 import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTVariable;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
 import java.util.List;
@@ -77,17 +80,27 @@ class AnnotationUtilTest extends OMTTestSuite {
     @Test
     void annotateUsageThrowsNotUsedAnnotation() {
         ApplicationManager.getApplication().runReadAction(() -> {
-            getAnnotationUtil().annotateUsage(unusedVariable, OMTVariable.class, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.WARNING), eq("$unusedVariable is never used"));
-            verify(annotationBuilder, times(1)).create();
+            try (MockedStatic<ReferencesSearch> searchMockedStatic = mockStatic(ReferencesSearch.class)) {
+                final Query mock = mock(Query.class);
+                doReturn(false).when(mock).anyMatch(any());
+                searchMockedStatic.when(() -> ReferencesSearch.search(eq(unusedVariable))).thenReturn(mock);
+                getAnnotationUtil().annotateUsage(unusedVariable, annotationHolder);
+                verify(annotationHolder).newAnnotation(eq(HighlightSeverity.WARNING), eq("$unusedVariable is never used"));
+                verify(annotationBuilder, times(1)).create();
+            }
         });
     }
 
     @Test
     void annotateUsageDoesNotThrowUnusedAnnotation() {
         ApplicationManager.getApplication().runReadAction(() -> {
-            getAnnotationUtil().annotateUsage(usedVariableDeclaration, OMTVariable.class, annotationHolder);
-            verify(annotationBuilder, times(0)).create();
+            try (MockedStatic<ReferencesSearch> searchMockedStatic = mockStatic(ReferencesSearch.class)) {
+                final Query mock = mock(Query.class);
+                doReturn(true).when(mock).anyMatch(any());
+                searchMockedStatic.when(() -> ReferencesSearch.search(eq(unusedVariable))).thenReturn(mock);
+                getAnnotationUtil().annotateUsage(unusedVariable, annotationHolder);
+                verify(annotationBuilder, times(0)).create();
+            }
         });
     }
 

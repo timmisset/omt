@@ -4,18 +4,17 @@ import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.search.searches.ReferencesSearch;
 import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public class AnnotationUtil {
 
     /**
      * Generic method to check if the declaration of an element (variable, prefix etc) is ever referred to by another element
      */
-    public void annotateUsage(PsiElement element, Class<? extends PsiElement> usageClass, @NotNull AnnotationHolder holder) {
-        AnnotationBuilder annotationBuilder = annotateUsageGetBuilder(element, usageClass, holder);
+    public void annotateUsage(PsiElement element, @NotNull AnnotationHolder holder) {
+        AnnotationBuilder annotationBuilder = annotateUsageGetBuilder(element, holder);
         if (annotationBuilder != null) {
             annotationBuilder
                     .withFix(new RemoveIntention().getRemoveIntention(element))
@@ -23,11 +22,11 @@ public class AnnotationUtil {
         }
     }
 
-    public AnnotationBuilder annotateUsageGetBuilder(PsiElement element, Class<? extends PsiElement> usageClass, @NotNull AnnotationHolder holder) {
-        List<? extends PsiElement> usages = PsiImplUtil.getUsages(element, usageClass);
-        if (!usages.isEmpty()) {
+    public AnnotationBuilder annotateUsageGetBuilder(PsiElement element, @NotNull AnnotationHolder holder) {
+        if (ReferencesSearch.search(element)
+                .anyMatch(psiReference -> element != psiReference.getElement())) {
             return null;
-        }
+        } // no error, it's being used
         return holder.newAnnotation(HighlightSeverity.WARNING, String.format("%s is never used", element.getText())).range(element);
     }
 
