@@ -11,6 +11,7 @@ import com.misset.opp.omt.util.ProjectUtil;
 import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
@@ -22,6 +23,14 @@ import java.util.function.Predicate;
 import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
+
+    @Test
+    public void systemToken() {
+        final String token = System.getenv().getOrDefault("ORG_GRADLE_PROJECT_intellijPublishToken", "");
+        if (token.isEmpty()) {
+            fail("A token is required for publishing the plugin");
+        }
+    }
 
     protected static final String XSD_BOOLEAN = "http://www.w3.org/2001/XMLSchema#boolean";
     protected static final String XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
