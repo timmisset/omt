@@ -50,3 +50,6 @@ tasks{
         jvmArgs("-Xmx2000m")
     }
 }
+publishPlugin {
+    token System.getenv().getOrDefault("ORG_GRADLE_PROJECT_intellijPublishToken", "")
+}
