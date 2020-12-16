@@ -3,7 +3,6 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
-import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.OMTTestSuite;
@@ -25,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
 
 class VariableUtilTest extends OMTTestSuite {
 
@@ -113,67 +112,6 @@ class VariableUtilTest extends OMTTestSuite {
             OMTVariable declared = variableList.get(0);
             OMTVariable usage = variableList.get(1);
             assertEquals(declared, variableUtil.getDeclaredByVariable(usage).get());
-        });
-    }
-
-    @Test
-    void annotateVariable_GlobalVariable() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable globalVariable = exampleFiles.getPsiElementFromRootDocument(
-                    OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$username")
-            );
-            variableUtil.annotateVariable(globalVariable, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("$username is a global variable which is always available"));
-            verify(annotationBuilder, times(1)).create();
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateVariable_IgnoredVariable() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable globalVariable = exampleFiles.getPsiElementFromRootDocument(
-                    OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$_")
-            );
-            variableUtil.annotateVariable(globalVariable, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("$_ is used to indicate the variable ignored"));
-            verify(annotationBuilder, times(1)).create();
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateVariable_DeclaredVariable() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable declaredVariable = exampleFiles.getPsiElementFromRootDocument(
-                    OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$myDeclaredVariable")
-            );
-            variableUtil.annotateVariable(declaredVariable, annotationHolder);
-            verify(annotationUtil, times(1)).annotateUsageGetBuilder(eq(declaredVariable), eq(annotationHolder));
-        });
-    }
-
-    @Test
-    void annotateVariable_LocalVariable() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable declaredVariable = exampleFiles.getPsiElementFromRootDocument(
-                    OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$newValue")
-            );
-            variableUtil.annotateVariable(declaredVariable, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("$newValue is locally available in onChange"));
-            verify(annotationBuilder, times(1)).create();
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateVariable_ThrowsNotDeclared() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable declaredVariable = exampleFiles.getPsiElementFromRootDocument(
-                    OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$value")
-            );
-            variableUtil.annotateVariable(declaredVariable, annotationHolder);
-            verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("$value is not declared"));
         });
     }
 
