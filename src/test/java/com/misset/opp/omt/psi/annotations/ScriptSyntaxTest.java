@@ -1,4 +1,4 @@
-package com.misset.opp.omt.annotator;
+package com.misset.opp.omt.psi.annotations;
 
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.lang.annotation.HighlightSeverity;

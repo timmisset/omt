@@ -1,16 +1,14 @@
-package com.misset.opp.omt;
+package com.misset.opp.omt.psi.annotations;
 
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.annotations.QueryAnnotator;
-import com.misset.opp.omt.psi.annotations.ScriptAnnotator;
-import com.misset.opp.omt.psi.annotations.VariableAnnotator;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.support.OMTCall;
 import org.jetbrains.annotations.NotNull;
@@ -22,6 +20,7 @@ public class OMTAnnotator implements Annotator {
     private static final QueryAnnotator queryAnnotations = new QueryAnnotator();
     private static final ScriptAnnotator scriptAnnotations = new ScriptAnnotator();
     private static final VariableAnnotator variableAnnotations = new VariableAnnotator();
+    private static final DefinedParameterAnnotator definedParameterAnnotator = new DefinedParameterAnnotator();
 
     private void doAnnoation(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
         if (element instanceof LeafPsiElement) {
@@ -51,7 +50,7 @@ public class OMTAnnotator implements Annotator {
             return;
         }
         if (element instanceof OMTDefineParam) {
-            getVariableUtil().annotateDefineParameter((OMTDefineParam) element, holder);
+            definedParameterAnnotator.annotateDefineParameter((OMTDefineParam) element, holder);
             return;
         }
         if (element instanceof OMTCall) {
@@ -129,6 +128,9 @@ public class OMTAnnotator implements Annotator {
 
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
+        if (element instanceof PsiWhiteSpace) {
+            return;
+        }
         doAnnoation(element, holder);
     }
 

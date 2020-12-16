@@ -143,6 +143,11 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         utilManager.when(UtilManager::getProjectUtil).thenReturn(projectUtil);
     }
 
+    protected void setUtilMock(VariableUtil variableUtil) {
+        validateMock(variableUtil);
+        utilManager.when(UtilManager::getVariableUtil).thenReturn(variableUtil);
+    }
+
     protected void setUtilMock(ImportUtil importUtil) {
         validateMock(importUtil);
         utilManager.when(UtilManager::getImportUtil).thenReturn(importUtil);

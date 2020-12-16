@@ -185,4 +185,5 @@ class VariableAnnotatorTest extends OMTTestSuite {
             verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.WEAK_WARNING), eq("Annotate parameter with a type"));
         }
     }
+
 }

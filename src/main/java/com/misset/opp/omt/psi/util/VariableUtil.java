@@ -1,7 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
 import com.google.gson.JsonObject;
-import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
@@ -11,7 +10,6 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.impl.BuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTQueryReverseStepImpl;
-import com.misset.opp.omt.psi.intentions.variables.AnnotateParameterIntention;
 import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTCall;
 import org.apache.jena.rdf.model.Resource;
@@ -156,36 +154,7 @@ public class VariableUtil {
 
     }
 
-    public void annotateDefineParameter(OMTDefineParam defineParam, AnnotationHolder holder) {
-        defineParam.getVariableList().forEach(omtVariable -> {
-            final List<Resource> type = omtVariable.getType();
-            if (type.isEmpty()) {
-                final List<Resource> typeSuggestions = getTypeSuggestions(defineParam, omtVariable);
-                AnnotationBuilder annotate_parameter_with_type = holder.newAnnotation(HighlightSeverity.WEAK_WARNING, "Annotate parameter with type")
-                        .tooltip(String.format("Annotate parameter %s with a type, this help to resolve the query path%n%n" +
-                                "/**" +
-                                "%n* @param %s (pol:Classname)%n" +
-                                "*/", omtVariable.getName(), omtVariable.getName()))
-                        .range(omtVariable);
-                final List<String> suggetions = typeSuggestions.stream().map(resource -> ((OMTFile) omtVariable.getContainingFile()).resourceToCurie(resource)).collect(Collectors.toList());
-                if (typeSuggestions.isEmpty()) {
-                    suggetions.add("prefix:Class");
-                }
-
-                final AnnotateParameterIntention annotateParameterIntention = new AnnotateParameterIntention();
-                for (String suggestion : suggetions) {
-                    annotate_parameter_with_type = annotate_parameter_with_type.withFix(
-                            annotateParameterIntention.getAnnotateParameterIntention(
-                                    defineParam, omtVariable.getName(), suggestion
-                            )
-                    );
-                }
-                annotate_parameter_with_type.create();
-            }
-        });
-    }
-
-    private List<Resource> getTypeSuggestions(OMTDefineParam defineParam, OMTVariable variableToAnnotate) {
+    public List<Resource> getTypeSuggestions(OMTDefineParam defineParam, OMTVariable variableToAnnotate) {
         List<Resource> types = new ArrayList<>();
         PsiTreeUtil.findChildrenOfType(defineParam.getParent(), OMTVariable.class).stream().filter(
                 variable -> variable.getReference() != null &&

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
-public abstract class OMTAnnotations {
+public abstract class AbstractAnnotator {
 
     protected void annotateBoolean(List<Resource> valueType, AnnotationHolder holder, PsiElement range) {
         final Resource booleanType = getRDFModelUtil().getPrimitiveTypeAsResource("boolean");
