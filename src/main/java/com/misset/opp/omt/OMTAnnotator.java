@@ -8,8 +8,9 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.annotations.QueryAnnotations;
-import com.misset.opp.omt.psi.annotations.ScriptAnnotations;
+import com.misset.opp.omt.psi.annotations.QueryAnnotator;
+import com.misset.opp.omt.psi.annotations.ScriptAnnotator;
+import com.misset.opp.omt.psi.annotations.VariableAnnotator;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.support.OMTCall;
 import org.jetbrains.annotations.NotNull;
@@ -18,8 +19,9 @@ import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 public class OMTAnnotator implements Annotator {
 
-    private static final QueryAnnotations queryAnnotations = new QueryAnnotations();
-    private static final ScriptAnnotations scriptAnnotations = new ScriptAnnotations();
+    private static final QueryAnnotator queryAnnotations = new QueryAnnotator();
+    private static final ScriptAnnotator scriptAnnotations = new ScriptAnnotator();
+    private static final VariableAnnotator variableAnnotations = new VariableAnnotator();
 
     private void doAnnoation(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
         if (element instanceof LeafPsiElement) {
@@ -27,7 +29,7 @@ public class OMTAnnotator implements Annotator {
             return;
         }
         if (element instanceof OMTVariable) {
-            getVariableUtil().annotateVariable((OMTVariable) element, holder);
+            variableAnnotations.annotateVariable((OMTVariable) element, holder);
             return;
         }
         if (element instanceof OMTNamespacePrefix) {

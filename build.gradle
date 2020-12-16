@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.0.1'
+version '2.0.3'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -42,7 +42,7 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-      Improved formatter for blank lines and spaces
+      References searched via index for faster annotation
       """
 }
 tasks{
