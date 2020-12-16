@@ -8,7 +8,7 @@ import com.misset.opp.omt.psi.OMTIfBlock;
 import com.misset.opp.omt.psi.OMTScriptContent;
 import com.misset.opp.omt.psi.OMTTypes;
 
-public class ScriptAnnotator extends OMTAnnotations {
+public class ScriptAnnotator extends AbstractAnnotator {
 
     public void annotateSemicolonForScriptContent(OMTScriptContent scriptContent, AnnotationHolder holder) {
         final PsiElement psiElement = PsiTreeUtil.nextVisibleLeaf(scriptContent);

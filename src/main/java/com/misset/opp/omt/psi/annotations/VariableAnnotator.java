@@ -14,7 +14,7 @@ import java.util.HashMap;
 
 import static com.misset.opp.omt.psi.util.UtilManager.*;
 
-public class VariableAnnotator extends OMTAnnotations {
+public class VariableAnnotator extends AbstractAnnotator {
     private static final String PARAMS = "params";
 
     private void annotateGlobalVariable(@NotNull final OMTVariable variable, @NotNull AnnotationHolder holder) {

@@ -20,7 +20,7 @@
         <lang.braceMatcher language="OMT" implementationClass="com.misset.opp.omt.OMTBraceMatcher"/>
         <enterHandlerDelegate implementation="com.misset.opp.omt.formatter.OMTEnterTypedHandler"/>
         <colorSettingsPage implementation="com.misset.opp.omt.style.OMTColorSettingsPage"/>
-        <annotator language="OMT" implementationClass="com.misset.opp.omt.OMTAnnotator"/>
+        <annotator language="OMT" implementationClass="com.misset.opp.omt.psi.annotations.OMTAnnotator"/>
         <codeStyleSettingsProvider implementation="com.misset.opp.omt.settings.OMTCodeStyleSettingsProvider"/>
         <langCodeStyleSettingsProvider
                 implementation="com.misset.opp.omt.settings.OMTLanguageCodeStyleSettingsProvider"/>

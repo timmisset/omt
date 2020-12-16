@@ -16,7 +16,7 @@ import static com.misset.opp.omt.psi.intentions.query.UnwrapIntention.getUnwrapI
 import static com.misset.opp.omt.psi.util.UtilManager.getQueryUtil;
 import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
-public class QueryAnnotator extends OMTAnnotations {
+public class QueryAnnotator extends AbstractAnnotator {
 
     public void annotateQueryStep(OMTQueryStep step, AnnotationHolder holder) {
         // resolve the querystep to a class or type
