@@ -37,7 +37,9 @@ scalarValue ::=                             parameterWithType | variableAssignme
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indented, it must dedent
 sequence ::=                                sequenceItem+ | (indentToken sequenceItem+ dedentToken)
-sequenceItem ::=                            leading? SEQUENCE_BULLET (scalarValue | block)?
+sequenceItem ::=                            leading? SEQUENCE_BULLET (scalarValue | block)? {
+                                            methods = [getName]
+}
 
 genericBlock ::=                            leading? propertyLabel ((indentedBlock | sequence | scalar) | (indentToken (sequence | scalar) dedentToken))? {
                                             extends=blockEntry

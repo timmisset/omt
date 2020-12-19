@@ -22,10 +22,8 @@ import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
 
 public class MemberIntention {
 
-    public List<IntentionAction> getImportMemberIntentions(OMTCall call) {
-        String _callname = call.getFirstChild().getText();
-        final String callName = _callname.startsWith("@") ? _callname.substring(1) : _callname;
-        List<OMTExportMember> exportMembers = getProjectUtil().getExportMember(callName);
+    public static List<IntentionAction> getImportMemberIntentions(OMTCall call) {
+        List<OMTExportMember> exportMembers = getProjectUtil().getExportMember(call.getName());
 
         List<IntentionAction> intentionActions = new ArrayList<>();
         exportMembers.forEach(exportMember -> {
@@ -44,13 +42,13 @@ public class MemberIntention {
                 relativePath = "./" + relativePath;
             }
 
-            intentionActions.add(getImportIntention(clientPath, callName, call));
-            intentionActions.add(getImportIntention(relativePath, callName, call));
+            intentionActions.add(getImportIntention(clientPath, call.getName(), call));
+            intentionActions.add(getImportIntention(relativePath, call.getName(), call));
         });
         return intentionActions;
     }
 
-    private IntentionAction getImportIntention(String path, String name, PsiElement target) {
+    private static IntentionAction getImportIntention(String path, String name, PsiElement target) {
         return new IntentionAction() {
             @NotNull
             @Override

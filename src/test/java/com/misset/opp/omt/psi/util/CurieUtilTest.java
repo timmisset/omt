@@ -4,26 +4,26 @@ import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
-import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.search.searches.ReferencesSearch;
-import com.intellij.util.Query;
 import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.util.ProjectUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class CurieUtilTest extends OMTTestSuite {
@@ -130,93 +130,6 @@ class CurieUtilTest extends OMTTestSuite {
             OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, activityWithoutPrefixBlock);
             OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixBlock(variable);
             assertNull(returnedPrefixBlock);
-        });
-    }
-
-    @Test
-    void annotateNamespacePrefixThrowsNotUsedAnnotation() {
-        final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            try (MockedStatic<ReferencesSearch> searchMockedStatic = mockStatic(ReferencesSearch.class)) {
-                final Query mock = mock(Query.class);
-                doReturn(false).when(mock).anyMatch(any());
-                searchMockedStatic.when(() -> ReferencesSearch.search(any(PsiElement.class))).thenReturn(mock);
-                loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
-                curieUtil.annotateNamespacePrefix(def, annotationHolder);
-                verify(annotationHolder).newAnnotation(eq(HighlightSeverity.WARNING), eq("def: is never used"));
-                verify(annotationBuilder, times(1)).create();
-            }
-        });
-    }
-
-    @Test
-    void annotateNamespacePrefixDoesNotThrowNotUsedAnnotation() {
-        final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            try (MockedStatic<ReferencesSearch> searchMockedStatic = mockStatic(ReferencesSearch.class)) {
-                final Query mock = mock(Query.class);
-                doReturn(true).when(mock).anyMatch(any());
-                searchMockedStatic.when(() -> ReferencesSearch.search(any(PsiElement.class))).thenReturn(mock);
-                loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
-                curieUtil.annotateNamespacePrefix(abcDeclared, annotationHolder);
-                verify(annotationBuilder, times(0)).create();
-            }
-        });
-    }
-
-    @Test
-    void annotateNamespacePrefixThrowsNotDeclaredAnnotation() {
-        final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
-            curieUtil.annotateNamespacePrefix(ghi, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("ghi: is not declared"));
-            verify(annotationBuilder, times(1)).create();
-        });
-    }
-
-    @Test
-    void annotateNamespacePrefixThrowsNotDeclaredAnnotationWithFix() {
-        final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            List<OMTPrefix> suggestions = exampleFiles.getPsiElementsFromRootDocument(OMTPrefix.class, rootBlock);
-            doReturn(suggestions).when(projectUtil).getKnownPrefixes(eq("ghi"));
-
-            loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
-            curieUtil.annotateNamespacePrefix(ghi, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("ghi: is not declared"));
-            verify(annotationBuilder, times(1)).create();
-
-            // verify a call for each prefix and + 1 remove suggestion
-            verify(annotationBuilder, times(suggestions.size() + 1)).withFix(any(IntentionAction.class));
-        });
-    }
-
-    @Test
-    void annotateNamespacePrefixThrowsNotDeclaredAnnotationAddsFixSuggestion() {
-        final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTPrefix knownPrefix = mock(OMTPrefix.class);
-            OMTNamespaceIri iri = mock(OMTNamespaceIri.class);
-            doReturn(iri).when(knownPrefix).getNamespaceIri();
-            doReturn("<http://myiri/>").when(iri).getText();
-
-            doReturn(Collections.singletonList(knownPrefix)).when(projectUtil).getKnownPrefixes(eq("ghi:"));
-            loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
-            curieUtil.annotateNamespacePrefix(ghi, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("ghi: is not declared"));
-            verify(annotationBuilder, times(1)).withFix(any()); // remove fix only
-            verify(annotationBuilder, times(1)).create();
-        });
-    }
-
-    @Test
-    void annotateNamespacePrefixDoesNotThrowNotDeclaredAnnotation() {
-        final PsiElement activityWithUndeclaredElements = exampleFiles.getActivityWithUndeclaredElements();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            loadUndeclaredNamespacePrefixes(activityWithUndeclaredElements);
-            curieUtil.annotateNamespacePrefix(abcUsage, annotationHolder);
-            verify(annotationBuilder, times(0)).create();
         });
     }
 

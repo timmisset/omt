@@ -12,7 +12,7 @@ import static com.misset.opp.omt.psi.util.UtilManager.getCurieUtil;
 
 public class RegisterPrefixIntention {
 
-    public IntentionAction getRegisterPrefixIntention(OMTNamespacePrefix namespacePrefix, String iri) {
+    public static IntentionAction getRegisterPrefixIntention(OMTNamespacePrefix namespacePrefix, String iri) {
         return new IntentionAction() {
             @Override
             public @Nls(capitalization = Nls.Capitalization.Sentence)

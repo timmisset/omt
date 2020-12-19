@@ -1,6 +1,5 @@
 package com.misset.opp.omt.psi.util;
 
-import com.google.gson.JsonObject;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
@@ -9,14 +8,9 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.misset.opp.omt.OMTTestSuite;
-import com.misset.opp.omt.exceptions.CallCallableMismatchException;
-import com.misset.opp.omt.exceptions.IncorrectFlagException;
-import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.impl.BuiltInMember;
-import com.misset.opp.omt.psi.intentions.members.MemberIntention;
 import com.misset.opp.omt.psi.named.NamedMemberType;
-import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.support.OMTExportMember;
@@ -31,12 +25,11 @@ import org.mockito.Spy;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class MemberUtilTest extends OMTTestSuite {
@@ -58,10 +51,6 @@ class MemberUtilTest extends OMTTestSuite {
     BuiltInUtil builtInUtil;
     @Mock
     BuiltInMember builtInMember;
-    @Mock
-    IntentionAction intentionAction;
-    @Mock
-    MemberIntention memberIntention;
     @Spy
     ModelUtil modelUtil;
     @Spy
@@ -92,7 +81,6 @@ class MemberUtilTest extends OMTTestSuite {
         doReturn(annotationBuilder).when(annotationBuilder).range(any(PsiElement.class));
         doReturn(annotationBuilder).when(annotationBuilder).tooltip(anyString());
         doReturn(annotationBuilder).when(annotationBuilder).withFix(any(IntentionAction.class));
-        doReturn(Arrays.asList(intentionAction)).when(memberIntention).getImportMemberIntentions(any());
     }
 
     @AfterEach
@@ -181,289 +169,6 @@ class MemberUtilTest extends OMTTestSuite {
             Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(operatorCall);
             assertTrue(declaringMember.isPresent());
         });
-    }
-
-    @Test
-    void annotateCall() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("myThirdCommand"));
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateCall_MyThirdActivity() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTOperatorCall call = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
-                    operatorCall -> operatorCall.getName().equals("titleQuery"));
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateCall_annotateAsBuiltInMember() {
-        doReturn(builtInMember).when(builtInUtil).getBuiltInMember(anyString(), eq(BuiltInType.Command));
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("myBuiltInMethod"));
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.INFORMATION), eq(SHORT_DESCRIPTION));
-            verify(annotationBuilder).tooltip(eq(HTML_DESCRIPTION));
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateCall_annotateAsBuiltInMemberThrowsNumberOfInputParametersMismatchException() {
-        doReturn(builtInMember).when(builtInUtil).getBuiltInMember(anyString(), eq(BuiltInType.Command));
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("myBuiltInMethod"));
-            try {
-                doThrow(new NumberOfInputParametersMismatchException("myBuiltInMethod", 0, 1, 2)).when(builtInMember).validateSignature(eq(call));
-            } catch (CallCallableMismatchException | NumberOfInputParametersMismatchException | IncorrectFlagException e) {
-                e.printStackTrace();
-            }
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("myBuiltInMethod expects between 0 and 1 parameters, found 2"));
-        });
-    }
-
-    @Test
-    void annotateCall_annotateAsBuiltInMemberDoesNotThrowValidateSignatureErrorsWhenNamedReference() {
-        doReturn(builtInMember).when(builtInUtil).getBuiltInMember(anyString(), eq(BuiltInType.Command));
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("myBuiltInMethod"));
-            try {
-                doThrow(new NumberOfInputParametersMismatchException("myBuiltInMethod", 0, 1, 2)).when(builtInMember).validateSignature(eq(call));
-            } catch (CallCallableMismatchException | NumberOfInputParametersMismatchException | IncorrectFlagException e) {
-                e.printStackTrace();
-            }
-
-            JsonObject attributes = new JsonObject();
-            attributes.addProperty("namedReference", true);
-            doReturn(attributes).when(modelUtil).getJson(call);
-
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateCall_annotateAsBuiltInMemberDoesThrowValidateSignatureErrorsWhenNamedReferenceFalse() {
-        doReturn(builtInMember).when(builtInUtil).getBuiltInMember(anyString(), eq(BuiltInType.Command));
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("myBuiltInMethod"));
-            try {
-                doThrow(new NumberOfInputParametersMismatchException("myBuiltInMethod", 0, 1, 2)).when(builtInMember).validateSignature(eq(call));
-            } catch (CallCallableMismatchException | NumberOfInputParametersMismatchException | IncorrectFlagException e) {
-                e.printStackTrace();
-            }
-
-            JsonObject attributes = new JsonObject();
-            attributes.addProperty("namedReference", false);
-            doReturn(attributes).when(modelUtil).getJson(call);
-
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("myBuiltInMethod expects between 0 and 1 parameters, found 2"));
-        });
-    }
-
-    @Test
-    void annotateCall_annotateAsBuiltInMemberThrowsNumberInvalidFlagSignature() {
-        doReturn(builtInMember).when(builtInUtil).getBuiltInMember(anyString(), eq(BuiltInType.Command));
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("myBuiltInMethodWithFlag"));
-            try {
-                doThrow(new IncorrectFlagException("someFlag", Arrays.asList("flagA, flagB"))).when(builtInMember).validateSignature(eq(call));
-            } catch (CallCallableMismatchException | NumberOfInputParametersMismatchException | IncorrectFlagException e) {
-                e.printStackTrace();
-            }
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("Incorrect flag 'someFlag' used, acceptable flags are: 'flagA, flagB'"));
-        });
-    }
-
-    @Test
-    void annotateCall_annotateAsLocalCommand() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("LOCALCOMMAND"));
-            doReturn(Arrays.asList("LOCALCOMMAND")).when(modelUtil).getLocalCommands(eq(call));
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("LOCALCOMMAND is available as local command"));
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateCall_annotateAsLocalCommandCallsAnnotateFinalStatement() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("DONE"));
-            doReturn(Arrays.asList("DONE")).when(modelUtil).getLocalCommands(eq(call));
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("DONE is available as local command"));
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-            verify(scriptUtil, times(1)).annotateFinalStatement(eq(call), eq(annotationHolder));
-        });
-    }
-
-    @Test
-    void annotateCall_annotateAsLocalCommandCallsDoesNotAnnotateWhenOperatorCall() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("DONE"));
-            OMTCommandCall callAsSpy = spy(call);
-            doReturn(false).when(callAsSpy).isCommandCall();
-            doReturn(Arrays.asList("DONE")).when(modelUtil).getLocalCommands(eq(call));
-            memberUtil.annotateCall(callAsSpy, annotationHolder);
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("DONE is available as local command"));
-        });
-    }
-
-    @Test
-    void annotateCall_annotateAsLocalCommandCallsDoesNotAnnotateWhenUnknownLocalCommand() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("DONE"));
-            OMTCommandCall callAsSpy = spy(call);
-            doReturn(new ArrayList<>()).when(modelUtil).getLocalCommands(eq(callAsSpy));
-            memberUtil.annotateCall(callAsSpy, annotationHolder);
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("DONE is available as local command"));
-        });
-    }
-
-    @Test
-    void annotateCall_annotateByAttributeString() {
-        JsonObject attributes = new JsonObject();
-        attributes.addProperty("type", "string");
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTOperatorCall call = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
-                    operatorCall -> operatorCall.getName().equals("Mijn"));
-            doReturn(attributes).when(modelUtil).getJson(eq(call));
-
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateCall_annotateByAttributeInterpolatedString() {
-        JsonObject attributes = new JsonObject();
-        attributes.addProperty("type", "interpolatedString");
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTOperatorCall call = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
-                    operatorCall -> operatorCall.getName().equals("Mijn"));
-            doReturn(attributes).when(modelUtil).getJson(eq(call));
-
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateCall_annotateByAttributeInterpolatedStringThrowsError() {
-        JsonObject attributes = new JsonObject();
-        attributes.addProperty("type", "interpolatedString");
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTOperatorCall call = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
-                    operatorCall -> operatorCall.getName().equals("mijnInterpolatedTitel"));
-            doReturn(attributes).when(modelUtil).getJson(eq(call));
-
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("mijnInterpolatedTitel could not be resolved"));
-        });
-    }
-
-    @Test
-    void annotateCall_annotateByAttributeShortcut() {
-        JsonObject attributes = new JsonObject();
-        attributes.addProperty("shortcut", "bladiebla");
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTOperatorCall call = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
-                    operatorCall -> operatorCall.getName().equals("Mijn"));
-            doReturn(attributes).when(modelUtil).getJson(eq(call));
-
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateCall_annotateByAttributeNoJsonThrows() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTOperatorCall call = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
-                    operatorCall -> operatorCall.getName().equals("Mijn"));
-            doReturn(null).when(modelUtil).getJson(eq(call));
-
-            memberUtil.annotateCall(call, annotationHolder);
-
-            // since there is no valid way to check that the operator should not be annotated with an error, it gets annotated
-            verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("Mijn could not be resolved"));
-        });
-    }
-
-    @Test
-    void annotateCall_annotateByAttributeThrowsError() {
-        JsonObject attributes = new JsonObject();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTOperatorCall call = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
-                    operatorCall -> operatorCall.getName().equals("Mijn"));
-            doReturn(attributes).when(modelUtil).getJson(eq(call));
-
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(1)).newAnnotation(eq(HighlightSeverity.ERROR), eq("Mijn could not be resolved"));
-        });
-    }
-
-    @Test
-    void annotateCall_annotateCallToProcedure() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("MijnProcedure"));
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("Procedure: MijnProcedure"));
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateCall_annotateCallToProcedureThrowsCannotBeResolved() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("MijnProcedure"));
-            doReturn("WrongType").when(modelUtil).getModelItemType(any(PsiElement.class));
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(1))
-                    .newAnnotation(eq(HighlightSeverity.ERROR), eq("Could not resolve callable element to exported member, this might be an issue with the imported file"));
-        });
-    }
-
-    @Test
-    void annotateCall_annotateCallToProcedureThrowsCannotBeResolvedEscapesViaOntology() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
-                    commandCall -> commandCall.getName().equals("MijnProcedure"));
-            doReturn("WrongType").when(modelUtil).getModelItemType(any(PsiElement.class));
-            doReturn(true).when(modelUtil).isOntology(any(PsiElement.class));
-            memberUtil.annotateCall(call, annotationHolder);
-            verify(annotationHolder, times(0))
-                    .newAnnotation(eq(HighlightSeverity.ERROR), anyString());
-        });
-    }
-
-    @Test
-    void annotateCall_StopsOnNullReference() {
-        OMTCall mockCall = mock(OMTCall.class);
-        memberUtil.annotateCall(mockCall, annotationHolder);
-        verify(mockCall, times(1)).getReference();
     }
 
     @Test

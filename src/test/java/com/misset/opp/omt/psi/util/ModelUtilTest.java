@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
-import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.OMTTestSuite;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class ModelUtilTest extends OMTTestSuite {
@@ -179,49 +177,6 @@ class ModelUtilTest extends OMTTestSuite {
     void getModelItemEntryLabel() {
         ApplicationManager.getApplication().runReadAction(() -> {
             assertEquals("params", modelUtil.getModelItemEntryLabel(variable));
-        });
-    }
-
-    @Test
-    void annotateModelItemType_ThrowsUnknownModelType() {
-        PsiElement modelWithWrongModelItemType = exampleFiles.getModelWithWrongModelItemType();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, modelWithWrongModelItemType);
-            modelUtil.annotateModelItemType(modelItemBlock.getModelItemLabel().getModelItemTypeElement(), annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("Unknown model type: !WrongModelItemType"));
-            verify(annotationBuilder, times(1)).create();
-        });
-    }
-
-    @Test
-    void annotateModelItemType() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, rootBlock);
-            modelUtil.annotateModelItemType(modelItemBlock.getModelItemLabel().getModelItemTypeElement(), annotationHolder);
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), eq("Unknown model type: !WrongModelItemType"));
-            verify(annotationBuilder, times(0)).create();
-        });
-    }
-
-    @Test
-    void annotateBlock_ThrowsMissingAttributes() {
-        PsiElement modelWithWrongModelItemType = exampleFiles.getStandaloneQueryWithMissingAttribute();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, modelWithWrongModelItemType);
-            modelUtil.annotateBlock(modelItemBlock.getBlock(), annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), startsWith("myStandAloneQuery is missing attribute(s)"));
-            verify(annotationBuilder, times(1)).create();
-        });
-    }
-
-    @Test
-    void annotateBlockEntry_ThrowsWrongAttribute() {
-        PsiElement modelWithWrongNestedAttribute = exampleFiles.getActivityWithWrongNestedAttribute();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTBlockEntry blockEntry = exampleFiles.getPsiElementFromRootDocument(OMTBlockEntry.class, modelWithWrongNestedAttribute, omtBlockEntry -> modelUtil.getEntryBlockLabel(omtBlockEntry).equals("queryX"));
-            modelUtil.annotateBlockEntry(blockEntry, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), startsWith("queryX is not a known attribute for PayloadProperty"));
-            verify(annotationBuilder, times(1)).create();
         });
     }
 

@@ -1,6 +1,5 @@
 package com.misset.opp.omt.psi.util;
 
-import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiFile;
@@ -18,9 +17,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
-import static com.misset.opp.omt.psi.util.VariableUtil.NO_TYPE_SPECIFIED;
 
-public class VariableUtilTest_Fixture extends OMTTestSuite {
+class VariableUtilTest_Fixture extends OMTTestSuite {
 
     VariableUtil variableUtil;
 
@@ -145,19 +143,6 @@ public class VariableUtilTest_Fixture extends OMTTestSuite {
             assertEquals("'test'", variables.get(2).getValue().getQuery().getText()); // the first usage
             assertEquals("'test2'", variables.get(4).getValue().getQuery().getText()); // the second usage
         });
-    }
-
-    @Test
-    void annotateEmptyParameterWithTypeError() {
-        String content = "model:\n" +
-                "   activiteit: !Activity\n" +
-                "       params: \n" +
-                "           - $param ()\n";
-        myFixture.configureByText("test.omt", content);
-        final List<HighlightInfo> infoList = myFixture.doHighlighting();
-        assertTrue(infoList.stream().anyMatch(
-                highlightInfo -> highlightInfo.getDescription().equals(NO_TYPE_SPECIFIED)
-        ));
     }
 
     List<Resource> getVariableType(String content) {

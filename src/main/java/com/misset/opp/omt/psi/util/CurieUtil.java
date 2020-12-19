@@ -1,8 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
 import com.intellij.application.options.CodeStyle;
-import com.intellij.codeInsight.intention.IntentionAction;
-import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.project.Project;
@@ -16,12 +14,10 @@ import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.psi.util.UtilManager.*;
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
 public class CurieUtil {
 
@@ -61,30 +57,6 @@ public class CurieUtil {
         return prefixes.orElse(null);
     }
 
-    public void annotateNamespacePrefix(@NotNull OMTNamespacePrefix namespacePrefix, @NotNull AnnotationHolder holder) {
-        if (namespacePrefix.getParent() instanceof OMTPrefix) {
-            getAnnotationUtil().annotateUsage(namespacePrefix, holder);
-        } else {
-            List<OMTPrefix> knownPrefixes = getProjectUtil().getKnownPrefixes(namespacePrefix.getName());
-            AnnotationBuilder annotationBuilder = getAnnotationUtil().annotateOriginGetBuilder(namespacePrefix, holder);
-
-            if (annotationBuilder != null) {
-                if (!knownPrefixes.isEmpty()) {
-                    final List<IntentionAction> intentions = knownPrefixes.stream()
-                            .map(OMTPrefix::getNamespaceIri)
-                            .map(PsiElement::getText)
-                            .distinct()
-                            .map(iri -> registerPrefixIntention.getRegisterPrefixIntention(namespacePrefix, iri))
-                            .collect(Collectors.toList());
-                    for (IntentionAction intention : intentions) {
-                        annotationBuilder = annotationBuilder.withFix(intention);
-                    }
-                }
-                annotationBuilder.create();
-            }
-        }
-    }
-
     public void addPrefixToBlock(PsiElement element, String addNamespacePrefix, String addNamespaceIri) {
         resetPrefixBlock(element, addNamespacePrefix, addNamespaceIri);
     }
@@ -118,10 +90,6 @@ public class CurieUtil {
 
     public void annotateCurieElement(OMTCurieElement curieElement, AnnotationHolder annotationHolder) {
         annotateAsResource(curieElement.getAsResource(), annotationHolder);
-    }
-
-    public void annotateParameterType(OMTParameterType parameterType, AnnotationHolder annotationHolder) {
-        annotateAsResource(parameterType.getAsResource(), annotationHolder);
     }
 
     private void annotateAsResource(Resource resource, AnnotationHolder annotationHolder) {

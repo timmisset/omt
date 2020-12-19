@@ -3,34 +3,34 @@ package com.misset.opp.omt;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.intellij.util.Query;
 import com.misset.opp.omt.psi.util.*;
 import com.misset.opp.omt.util.BuiltInUtil;
 import com.misset.opp.omt.util.ProjectUtil;
 import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
-import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.util.UtilManager.*;
+import static org.mockito.Mockito.mock;
 
 public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
 
-    @Test
-    public void systemToken() {
-        final String token = System.getenv().getOrDefault("ORG_GRADLE_PROJECT_intellijPublishToken", "");
-        if (token.isEmpty()) {
-            fail("A token is required for publishing the plugin");
-        }
-    }
+    private MockedStatic<ReferencesSearch> referencesSearchMockedStatic;
 
     protected static final String XSD_BOOLEAN = "http://www.w3.org/2001/XMLSchema#boolean";
     protected static final String XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
@@ -47,6 +47,16 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         return model.createResource(XSD_BOOLEAN);
     }
 
+    // @Test
+    // Run this test once locally to check if an environmental variable can be retrieved for puslishing the plugin
+    // to the IntelliJ repository
+    void systemToken() {
+        final String token = System.getenv().getOrDefault("ORG_GRADLE_PROJECT_intellijPublishToken", "");
+        if (token.isEmpty()) {
+            fail("A token is required for publishing the plugin");
+        }
+    }
+
     protected Resource xsdString(Model model) {
         return model.createResource(XSD_STRING);
     }
@@ -55,7 +65,25 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         return model.createResource(XSD_INTEGER);
     }
 
+    protected Resource xsdString() {
+        return xsdString(getProjectUtil().getOntologyModel());
+    }
+
+    protected Resource createResource(String localName) {
+        return getProjectUtil().getOntologyModel().createResource("http://ontologie#" + localName);
+    }
+
+    protected List<Resource> classesAsResourceList(String... classes) {
+        return classesAsResourceList(getProjectUtil().getOntologyModel(), classes);
+    }
+
     private MockedStatic<UtilManager> utilManager;
+
+    protected List<Resource> classesAsResourceList(Model model, String... classes) {
+        return Arrays.stream(classes).map(
+                classId -> model.createResource("http://ontologie#" + classId)
+        ).collect(Collectors.toList());
+    }
 
     protected Resource xsdDouble(Model model) {
         return model.createResource(XSD_DOUBLE);
@@ -69,6 +97,9 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         if (psiTreeUtil != null && !psiTreeUtil.isClosed()) {
             psiTreeUtil.close();
         }
+        if (referencesSearchMockedStatic != null && !referencesSearchMockedStatic.isClosed()) {
+            referencesSearchMockedStatic.close();
+        }
         if (myFixture != null) {
             super.tearDown();
         }
@@ -79,6 +110,16 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
             psiTreeUtil = Mockito.mockStatic(PsiTreeUtil.class);
         }
         return psiTreeUtil;
+    }
+
+    protected void setPsiTreeUtilMock(Consumer<MockedStatic<PsiTreeUtil>> consumer) {
+        final MockedStatic<PsiTreeUtil> psiTreeUtilMock = getPsiTreeUtilMock();
+        consumer.accept(psiTreeUtilMock);
+    }
+
+    protected void setPsiTreeUtilMockWhenThenReturn(MockedStatic.Verification verification, Object thenReturn) {
+        final MockedStatic<PsiTreeUtil> psiTreeUtilMock = getPsiTreeUtilMock();
+        psiTreeUtilMock.when(verification).thenReturn(thenReturn);
     }
 
     protected void setOntologyModel() {
@@ -112,7 +153,6 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
             ProjectUtil projectUtil = getProjectUtil();
             QueryUtil queryUtil = getQueryUtil();
             MemberUtil memberUtil = getMemberUtil();
-            AnnotationUtil annotationUtil = getAnnotationUtil();
             ImportUtil importUtil = getImportUtil();
             ScriptUtil scriptUtil = getScriptUtil();
             ModelUtil modelUtil = getModelUtil();
@@ -121,12 +161,12 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
             TokenFinderUtil tokenFinderUtil = getTokenFinderUtil();
             VariableUtil variableUtil = getVariableUtil();
             CurieUtil curieUtil = getCurieUtil();
+            RDFModelUtil rdfModelUtil = getRDFModelUtil();
 
             utilManager = Mockito.mockStatic(UtilManager.class);
             utilManager.when(UtilManager::getProjectUtil).thenReturn(projectUtil);
             utilManager.when(UtilManager::getQueryUtil).thenReturn(queryUtil);
             utilManager.when(UtilManager::getMemberUtil).thenReturn(memberUtil);
-            utilManager.when(UtilManager::getAnnotationUtil).thenReturn(annotationUtil);
             utilManager.when(UtilManager::getImportUtil).thenReturn(importUtil);
             utilManager.when(UtilManager::getScriptUtil).thenReturn(scriptUtil);
             utilManager.when(UtilManager::getModelUtil).thenReturn(modelUtil);
@@ -135,6 +175,7 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
             utilManager.when(UtilManager::getTokenFinderUtil).thenReturn(tokenFinderUtil);
             utilManager.when(UtilManager::getVariableUtil).thenReturn(variableUtil);
             utilManager.when(UtilManager::getCurieUtil).thenReturn(curieUtil);
+            utilManager.when(UtilManager::getRDFModelUtil).thenReturn(rdfModelUtil);
         }
     }
 
@@ -175,20 +216,12 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
 
     protected void setUtilMock(ModelUtil modelUtil) {
         validateMock(modelUtil);
-        utilManager.when(UtilManager::getModelUtil).then((invocationOnMock) -> {
-            System.out.println("returning mock");
-            return modelUtil;
-        });
+        utilManager.when(UtilManager::getModelUtil).then((invocationOnMock) -> modelUtil);
     }
 
     protected void setUtilMock(ScriptUtil scriptUtil) {
         validateMock(scriptUtil);
         utilManager.when(UtilManager::getScriptUtil).thenReturn(scriptUtil);
-    }
-
-    protected void setUtilMock(AnnotationUtil annotationUtil) {
-        validateMock(annotationUtil);
-        utilManager.when(UtilManager::getAnnotationUtil).thenReturn(annotationUtil);
     }
 
     protected void setUtilMock(QueryUtil queryUtil) {
@@ -199,6 +232,13 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
     protected void setUtilMock(TokenUtil tokenUtil) {
         validateMock(tokenUtil);
         utilManager.when(UtilManager::getTokenUtil).thenReturn(tokenUtil);
+    }
+
+    protected void setSearchReferenceMock(PsiElement element, Consumer<Query> queryConsumer) {
+        referencesSearchMockedStatic = Mockito.mockStatic(ReferencesSearch.class);
+        final Query queryMock = mock(Query.class);
+        queryConsumer.accept(queryMock);
+        referencesSearchMockedStatic.when(() -> ReferencesSearch.search(Mockito.eq(element))).thenReturn(queryMock);
     }
 
     private void validateMock(Object mockInstance) {

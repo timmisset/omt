@@ -1,8 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
 import com.google.gson.JsonObject;
-import com.intellij.lang.annotation.AnnotationHolder;
-import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
@@ -27,7 +25,6 @@ public class VariableUtil {
     private static final String BASE = "base";
     private static final String BINDINGS = "bindings";
     private static final String NAME = "name";
-    public static final String NO_TYPE_SPECIFIED = "No type specified";
 
     private static final String GLOBAL_VARIABLE_USERNAME = "$username";
     private static final String GLOBAL_VARIABLE_MEDEWERKERGRAPH = "$medewerkerGraph";
@@ -334,12 +331,6 @@ public class VariableUtil {
                                 .collect(Collectors.toList())
                 ));
         return assignments;
-    }
-
-    public void annotateParameterWithType(OMTParameterWithType parameterWithType, AnnotationHolder holder) {
-        if (parameterWithType.getParameterType() == null) {
-            holder.newAnnotation(HighlightSeverity.ERROR, NO_TYPE_SPECIFIED).create();
-        }
     }
 
     public List<String> getGlobalVariables() {

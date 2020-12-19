@@ -7,122 +7,67 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.named.NamedMemberType;
-import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.OMTQueryPath;
+import com.misset.opp.omt.psi.OMTTypes;
 import org.jetbrains.annotations.NotNull;
 
-import static com.misset.opp.omt.psi.util.UtilManager.*;
+import static com.misset.opp.omt.psi.OMTTypes.*;
 
 public class OMTAnnotator implements Annotator {
 
-    private static final QueryAnnotator queryAnnotations = new QueryAnnotator();
-    private static final ScriptAnnotator scriptAnnotations = new ScriptAnnotator();
-    private static final VariableAnnotator variableAnnotations = new VariableAnnotator();
-    private static final DefinedParameterAnnotator definedParameterAnnotator = new DefinedParameterAnnotator();
+    private static final TokenSet QUERY_ANNOTATIONS = TokenSet.create(
+            DEFINE_QUERY_STATEMENT, ADD_TO_COLLECTION, REMOVE_FROM_COLLECTION, ASSIGNMENT_STATEMENT, EQUATION_STATEMENT, BOOLEAN_STATEMENT
+    );
+    private static final TokenSet IMPORT_ANNOTATIONS = TokenSet.create(
+            IMPORT_SOURCE, MEMBER
+    );
+    private static final TokenSet COLLECTION_ANNOTATIONS = TokenSet.create(
+            MEMBER_LIST_ITEM, SEQUENCE_ITEM, BLOCK_ENTRY, GENERIC_BLOCK, SPECIFIC_BLOCK
+    );
+    private static final TokenSet VARIABLE_ANNOTATIONS = TokenSet.create(
+            VARIABLE
+    );
+    private static final TokenSet SCRIPT_ANNOTATIONS = TokenSet.create(
+            IF_BLOCK, SCRIPT_CONTENT, SCRIPT_LINE
+    );
+    private static final TokenSet MODEL_ANNOTATIONS = TokenSet.create(
+            MODEL_ITEM_TYPE, BLOCK, GENERIC_BLOCK, BLOCK_ENTRY, INDENTED_BLOCK, ROOT_BLOCK
+    );
+    private static final TokenSet PARAMETER_ANNOTATIONS = TokenSet.create(
+            PARAMETER_WITH_TYPE, PARAMETER_TYPE, DEFINE_PARAM
+    );
+    private static final TokenSet MEMBER_ANNOTATIONS = TokenSet.create(
+            COMMAND_CALL, OPERATOR_CALL, SIGNATURE_ARGUMENT, SIGNATURE
+    );
+    private static final TokenSet CURIE_ANNOTATIONS = TokenSet.create(
+            NAMESPACE_PREFIX, CURIE_ELEMENT
+    );
 
     private void doAnnoation(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
+        final IElementType elementType = element.getNode().getElementType();
         if (element instanceof LeafPsiElement) {
             annotateLeaf(element, holder);
             return;
-        }
-        if (element instanceof OMTVariable) {
-            variableAnnotations.annotateVariable((OMTVariable) element, holder);
-            return;
-        }
-        if (element instanceof OMTNamespacePrefix) {
-            getCurieUtil().annotateNamespacePrefix((OMTNamespacePrefix) element, holder);
-            return;
-        }
-        if (element instanceof OMTImport) {
-            getImportUtil().annotateImport((OMTImport) element, holder);
-            return;
-        }
-        if (element instanceof OMTImportSource) {
-            getImportUtil().annotateImportSource((OMTImportSource) element, holder);
-            return;
-        }
-        if (element instanceof OMTMember) {
-            if (((OMTMember) element).getType() == NamedMemberType.ImportingMember) {
-                getMemberUtil().annotateImportedMember((OMTMember) element, holder);
-            }
-            return;
-        }
-        if (element instanceof OMTDefineParam) {
-            definedParameterAnnotator.annotateDefineParameter((OMTDefineParam) element, holder);
-            return;
-        }
-        if (element instanceof OMTCall) {
-            getMemberUtil().annotateCall((OMTCall) element, holder);
-            return;
-        }
-        if (element instanceof OMTModelItemTypeElement) {
-            getModelUtil().annotateModelItemType((OMTModelItemTypeElement) element, holder);
-            return;
-        }
-        if (element instanceof OMTBlockEntry) {
-            getModelUtil().annotateBlockEntry((OMTBlockEntry) element, holder);
-            return;
-        }
-        if (element instanceof OMTBlock) {
-            getModelUtil().annotateBlock((OMTBlock) element, holder);
-            return;
-        }
-        if (element instanceof OMTReturnStatement) {
-            getScriptUtil().annotateFinalStatement(element, holder);
-            return;
-        }
-        if (element instanceof OMTCurieElement) {
-            getCurieUtil().annotateCurieElement((OMTCurieElement) element, holder);
-            return;
-        }
-        if (element instanceof OMTParameterType) {
-            getCurieUtil().annotateParameterType((OMTParameterType) element, holder);
-            return;
-        }
-        if (element instanceof OMTParameterWithType) {
-            getVariableUtil().annotateParameterWithType((OMTParameterWithType) element, holder);
-            return;
-        }
-        if (element instanceof OMTScriptContent) {
-            scriptAnnotations.annotateSemicolonForScriptContent((OMTScriptContent) element, holder);
-            return;
-        }
-        if (element instanceof OMTDefineQueryStatement) {
-            queryAnnotations.annotateSemicolonForDefinedQueryStatement((OMTDefineQueryStatement) element, holder);
-            return;
-        }
-        if (element instanceof OMTAddToCollection) {
-            queryAnnotations.annotateAddToCollection((OMTAddToCollection) element, holder);
-            return;
-        }
-        if (element instanceof OMTRemoveFromCollection) {
-            queryAnnotations.annotateRemoveFromCollection((OMTRemoveFromCollection) element, holder);
-            return;
-        }
-        if (element instanceof OMTAssignmentStatement) {
-            queryAnnotations.annotateAssignmentStatement((OMTAssignmentStatement) element, holder);
-            return;
-        }
-        if (element instanceof OMTEquationStatement) {
-            queryAnnotations.annotateEquationStatement((OMTEquationStatement) element, holder);
-            return;
-        }
-        if (element instanceof OMTBooleanStatement) {
-            queryAnnotations.annotateBooleanStatement((OMTBooleanStatement) element, holder);
-            return;
-        }
-        if (element instanceof OMTIfBlock) {
-            scriptAnnotations.annotateIfBlock((OMTIfBlock) element, holder);
-            return;
-        }
-
-        if (element instanceof OMTQueryStep) {
-            if (element.getParent() instanceof OMTQueryReverseStep) {
-                return;
-            }
-            queryAnnotations.annotateQueryStep((OMTQueryStep) element, holder);
+        } else if (QUERY_ANNOTATIONS.contains(elementType)) {
+            new QueryAnnotator(holder).annotate(element);
+        } else if (IMPORT_ANNOTATIONS.contains(elementType)) {
+            new ImportAnnotator(holder).annotate(element);
+        } else if (COLLECTION_ANNOTATIONS.contains(elementType)) {
+            new CollectionAnnotator(holder).annotate(element);
+        } else if (VARIABLE_ANNOTATIONS.contains(elementType)) {
+            new VariableAnnotator(holder).annotate(element);
+        } else if (SCRIPT_ANNOTATIONS.contains(elementType)) {
+            new ScriptAnnotator(holder).annotate(element);
+        } else if (MODEL_ANNOTATIONS.contains(elementType)) {
+            new ModelAnnotator(holder).annotate(element);
+        } else if (PARAMETER_ANNOTATIONS.contains(elementType)) {
+            new ParameterAnnotator(holder).annotate(element);
+        } else if (MEMBER_ANNOTATIONS.contains(elementType)) {
+            new MemberAnnotator(holder).annotate(element);
+        } else if (CURIE_ANNOTATIONS.contains(elementType)) {
+            new CurieAnnotator(holder).annotate(element);
         }
     }
 
@@ -152,7 +97,7 @@ public class OMTAnnotator implements Annotator {
                     .range(element)
                     .create();
         }
-
     }
+
 }
 

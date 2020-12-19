@@ -1,30 +1,30 @@
 package com.misset.opp.omt.psi.annotations;
 
 import com.intellij.codeInsight.intention.IntentionAction;
-import com.intellij.lang.annotation.AnnotationBuilder;
-import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.OMTTestSuite;
-import com.misset.opp.omt.psi.OMTParameterType;
 import com.misset.opp.omt.psi.OMTParameterWithType;
 import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.psi.OMTVariableAssignment;
-import com.misset.opp.omt.psi.util.AnnotationUtil;
 import com.misset.opp.omt.psi.util.ModelUtil;
+import com.misset.opp.omt.psi.util.VariableUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.HashMap;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-class VariableAnnotatorTest extends OMTTestSuite {
-
-    @Mock
-    AnnotationUtil annotationUtil;
+class VariableAnnotatorTest extends OMTAnnotationTest {
 
     @Mock
     ModelUtil modelUtil;
@@ -32,14 +32,11 @@ class VariableAnnotatorTest extends OMTTestSuite {
     @Mock
     OMTVariable variable;
 
+    @Mock
+    PsiReference reference;
+
     @InjectMocks
     VariableAnnotator variableAnnotator;
-
-    @Mock
-    AnnotationHolder annotationHolder;
-
-    @Mock
-    AnnotationBuilder annotationBuilder;
 
     @BeforeEach
     protected void setUp() throws Exception {
@@ -48,16 +45,13 @@ class VariableAnnotatorTest extends OMTTestSuite {
 
         MockitoAnnotations.openMocks(this);
 
-        setUtilMock(annotationUtil);
         setUtilMock(modelUtil);
 
         doReturn("$variable").when(variable).getName();
+        doReturn("$variable").when(variable).getText();
         doReturn(false).when(variable).isGlobalVariable();
         doReturn(false).when(variable).isGlobalVariable();
         doReturn(false).when(variable).isDeclaredVariable();
-
-        doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(HighlightSeverity.class), anyString());
-        doReturn(annotationBuilder).when(annotationBuilder).withFix(any(IntentionAction.class));
 
         doReturn("").when(modelUtil).getEntryBlockLabel(eq(variable));
     }
@@ -68,122 +62,125 @@ class VariableAnnotatorTest extends OMTTestSuite {
     }
 
     @Test
+    void annotateVariableNoAnnotationWhenInvalidType() {
+        variableAnnotator.annotate(mock(PsiElement.class));
+        verifyNoAnnotations();
+    }
+
+    @Test
     void annotateVariable_GlobalVariable() {
         doReturn(true).when(variable).isGlobalVariable();
-        variableAnnotator.annotateVariable(variable, annotationHolder);
-        verify(annotationHolder).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("$variable is a global variable which is always available"));
-        verify(annotationBuilder, times(1)).create();
-        verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
+        variableAnnotator.annotate(variable);
+        verify(getHolder()).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("$variable is a global variable which is always available"));
+        verify(getBuilder(), times(1)).create();
+        verify(getHolder(), times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
     }
 
     @Test
     void annotateVariable_IgnoredVariable() {
         doReturn(true).when(variable).isIgnoredVariable();
-        variableAnnotator.annotateVariable(variable, annotationHolder);
-        verify(annotationHolder).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("$variable is used to indicate the variable ignored"));
-        verify(annotationBuilder, times(1)).create();
-        verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
+        variableAnnotator.annotate(variable);
+        verify(getHolder()).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("$variable is used to indicate the variable ignored"));
+        verify(getBuilder(), times(1)).create();
+        verify(getHolder(), times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
     }
 
     @Test
     void annotateVariable_DeclaredVariableSuggestsRenameTo$_WhenNotUsed() {
         doReturn(true).when(variable).isDeclaredVariable();
-        doReturn(annotationBuilder).when(annotationUtil).annotateUsageGetBuilder(eq(variable), eq(annotationHolder));
+        setSearchReferenceMock(variable, query -> doReturn(false).when(query).anyMatch(any()));
         doReturn(mock(OMTVariableAssignment.class)).when(variable).getParent();
 
-        try (MockedStatic<PsiTreeUtil> psiTreeUtilMockedStatic = mockStatic(PsiTreeUtil.class)) {
-            // when there is a sibling variable in the same assignment statement
-            psiTreeUtilMockedStatic.when(() -> PsiTreeUtil.getNextSiblingOfType(eq(variable), eq(OMTVariable.class)))
-                    .thenReturn(mock(OMTVariable.class));
-            variableAnnotator.annotateVariable(variable, annotationHolder);
-            verify(annotationUtil, times(1)).annotateUsageGetBuilder(eq(variable), eq(annotationHolder));
-
-            ArgumentCaptor<IntentionAction> intentionActionArgumentCaptor = ArgumentCaptor.forClass(IntentionAction.class);
-            verify(annotationBuilder, times(1)).withFix(intentionActionArgumentCaptor.capture());
-            assertEquals("Rename to $_", intentionActionArgumentCaptor.getValue().getText());
-            verify(annotationBuilder, times(1)).create();
-        }
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.getNextSiblingOfType(eq(variable), eq(OMTVariable.class)), mock(OMTVariable.class));
+        variableAnnotator.annotate(variable);
+        ArgumentCaptor<IntentionAction> intentionActionArgumentCaptor = ArgumentCaptor.forClass(IntentionAction.class);
+        verify(getBuilder(), times(1)).withFix(intentionActionArgumentCaptor.capture());
+        assertEquals("Rename to $_", intentionActionArgumentCaptor.getValue().getText());
+        verify(getBuilder(), times(1)).create();
     }
 
     @Test
     void annotateVariable_DeclaredVariableDoesNOTSuggestRenameTo$_WhenNoNextSibling() {
         doReturn(true).when(variable).isDeclaredVariable();
-        doReturn(annotationBuilder).when(annotationUtil).annotateUsageGetBuilder(eq(variable), eq(annotationHolder));
+        setSearchReferenceMock(variable, query -> doReturn(false).when(query).anyMatch(any()));
         doReturn(mock(OMTVariableAssignment.class)).when(variable).getParent();
 
-        try (MockedStatic<PsiTreeUtil> psiTreeUtilMockedStatic = mockStatic(PsiTreeUtil.class)) {
-            // when there is a sibling variable in the same assignment statement
-            psiTreeUtilMockedStatic.when(() -> PsiTreeUtil.getNextSiblingOfType(eq(variable), eq(OMTVariable.class)))
-                    .thenReturn(null);
-            variableAnnotator.annotateVariable(variable, annotationHolder);
-            verify(annotationUtil, times(1)).annotateUsageGetBuilder(eq(variable), eq(annotationHolder));
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.getNextSiblingOfType(eq(variable), eq(OMTVariable.class)), null);
 
-            ArgumentCaptor<IntentionAction> intentionActionArgumentCaptor = ArgumentCaptor.forClass(IntentionAction.class);
-            verify(annotationBuilder, times(0)).withFix(intentionActionArgumentCaptor.capture());
-            verify(annotationBuilder, times(1)).create();
-        }
+        variableAnnotator.annotate(variable);
+        ArgumentCaptor<IntentionAction> intentionActionArgumentCaptor = ArgumentCaptor.forClass(IntentionAction.class);
+        verify(getBuilder(), times(0)).withFix(intentionActionArgumentCaptor.capture());
+        verify(getBuilder(), times(1)).create();
     }
 
     @Test
     void annotateVariable_DeclaredVariableDoesNOTSuggestRenameTo$_WhenNotInAssignment() {
         doReturn(true).when(variable).isDeclaredVariable();
-        doReturn(annotationBuilder).when(annotationUtil).annotateUsageGetBuilder(eq(variable), eq(annotationHolder));
+        setSearchReferenceMock(variable, query -> doReturn(false).when(query).anyMatch(any()));
         doReturn(null).when(variable).getParent();
 
-        variableAnnotator.annotateVariable(variable, annotationHolder);
-        verify(annotationUtil, times(1)).annotateUsageGetBuilder(eq(variable), eq(annotationHolder));
+        variableAnnotator.annotate(variable);
 
         ArgumentCaptor<IntentionAction> intentionActionArgumentCaptor = ArgumentCaptor.forClass(IntentionAction.class);
-        verify(annotationBuilder, times(0)).withFix(intentionActionArgumentCaptor.capture());
-        verify(annotationBuilder, times(1)).create();
+        verify(getBuilder(), times(0)).withFix(intentionActionArgumentCaptor.capture());
+        verify(getBuilder(), times(1)).create();
     }
 
     @Test
     void annotateVariable_DeclaredVariableAnnotatesAsUntypedParameter() {
         doReturn(true).when(variable).isDeclaredVariable();
-        doReturn(null).when(annotationUtil).annotateUsageGetBuilder(eq(variable), eq(annotationHolder));
+        setSearchReferenceMock(variable, query -> doReturn(true).when(query).anyMatch(any()));
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.getParentOfType(eq(variable), eq(OMTParameterWithType.class)), null);
+        doReturn("params").when(modelUtil).getEntryBlockLabel(eq(variable));
 
-        try (MockedStatic<PsiTreeUtil> psiTreeUtilMockedStatic = mockStatic(PsiTreeUtil.class)) {
-            psiTreeUtilMockedStatic.when(
-                    () -> PsiTreeUtil.getParentOfType(eq(variable), eq(OMTParameterType.class))
-            ).thenReturn(null);
+        variableAnnotator.annotate(variable);
 
-            doReturn("params").when(modelUtil).getEntryBlockLabel(eq(variable));
-            variableAnnotator.annotateVariable(variable, annotationHolder);
-            verify(annotationHolder).newAnnotation(eq(HighlightSeverity.WEAK_WARNING), eq("Annotate parameter with a type"));
-        }
+        verify(getHolder()).newAnnotation(eq(HighlightSeverity.WEAK_WARNING), eq("Annotate parameter with a type"));
     }
 
     @Test
     void annotateVariable_DeclaredVariableNotAnnotatedAsUntypedWhenNotInParams() {
         doReturn(true).when(variable).isDeclaredVariable();
-        doReturn(null).when(annotationUtil).annotateUsageGetBuilder(eq(variable), eq(annotationHolder));
+        setSearchReferenceMock(variable, query -> doReturn(true).when(query).anyMatch(any()));
 
-        try (MockedStatic<PsiTreeUtil> psiTreeUtilMockedStatic = mockStatic(PsiTreeUtil.class)) {
-            psiTreeUtilMockedStatic.when(
-                    () -> PsiTreeUtil.getParentOfType(eq(variable), eq(OMTParameterWithType.class))
-            ).thenReturn(null);
-
-            doReturn("variables").when(modelUtil).getEntryBlockLabel(eq(variable));
-            variableAnnotator.annotateVariable(variable, annotationHolder);
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.WEAK_WARNING), eq("Annotate parameter with a type"));
-        }
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.getParentOfType(eq(variable), eq(OMTParameterWithType.class)), null);
+        doReturn("variables").when(modelUtil).getEntryBlockLabel(eq(variable));
+        variableAnnotator.annotate(variable);
+        verify(getHolder(), times(0)).newAnnotation(eq(HighlightSeverity.WEAK_WARNING), eq("Annotate parameter with a type"));
     }
 
     @Test
     void annotateVariable_DeclaredVariableNotAnnotatedAsUntypedWhenWithType() {
         doReturn(true).when(variable).isDeclaredVariable();
-        doReturn(null).when(annotationUtil).annotateUsageGetBuilder(eq(variable), eq(annotationHolder));
+        setSearchReferenceMock(variable, query -> doReturn(true).when(query).anyMatch(any()));
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.getParentOfType(eq(variable), eq(OMTParameterWithType.class)), mock(OMTParameterWithType.class));
 
-        try (MockedStatic<PsiTreeUtil> psiTreeUtilMockedStatic = mockStatic(PsiTreeUtil.class)) {
-            psiTreeUtilMockedStatic.when(
-                    () -> PsiTreeUtil.getParentOfType(eq(variable), eq(OMTParameterWithType.class))
-            ).thenReturn(mock(OMTParameterWithType.class));
+        doReturn("params").when(modelUtil).getEntryBlockLabel(eq(variable));
+        variableAnnotator.annotate(variable);
+        verify(getHolder(), times(0)).newAnnotation(eq(HighlightSeverity.WEAK_WARNING), eq("Annotate parameter with a type"));
+    }
 
-            doReturn("params").when(modelUtil).getEntryBlockLabel(eq(variable));
-            variableAnnotator.annotateVariable(variable, annotationHolder);
-            verify(annotationHolder, times(0)).newAnnotation(eq(HighlightSeverity.WEAK_WARNING), eq("Annotate parameter with a type"));
-        }
+    @Test
+    void annotateVariable_LocalVariable() {
+        HashMap<String, String> localVariables = new HashMap<>();
+        localVariables.put(variable.getName(), "COMMAND");
+        final VariableUtil variableUtil = mock(VariableUtil.class);
+        setUtilMock(variableUtil);
+
+        doReturn(localVariables).when(variableUtil).getLocalVariables(eq(variable));
+
+        variableAnnotator.annotate(variable);
+
+        verify(getHolder()).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("$variable is locally available in COMMAND"));
+    }
+
+    @Test
+    void annotateVariable_UsageVariableThrowsErrorWhenNoReference() {
+        doReturn(reference).when(variable).getReference();
+
+        variableAnnotator.annotate(variable);
+
+        verify(getHolder()).newAnnotation(eq(HighlightSeverity.ERROR), eq("$variable is not declared"));
     }
 
 }
