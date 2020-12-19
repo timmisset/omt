@@ -10,7 +10,6 @@ import com.misset.opp.omt.psi.util.CurieUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -26,8 +25,6 @@ class RegisterPrefixIntentionTest extends OMTTestSuite {
     @Mock
     OMTNamespacePrefix omtNamespacePrefix;
 
-    @InjectMocks
-    RegisterPrefixIntention registerPrefixIntention;
     IntentionAction intentionAction;
 
     @BeforeEach
@@ -35,7 +32,7 @@ class RegisterPrefixIntentionTest extends OMTTestSuite {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         setUtilMock(curieUtil);
-        intentionAction = this.registerPrefixIntention.getRegisterPrefixIntention(omtNamespacePrefix, IRI);
+        intentionAction = RegisterPrefixIntention.getRegisterPrefixIntention(omtNamespacePrefix, IRI);
     }
 
     @Override

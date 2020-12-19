@@ -2,14 +2,13 @@ package com.misset.opp.omt.psi.annotations;
 
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.lang.annotation.HighlightSeverity;
-import com.misset.opp.omt.OMTTestSuite;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-class ScriptSyntaxTest extends OMTTestSuite {
+class ScriptSyntaxTest extends OMTAnnotationTest {
 
     @Override
     @BeforeEach
@@ -77,8 +76,7 @@ class ScriptSyntaxTest extends OMTTestSuite {
                 "       VAR $x = ''; ;\n" +
                 "   }";
         myFixture.configureByText(getFileName(), content);
-        final List<HighlightInfo> highlighting = myFixture.doHighlighting(HighlightSeverity.ERROR);
-        assertEquals(0, highlighting.size());
+        final List<HighlightInfo> highlighting = myFixture.doHighlighting(HighlightSeverity.WARNING);
+        assertTrue(highlighting.stream().anyMatch(highlightInfo -> highlightInfo.getDescription().equals("Unexpected character")));
     }
-
 }

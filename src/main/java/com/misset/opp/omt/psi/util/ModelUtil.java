@@ -1,19 +1,17 @@
 package com.misset.opp.omt.psi.util;//package com.misset.opp.omt.domain.util;
 
 import com.google.gson.JsonObject;
-import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.ASTNode;
-import com.intellij.lang.annotation.AnnotationHolder;
-import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
 import com.sun.istack.Nullable;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
@@ -24,10 +22,8 @@ public class ModelUtil {
     private static final String MAPOF = "mapOf";
     private static final String MAP = "map";
     private static final String NODE = "node";
-    private static final String NAME = "name";
     private static final String TYPE = "type";
     private static final String DEF = "Def";
-    private final RemoveIntention removeIntention = new RemoveIntention();
 
     /**
      * Returns the modelitem block containing the element, for example an Activity or Procedure block
@@ -75,7 +71,7 @@ public class ModelUtil {
         return labelElement == null ? "" : labelElement.getText().replace(":", "");
     }
 
-    private PsiElement getEntryBlockLabelElement(PsiElement element) {
+    public PsiElement getEntryBlockLabelElement(PsiElement element) {
         if (element == null) {
             return null;
         }
@@ -108,7 +104,7 @@ public class ModelUtil {
         return getEntryBlockLabel(omtBlockEntry);
     }
 
-    private JsonObject getAttributes(String memberName) {
+    public JsonObject getAttributes(String memberName) {
         JsonObject parsedModel = getProjectUtil().getParsedModel();
         boolean hasMember = parsedModel.has(memberName);
         return hasMember ? (JsonObject) parsedModel.get(memberName) : new JsonObject();
@@ -124,74 +120,12 @@ public class ModelUtil {
                 .collect(Collectors.toList());
     }
 
-    public void annotateModelItemType(OMTModelItemTypeElement omtModelItemTypeElement, AnnotationHolder holder) {
-        String modelItemType = getModelItemType(omtModelItemTypeElement);
-        JsonObject jsonObject = getAttributes(modelItemType);
-        if (jsonObject.keySet().isEmpty()) {
-            holder.newAnnotation(HighlightSeverity.ERROR,
-                    String.format("Unknown model type: %s", omtModelItemTypeElement.getText()))
-                    .range(omtModelItemTypeElement)
-                    .create();
-        }
-
-    }
-
-    public void annotateBlock(OMTBlock block, AnnotationHolder holder) {
-        annotateMissingEntries(block, holder);
-    }
-
-    public void annotateBlockEntry(OMTBlockEntry omtBlockEntry, AnnotationHolder holder) {
-        if (omtBlockEntry instanceof OMTModelItemBlock) {
-            // no annotation needed for OMTModelItemBlock
-            return;
-        }
-        String label = getEntryBlockLabel(omtBlockEntry);
-        PsiElement targetLabel = getEntryBlockLabelElement(omtBlockEntry);
-
-        JsonObject container = getJsonAtElementLevel(omtBlockEntry);
-        Set<String> keys = container.has(ATTRIBUTES) ? container.getAsJsonObject(ATTRIBUTES).keySet() : new JsonObject().keySet();
-        String containerName = container.has(NAME) ? container.get(NAME).getAsString() : null;
-
-        if (containerName != null && !keys.contains(label) && !isMapNode(container)) {
-            String errorMessage = String.format("%s is not a known attribute for %s",
-                    label, containerName);
-
-            IntentionAction remove = removeIntention.getRemoveIntention(omtBlockEntry);
-            holder.newAnnotation(HighlightSeverity.ERROR, errorMessage)
-                    .range(targetLabel)
-                    .withFix(remove)
-                    .create();
-        }
-    }
-
-    private boolean isMapNode(JsonObject jsonInfo) {
+    public boolean isMapNode(JsonObject jsonInfo) {
         return jsonInfo.has(NODE) && jsonInfo.get(NODE).getAsString().equals(MAP) ||
                 jsonInfo.has(MAPOF);
     }
 
-    private void annotateMissingEntries(OMTBlock block, AnnotationHolder holder) {
-        List<String> entryLabels = block.getBlockEntryList().stream().map(this::getEntryBlockLabel).collect(Collectors.toList());
-        final JsonObject jsonAttributes = getJsonAttributes(block);
-        if (jsonAttributes.has("shortcut")) {
-            return;
-        }
-        final JsonObject attributes = jsonAttributes.getAsJsonObject(ATTRIBUTES);
-        List<String> missingElements = attributes.entrySet().stream()
-                .filter(entry ->
-                        entry.getValue().getAsJsonObject().has("required") &&
-                                entry.getValue().getAsJsonObject().get("required").getAsBoolean() &&
-                                !entryLabels.contains(entry.getKey()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
 
-        if (!missingElements.isEmpty()) {
-            String error = String.format("%s is missing attribute(s): %n%s",
-                    getEntryBlockLabel(block),
-                    String.join(", ", missingElements));
-            holder.newAnnotation(HighlightSeverity.ERROR, error)
-                    .range(block).create();
-        }
-    }
 
     public List<String> getLocalCommands(PsiElement element) {
 

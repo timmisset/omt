@@ -12,7 +12,6 @@ public class UtilManager {
     private static ProjectUtil projectUtil;
     private static QueryUtil queryUtil;
     private static MemberUtil memberUtil;
-    private static AnnotationUtil annotationUtil;
     private static ImportUtil importUtil;
     private static ScriptUtil scriptUtil;
     private static ModelUtil modelUtil;
@@ -38,19 +37,11 @@ public class UtilManager {
         }
         return queryUtil;
     }
-
     public static MemberUtil getMemberUtil() {
         if (memberUtil == null) {
             memberUtil = new MemberUtil();
         }
         return memberUtil;
-    }
-
-    public static AnnotationUtil getAnnotationUtil() {
-        if (annotationUtil == null) {
-            annotationUtil = new AnnotationUtil();
-        }
-        return annotationUtil;
     }
 
     public static ImportUtil getImportUtil() {

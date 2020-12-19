@@ -1,13 +1,9 @@
 package com.misset.opp.omt.psi.annotations;
 
 import com.intellij.codeInsight.intention.IntentionAction;
-import com.intellij.lang.annotation.AnnotationBuilder;
-import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
-import com.misset.opp.omt.OMTTestSuite;
-import com.misset.opp.omt.psi.OMTDefineParam;
-import com.misset.opp.omt.psi.OMTFile;
-import com.misset.opp.omt.psi.OMTVariable;
+import com.intellij.psi.PsiElement;
+import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.util.VariableUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.AfterEach;
@@ -23,11 +19,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-class DefineParameterAnnotatorTest extends OMTTestSuite {
+class ParameterAnnotatorTest extends OMTAnnotationTest {
 
     @Mock
     VariableUtil variableUtil;
@@ -41,14 +36,17 @@ class DefineParameterAnnotatorTest extends OMTTestSuite {
     @Mock
     OMTFile file;
 
+    @Mock
+    Resource resource;
+
+    @Mock
+    OMTParameterWithType parameterWithType;
+
+    @Mock
+    OMTParameterType parameterType;
+
     @InjectMocks
-    DefinedParameterAnnotator definedParameterAnnotator;
-
-    @Mock
-    AnnotationHolder annotationHolder;
-
-    @Mock
-    AnnotationBuilder annotationBuilder;
+    ParameterAnnotator parameterAnnotator;
 
     List<OMTVariable> variables;
 
@@ -64,11 +62,6 @@ class DefineParameterAnnotatorTest extends OMTTestSuite {
         variables.add(variable);
         doReturn(variables).when(defineParam).getVariableList();
 
-        doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(HighlightSeverity.class), anyString());
-        doReturn(annotationBuilder).when(annotationBuilder).tooltip(anyString());
-        doReturn(annotationBuilder).when(annotationBuilder).withFix(any(IntentionAction.class));
-        doReturn(annotationBuilder).when(annotationBuilder).range(eq(variable));
-
         doReturn("$variable").when(variable).getName();
         doReturn(file).when(variable).getContainingFile();
 
@@ -80,14 +73,34 @@ class DefineParameterAnnotatorTest extends OMTTestSuite {
     }
 
     @Test
+    void annotateParameterNoAnnotationWhenInvalidType() {
+        parameterAnnotator.annotate(mock(PsiElement.class));
+        verifyNoAnnotations();
+    }
+
+    @Test
+    void annotateParameterWithTypeThrowsError() {
+        doReturn(null).when(parameterWithType).getParameterType();
+        parameterAnnotator.annotate(parameterWithType);
+        verify(getHolder()).newAnnotation(HighlightSeverity.ERROR, "No type specified");
+    }
+
+    @Test
+    void annotateParameterWithTypeThrowsNoError() {
+        doReturn(mock(OMTParameterType.class)).when(parameterWithType).getParameterType();
+        parameterAnnotator.annotate(parameterWithType);
+        verify(getHolder(), times(0)).newAnnotation(HighlightSeverity.ERROR, "No type specified");
+    }
+
+    @Test
     void annotateDefineParameter_DoesNothingWhenVariableHasType() {
         List<Resource> typeResources = new ArrayList<>();
         typeResources.add(mock(Resource.class));
         doReturn(typeResources).when(variable).getType();
 
-        definedParameterAnnotator.annotateDefineParameter(defineParam, annotationHolder);
+        parameterAnnotator.annotate(defineParam);
         assertNotEmpty(variables);
-        verify(annotationBuilder, times(0)).create();
+        verify(getBuilder(), times(0)).create();
     }
 
     @Test
@@ -97,10 +110,10 @@ class DefineParameterAnnotatorTest extends OMTTestSuite {
 
         doReturn(emptyResourceList).when(variableUtil).getTypeSuggestions(eq(defineParam), eq(variable));
 
-        definedParameterAnnotator.annotateDefineParameter(defineParam, annotationHolder);
+        parameterAnnotator.annotate(defineParam);
         ArgumentCaptor<IntentionAction> intentionActionArgumentCaptor = ArgumentCaptor.forClass(IntentionAction.class);
-        verify(annotationBuilder).withFix(intentionActionArgumentCaptor.capture());
-        verify(annotationBuilder, times(1)).create();
+        verify(getBuilder()).withFix(intentionActionArgumentCaptor.capture());
+        verify(getBuilder(), times(1)).create();
         assertEquals("Add annotation as prefix:Class", intentionActionArgumentCaptor.getValue().getText());
     }
 
@@ -118,12 +131,23 @@ class DefineParameterAnnotatorTest extends OMTTestSuite {
 
         doReturn(suggestedTypes).when(variableUtil).getTypeSuggestions(eq(defineParam), eq(variable));
 
-        definedParameterAnnotator.annotateDefineParameter(defineParam, annotationHolder);
+        parameterAnnotator.annotate(defineParam);
         ArgumentCaptor<IntentionAction> intentionActionArgumentCaptor = ArgumentCaptor.forClass(IntentionAction.class);
-        verify(annotationBuilder, times(2)).withFix(intentionActionArgumentCaptor.capture());
-        verify(annotationBuilder, times(1)).create();
+        verify(getBuilder(), times(2)).withFix(intentionActionArgumentCaptor.capture());
+        verify(getBuilder(), times(1)).create();
         final List<String> suggestions = intentionActionArgumentCaptor.getAllValues().stream().map(IntentionAction::getText).collect(Collectors.toList());
         assertContainsElements(suggestions, "Add annotation as SuggestionA", "Add annotation as SuggestionB");
         assertDoesntContain(suggestions, "Add annotation as prefix:Class");
+    }
+
+    @Test
+    void annotateParameterTypeAnnotatesAsResource() {
+        setOntologyModel();
+        resource = xsdString();
+        doReturn(resource).when(parameterType).getAsResource();
+
+        parameterAnnotator.annotate(parameterType);
+
+        verifyInfo(xsdString().toString());
     }
 }

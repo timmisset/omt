@@ -1,7 +1,5 @@
 package com.misset.opp.omt.psi.util;
 
-import com.intellij.lang.annotation.AnnotationHolder;
-import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -17,8 +15,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-
-import static com.misset.opp.omt.psi.intentions.imports.UnwrapIntention.getUnwrapIntention;
 
 public class ImportUtil {
 
@@ -104,29 +100,6 @@ public class ImportUtil {
         return importedFile != null ? (OMTFile) getPsiManager(omtImport.getProject()).findFile(importedFile) : null;
     }
 
-    public void annotateImport(OMTImport omtImport, AnnotationHolder holder) {
-        final OMTFile omtFile = getFile(omtImport);
-        if (omtFile == null) {
-            holder.newAnnotation(HighlightSeverity.ERROR,
-                    String.format("%s could not be resolved to a file", omtImport.getImportSource().getText()))
-                    .range(omtImport)
-                    .create();
-        } else {
-            if (omtImport.getMemberList() != null) {
-                omtImport.getMemberList().getMemberListItemList().forEach(omtMemberListItem -> {
-                    String memberName = omtMemberListItem.getName().trim();
-                    if (omtMemberListItem.getMember() != null &&
-                            !omtFile.getExportedMember(memberName).isPresent()) {
-                        holder.newAnnotation(HighlightSeverity.ERROR,
-                                String.format("%s is not an exported member of %s", memberName, omtImport.getImportSource().getText()))
-                                .range(omtMemberListItem.getMember())
-                                .create();
-                    }
-                });
-            }
-        }
-    }
-
     public Optional<PsiElement> resolveImportMember(OMTMember member) {
         // resolve the import member to an import
         OMTImport omtImport = (OMTImport) member.getParent().getParent().getParent();
@@ -201,13 +174,4 @@ public class ImportUtil {
         return path;
     }
 
-    public void annotateImportSource(OMTImportSource importSource, AnnotationHolder holder) {
-        final String name = importSource.getName();
-        if (name != null && name.startsWith("'.")) {
-            holder.newAnnotation(HighlightSeverity.WARNING,
-                    "Unnecessary wrapping of import statement")
-                    .withFix(getUnwrapIntention(importSource))
-                    .create();
-        }
-    }
 }

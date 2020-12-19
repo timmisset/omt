@@ -31,9 +31,6 @@ class VariableUtilTest extends OMTTestSuite {
     @Mock
     BuiltInUtil builtInUtil;
 
-    @Mock
-    AnnotationUtil annotationUtil;
-
     @InjectMocks
     VariableUtil variableUtil;
 
@@ -54,7 +51,6 @@ class VariableUtilTest extends OMTTestSuite {
         MockitoAnnotations.openMocks(this);
 
         setUtilMock(builtInUtil);
-        setUtilMock(annotationUtil);
 
         exampleFiles = new ExampleFiles(this, myFixture);
         rootBlock = exampleFiles.getActivityWithVariables();
