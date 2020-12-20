@@ -6,6 +6,7 @@ import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.util.ModelUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,9 @@ class ScriptAnnotatorTest extends OMTAnnotationTest {
     PsiElement element;
 
     @Mock
+    ModelUtil modelUtil;
+
+    @Mock
     ASTNode astNode;
 
     @Mock
@@ -48,6 +52,8 @@ class ScriptAnnotatorTest extends OMTAnnotationTest {
         super.setName("ScriptAnnotatorTest");
         super.setUp();
         MockitoAnnotations.openMocks(this);
+        setUtilMock(modelUtil);
+        doReturn(true).when(modelUtil).isScalarEntry(any());
         doReturn(astNode).when(element).getNode();
         doReturn(query).when(ifBlock).getQuery();
 
@@ -89,7 +95,42 @@ class ScriptAnnotatorTest extends OMTAnnotationTest {
         doReturn(SEMICOLON).when(astNode).getElementType();
 
         scriptAnnotator.annotate(scriptContent);
-        verify(getHolder(), times(0)).newAnnotation(eq(HighlightSeverity.ERROR), eq("; expected"));
+        verifyNoErrors();
+    }
+
+    @Test
+    void annotateSemicolonForScriptContentThrowsNoErrorWhenNotEndingWithSemicolonButNotScalarEntry() {
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.nextVisibleLeaf(eq(scriptContent)), element);
+
+        doReturn(null).when(astNode).getElementType();
+        doReturn(false).when(modelUtil).isScalarEntry(eq(scriptContent));
+
+        scriptAnnotator.annotate(scriptContent);
+        verifyNoErrors();
+    }
+
+    @Test
+    void annotateSemicolonForScriptContentThrowsErrorWhenEndingWithSemicolonButQueryEntry() {
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.nextVisibleLeaf(eq(scriptContent)), element);
+
+        doReturn(SEMICOLON).when(astNode).getElementType();
+        doReturn(false).when(modelUtil).isScalarEntry(eq(scriptContent));
+        doReturn(true).when(modelUtil).isQueryEntry(eq(scriptContent));
+
+        scriptAnnotator.annotate(scriptContent);
+        verify(getHolder()).newAnnotation(eq(HighlightSeverity.ERROR), eq("Query entry should not end with semicolon"));
+    }
+
+    @Test
+    void annotateSemicolonForScriptContentThrowsNoErrorWhenEndingWithSemicolonButNotQueryEntry() {
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.nextVisibleLeaf(eq(scriptContent)), element);
+
+        doReturn(SEMICOLON).when(astNode).getElementType();
+        doReturn(false).when(modelUtil).isScalarEntry(eq(scriptContent));
+        doReturn(false).when(modelUtil).isQueryEntry(eq(scriptContent));
+
+        scriptAnnotator.annotate(scriptContent);
+        verifyNoErrors();
     }
 
     @Test
@@ -98,7 +139,7 @@ class ScriptAnnotatorTest extends OMTAnnotationTest {
         doReturn(Collections.emptyList()).when(query).resolveToResource();
 
         scriptAnnotator.annotate(ifBlock);
-        verify(getHolder(), times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
+        verifyNoErrors();
     }
 
     @Test

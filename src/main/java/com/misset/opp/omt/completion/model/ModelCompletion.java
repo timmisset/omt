@@ -46,11 +46,10 @@ public class ModelCompletion extends OMTCompletion {
                 PlatformPatterns.psiElement().andOr(
                         PlatformPatterns.psiElement(OMTTypes.OPERATOR),             // capture placeholder as operator
                         PlatformPatterns.psiElement(OMTTypes.PROPERTY)              // or the PROVIDE_MODEL_ENTRY (MODEL: ENTRY)
-                ).inside(
-                        PlatformPatterns.psiElement(OMTSequenceItem.class)
-                ).andNot(
-                        PlatformPatterns.psiElement().inside(OMTParameterWithType.class)
-                );
+                )
+                        .inside(PlatformPatterns.psiElement(OMTSequenceItem.class))
+                        .andNot(PlatformPatterns.psiElement().inside(OMTParameterWithType.class))
+                        .andNot(PlatformPatterns.psiElement().inside(OMTVariableValue.class));
         completionContributor.extend(CompletionType.BASIC, sequencePattern, new ModelCompletion().getCompletionProvider(false));
     }
 

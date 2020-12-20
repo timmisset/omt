@@ -33,10 +33,8 @@ public class ScriptContentCompletion extends RDFCompletion {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                 PsiElement element = parameters.getPosition();
-                // all accessible commands
-                setResolvedElementsForDefinedCommands(element);
-                // all builtin commands
-                setResolvedElementsForBuiltinCommands();
+                // all commands
+                setResolvedElementsForCommands(element);
                 // all accessible variables
                 setResolvedElementsForVariables(element);
 

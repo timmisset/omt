@@ -97,6 +97,19 @@ class ModelCompletionTest extends OMTCompletionTestSuite {
     }
 
     @Test
+    void modelDestructedElementInVariableAssignment() {
+        String content = "model:\n" +
+                "   mijnActiviteit: !Activity\n" +
+                "       title: Titel\n" +
+                "       variables:\n" +
+                "           - $variable = <caret>";
+        final List<String> completionLookupElements = getCompletionLookupElements(content);
+        assertDoesntContain(completionLookupElements, "name:", "value:", "onChange:");
+        assertCompletionContainsBuiltinOperators(completionLookupElements);
+        assertCompletionNOTContainsBuiltinCommands(completionLookupElements);
+    }
+
+    @Test
     void modelDestructedElementWithExistingKeys() {
         String content = "model:\n" +
                 "   mijnActiviteit: !Activity\n" +

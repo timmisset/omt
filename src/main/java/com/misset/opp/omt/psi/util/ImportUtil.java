@@ -13,6 +13,8 @@ import com.misset.opp.omt.psi.support.OMTExportMember;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -127,9 +129,9 @@ public class ImportUtil {
         Project project = element.getProject();
         String template = String.format("import:\n" +
                 "    %s\n" +
-                "        -   %s\n\n", importPath, importMember);
+                "    - %s\n\n", finalizeImportPath(importPath), importMember);
         Optional<OMTImportBlock> optionalImportBlock = targetFile.getSpecificBlock("import", OMTImportBlock.class);
-        if (optionalImportBlock.isPresent()) {
+        if (optionalImportBlock.isPresent() && !optionalImportBlock.get().getImportList().isEmpty()) {
             OMTImportBlock importBlock = optionalImportBlock.get();
             final Optional<OMTImport> existingImport = importBlock.getImportList().stream().filter(omtImport -> sameImportLocation(omtImport, importPath)).findFirst();
             if (existingImport.isPresent()) {
@@ -145,16 +147,28 @@ public class ImportUtil {
             } else {
                 // add new import and member to existing import block
                 final OMTImport newImport = (OMTImport) OMTElementFactory.fromString(template, OMTImport.class, project);
-                importBlock.addBefore(newImport, importBlock.getDedentToken());
+                // get the last importSource:
+                final List<OMTImport> importList = importBlock.getImportList();
+                final OMTImport lastImport = importList.get(importList.size() - 1);
+                final PsiElement newLine = importBlock.addAfter(OMTElementFactory.createNewLine(project), lastImport);
+                importBlock.addAfter(newImport, newLine);
+                CodeStyleManager.getInstance(project).reformat(importBlock);
             }
-            CodeStyleManager.getInstance(project).reformat(importBlock);
-            importBlock.replace(OMTElementFactory.removeBlankLinesInside(importBlock, OMTImportBlock.class, "\n"));
         } else {
             // add new import block:
             OMTImportBlock importBlock = (OMTImportBlock) OMTElementFactory.fromString(template, OMTImportBlock.class, project);
-            targetFile.setRootBlock(importBlock);
             CodeStyleManager.getInstance(project).reformat(importBlock);
+            targetFile.setRootBlock(importBlock);
         }
+
+    }
+
+    private String finalizeImportPath(String path) {
+        path = cleanUpPath(path);
+        if (path.startsWith("@")) {
+            path = String.format("'%s'", path);
+        }
+        return String.format("%s:", path);
     }
 
     private boolean sameImportLocation(OMTImport omtImport, String path) {
@@ -174,4 +188,31 @@ public class ImportUtil {
         return path;
     }
 
+    /**
+     * Returns a @client and relative import options for the exporting member in the context of the importing file
+     * if the file already contains one of the options, that will be the only one showing
+     */
+    public List<String> getImportPaths(OMTExportMember exportMember, OMTFile importingFile) {
+        OMTFile exportingFile = (OMTFile) exportMember.getResolvingElement().getContainingFile();
+        String exportPath = exportingFile.getVirtualFile().getPath();
+
+        String importFilePath = importingFile.getVirtualFile().getPath();
+
+        Path relativize = new File(importFilePath).getParentFile().toPath().relativize(new File(exportPath).toPath());
+        exportPath = exportPath.replace("\\", "/");
+        String clientPath = "@client" + exportPath.substring(exportPath.indexOf("/frontend/libs") + "/frontend/libs".length());
+        if (importingFile.hasImport(clientPath)) {
+            return Collections.singletonList(clientPath);
+        }
+
+        String relativePath = relativize.toString().replace("\\", "/");
+        if (!relativePath.startsWith(".")) {
+            relativePath = "./" + relativePath;
+        }
+        if (importingFile.hasImport(relativePath)) {
+            return Collections.singletonList(relativePath);
+        }
+
+        return Arrays.asList(clientPath, relativePath);
+    }
 }

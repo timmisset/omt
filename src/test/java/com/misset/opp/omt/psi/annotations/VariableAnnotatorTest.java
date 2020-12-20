@@ -20,7 +20,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.HashMap;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -73,7 +72,7 @@ class VariableAnnotatorTest extends OMTAnnotationTest {
         variableAnnotator.annotate(variable);
         verify(getHolder()).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("$variable is a global variable which is always available"));
         verify(getBuilder(), times(1)).create();
-        verify(getHolder(), times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
+        verifyNoErrors();
     }
 
     @Test
@@ -82,7 +81,7 @@ class VariableAnnotatorTest extends OMTAnnotationTest {
         variableAnnotator.annotate(variable);
         verify(getHolder()).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("$variable is used to indicate the variable ignored"));
         verify(getBuilder(), times(1)).create();
-        verify(getHolder(), times(0)).newAnnotation(eq(HighlightSeverity.ERROR), anyString());
+        verifyNoErrors();
     }
 
     @Test
@@ -146,7 +145,7 @@ class VariableAnnotatorTest extends OMTAnnotationTest {
         setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.getParentOfType(eq(variable), eq(OMTParameterWithType.class)), null);
         doReturn("variables").when(modelUtil).getEntryBlockLabel(eq(variable));
         variableAnnotator.annotate(variable);
-        verify(getHolder(), times(0)).newAnnotation(eq(HighlightSeverity.WEAK_WARNING), eq("Annotate parameter with a type"));
+        verifyNoWeakWarnings();
     }
 
     @Test
@@ -157,7 +156,7 @@ class VariableAnnotatorTest extends OMTAnnotationTest {
 
         doReturn("params").when(modelUtil).getEntryBlockLabel(eq(variable));
         variableAnnotator.annotate(variable);
-        verify(getHolder(), times(0)).newAnnotation(eq(HighlightSeverity.WEAK_WARNING), eq("Annotate parameter with a type"));
+        verifyNoWeakWarnings();
     }
 
     @Test

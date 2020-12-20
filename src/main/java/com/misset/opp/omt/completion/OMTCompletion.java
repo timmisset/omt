@@ -6,11 +6,15 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.patterns.ElementPattern;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTImportBlock;
 import com.misset.opp.omt.psi.OMTMemberListItem;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
+import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.util.MemberUtil;
+import com.misset.opp.omt.settings.OMTSettingsState;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -160,5 +164,58 @@ public abstract class OMTCompletion {
     protected void setResolvedElementsForBuiltinCommands(Predicate<OMTCallable> condition) {
         getBuiltinUtil().getBuiltInCommandsAsSuggestions(condition)
                 .forEach(suggestion -> addPriorityElement(suggestion, BUILTIN_MEMBER_PRIORITY));
+    }
+
+    protected void setResolvedElementsForExportedCommands() {
+        getProjectUtil().getExportedMembers(true).forEach(
+                this::setResolvedElementsForImportMembers
+        );
+    }
+
+    protected void setResolvedElementsForExportedOperators() {
+        getProjectUtil().getExportedMembers(false).forEach(
+                this::setResolvedElementsForImportMembers
+        );
+    }
+
+    /**
+     * Include all BuiltInCommands, ExportedCommands and DefinedCommands
+     */
+    protected void setResolvedElementsForCommands(PsiElement element) {
+        setResolvedElementsForBuiltinCommands();
+        setResolvedElementsForExportedCommands();
+        setResolvedElementsForDefinedCommands(element);
+    }
+
+    private void setResolvedElementsForImportMembers(OMTExportMember exportMember) {
+        final PsiElement resolvingElement = exportMember.getResolvingElement();
+        final PsiFile containingFile = resolvingElement != null ? resolvingElement.getContainingFile() : null;
+        if (!includeImport(containingFile)) return;
+
+        assert containingFile != null;
+        final String folder = containingFile.getContainingDirectory() != null ?
+                containingFile.getContainingDirectory().getName() :
+                "<root>";
+        String path = String.format("%s/%s", folder, containingFile.getName());
+        String title = exportMember.getAsSuggestion();
+        addPriorityElement(title, IMPORTABLE_MEMBER_PRIORITY, title,
+                (context, item) -> {
+                    OMTFile omtFile = (OMTFile) context.getFile();
+                    if (!omtFile.hasImportFor(exportMember)) {
+                        List<String> importPaths = getImportUtil().getImportPaths(exportMember, omtFile);
+                        if (!importPaths.isEmpty()) {
+                            String importPath = importPaths.get(0);
+                            getImportUtil().addImportMemberToBlock(context.getFile(), importPath, exportMember.getName());
+                        }
+                    }
+                }, path, exportMember.getCallableType());
+    }
+
+    private boolean includeImport(PsiFile containingFile) {
+        // filter out suggestions from mocha subfolders
+        OMTSettingsState settings = OMTSettingsState.getInstance();
+        final boolean valid = containingFile != null && containingFile.isValid() && containingFile.getVirtualFile() != null;
+        boolean hasMochaSubfolder = valid && containingFile.getVirtualFile().getPath().contains("/mocha/");
+        return valid && (!hasMochaSubfolder || settings.includeMochaFolderImportSuggestions);
     }
 }

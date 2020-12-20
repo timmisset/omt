@@ -5,6 +5,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
+
 public class ScriptAnnotator extends AbstractAnnotator {
 
     public ScriptAnnotator(AnnotationHolder holder) {
@@ -23,9 +25,17 @@ public class ScriptAnnotator extends AbstractAnnotator {
 
     private void annotate(OMTScriptContent scriptContent) {
         final PsiElement psiElement = PsiTreeUtil.nextVisibleLeaf(scriptContent);
-        if (psiElement == null || psiElement.getNode().getElementType() != OMTTypes.SEMICOLON) {
+        if ((isPartOfCommandBlock(scriptContent) || getModelUtil().isScalarEntry(scriptContent)) &&
+                (psiElement == null || psiElement.getNode().getElementType() != OMTTypes.SEMICOLON)) {
             setError("; expected");
+        } else if (getModelUtil().isQueryEntry(scriptContent)
+                && psiElement != null && psiElement.getNode().getElementType() == OMTTypes.SEMICOLON) {
+            setError("Query entry should not end with semicolon");
         }
+    }
+
+    private boolean isPartOfCommandBlock(OMTScriptContent scriptContent) {
+        return PsiTreeUtil.findFirstParent(scriptContent, parent -> parent instanceof OMTCommandBlock) != null;
     }
 
     private void annotate(OMTIfBlock omtIfBlock) {
