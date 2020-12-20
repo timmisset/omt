@@ -4,10 +4,7 @@ import com.google.gson.JsonObject;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.OMTBlock;
-import com.misset.opp.omt.psi.OMTBlockEntry;
-import com.misset.opp.omt.psi.OMTGenericBlock;
-import com.misset.opp.omt.psi.OMTModelItemTypeElement;
+import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.intentions.generic.RemoveIntention;
 
 import java.util.List;
@@ -32,6 +29,10 @@ public class ModelAnnotator extends AbstractAnnotator {
             annotateBlockEntry((OMTGenericBlock) element);
         } else if (element instanceof OMTBlock) {
             annotateMissingEntries((OMTBlock) element);
+        } else if (element instanceof OMTModelItemLabel) {
+            annotateUsage(element); // usage check of activities, procedures, etc
+        } else if (element instanceof OMTDefineName) {
+            annotateUsage(element); // usage of defined queries and commands
         }
     }
 

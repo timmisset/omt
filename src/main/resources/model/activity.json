@@ -73,7 +73,8 @@
         "node": "map"
       },
       "reason": {
-        "node": "scalar"
+        "node": "scalar",
+        "type": "string"
       }
     }
   }

@@ -1,6 +1,5 @@
 package com.misset.opp.omt.psi.util;
 
-import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
@@ -18,8 +17,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -186,50 +183,6 @@ class CurieUtilTest extends OMTTestSuite {
                     "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
                     "\n", asText);
         });
-    }
-
-    @Test
-    void annotateParameterTypeAsResource() {
-        List<HighlightInfo> highlighting = getHighlighting("prefixes:\n" +
-                "    ont:     <http://ontologie#>\n" +
-                "\n" +
-                "model:\n" +
-                "    MijnActiviteit: !Activity\n" +
-                "        params:\n" +
-                "        -   $paramA (ont:Something)\n" +
-                "        ");
-        assertEquals(2, highlighting.size());
-        assertEquals("http://ontologie#Something", highlighting.get(1).getDescription());
-    }
-
-    List<HighlightInfo> getHighlighting(String content) {
-        myFixture.configureByText("test.omt", content);
-        return myFixture.doHighlighting();
-    }
-
-
-    private void loadUndeclaredNamespacePrefixes(PsiElement rootBlock) {
-        // TODO: refactor to usage of the predicate getPsiElementsFromRootDocument
-        List<OMTNamespacePrefix> prefixes = exampleFiles.getPsiElementsFromRootDocument(OMTNamespacePrefix.class, rootBlock);
-        prefixes.forEach(prefix ->
-                {
-                    switch (Objects.requireNonNull(prefix.getName())) {
-                        case "def":
-                            def = prefix;
-                            break;
-                        case "ghi":
-                            ghi = prefix;
-                            break;
-                        case "abc":
-                            if (abcDeclared == null) {
-                                abcDeclared = prefix;
-                            } else {
-                                abcUsage = prefix;
-                            }
-                            break;
-                    }
-                }
-        );
     }
 
     private void assertSameContent(String expected, String value) {

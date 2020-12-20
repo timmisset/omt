@@ -33,7 +33,8 @@ public class OMTAnnotator implements Annotator {
             IF_BLOCK, SCRIPT_CONTENT, SCRIPT_LINE
     );
     private static final TokenSet MODEL_ANNOTATIONS = TokenSet.create(
-            MODEL_ITEM_TYPE, BLOCK, GENERIC_BLOCK, BLOCK_ENTRY, INDENTED_BLOCK, ROOT_BLOCK
+            MODEL_ITEM_TYPE, BLOCK, GENERIC_BLOCK, BLOCK_ENTRY,
+            INDENTED_BLOCK, ROOT_BLOCK, MODEL_ITEM_LABEL, DEFINE_NAME
     );
     private static final TokenSet PARAMETER_ANNOTATIONS = TokenSet.create(
             PARAMETER_WITH_TYPE, PARAMETER_TYPE, DEFINE_PARAM
