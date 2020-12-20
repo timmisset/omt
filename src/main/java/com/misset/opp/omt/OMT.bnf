@@ -323,5 +323,5 @@ interpolationTemplate ::=                   TEMPLATE_OPEN query TEMPLATE_CLOSED
 interpolatedString ::=                      BACKTICK (interpolationTemplate | STRING)* BACKTICK { extends=queryStep }
 
 // string / interpolated string without encapsulation of ' or `
-nakedString ::=                             (COMMA | EQUALS | SEQUENCE_BULLET | interpolationTemplate | (OPERATOR OPERATOR+))+
+nakedString ::=                            (STRING | interpolationTemplate)+
 

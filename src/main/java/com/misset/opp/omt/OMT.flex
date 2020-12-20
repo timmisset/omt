@@ -82,6 +82,10 @@ String getStateName(int state) {
         case 2: return "YAML_SCALAR";
         case 4: return "CURIE";
         case 6: return "BACKTICK";
+        case 8: return "JAVADOCS";
+        case 10: return "PARAM_ANNOTATION";
+        case 12: return "STRING";
+        case 14: return "INTERPOLATED_STRING";
     }
     return "UNKNOWN";
 }
@@ -104,7 +108,19 @@ IElementType getIndent() {
     lastIndent = lastIndent == null || lastIndent == OMTTypes.INDENT2 ? OMTTypes.INDENT : OMTTypes.INDENT2;
     return lastIndent;
 }
+int getScalarState() {
+    switch(currentBlockLabel) {
+        case "title:":
+            return INTERPOLATED_STRING;
+        case "reason:":
+            return STRING;
+        default:
+            return YAML_SCALAR;
+    }
+}
+String currentBlockLabel;
 IElementType toSpecificBlockLabel() {
+    currentBlockLabel = yytext().toString();
     switch(yytext().toString()) {
         case "prefixes:": return logAndReturn(OMTTypes.PREFIX_BLOCK_START);
         case "commands:": return logAndReturn(OMTTypes.COMMAND_BLOCK_START);
@@ -200,7 +216,7 @@ IElementType startScalar() {
     IElementType elementType = returnLeadingWhitespaceFirst(OMTIgnored.START_TOKEN);
     if(elementType == OMTIgnored.START_TOKEN) {
         yypushback(currentNonWhiteSpaceSize(), "Starting Scalar");
-        setState(YAML_SCALAR);
+        setState(getScalarState());
     }
     return elementType;
 }
@@ -225,6 +241,7 @@ IElementType closeBracket() {
     // allow template parsing in the scalar values, annotation of the model tree should determine if their usage is legal
     if(templateInScalar) {
         setTemplateInScalar(false);
+        setState(getScalarState());
         return returnElement(OMTTypes.TEMPLATE_CLOSED);
     }
     return returnElement(OMTTypes.CURLY_CLOSED); }
@@ -236,6 +253,8 @@ IElementType closeBracket() {
 %state BACKTICK
 %state JAVADOCS
 %state PARAM_ANNOTATION
+%state STRING
+%state INTERPOLATED_STRING
 
 %%
 <YYINITIAL> {
@@ -387,6 +406,20 @@ IElementType closeBracket() {
     [^\$\`\ \n]+                                                    { return returnElement(OMTTypes.STRING); }
     "$"                                                             { return returnElement(OMTTypes.STRING); }
 }
+<STRING> {
+    {PROPERTY_KEY}                                                  {    return exitScalar(); }
+    [^\n\ ]+                                                        { return returnElement(OMTTypes.STRING);  }
+    <<EOF>>                                                          { return finishLexer(); }
+}
+<INTERPOLATED_STRING> {
+    // Interpolated templates are supported and anything parsed in them can be resolved to PSI elements
+    {PROPERTY_KEY}                                                  {    return exitScalar(); }
+    "${"                                                            { setTemplateInScalar(true); setState(YAML_SCALAR); return returnElement(OMTTypes.TEMPLATE_OPEN); }
+    "`"                                                             { setTemplateInBacktick(false); setState(YAML_SCALAR); return returnElement(OMTTypes.BACKTICK); }
+    "$"                                                             { return returnElement(OMTTypes.STRING); }
+    [^\$\`\ \n]+                                                    { return returnElement(OMTTypes.STRING);  }
+    <<EOF>>                                                          { return finishLexer(); }
+}
 <JAVADOCS> {
     {JDEND}                                                         { setState(previousState); return returnElement(OMTTypes.JAVADOCS_END); }
     {JDCOMMENTLINE}                                                 { return returnElement(OMTTypes.JAVADOCS_CONTENT); }
@@ -405,7 +438,7 @@ IElementType closeBracket() {
     "("                                                             { return returnElement(OMTTypes.PARENTHESES_OPEN); }
     ")"                                                             { setState(JAVADOCS, false); return returnElement(OMTTypes.PARENTHESES_CLOSE); }
 }
-<YYINITIAL, YAML_SCALAR, JAVADOCS, BACKTICK, PARAM_ANNOTATION> {
+<YYINITIAL, YAML_SCALAR, JAVADOCS, BACKTICK, PARAM_ANNOTATION, STRING, INTERPOLATED_STRING> {
 
     // WHITE_SPACE and NEWLINE are not relevant in YAML except for indentation
     // which is handled above

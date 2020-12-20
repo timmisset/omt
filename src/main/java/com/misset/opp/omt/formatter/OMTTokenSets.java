@@ -42,7 +42,8 @@ public interface OMTTokenSets {
 
     TokenSet ASSIGNMENT_OPERATORS = TokenSet.create(
             EQUALS,
-            CONDITIONAL_OPERATOR
+            CONDITIONAL_OPERATOR,
+            LAMBDA
     );
     TokenSet ENTRIES = TokenSet.create(
             MODEL_ITEM_BLOCK,

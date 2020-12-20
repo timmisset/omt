@@ -25,7 +25,11 @@ class OMTFormattingReformattingTest extends OMTFormattingTest {
 
     @Test
     void testSpacingSpaceAroundAssignmentOperators() {
-        assertFormattingApplied("$variable =='a'", "$variable == 'a'",
+        String unformatted = "commands: |\n" +
+                "    DEFINE COMMAND command =>{}";
+        String formatted = "commands: |\n" +
+                "    DEFINE COMMAND command => {}";
+        assertFormattingApplied(unformatted, formatted,
                 psiFile -> setLanguageSettings(psiFile,
                         commonCodeStyleSettings -> commonCodeStyleSettings.SPACE_AROUND_ASSIGNMENT_OPERATORS = true)
         );

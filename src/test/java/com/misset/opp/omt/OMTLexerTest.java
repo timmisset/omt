@@ -96,7 +96,7 @@ class OMTLexerTest {
     }
 
     @Test
-    public void testExactContentMatch_ModelWithQueryAndParameter() throws IOException {
+    public void testExactContentMatch_ModelWithQueryAndParameter() {
         String contentToTest = "model:\n" +
                 "    test: !Activity\n" +
                 "        queries: |\n" +
@@ -110,23 +110,47 @@ class OMTLexerTest {
         assertEquals("OMTTokenType.PROPERTY", parsedElementsAsTypes.get("params:"));
     }
 
-//    @Test
-//    public void testExactContentMatch_ModelWithQueryAndParameterPartial() throws IOException {
-//        String contentToTest = "model:\n" +
-//                "    test: !Activity\n" +
-//                "        queries: |\n" +
-//                "            DEFINE QUERY myQuery() => 'mijn query';\n" +
-//                "\n" +
-//                "\n" +
-//                "        params:\n" +
-//                "            -   $mijnParameter";
-//        HashMap<String, String> parsedElementsAsTypes = getParsedElementsAsTypes(contentToTest, 44, contentToTest.length());
-//        assertTrue(parsedElementsAsTypes.containsKey("params:"));
-//        assertEquals("OMTTokenType.PROPERTY", parsedElementsAsTypes.get("params:"));
-//    }
+    @Test
+    public void testNakedString() {
+        String contentToTest = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        title: Doe dit, dat, enz";
+        List<String> elements = getElements(contentToTest);
+        assertThat(elements, not(hasItem("BAD_CHARACTER")));
+    }
 
     @Test
-    public void testIncompletePushbacks() throws IOException {
+    void testGraphs() {
+        String contentToTest = "prefixes:\n" +
+                "    pol:    <http://ontologie.politie.nl/def/politie#>\n" +
+                "    dat:    <http://data.politie.nl/>\n" +
+                "\n" +
+                "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        queries: |\n" +
+                "            DEFINE QUERY wijzeMeldenGraph => / dat:19000000000000_WijzeMelden;\n" +
+                "        graphs:\n" +
+                "            live:\n" +
+                "            -   wijzeMeldenGraph\n" +
+                "            -   /pol:Test\n";
+        List<String> elements = getElements(contentToTest);
+        assertThat(elements, not(hasItem("BAD_CHARACTER")));
+    }
+
+    @Test
+    void testModelPath() {
+        String contentToTest = "" +
+                "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       title: Test titel\n" +
+                "       variables:\n" +
+                "       - $test\n" +
+                "";
+        List<String> elements = getElements(contentToTest);
+    }
+
+    @Test
+    public void testIncompletePushbacks() {
         String contentToTest = "prefixes:\n" +
                 "    pol:    <http://ontologie.politie.nl/def/politie#>\n" +
                 "    rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
@@ -151,7 +175,6 @@ class OMTLexerTest {
                 "   - member\n" +
                 "\n";
         List<String> elements = getElements(contentToTest);
-        final HashMap<String, String> parsedElementsAsTypes = getParsedElementsAsTypes(contentToTest);
         assertThat(elements, not(hasItem("BAD_CHARACTER")));
     }
 
