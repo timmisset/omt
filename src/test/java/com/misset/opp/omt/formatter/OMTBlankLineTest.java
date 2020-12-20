@@ -38,6 +38,26 @@ class OMTBlankLineTest extends OMTFormattingTest {
     }
 
     @Test
+    void emptyLinesBetweenRootBlocksWithComments() {
+        String content = "" +
+                "prefixes:\n" +
+                "    ont:    <http://ontologie#>\n" +
+                "\n" +
+                "\n" +
+                "#Some comment\n" +
+                "model:\n" +
+                "    Activiteit: !Activity";
+        String expected = "" +
+                "prefixes:\n" +
+                "    ont:    <http://ontologie#>\n" +
+                "\n" +
+                "#Some comment\n" +
+                "model:\n" +
+                "    Activiteit: !Activity";
+        assertSpacing(content, expected);
+    }
+
+    @Test
     void emptyLinesBetweenModelItems() {
         String content = "" +
                 "model:\n" +

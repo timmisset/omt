@@ -79,6 +79,7 @@ public class OMTFormattingContext {
                 .aroundInside(FORWARD_SLASH, QUERY_PATH).spaces(1)
                 // between rootblocks
                 .betweenInside(OMTTokenSets.ROOTBLOCK_ENTRIES, OMTTokenSets.ROOTBLOCK_ENTRIES, ROOT_BLOCK).blankLines(1)
+                .betweenInside(OMTTokenSets.ROOTBLOCK_ENTRIES, TokenSet.create(END_OF_LINE_COMMENT), ROOT_BLOCK).blankLines(1)
                 .between(MODEL_ITEM_BLOCK, MODEL_ITEM_BLOCK).blankLines(1)
                 // the content of the import block can be added by intentions, make sure there are not empty lines:
                 .around(IMPORT).blankLines(0)
