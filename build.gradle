@@ -42,7 +42,12 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-      References searched via index for faster annotation
+      2.0.3
+      Added reference annotation for Queries, Command, ModelItems
+      String model entries are resolved in the lexer directly
+      Fix for StandaloneQuery parsing, query: doesn't accept semicolon ending
+      Formatter updated
+      Auto-import and code completion for exporting members from other files
       """
 }
 tasks{
