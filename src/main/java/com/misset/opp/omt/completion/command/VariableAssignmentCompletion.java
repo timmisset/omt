@@ -10,6 +10,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.completion.OMTCompletionContributor;
 import com.misset.opp.omt.completion.RDFCompletion;
+import com.misset.opp.omt.psi.OMTScriptContent;
 import com.misset.opp.omt.psi.OMTVariableValue;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,24 +27,37 @@ public class VariableAssignmentCompletion extends RDFCompletion {
     // since OMT will allow for type re-assignments for variables
     // therefore, all commands, operators, queries, variables etc are all applicable
     public static void register(OMTCompletionContributor completionContributor) {
-        final ElementPattern<PsiElement> pattern = PlatformPatterns.psiElement()
+        final ElementPattern<PsiElement> patternInScript = PlatformPatterns.psiElement()
+                .inside(OMTScriptContent.class)
                 .atStartOf(PlatformPatterns.psiElement(OMTVariableValue.class));
-        completionContributor.extend(CompletionType.BASIC, pattern,
-                new VariableAssignmentCompletion().getCompletionProvider());
+
+        final ElementPattern<PsiElement> patternInModel = PlatformPatterns.psiElement()
+                .atStartOf(PlatformPatterns.psiElement(OMTVariableValue.class))
+                .andNot(PlatformPatterns.psiElement().inside(OMTScriptContent.class));
+
+        // completion for a variable assignment within a script
+        completionContributor.extend(CompletionType.BASIC, patternInScript,
+                new VariableAssignmentCompletion().getCompletionProvider(true));
+
+        // completion for a variable assignment within a script
+        completionContributor.extend(CompletionType.BASIC, patternInModel,
+                new VariableAssignmentCompletion().getCompletionProvider(false));
     }
 
-    public CompletionProvider<CompletionParameters> getCompletionProvider() {
+    public CompletionProvider<CompletionParameters> getCompletionProvider(boolean includeCommandCalls) {
         return new CompletionProvider<CompletionParameters>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                 // The first step of the query will suggest starting points of the query
                 PsiElement element = parameters.getPosition();
-                // all accessible commands
-                setResolvedElementsForDefinedCommands(element);
-                // all builtin commands
-                setResolvedElementsForBuiltinCommands();
-                // all accessible commands
-                setResolvedElementsForDefinedQueries(element);
+                if (includeCommandCalls) {
+                    // all accessible commands
+                    setResolvedElementsForDefinedCommands(element);
+                    // all builtin commands
+                    setResolvedElementsForBuiltinCommands();
+                    // all accessible commands
+                    setResolvedElementsForDefinedQueries(element);
+                }
                 // all builtin commands
                 setResolvedElementsForBuiltinOperators();
                 // all accessible variables

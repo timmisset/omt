@@ -235,7 +235,7 @@ class ImportUtilTest extends OMTTestSuite {
             String text = importBlock.getText();
             assertEquals("import:\n" +
                     "    '@client/someModule/activity.omt':\n" +
-                    "        -   AnotherMember\n" +
+                    "    -   AnotherMember\n" +
                     "\n", text);
         });
     }

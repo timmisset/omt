@@ -62,25 +62,28 @@ public class OMTFormattingContext {
     }
 
     private SpacingBuilder getDefaultSpacingBuilder(@NotNull CodeStyleSettings settings) {
+        // the KEEP_BLANK_LINES_IN_DECLARATIONS is used to set a minimum number of blank lines
+        // this would negate the blank lines provided into the spacingbuilder when < KEEP_BLANK_LINES_IN_DECLARATIONS;
+        // For now, don't make the blank lines a setting but implement simple blank line settings
+        settings.getCommonSettings(OMTLanguage.INSTANCE).KEEP_BLANK_LINES_IN_DECLARATIONS = 0;
         return new SpacingBuilder(settings, OMTLanguage.INSTANCE)
                 // assignment operators (=, ==, +=, -=)
                 .around(OMTTokenSets.ASSIGNMENT_OPERATORS)
                 .spaceIf(common.SPACE_AROUND_ASSIGNMENT_OPERATORS)
                 // after sequence bullet
                 .afterInside(SEQUENCE_BULLET, TokenSet.create(SEQUENCE_ITEM, MEMBER_LIST_ITEM))
-                .spaces(customCodeStyleSettings.INDENT_AFTER_SEQUENCE_VALUE ? getIndentSize() : 1)
+                .spaces(customCodeStyleSettings.INDENT_AFTER_SEQUENCE_VALUE ? getIndentSize() - 1 : 1)
                 // inside curieConstantElement
-                .betweenInside(FORWARD_SLASH, CURIE_ELEMENT, CURIE_CONSTANT_ELEMENT)
-                .spaces(0)
+                .betweenInside(FORWARD_SLASH, CURIE_ELEMENT, CURIE_CONSTANT_ELEMENT).spaces(0)
                 // inside QueryPath between steps
-                .aroundInside(FORWARD_SLASH, QUERY_PATH)
-                .spaces(1)
+                .aroundInside(FORWARD_SLASH, QUERY_PATH).spaces(1)
                 // between rootblocks
-                .betweenInside(OMTTokenSets.ROOTBLOCK_ENTRIES, OMTTokenSets.ROOTBLOCK_ENTRIES, ROOT_BLOCK)
-                .blankLines(1)
-                // between modelItems
+                .betweenInside(OMTTokenSets.ROOTBLOCK_ENTRIES, OMTTokenSets.ROOTBLOCK_ENTRIES, ROOT_BLOCK).blankLines(1)
                 .between(MODEL_ITEM_BLOCK, MODEL_ITEM_BLOCK).blankLines(1)
-
+                // the content of the import block can be added by intentions, make sure there are not empty lines:
+                .around(IMPORT).blankLines(0)
+                .around(IMPORT_SOURCE).blankLines(0)
+                .aroundInside(MEMBER_LIST_ITEM, MEMBER_LIST).blankLines(0)
                 ;
     }
 
@@ -90,7 +93,6 @@ public class OMTFormattingContext {
         if (spacing != null) {
             return spacing;
         }
-
         if (isNodeType(parent, PREFIX) && isNodeType(child1, NAMESPACE_PREFIX) && isNodeType(child2, NAMESPACE_IRI)) {
             // spacing between the prefix and iri depends on the size of the largest prefix:
             final int maxLength = getMaxPrefixLength(((OMTFormattingBlock) parent).getNode());
@@ -118,6 +120,13 @@ public class OMTFormattingContext {
             return false;
         }
         return ((OMTFormattingBlock) block).getNode().getElementType() == elementType;
+    }
+
+    private boolean isNodeType(Block block, TokenSet tokenSet) {
+        if (block == null) {
+            return false;
+        }
+        return tokenSet.contains(((OMTFormattingBlock) block).getNode().getElementType());
     }
 
     public Indent computeIndent(@NotNull ASTNode node) {
@@ -202,7 +211,7 @@ public class OMTFormattingContext {
     /**
      * Check if it is the first indentable step in the query:
      * DEFINE QUERY myQuery => .. / .. /
-     *     ..  <-- first indentable query step
+     * ..  <-- first indentable query step
      */
     private boolean isFirstIndentableQueryStep(ASTNode node) {
         return node.getTreeParent() != null &&
@@ -308,7 +317,8 @@ public class OMTFormattingContext {
      */
     private Alignment registerAndReturnIfAnyOf(ASTNode node, IElementType... types) {
         if (nodeAlignment.containsKey(node)) {
-            return nodeAlignment.get(node); }
+            return nodeAlignment.get(node);
+        }
         final ASTNode firstOfKindInParent = getFirstOfKindInParent(node.getTreeParent(), types);
         if (firstOfKindInParent == node) {
             return registerAlignmentAndReturn(node);
@@ -397,7 +407,6 @@ public class OMTFormattingContext {
         return null;
     }
 
-
     private Alignment alignEOLComment(ASTNode node) {
         if (!getTokenFinderUtil().isStartOfLine(node)) {
             return null;
@@ -428,7 +437,7 @@ public class OMTFormattingContext {
     }
 
     private Alignment registerAlignmentAndReturn(ASTNode node) {
-        if(nodeAlignment.containsKey(node)) {
+        if (nodeAlignment.containsKey(node)) {
             return nodeAlignment.get(node);
         }
         Alignment alignment = Alignment.createAlignment();
@@ -437,7 +446,7 @@ public class OMTFormattingContext {
     }
 
     private Alignment getAlignmentAndRegisterSelf(ASTNode node, ASTNode registeredNode) {
-        if(nodeAlignment.containsKey(node)) {
+        if (nodeAlignment.containsKey(node)) {
             return nodeAlignment.get(node);
         }
         Alignment alignment = nodeAlignment.get(registeredNode);

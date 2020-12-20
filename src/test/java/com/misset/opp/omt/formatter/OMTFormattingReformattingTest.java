@@ -9,7 +9,7 @@ class OMTFormattingReformattingTest extends OMTFormattingTest {
     @BeforeEach
     @Override
     public void setUp() throws Exception {
-        super.setName("OMTEnterTypedHandlerTest");
+        super.setName("OMTFormattingReformattingTest");
         super.setUp();
     }
 

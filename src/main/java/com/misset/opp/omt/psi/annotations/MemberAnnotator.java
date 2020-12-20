@@ -16,6 +16,7 @@ import com.misset.opp.omt.psi.impl.BuiltInMember;
 import com.misset.opp.omt.psi.intentions.members.MemberIntention;
 import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,10 +44,13 @@ public class MemberAnnotator extends AbstractAnnotator {
         OMTSignature signature = (OMTSignature) signatureArgument.getParent();
         OMTCall call = (OMTCall) signature.getParent();
         try {
-            call.getCallable().validateSignatureArgument(
-                    signature.getSignatureArgumentList().indexOf(signatureArgument),
-                    signatureArgument
-            );
+            final OMTCallable callable = call.getCallable();
+            if (callable != null) {
+                callable.validateSignatureArgument(
+                        signature.getSignatureArgumentList().indexOf(signatureArgument),
+                        signatureArgument
+                );
+            }
         } catch (IncorrectSignatureArgument exception) {
             setError(exception.getMessage());
         }
@@ -60,7 +64,8 @@ public class MemberAnnotator extends AbstractAnnotator {
 
         // validate the call itself, number of arguments, required etc
         try {
-            call.getCallable().validateSignature(call);
+            final OMTCallable callable = call.getCallable();
+            if (callable != null) callable.validateSignature(call);
         } catch (NumberOfInputParametersMismatchException | CallCallableMismatchException | IncorrectFlagException exception) {
             setError(exception.getMessage());
         }

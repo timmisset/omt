@@ -106,8 +106,7 @@ class QueryAnnotatorTest extends OMTAnnotationTest {
 
         queryAnnotator.annotate(step);
 
-        verify(getHolder(), times(0)).newAnnotation(HighlightSeverity.ERROR,
-                String.format("%s is not a known %s-path predicate for type(s): %s", somePredicate, "FORWARD", RESOURCES_AS_STRING));
+        verifyNoErrors();
     }
 
     @Test

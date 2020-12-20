@@ -313,4 +313,17 @@ public class ModelUtil {
     public boolean isImportNode(ASTNode node) {
         return PsiTreeUtil.findFirstParent(node.getPsi(), element -> element instanceof OMTImport) != null;
     }
+
+    public boolean isScalarEntry(PsiElement element) {
+        return isEntry(element, "scalar");
+    }
+
+    public boolean isQueryEntry(PsiElement element) {
+        return isEntry(element, "query");
+    }
+
+    private boolean isEntry(PsiElement element, String entryType) {
+        final JsonObject json = getJson(element);
+        return json != null && json.has("type") && json.get("type").getAsString().equals(entryType);
+    }
 }
