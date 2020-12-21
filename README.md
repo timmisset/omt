@@ -26,26 +26,7 @@ De ODT Commands en Operators worden uitgelezen uit de index files en geannoteerd
 > Sommige commands bevatten lokale variabelen ($value bij FOREACH). Indien de gebruiker er overheen beweegt zal getoond worden dat ze op die plek beschikbaar zijn als local variabel
 
 ## Ontologie model
-Op dit moment wordt in de development branch aan de integratie met het data-model gewerkt. Deze is nog niet gereleased. Experimenteren ermee kan al wel door de plugin te bouwen vanuit de huidige development branch
-
-## Annotaties
-Annotaties worden door IntelliJ gebruikt om aan te geven of er iets mis in de code (errors, warnings) of om meer informatie te tonen. Op dit moment wordt het volgende geannoteerd:
-
-#### Import
-- Bestand kan niet worden gevonden => error
-- Member kan niet worden gevonden in de geimporeerde file => error
-
-#### Operators / Commands
-- Aanroepen van niet bekende member => error met import suggestie indien beschikbaar
-- Verkeerd aantal argumenten => error met het verwachtte aantal
-
-#### Prefixes
- - Prefix niet declared => error met suggestie op basis van andere toepassingen in het project
- - Prefix niet gebruikt => warning
-
-#### Variabelen
- - Variable niet declared => error
- - Variable niet gebruikt => warning => herschrijf naar $_ om de warning weg te halen. 
+De ontologie wordt uit de project folder model gelezen als ttl files. Dit gebeurt via de Apache Jena library en wordt vervolgens gebruikt om zoveel mogelijk type-checking en code completion te bewerkstelligen. Wijzigingen in de ttl files worden direct verwerkt door de plugin bij opslaan van de ttl file.
 
 ## Kleurtjes
 De color scheme voor de OMT / ODT elementen kan worden ingesteld bij Preferences | Editor | Color Scheme | OMT
