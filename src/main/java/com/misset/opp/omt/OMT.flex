@@ -108,8 +108,11 @@ IElementType getIndent() {
     lastIndent = lastIndent == null || lastIndent == OMTTypes.INDENT2 ? OMTTypes.INDENT : OMTTypes.INDENT2;
     return lastIndent;
 }
-int getScalarState() {
-    switch(currentBlockLabel) {
+public int getScalarState() {
+    return getScalarState(currentBlockLabel);
+}
+public static int getScalarState(String entry) {
+    switch(entry) {
         case "title:":
             return INTERPOLATED_STRING;
         case "reason:":
@@ -118,7 +121,7 @@ int getScalarState() {
             return YAML_SCALAR;
     }
 }
-String currentBlockLabel;
+public String currentBlockLabel;
 IElementType toSpecificBlockLabel() {
     currentBlockLabel = yytext().toString();
     switch(yytext().toString()) {
@@ -407,13 +410,15 @@ IElementType closeBracket() {
     "$"                                                             { return returnElement(OMTTypes.STRING); }
 }
 <STRING> {
-    {PROPERTY_KEY}                                                  {    return exitScalar(); }
+    {PROPERTY_KEY}                                                  { return exitScalar(); }
+    {VARIABLENAME}                                                  { return returnElement(OMTTypes.VARIABLE_NAME); }
     [^\n\ ]+                                                        { return returnElement(OMTTypes.STRING);  }
-    <<EOF>>                                                          { return finishLexer(); }
+    <<EOF>>                                                         { return finishLexer(); }
 }
 <INTERPOLATED_STRING> {
     // Interpolated templates are supported and anything parsed in them can be resolved to PSI elements
     {PROPERTY_KEY}                                                  {    return exitScalar(); }
+    {VARIABLENAME}                                                  { return returnElement(OMTTypes.VARIABLE_NAME); }
     "${"                                                            { setTemplateInScalar(true); setState(YAML_SCALAR); return returnElement(OMTTypes.TEMPLATE_OPEN); }
     "`"                                                             { setTemplateInBacktick(false); setState(YAML_SCALAR); return returnElement(OMTTypes.BACKTICK); }
     "$"                                                             { return returnElement(OMTTypes.STRING); }

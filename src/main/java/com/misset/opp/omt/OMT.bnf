@@ -32,7 +32,7 @@ propertyLabel ::=                           PROPERTY { methods=[getPropertyLabel
 
 // a scalar single statement (multiline optional) following a property label
 scalar ::=                                  comment? scalarValue
-scalarValue ::=                             parameterWithType | variableAssignment | indentedBlock | nakedString | query | script
+scalarValue ::=                             parameterWithType | variableAssignment | indentedBlock | stringEntry | query | script
 
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indented, it must dedent
@@ -323,5 +323,5 @@ interpolationTemplate ::=                   TEMPLATE_OPEN query TEMPLATE_CLOSED
 interpolatedString ::=                      BACKTICK (interpolationTemplate | STRING)* BACKTICK { extends=queryStep }
 
 // string / interpolated string without encapsulation of ' or `
-nakedString ::=                            (STRING | interpolationTemplate)+
+stringEntry ::=                            (STRING | interpolationTemplate)+
 

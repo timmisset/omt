@@ -42,12 +42,28 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
+      2.0.4
+      Variables in string fields are resolvable
+      Fix for Highlighting Lexer
+      
       2.0.3
       Added reference annotation for Queries, Command, ModelItems
       String model entries are resolved in the lexer directly
       Fix for StandaloneQuery parsing, query: doesn't accept semicolon ending
       Formatter updated
       Auto-import and code completion for exporting members from other files
+      
+      2.0.2
+      Performance improvement by resolving references with the IntelliJ indexed ReferenceSearch
+      
+      2.0.1
+      Improved formatter for blank lines and spaces
+      
+      2.0
+      RDF Ontology is included in most parts of the validation and completion providers. Typing is checked where possible,
+      resolves to an 'any' type for unknown or unresovable query-steps to prevent false-positive error annotations. 
+      Annotation of parameters is possible (and suggested with light warnings) which will help to resolve the types. 
+      Formatter is implemented, mostly based on YAML style, it also adds some formatting within queries.
       """
 }
 tasks{

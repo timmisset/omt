@@ -23,6 +23,30 @@ public class OMTLexerAdapter extends FlexAdapter {
         if (logging) {
             System.out.printf("%s, started with offset %s - %s in state %s%n", origin, startOffset, endOffset, initialState);
         }
+        if (startOffset > 0) {
+            // only the HighlightingLexer will restart at an offset
+            initLexerStartState(buffer.toString(), startOffset);
+        }
         super.start(buffer, startOffset, endOffset, initialState);
+    }
+
+    private void initLexerStartState(String buffer, int endOffset) {
+        // method to ensure that the lexer starts in the right scalar type
+        // when restarting (Highlighting only)
+        // although quick, it is still a rather expensive workaround:
+        // TODO: check if the Highlighting lexer can be forced to always start at offSet 0
+        // this cannot be done by overriding the startOffset since this will cause a shifting
+        // error in the parser. Probably the number of returned segments mismatched with the expected
+        // amount of segments
+        OMTLexerAdapter lexer = new OMTLexerAdapter(false);
+        lexer.start(buffer, 0, endOffset, 0);
+        boolean cont = true;
+        while (cont) {
+            lexer.advance();
+            cont = lexer.getTokenType() != null;
+        }
+        final OMTLexer currentLexer = (OMTLexer) super.getFlex();
+        final OMTLexer initLexer = (OMTLexer) lexer.getFlex();
+        currentLexer.currentBlockLabel = initLexer.currentBlockLabel;
     }
 }
