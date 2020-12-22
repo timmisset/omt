@@ -183,6 +183,18 @@ class PsiImplUtilTest extends OMTTestSuite {
     }
 
     @Test
+    void queryPathResolveToResourceResolvesRightSideFilter() {
+        String content = "prefixes:\n" +
+                "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "    ont:     <http://ontologie#>\n" +
+                "\n" +
+                "queries: |\n" +
+                "    DEFINE QUERY test() => 'test' / ^ont:stringProperty [/ont:ClassB == rdf:type];\n";
+        OMTQuery query = parseQueryFromContent(content);
+        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
+    }
+
+    @Test
     void queryPathResolveToResourceResolvesANDNOTFilterWithType() {
         String content = "prefixes:\n" +
                 "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +

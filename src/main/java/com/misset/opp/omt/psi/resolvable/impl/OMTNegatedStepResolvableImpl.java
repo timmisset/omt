@@ -30,11 +30,6 @@ public abstract class OMTNegatedStepResolvableImpl extends OMTQueryImpl implemen
     }
 
     @Override
-    public List<Resource> resolveToResource(boolean lookBack) {
-        return resolveToResource();
-    }
-
-    @Override
     public List<Resource> filter(List<Resource> resources) {
         return getQuery().filter(resources);
     }

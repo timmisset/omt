@@ -86,7 +86,7 @@ public class QueryUtil {
     }
 
     public List<Resource> getPreviousStep(OMTQueryFilter filter) {
-        final List<Resource> resources = ((OMTQueryStep) filter.getParent()).resolveToResource(true, false);
+        final List<Resource> resources = ((OMTQueryStep) filter.getParent()).resolveToResource(false);
         resources.addAll(getRDFModelUtil().allSubClasses(resources));
         return getRDFModelUtil().getDistinctResources(resources);
     }

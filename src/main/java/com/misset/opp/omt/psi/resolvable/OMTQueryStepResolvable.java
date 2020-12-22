@@ -6,9 +6,7 @@ import java.util.List;
 
 public interface OMTQueryStepResolvable extends OMTResolvableResource {
 
-    List<Resource> resolveToResource(boolean lookBack, boolean filter);
-
-    List<Resource> resolveToResource(boolean lookBack);
+    List<Resource> resolveToResource(boolean filter);
 
     List<Resource> resolveToResource();
 

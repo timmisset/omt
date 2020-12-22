@@ -78,14 +78,6 @@ class OMTQueryArrayResolvableImplTest extends OMTTestSuite {
     }
 
     @Test
-    void resolveToResourceWithLookbackReturnsCombinationOfQueries() {
-        final List<Resource> resources = queryArray.resolveToResource(true);
-        assertEquals(2, resources.size());
-        assertContainsElements(resources, CLASSA, CLASSB);
-        verify(rdfModelUtil, times(1)).getDistinctResources(anyList());
-    }
-
-    @Test
     void filterReturnsInput() {
         List<Resource> input = new ArrayList<>();
         assertSame(input, queryArray.filter(input));

@@ -46,18 +46,12 @@ public abstract class OMTQueryPathResolvableImpl extends OMTQueryImpl implements
     }
 
     @Override
-    public List<Resource> resolveToResource(boolean lookBack) {
+    public List<Resource> resolveToResource() {
         final OMTQueryStep queryStep = getLastStep();
         if (queryStep == null) {
             return new ArrayList<>();
         }
-        return queryStep.resolveToResource(lookBack);
-    }
-
-    @Override
-    public List<Resource> resolveToResource() {
-        // lookback when there is more than one step in this query
-        return resolveToResource(true);
+        return queryStep.resolveToResource();
     }
 
     @Override

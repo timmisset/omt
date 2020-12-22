@@ -31,11 +31,6 @@ public abstract class OMTBooleanStatementResolvableImpl extends OMTQueryImpl imp
     }
 
     @Override
-    public List<Resource> resolveToResource(boolean lookBack) {
-        return resolveToResource();
-    }
-
-    @Override
     public List<Resource> filter(List<Resource> resources) {
         // applies filtering on all steps and returns the one with the fewest options
         return getQueryList().stream()

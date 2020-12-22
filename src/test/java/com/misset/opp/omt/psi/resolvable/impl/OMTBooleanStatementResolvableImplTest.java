@@ -46,7 +46,6 @@ class OMTBooleanStatementResolvableImplTest extends OMTTestSuite {
 
         doReturn(resource).when(modelUtil).getPrimitiveTypeAsResource(eq("boolean"));
         assertContainsElements(booleanStatement.resolveToResource(), resource);
-        assertContainsElements(booleanStatement.resolveToResource(true), resource);
         super.tearDown();
     }
 

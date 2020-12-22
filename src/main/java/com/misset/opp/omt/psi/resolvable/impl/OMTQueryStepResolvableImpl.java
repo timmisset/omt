@@ -19,8 +19,6 @@ import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
 public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement implements OMTQueryStep {
 
-    private static final String BOOLEAN = "boolean";
-
     public OMTQueryStepResolvableImpl(@NotNull ASTNode node) {
         super(node);
     }
@@ -39,12 +37,7 @@ public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement im
     }
 
     @Override
-    public List<Resource> resolveToResource(boolean lookBack) {
-        return resolveToResource(lookBack, true);
-    }
-
-    @Override
-    public List<Resource> resolveToResource(boolean lookBack, boolean filter) {
+    public List<Resource> resolveToResource(boolean filter) {
         // steps that do not include preceeding info
         List<Resource> resources = new ArrayList<>();
         if (getConstantValue() != null) {
@@ -53,7 +46,7 @@ public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement im
             resources = getVariable().getType();
         } else if (getCurieElement() != null) {
             List<Resource> previousStep = getQueryUtil().getPreviousStep(this);
-            if (doLookBack(lookBack) && !previousStep.isEmpty()) {
+            if (canLookBack() && !previousStep.isEmpty()) {
                 return getRDFModelUtil().listObjectsWithSubjectPredicate(previousStep, getCurieElement().getAsResource());
             }
             return getCurieElement().resolveToResource();
@@ -61,10 +54,6 @@ public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement im
             return getOperatorCall().resolveToResource();
         }
         return filter ? filter(resources) : resources;
-    }
-
-    private boolean doLookBack(boolean lookbackRequest) {
-        return lookbackRequest && canLookBack();
     }
 
     protected boolean canLookBack() {
