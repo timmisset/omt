@@ -85,14 +85,6 @@ class OMTQueryPathResolvableImplTest extends OMTTestSuite {
     }
 
     @Test
-    void resolveToResourceUsesLookback() {
-        doReturn(null).when(queryPath).resolveToResource(anyBoolean());
-        doReturn(Arrays.asList(mock(OMTQueryStep.class), mock(OMTQueryStep.class))).when(queryPath).getQueryStepList();
-        queryPath.resolveToResource();
-        verify(queryPath).resolveToResource(eq(true));
-    }
-
-    @Test
     void resolveToResourceReturnsEmptyListWhenNoSteps() {
         doReturn(mock(PsiElement.class)).when(queryPath).getParent();
         doReturn(Collections.emptyList()).when(queryPath).getQueryStepList();
@@ -106,8 +98,8 @@ class OMTQueryPathResolvableImplTest extends OMTTestSuite {
         OMTQueryStep firstStep = mock(OMTQueryStep.class);
         OMTQueryStep secondStep = mock(OMTQueryStep.class);
 
-        doReturn(firstStepResourceList).when(firstStep).resolveToResource(anyBoolean());
-        doReturn(secondStepResourceList).when(secondStep).resolveToResource(anyBoolean());
+        doReturn(firstStepResourceList).when(firstStep).resolveToResource();
+        doReturn(secondStepResourceList).when(secondStep).resolveToResource();
         doReturn(Arrays.asList(firstStep, secondStep)).when(queryPath).getQueryStepList();
 
         final List<Resource> resourceList = queryPath.resolveToResource();

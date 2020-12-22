@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static com.misset.opp.omt.psi.OMTTypes.FORWARD_SLASH;
 import static org.mockito.Mockito.*;
 
 class OMTQueryStepResolvableImplTest extends OMTTestSuite {
@@ -56,9 +57,6 @@ class OMTQueryStepResolvableImplTest extends OMTTestSuite {
         resourceList = new ArrayList<>(Arrays.asList(CLASSA, CLASSB));
         queryStep = mock(OMTQueryStepImpl.class, InvocationOnMock::callRealMethod);
         doReturn(queryPath).when(queryStep).getParent();
-//        doReturn(previousStep).when(queryUtil).getPreviousStep(queryStep);
-//        doReturn(curieElement).when(queryStep).getCurieElement();
-//        doAnswer(invocation -> invocation.getArgument(0)).when(queryStep).filter(anyList());
     }
 
     @AfterEach
@@ -98,10 +96,10 @@ class OMTQueryStepResolvableImplTest extends OMTTestSuite {
     }
 
     @Test
-    void resolveToResourceCallsResolveToResourceWithLookbackAndFilter() {
-        doReturn(null).when(queryStep).resolveToResource(anyBoolean(), anyBoolean());
+    void resolveToResourceCallsResolveToResourceWithFilter() {
+        doReturn(null).when(queryStep).resolveToResource(anyBoolean());
         queryStep.resolveToResource();
-        verify(queryStep).resolveToResource(eq(true), eq(true));
+        verify(queryStep).resolveToResource(eq(true));
     }
 
     @Test
@@ -109,7 +107,7 @@ class OMTQueryStepResolvableImplTest extends OMTTestSuite {
         final OMTConstantValue constantValue = mock(OMTConstantValue.class);
         doReturn(resourceList).when(constantValue).resolveToResource();
         doReturn(constantValue).when(queryStep).getConstantValue();
-        assertSame(resourceList, queryStep.resolveToResource(true, false));
+        assertSame(resourceList, queryStep.resolveToResource(false));
     }
 
     @Test
@@ -118,20 +116,34 @@ class OMTQueryStepResolvableImplTest extends OMTTestSuite {
         doReturn(resourceList).when(variable).getType();
         doReturn(null).when(queryStep).getConstantValue();
         doReturn(variable).when(queryStep).getVariable();
-        assertSame(resourceList, queryStep.resolveToResource(true, false));
+        assertSame(resourceList, queryStep.resolveToResource(false));
     }
 
     @Test
     void resolveToResourceReturnsCurieResolveToResource() {
+        // return the resolved curie element itself when first child in parent
+        // and it should look-back
+
         final OMTVariable variable = mock(OMTVariable.class);
         doReturn(resourceList).when(variable).getType();
         doReturn(null).when(queryStep).getConstantValue();
         doReturn(null).when(queryStep).getVariable();
+        doReturn(0).when(queryStep).getTextOffset(); // first child in parent
         doReturn(curieElement).when(queryStep).getCurieElement();
         doReturn(resourceList).when(queryUtil).getPreviousStep(eq(queryStep));
         doReturn(Collections.singletonList(CLASSA)).when(curieElement).resolveToResource();
 
-        final List<Resource> resources = queryStep.resolveToResource(false, false);
+        // if for some reason the curie element is not considered a curie constant
+        // but the preceding character is a forward slash, and it is the first step in the path
+        // the resolved result should not be the result of a lookback but the curie itself:
+        // $something [/ ont:ClassA <-- should resolve to ClassA
+        final PsiElement prevLeaf = mock(PsiElement.class);
+        final ASTNode astNode = mock(ASTNode.class);
+        doReturn(astNode).when(prevLeaf).getNode();
+        doReturn(FORWARD_SLASH).when(astNode).getElementType();
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.prevVisibleLeaf(eq(queryStep)), prevLeaf);
+
+        final List<Resource> resources = queryStep.resolveToResource(false);
         assertEquals(1, resources.size());
         assertContainsElements(resources, CLASSA);
     }
@@ -152,14 +164,14 @@ class OMTQueryStepResolvableImplTest extends OMTTestSuite {
         ASTNode leafNode = mock(ASTNode.class);
         PsiElement leafElement = mock(PsiElement.class);
         doReturn(leafNode).when(leafElement).getNode();
-        doReturn(OMTTypes.FORWARD_SLASH).when(leafNode).getElementType();
+        doReturn(FORWARD_SLASH).when(leafNode).getElementType();
 
         try (MockedStatic<PsiTreeUtil> mockedStatic = mockStatic(PsiTreeUtil.class)) {
             mockedStatic
                     .when(() -> PsiTreeUtil.prevLeaf(any(), eq(true)))
                     .thenReturn(leafElement);
 
-            final List<Resource> resources = queryStep.resolveToResource(true, false);
+            final List<Resource> resources = queryStep.resolveToResource(false);
             assertEquals(1, resources.size());
             assertContainsElements(resources, CLASSA);
         }
@@ -179,7 +191,7 @@ class OMTQueryStepResolvableImplTest extends OMTTestSuite {
         doReturn(10).when(queryStep).getTextOffset();
         doReturn(0).when(queryPath).getTextOffset();
 
-        final List<Resource> resources = queryStep.resolveToResource(true, false);
+        final List<Resource> resources = queryStep.resolveToResource(false);
         assertSame(resourceList, resources);
         verify(rdfModelUtil).listObjectsWithSubjectPredicate(eq(resourceList), any());
     }
@@ -194,6 +206,6 @@ class OMTQueryStepResolvableImplTest extends OMTTestSuite {
         doReturn(null).when(queryStep).getCurieElement();
         doReturn(operatorCall).when(queryStep).getOperatorCall();
         doReturn(resourceList).when(operatorCall).resolveToResource();
-        assertSame(resourceList, queryStep.resolveToResource(true, false));
+        assertSame(resourceList, queryStep.resolveToResource(false));
     }
 }

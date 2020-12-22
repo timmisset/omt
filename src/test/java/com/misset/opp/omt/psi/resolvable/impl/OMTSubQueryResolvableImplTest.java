@@ -49,28 +49,4 @@ class OMTSubQueryResolvableImplTest extends OMTTestSuite {
         subQuery.resolveToResource();
         verify(query).resolveToResource();
     }
-
-    @Test
-    void resolveToResourceDefersToQueryWithLookback() {
-        subQuery.resolveToResource(true);
-        verify(query).resolveToResource(eq(true));
-    }
-
-    @Test
-    void resolveToResourceDefersToQueryWithoutLookback() {
-        subQuery.resolveToResource(false);
-        verify(query).resolveToResource(eq(false));
-    }
-
-    @Test
-    void resolveToResourceDefersToQueryWithLookbackAndFilter() {
-        subQuery.resolveToResource(true, true);
-        verify(query).resolveToResource(eq(true));
-    }
-
-    @Test
-    void resolveToResourceDefersToQueryWithoutLookbackAndFilter() {
-        subQuery.resolveToResource(false, true);
-        verify(query).resolveToResource(eq(false));
-    }
 }

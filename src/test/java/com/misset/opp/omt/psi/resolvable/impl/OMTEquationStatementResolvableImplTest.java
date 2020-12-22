@@ -15,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -35,8 +34,7 @@ class OMTEquationStatementResolvableImplTest extends OMTTestSuite {
     @Mock
     RDFModelUtil rdfModelUtil;
 
-    @Mock
-    OMTQuery leftHandQuery;
+    OMTQuery leftHandQuery = getTypeStep();
 
     @Mock
     OMTQuery rightHandQuery;
@@ -55,7 +53,6 @@ class OMTEquationStatementResolvableImplTest extends OMTTestSuite {
 
         queryList = Arrays.asList(leftHandQuery, rightHandQuery);
         doReturn(queryList).when(equationStatement).getQueryList();
-        doReturn(Collections.singletonList(TYPE_RESOURCE)).when(leftHandQuery).resolveToResource();
 
         resources = Arrays.asList(
                 model.createResource(CLASSA),
@@ -64,6 +61,16 @@ class OMTEquationStatementResolvableImplTest extends OMTTestSuite {
         );
 
         doReturn(true).when(rdfModelUtil).isTypePredicate(TYPE_RESOURCE);
+    }
+
+    private OMTQuery getTypeStep() {
+        final OMTQueryPath query = mock(OMTQueryPath.class);
+        final OMTQueryStep step = mock(OMTQueryStep.class);
+        final OMTCurieElement curieElement = mock(OMTCurieElement.class);
+        doReturn(curieElement).when(step).getCurieElement();
+        doReturn(Collections.singletonList(step)).when(query).getQueryStepList();
+        doReturn(TYPE_RESOURCE).when(curieElement).getAsResource();
+        return query;
     }
 
     @AfterEach
@@ -91,26 +98,6 @@ class OMTEquationStatementResolvableImplTest extends OMTTestSuite {
     }
 
     @Test
-    void resolveToResourceWithLookbackReturnsBoolean() {
-        doReturn(BOOLEAN_RESOURCE).when(rdfModelUtil).getPrimitiveTypeAsResource("boolean");
-        final List<Resource> resources = equationStatement.resolveToResource(true);
-        assertEquals(1, resources.size());
-        assertContainsElements(resources, BOOLEAN_RESOURCE);
-    }
-
-    @Test
-    void filterCallsResolveQueryWithoutLookbackWhenQueryPath() {
-        OMTQueryPath queryPath = mock(OMTQueryPath.class);
-
-        doReturn(new ArrayList<>()).when(queryPath).resolveToResource(eq(false));
-        doReturn(Collections.singletonList(queryPath)).when(equationStatement).getQueryList();
-
-        final List<Resource> filterResult = equationStatement.filter(resources);
-        assertSame(filterResult, resources);
-        verify(queryPath, times(1)).resolveToResource(eq(false));
-    }
-
-    @Test
     void filterReturnsInputWhenNotTypePredicate() {
         doReturn(false).when(rdfModelUtil).isTypePredicate(any());
         final List<Resource> filterResult = equationStatement.filter(resources);
@@ -127,11 +114,52 @@ class OMTEquationStatementResolvableImplTest extends OMTTestSuite {
     }
 
     @Test
+    void filterReturnsFilteredListWhenFlipped() {
+        doReturn(mock(OMTQueryFilter.class)).when(equationStatement).getParent();
+        doReturn(Collections.singletonList(model.createResource(CLASSA))).when(rightHandQuery).resolveToResource();
+
+        // flip queries:
+        doReturn(Arrays.asList(queryList.get(1), queryList.get(0))).when(equationStatement).getQueryList();
+
+        final List<Resource> filterResult = equationStatement.filter(resources);
+        assertEquals(1, filterResult.size());
+        assertContainsElements(filterResult, model.createResource(CLASSA));
+    }
+
+    @Test
     void filterReturnsFilteredNegatedList() {
         doReturn(mock(OMTNegatedStep.class)).when(equationStatement).getParent();
         doReturn(Collections.singletonList(model.createResource(CLASSA))).when(rightHandQuery).resolveToResource();
         final List<Resource> filterResult = equationStatement.filter(resources);
         assertEquals(2, filterResult.size());
         assertContainsElements(filterResult, model.createResource(CLASSB), model.createResource(CLASSC));
+    }
+
+    @Test
+    void filterReturnsResourcesWhenMoreThan1StepInThePath() {
+        doReturn(mock(OMTQueryFilter.class)).when(equationStatement).getParent();
+        doReturn(Collections.singletonList(model.createResource(CLASSA))).when(rightHandQuery).resolveToResource();
+
+        // add additional step:
+        final OMTQueryPath queryPath = mock(OMTQueryPath.class);
+        doReturn(Arrays.asList(mock(OMTQueryStep.class), mock(OMTQueryStep.class))).when(queryPath).getQueryStepList();
+        doReturn(Arrays.asList(queryPath, queryList.get(1))).when(equationStatement).getQueryList();
+
+        final List<Resource> filterResult = equationStatement.filter(resources);
+        assertContainsElements(filterResult, resources);
+    }
+
+    @Test
+    void filterReturnsResourcesWhenStepIsNotACurieElement() {
+        doReturn(mock(OMTQueryFilter.class)).when(equationStatement).getParent();
+        doReturn(Collections.singletonList(model.createResource(CLASSA))).when(rightHandQuery).resolveToResource();
+
+        // add additional step:
+        final OMTQueryPath queryPath = mock(OMTQueryPath.class);
+        doReturn(Collections.singletonList(mock(OMTQueryStep.class))).when(queryPath).getQueryStepList();
+        doReturn(Arrays.asList(queryPath, queryList.get(1))).when(equationStatement).getQueryList();
+
+        final List<Resource> filterResult = equationStatement.filter(resources);
+        assertContainsElements(filterResult, resources);
     }
 }

@@ -18,14 +18,4 @@ public abstract class OMTSubQueryResolvableImpl extends OMTQueryStepImpl impleme
     public List<Resource> resolveToResource() {
         return getQuery().resolveToResource();
     }
-
-    @Override
-    public List<Resource> resolveToResource(boolean lookBack) {
-        return getQuery().resolveToResource(lookBack);
-    }
-
-    @Override
-    public List<Resource> resolveToResource(boolean lookBack, boolean filter) {
-        return getQuery().resolveToResource(lookBack);
-    }
 }

@@ -38,8 +38,4 @@ public abstract class OMTQueryArrayResolvableImpl extends OMTQueryImpl implement
         return resources;
     }
 
-    @Override
-    public List<Resource> resolveToResource(boolean lookBack) {
-        return resolveToResource();
-    }
 }

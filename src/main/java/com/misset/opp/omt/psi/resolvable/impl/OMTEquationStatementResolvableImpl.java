@@ -2,14 +2,12 @@ package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.OMTEquationStatement;
-import com.misset.opp.omt.psi.OMTNegatedStep;
-import com.misset.opp.omt.psi.OMTQuery;
-import com.misset.opp.omt.psi.OMTQueryPath;
+import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.impl.OMTQueryImpl;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,25 +33,34 @@ public abstract class OMTEquationStatementResolvableImpl extends OMTQueryImpl im
     }
 
     @Override
-    public List<Resource> resolveToResource(boolean lookBack) {
-        return resolveToResource();
-    }
-
-    @Override
     public List<Resource> filter(List<Resource> resources) {
-        final OMTQuery query = getQueryList().get(0);
-        final List<Resource> leftHand = query instanceof OMTQueryPath ? query.resolveToResource(false) : query.resolveToResource();
+        final List<Resource> compareTo = new ArrayList<>();
 
-        if (!leftHand.isEmpty() && getRDFModelUtil().isTypePredicate(leftHand.get(0))) {
+        // check if either the left-side or right-side of the equation is a type filter (rdf:type)
+        if (isTypeFilter(getQueryList().get(0))) {
+            compareTo.addAll(getQueryList().get(1).resolveToResource());
+        } else if (isTypeFilter(getQueryList().get(1))) {
+            compareTo.addAll(getQueryList().get(0).resolveToResource());
+        }
+        if (!compareTo.isEmpty()) {
             // [rdf:type == ...]
             // now filter the resources based on the type
             PsiElement parent = getParent();
             boolean isNegated = parent instanceof OMTNegatedStep;
-            List<Resource> rightHand = getQueryList().get(1).resolveToResource();
             return resources.stream().filter(
-                    resource -> isNegated != rightHand.contains(resource)
+                    resource -> isNegated != compareTo.contains(resource)
             ).collect(Collectors.toList());
         }
         return resources;
+    }
+
+    private boolean isTypeFilter(OMTQuery query) {
+        if (!(query instanceof OMTQueryPath)) {
+            return false;
+        }
+        final OMTQueryPath queryPath = (OMTQueryPath) query;
+        final OMTCurieElement curieElement = queryPath.getQueryStepList().size() == 1 &&
+                queryPath.getQueryStepList().get(0).getCurieElement() != null ? queryPath.getQueryStepList().get(0).getCurieElement() : null;
+        return curieElement != null && getRDFModelUtil().isTypePredicate(curieElement.getAsResource());
     }
 }

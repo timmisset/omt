@@ -66,16 +66,16 @@ class OMTQueryReverseStepResolvableImplTest extends OMTTestSuite {
     }
 
     @Test
-    void resolveToResourceCallsResolveToResourceWithLookbackAndFilter() {
-        doReturn(null).when(queryReverseStep).resolveToResource(anyBoolean(), anyBoolean());
+    void resolveToResourceCallsResolveToResourceWithFilter() {
+        doReturn(null).when(queryReverseStep).resolveToResource(anyBoolean());
         queryReverseStep.resolveToResource();
-        verify(queryReverseStep).resolveToResource(eq(true), eq(true));
+        verify(queryReverseStep).resolveToResource(eq(true));
     }
 
     @Test
     void resolveToResourceReturnsPreviousStepWhenNoCurieElement() {
         doReturn(null).when(queryReverseStep).getCurieElement();
-        assertContainsElements(queryReverseStep.resolveToResource(true, false), CLASSA, CLASSB); // for coverage, run with false
+        assertContainsElements(queryReverseStep.resolveToResource(false), CLASSA, CLASSB); // for coverage, run with false
     }
 
     @Test
@@ -85,7 +85,7 @@ class OMTQueryReverseStepResolvableImplTest extends OMTTestSuite {
         doReturn(previousStep).when(rdfModelUtil).getPredicateSubjects(any());
         doReturn(previousStep).when(rdfModelUtil).listSubjectsWithPredicateObjectClass(any(), anyList());
 
-        queryReverseStep.resolveToResource(false, true); // for coverage, run with false
+        queryReverseStep.resolveToResource(true);
 
         // no calls to add superclasses
         verify(rdfModelUtil, times(0)).allSuperClasses(eq(previousStep));
@@ -101,7 +101,7 @@ class OMTQueryReverseStepResolvableImplTest extends OMTTestSuite {
         doReturn(previousStep).when(rdfModelUtil).getPredicateSubjects(any());
         doReturn(previousStep).when(rdfModelUtil).listSubjectsWithPredicateObjectClass(any(), anyList());
 
-        queryReverseStep.resolveToResource(false, false); // for coverage, run with false
+        queryReverseStep.resolveToResource(false); // for coverage, run with false
 
         // no calls to add superclasses
         verify(rdfModelUtil, times(0)).allSuperClasses(eq(previousStep));
@@ -116,7 +116,7 @@ class OMTQueryReverseStepResolvableImplTest extends OMTTestSuite {
         doReturn(previousStep).when(rdfModelUtil).getPredicateSubjects(any());
         doReturn(previousStep).when(rdfModelUtil).listSubjectsWithPredicateObjectClass(any(), anyList());
 
-        queryReverseStep.resolveToResource(false, false); // for coverage, run with false
+        queryReverseStep.resolveToResource(false);
 
         // no calls to add superclasses
         verify(rdfModelUtil).allSuperClasses(eq(previousStep));

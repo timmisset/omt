@@ -63,14 +63,6 @@ class OMTNegatedStepResolvableImplTest extends OMTTestSuite {
     }
 
     @Test
-    void resolveToResourceWithLookbackReturnsBoolean() {
-        doReturn(BOOLEAN_RESOURCE).when(rdfModelUtil).getPrimitiveTypeAsResource("boolean");
-        final List<Resource> resources = negatedStep.resolveToResource(true);
-        assertEquals(1, resources.size());
-        assertContainsElements(resources, BOOLEAN_RESOURCE);
-    }
-
-    @Test
     void filterCallsFilterOnQuery() {
         final OMTQuery query = mock(OMTQuery.class);
         doReturn(query).when(negatedStep).getQuery();
