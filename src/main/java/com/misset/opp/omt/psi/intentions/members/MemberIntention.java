@@ -28,22 +28,24 @@ public class MemberIntention {
         List<IntentionAction> intentionActions = new ArrayList<>();
         exportMembers.forEach(exportMember -> {
             OMTFile exportingFile = (OMTFile) exportMember.getResolvingElement().getContainingFile();
-            String exportPath = exportingFile.getVirtualFile().getPath();
+            if (exportingFile != null && exportingFile.getVirtualFile() != null) {
+                String exportPath = exportingFile.getVirtualFile().getPath();
 
-            OMTFile callFile = (OMTFile) call.getContainingFile();
-            String callPath = callFile.getVirtualFile().getPath();
+                OMTFile callFile = (OMTFile) call.getContainingFile();
+                String callPath = callFile.getVirtualFile().getPath();
 
-            Path relativize = new File(callPath).getParentFile().toPath().relativize(new File(exportPath).toPath());
-            exportPath = exportPath.replace("\\", "/");
-            String clientPath = "@client" + exportPath.substring(exportPath.indexOf("/frontend/libs") + "/frontend/libs".length());
+                Path relativize = new File(callPath).getParentFile().toPath().relativize(new File(exportPath).toPath());
+                exportPath = exportPath.replace("\\", "/");
+                String clientPath = "@client" + exportPath.substring(exportPath.indexOf("/frontend/libs") + "/frontend/libs".length());
 
-            String relativePath = relativize.toString().replace("\\", "/");
-            if (!relativePath.startsWith(".")) {
-                relativePath = "./" + relativePath;
+                String relativePath = relativize.toString().replace("\\", "/");
+                if (!relativePath.startsWith(".")) {
+                    relativePath = "./" + relativePath;
+                }
+
+                intentionActions.add(getImportIntention(clientPath, call.getName(), call));
+                intentionActions.add(getImportIntention(relativePath, call.getName(), call));
             }
-
-            intentionActions.add(getImportIntention(clientPath, call.getName(), call));
-            intentionActions.add(getImportIntention(relativePath, call.getName(), call));
         });
         return intentionActions;
     }
