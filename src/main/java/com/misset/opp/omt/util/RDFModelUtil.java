@@ -342,9 +342,6 @@ public class RDFModelUtil {
                 resources.put(shacl.getProperty(SHACL_PATH).getObject().asResource(), object);
             }
         });
-        if (!resources.isEmpty()) {
-            resources.put(RDF_TYPE.asResource(), null);
-        }
         return resources;
     }
 
@@ -353,9 +350,6 @@ public class RDFModelUtil {
         superClassesSortedByLevel(subjectClasses).forEach(subject ->
                 getShaclProperties(subject).keySet().forEach(statement ->
                         resources.put(statement.getProperty(SHACL_PATH).getObject().asResource(), subject)));
-        if (!resources.isEmpty()) {
-            resources.put(RDF_TYPE.asResource(), null);
-        }
         return resources;
     }
 

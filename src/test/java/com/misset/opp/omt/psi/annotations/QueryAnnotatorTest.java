@@ -85,7 +85,7 @@ class QueryAnnotatorTest extends OMTAnnotationTest {
     @Test
     void annotateQueryStepThrowsUnknownForwardPath() {
         queryStepResources.clear();
-        doReturn(classesAsResourceList("ClassA")).when(queryUtil).getPreviousStep(eq(step));
+        doReturn(classesAsResourceList("ClassA")).when(queryUtil).getPreviousStepResources(eq(step));
         doReturn(curieElement).when(step).getCurieElement();
         final Resource somePredicate = createResource("somePredicate");
         doReturn(createResource("somePredicate")).when(curieElement).getAsResource();
@@ -99,7 +99,7 @@ class QueryAnnotatorTest extends OMTAnnotationTest {
     @Test
     void annotateQueryStepThrowsNoErrorWhenKnownPredicate() {
         queryStepResources.clear();
-        doReturn(classesAsResourceList("ClassA")).when(queryUtil).getPreviousStep(eq(step));
+        doReturn(classesAsResourceList("ClassA")).when(queryUtil).getPreviousStepResources(eq(step));
         doReturn(curieElement).when(step).getCurieElement();
         final Resource somePredicate = createResource("somePredicate");
         doReturn(createResource("booleanProperty")).when(curieElement).getAsResource();
@@ -112,7 +112,7 @@ class QueryAnnotatorTest extends OMTAnnotationTest {
     @Test
     void annotateQueryStepThrowsNoErrorWhenNoPreviousStepCanBeResolved() {
         queryStepResources.clear();
-        doReturn(Collections.emptyList()).when(queryUtil).getPreviousStep(eq(step));
+        doReturn(Collections.emptyList()).when(queryUtil).getPreviousStepResources(eq(step));
         queryAnnotator.annotate(step);
         verifyNoErrors();
     }
@@ -120,7 +120,7 @@ class QueryAnnotatorTest extends OMTAnnotationTest {
     @Test
     void annotateQueryStepThrowsNoErrorWhenNoCurieElementCanBeResolved() {
         queryStepResources.clear();
-        doReturn(classesAsResourceList("ClassA")).when(queryUtil).getPreviousStep(eq(step));
+        doReturn(classesAsResourceList("ClassA")).when(queryUtil).getPreviousStepResources(eq(step));
         doReturn(null).when(step).getCurieElement();
         queryAnnotator.annotate(step);
         verifyNoErrors();
@@ -129,7 +129,7 @@ class QueryAnnotatorTest extends OMTAnnotationTest {
     @Test
     void annotateQueryStepThrowsUnknownReversePath() {
         queryStepResources.clear();
-        doReturn(classesAsResourceList("ClassA")).when(queryUtil).getPreviousStep(eq(reverseStep));
+        doReturn(classesAsResourceList("ClassA")).when(queryUtil).getPreviousStepResources(eq(reverseStep));
         doReturn(curieElement).when(reverseStep).getCurieElement();
         final Resource somePredicate = createResource("somePredicate");
         doReturn(createResource("somePredicate")).when(curieElement).getAsResource();

@@ -9,6 +9,7 @@ import com.misset.opp.omt.psi.OMTEquationStatement;
 import com.misset.opp.omt.psi.OMTQueryFilter;
 import com.misset.opp.omt.psi.OMTQueryPath;
 import com.misset.opp.omt.psi.OMTQueryStep;
+import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.List;
@@ -41,15 +42,19 @@ public abstract class QueryCompletion extends RDFCompletion {
             );
 
     protected void setResolvedElementsForQueryTraverse(PsiElement element) {
-        final PsiElement queryStep = PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTQueryStep);
+        final OMTQueryStep queryStep = PsiTreeUtil.getParentOfType(element, OMTQueryStep.class);
         if (queryStep == null) {
             return;
         }
-        List<Resource> previousStep = getQueryUtil().getPreviousStep(queryStep);
-        getRDFModelUtil().listPredicatesForSubjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(queryStep, resource, false,
-                PREDICATE_FORWARD_PRIORITY));
-        getRDFModelUtil().listPredicatesForObjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(queryStep, resource, true,
-                PREDICATE_REVERSE_PRIORITY));
+        if (getQueryUtil().isPreviousStepAType(queryStep)) {
+            setCurieSuggestion(element, RDFModelUtil.RDF_TYPE.asResource(), true, PREDICATE_REVERSE_PRIORITY);
+        } else {
+            List<Resource> previousStep = getQueryUtil().getPreviousStepResources(queryStep);
+            getRDFModelUtil().listPredicatesForSubjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(queryStep, resource, false,
+                    PREDICATE_FORWARD_PRIORITY));
+            getRDFModelUtil().listPredicatesForObjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(queryStep, resource, true,
+                    PREDICATE_REVERSE_PRIORITY));
+            setCurieSuggestion(element, RDFModelUtil.RDF_TYPE.asResource(), false, PREDICATE_FORWARD_PRIORITY);
+        }
     }
-
 }

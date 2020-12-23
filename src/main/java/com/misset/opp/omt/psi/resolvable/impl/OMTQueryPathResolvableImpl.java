@@ -65,4 +65,9 @@ public abstract class OMTQueryPathResolvableImpl extends OMTQueryImpl implements
         }
         return resources;
     }
+
+    @Override
+    public boolean isType() {
+        return getLastStep() != null && getLastStep().isType();
+    }
 }

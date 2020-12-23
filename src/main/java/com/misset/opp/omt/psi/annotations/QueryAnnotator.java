@@ -159,7 +159,7 @@ public class QueryAnnotator extends AbstractAnnotator {
 
     private void annotateQueryCurieElement() {
 
-        List<Resource> previousStep = getQueryUtil().getPreviousStep(step);
+        List<Resource> previousStep = getQueryUtil().getPreviousStepResources(step);
         previousStep = previousStep.stream().filter(resource -> getRDFModelUtil().isClassOrType(resource)).collect(Collectors.toList());
         final OMTCurieElement curieElement = step.getCurieElement();
         if (previousStep.isEmpty() || curieElement == null) {

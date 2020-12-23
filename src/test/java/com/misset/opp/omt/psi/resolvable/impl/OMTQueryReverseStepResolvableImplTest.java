@@ -49,7 +49,7 @@ class OMTQueryReverseStepResolvableImplTest extends OMTTestSuite {
         setUtilMock(queryUtil);
         previousStep = new ArrayList<>(Arrays.asList(CLASSA, CLASSB));
         queryReverseStep = mock(OMTQueryReverseStepImpl.class, InvocationOnMock::callRealMethod);
-        doReturn(previousStep).when(queryUtil).getPreviousStep(queryReverseStep);
+        doReturn(previousStep).when(queryUtil).getPreviousStepResources(queryReverseStep);
         doReturn(curieElement).when(queryReverseStep).getCurieElement();
         doAnswer(invocation -> invocation.getArgument(0)).when(queryReverseStep).filter(anyList());
     }

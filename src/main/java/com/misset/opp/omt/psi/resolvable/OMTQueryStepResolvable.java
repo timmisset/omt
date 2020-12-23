@@ -10,5 +10,9 @@ public interface OMTQueryStepResolvable extends OMTResolvableResource {
 
     List<Resource> resolveToResource();
 
+    boolean isType();
+
+    boolean canLookBack();
+
     List<Resource> filter(List<Resource> resources);
 }

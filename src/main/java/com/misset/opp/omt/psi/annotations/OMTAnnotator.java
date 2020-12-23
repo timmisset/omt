@@ -18,7 +18,8 @@ import static com.misset.opp.omt.psi.OMTTypes.*;
 public class OMTAnnotator implements Annotator {
 
     private static final TokenSet QUERY_ANNOTATIONS = TokenSet.create(
-            DEFINE_QUERY_STATEMENT, ADD_TO_COLLECTION, REMOVE_FROM_COLLECTION, ASSIGNMENT_STATEMENT, EQUATION_STATEMENT, BOOLEAN_STATEMENT
+            DEFINE_QUERY_STATEMENT, ADD_TO_COLLECTION, REMOVE_FROM_COLLECTION, ASSIGNMENT_STATEMENT,
+            EQUATION_STATEMENT, BOOLEAN_STATEMENT, QUERY_STEP, QUERY_REVERSE_STEP
     );
     private static final TokenSet IMPORT_ANNOTATIONS = TokenSet.create(
             IMPORT_SOURCE, MEMBER

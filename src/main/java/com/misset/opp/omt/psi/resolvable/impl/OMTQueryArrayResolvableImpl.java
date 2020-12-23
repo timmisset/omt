@@ -38,4 +38,8 @@ public abstract class OMTQueryArrayResolvableImpl extends OMTQueryImpl implement
         return resources;
     }
 
+    @Override
+    public boolean isType() {
+        return false;
+    }
 }

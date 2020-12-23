@@ -38,4 +38,9 @@ public abstract class OMTBooleanStatementResolvableImpl extends OMTQueryImpl imp
                 .min(Comparator.comparingInt(List::size))
                 .orElse(resources);
     }
+
+    @Override
+    public boolean isType() {
+        return false;
+    }
 }

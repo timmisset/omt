@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
+
 public abstract class OMTCurieConstantElementResolvableImpl extends OMTQueryStepImpl implements OMTCurieConstantElement {
 
     public OMTCurieConstantElementResolvableImpl(@NotNull ASTNode node) {
@@ -24,4 +26,14 @@ public abstract class OMTCurieConstantElementResolvableImpl extends OMTQueryStep
         return filter(Collections.singletonList(getCurieElement().getAsResource()));
     }
 
+    @Override
+    public boolean isType() {
+        return getCurieElement() != null &&
+                getRDFModelUtil().isClassOrType(getCurieElement().getAsResource());
+    }
+
+    @Override
+    public boolean canLookBack() {
+        return false;
+    }
 }

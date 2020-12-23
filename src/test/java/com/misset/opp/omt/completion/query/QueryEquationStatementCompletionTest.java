@@ -28,7 +28,16 @@ class QueryEquationStatementCompletionTest extends OMTCompletionTestSuite {
                 "   DEFINE QUERY myQuery => /ont:ClassC [rdf:type == <caret>]";
         final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
         assertCompletionContainsGlobalVariables(completionLookupElements);
-        assertContainsElements(completionLookupElements, "ont:ClassCImpl", "ont:ClassCImpl2");
+        assertContainsElements(completionLookupElements, "/ont:ClassCImpl", "/ont:ClassCImpl2");
+    }
+
+    @Test
+    void equationStatementUnknownTypeShowsAllClasses() {
+        String content = "queries: |\n" +
+                "   DEFINE QUERY myQuery => $variable [rdf:type == <caret>]";
+        final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
+        assertCompletionContainsGlobalVariables(completionLookupElements);
+        assertCompletionContainsClasses(completionLookupElements, true);
     }
 
     @Test

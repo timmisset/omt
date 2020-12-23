@@ -130,7 +130,7 @@ class OMTQueryStepResolvableImplTest extends OMTTestSuite {
         doReturn(null).when(queryStep).getVariable();
         doReturn(0).when(queryStep).getTextOffset(); // first child in parent
         doReturn(curieElement).when(queryStep).getCurieElement();
-        doReturn(resourceList).when(queryUtil).getPreviousStep(eq(queryStep));
+        doReturn(resourceList).when(queryUtil).getPreviousStepResources(eq(queryStep));
         doReturn(Collections.singletonList(CLASSA)).when(curieElement).resolveToResource();
 
         // if for some reason the curie element is not considered a curie constant
@@ -155,7 +155,7 @@ class OMTQueryStepResolvableImplTest extends OMTTestSuite {
         doReturn(null).when(queryStep).getConstantValue();
         doReturn(null).when(queryStep).getVariable();
         doReturn(curieElement).when(queryStep).getCurieElement();
-        doReturn(Collections.emptyList()).when(queryUtil).getPreviousStep(eq(queryStep));
+        doReturn(Collections.emptyList()).when(queryUtil).getPreviousStepResources(eq(queryStep));
         doReturn(Collections.singletonList(CLASSA)).when(curieElement).resolveToResource();
 
         doReturn(0).when(queryStep).getTextOffset();
@@ -184,7 +184,7 @@ class OMTQueryStepResolvableImplTest extends OMTTestSuite {
         doReturn(null).when(queryStep).getConstantValue();
         doReturn(null).when(queryStep).getVariable();
         doReturn(curieElement).when(queryStep).getCurieElement();
-        doReturn(resourceList).when(queryUtil).getPreviousStep(eq(queryStep));
+        doReturn(resourceList).when(queryUtil).getPreviousStepResources(eq(queryStep));
         doReturn(Collections.singletonList(CLASSA)).when(curieElement).resolveToResource();
         doAnswer(invocation -> invocation.getArgument(0)).when(rdfModelUtil).listObjectsWithSubjectPredicate(anyList(), any());
 

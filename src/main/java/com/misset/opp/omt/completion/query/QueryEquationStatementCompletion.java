@@ -48,13 +48,27 @@ public class QueryEquationStatementCompletion extends QueryCompletion {
                 }
 
                 final OMTEquationStatement equationStatement = (OMTEquationStatement) query.getParent();
-                final List<Resource> resources = equationStatement.getOpposite(query).resolveToResource();
+                final OMTQuery opposite = equationStatement.getOpposite(query);
+                final List<Resource> resources = opposite.resolveToResource();
 
                 final RDFModelUtil rdfModelUtil = getRDFModelUtil();
+                if (opposite.isType()) {
+                    if (!resources.isEmpty() && getRDFModelUtil().isTypePredicate(resources.get(0))) {
+                        // rdf:type was used on an unknown query step, show all possible classes:
+                        setResolvedElementsForClasses(element, true);
+                    } else {
+                        // the previous step could be resolved
+                        // only show the input type and all possible implementation classes
+                        resources.forEach(
+                                resource -> setCurieSuggestion(element, resource, false, CLASSES_PRIORITY, true)
+                        );
+                        setResolvedElementsForComparableTypes(element, resources);
+                    }
+
+                }
+
                 final Predicate<OMTCallable> acceptsInput = callable -> rdfModelUtil.validateType(resources, callable.getReturnType());
 
-                // set the comparable types from the
-                setResolvedElementsForComparableTypes(element, resources);
                 // all known variables at this point
                 setResolvedElementsForVariables(element);
                 // all accessible queries
