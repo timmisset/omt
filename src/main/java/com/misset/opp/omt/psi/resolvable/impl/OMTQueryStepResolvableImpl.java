@@ -49,6 +49,10 @@ public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement im
         } else if (getVariable() != null) {
             resources = getVariable().getType();
         } else if (getCurieElement() != null) {
+            // a type is a value not an instance of a class, return an empty list, will be caught by annotator
+            if (getQueryUtil().isPreviousStepAType(this)) {
+                return new ArrayList<>();
+            }
             List<Resource> previousStep = getQueryUtil().getPreviousStepResources(this);
             if (canLookBack() && !previousStep.isEmpty()) {
                 return getRDFModelUtil().listObjectsWithSubjectPredicate(previousStep, getCurieElement().getAsResource());

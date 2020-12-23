@@ -39,6 +39,13 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
     protected static final String RDF_TYPE = "http://www.w3.org/2001/XMLSchema#double";
     private MockedStatic<PsiTreeUtil> psiTreeUtil;
 
+    /**
+     * Returns the type resource, only works when setOntologyModel() has been called
+     */
+    protected Resource rdfType() {
+        return rdfType(getProjectUtil().getOntologyModel());
+    }
+
     protected Resource rdfType(Model model) {
         return model.createResource(RDF_TYPE);
     }
@@ -65,6 +72,9 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         return model.createResource(XSD_INTEGER);
     }
 
+    /**
+     * Returns the string type resource, only works when setOntologyModel() has been called
+     */
     protected Resource xsdString() {
         return xsdString(getProjectUtil().getOntologyModel());
     }
@@ -272,5 +282,18 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
                 "   rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
                 "\n" +
                 "%s", content);
+    }
+
+    /**
+     * Places the input statement into a template with common prefixes and inside a queries block
+     *
+     * @param queryStatement only the queryStatement without the define and semicolon
+     * @return
+     */
+    protected String queryWithPrefixes(String queryStatement) {
+        return withPrefixes(String.format("queries: |\n" +
+                "   DEFINE QUERY query => %s;\n" +
+                "\n", queryStatement));
+
     }
 }

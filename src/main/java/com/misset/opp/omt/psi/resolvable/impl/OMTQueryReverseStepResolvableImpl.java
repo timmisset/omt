@@ -8,6 +8,7 @@ import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getQueryUtil;
@@ -27,8 +28,14 @@ public abstract class OMTQueryReverseStepResolvableImpl extends OMTQueryStepImpl
             return resources;
         }
         final RDFModelUtil rdfModelUtil = getRDFModelUtil();
-        if (!rdfModelUtil.isTypePredicate(curieElement.getAsResource())) {
-            // For rdf:type, only resolve for the provided resources. If not, also add the superClasses for all resources
+        if (rdfModelUtil.isTypePredicate(curieElement.getAsResource())) {
+            // For ^rdf:type, only resolve for the provided resources.
+            // make sure it is called on a type, not an instance:
+            if (!getQueryUtil().isPreviousStepAType(this)) {
+                return new ArrayList<>();
+            }
+        } else {
+            // If not ^rdf:type, also add the superClasses for all resources
             resources = rdfModelUtil.allSuperClasses(resources);
         }
         List<Resource> resolvedResources = resources.isEmpty() ?

@@ -36,7 +36,7 @@ class QueryFilterStepCompletionTest extends OMTCompletionTestSuite {
     @Test
     void queryFilterNextStep() {
         String content = "queries: |\n" +
-                "   DEFINE QUERY myQuery => /ont:ClassA [ont:booleanProperty / <caret>]";
+                "   DEFINE QUERY myQuery => /ont:ClassA / ^rdf:type [ont:booleanProperty / <caret>]";
         final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
         assertCompletionContainsBuiltinOperators(completionLookupElements);
         assertCompletionNOTContainsBuiltinCommands(completionLookupElements);
