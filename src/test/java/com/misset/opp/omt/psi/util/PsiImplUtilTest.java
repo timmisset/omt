@@ -54,7 +54,7 @@ class PsiImplUtilTest extends OMTTestSuite {
                 Arguments.of("null", new String[0]),
                 Arguments.of("10 | 'test'", new String[]{"http://www.w3.org/2001/XMLSchema#int", "http://www.w3.org/2001/XMLSchema#string"}),
                 Arguments.of("true | false", new String[]{"http://www.w3.org/2001/XMLSchema#boolean"}),
-                Arguments.of("/ont:ClassA / ont:classProperty", new String[]{"http://ontologie#ClassC"}),
+                Arguments.of("/ont:ClassA / ^rdf:type / ont:classProperty", new String[]{"http://ontologie#ClassC"}),
                 Arguments.of("$variable / ont:classProperty", new String[]{"http://ontologie#ClassC"}),
                 Arguments.of("'test' / ^ont:stringProperty", new String[]{"http://ontologie#ClassA", "http://ontologie#ClassB", "http://ontologie#ClassC"}),
                 Arguments.of("'test' / (^ont:stringProperty)", new String[]{"http://ontologie#ClassA", "http://ontologie#ClassB", "http://ontologie#ClassC"}),

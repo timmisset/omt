@@ -208,4 +208,43 @@ class OMTQueryStepResolvableImplTest extends OMTTestSuite {
         doReturn(resourceList).when(operatorCall).resolveToResource();
         assertSame(resourceList, queryStep.resolveToResource(false));
     }
+
+    @Test
+    void resolveToResourceReturnsEmptyListWhenPreviousStepIsAType() {
+        final OMTVariable variable = mock(OMTVariable.class);
+        doReturn(resourceList).when(variable).getType();
+        doReturn(null).when(queryStep).getConstantValue();
+        doReturn(null).when(queryStep).getVariable();
+        doReturn(curieElement).when(queryStep).getCurieElement();
+        doReturn(true).when(queryUtil).isPreviousStepAType(queryStep);
+        assertEmpty(queryStep.resolveToResource(false));
+    }
+
+    @Test
+    void isTypeWhenCurieElementRdfType() {
+        // only a rdf:type or a /ont:Class are resolved to type values
+        // /ont:ClassA is handled by the CurieConstant queryStep
+        Resource typeResource = mock(Resource.class);
+        doReturn(typeResource).when(curieElement).getAsResource();
+        doReturn(curieElement).when(queryStep).getCurieElement();
+        doReturn(true).when(rdfModelUtil).isTypePredicate(typeResource);
+        assertTrue(queryStep.isType());
+    }
+
+    @Test
+    void isNotTypeWhenNotACurieElementStep() {
+        doReturn(null).when(queryStep).getCurieElement();
+        assertFalse(queryStep.isType());
+    }
+
+    @Test
+    void isTypeWhenCurieElementNotRdfType() {
+        // only a rdf:type or a /ont:Class are resolved to type values
+        // /ont:ClassA is handled by the CurieConstant queryStep
+        Resource typeResource = mock(Resource.class);
+        doReturn(typeResource).when(curieElement).getAsResource();
+        doReturn(curieElement).when(queryStep).getCurieElement();
+        doReturn(false).when(rdfModelUtil).isTypePredicate(typeResource);
+        assertFalse(queryStep.isType());
+    }
 }

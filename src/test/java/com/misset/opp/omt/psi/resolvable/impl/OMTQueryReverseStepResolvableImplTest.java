@@ -84,6 +84,7 @@ class OMTQueryReverseStepResolvableImplTest extends OMTTestSuite {
         doReturn(previousStep).when(rdfModelUtil).allSuperClasses(previousStep);
         doReturn(previousStep).when(rdfModelUtil).getPredicateSubjects(any());
         doReturn(previousStep).when(rdfModelUtil).listSubjectsWithPredicateObjectClass(any(), anyList());
+        doReturn(true).when(queryUtil).isPreviousStepAType(queryReverseStep);
 
         queryReverseStep.resolveToResource(true);
 
@@ -100,6 +101,7 @@ class OMTQueryReverseStepResolvableImplTest extends OMTTestSuite {
         doReturn(previousStep).when(rdfModelUtil).allSuperClasses(previousStep);
         doReturn(previousStep).when(rdfModelUtil).getPredicateSubjects(any());
         doReturn(previousStep).when(rdfModelUtil).listSubjectsWithPredicateObjectClass(any(), anyList());
+        doReturn(true).when(queryUtil).isPreviousStepAType(queryReverseStep);
 
         queryReverseStep.resolveToResource(false); // for coverage, run with false
 
@@ -122,5 +124,23 @@ class OMTQueryReverseStepResolvableImplTest extends OMTTestSuite {
         verify(rdfModelUtil).allSuperClasses(eq(previousStep));
         // resources is not empty (previousStep is set), should call listSubjectsWithPredicateObjectClass
         verify(rdfModelUtil).listSubjectsWithPredicateObjectClass(any(), anyList());
+    }
+
+    @Test
+    void resolveToResourcesReturnsEmptyWhenReverseRdfTypeOnInstance() {
+        doReturn(true).when(rdfModelUtil).isTypePredicate(any());
+        previousStep.clear();
+        doReturn(previousStep).when(rdfModelUtil).allSuperClasses(previousStep);
+        doReturn(previousStep).when(rdfModelUtil).getPredicateSubjects(any());
+        doReturn(previousStep).when(rdfModelUtil).listSubjectsWithPredicateObjectClass(any(), anyList());
+        doReturn(false).when(queryUtil).isPreviousStepAType(queryReverseStep);
+
+        assertEmpty(queryReverseStep.resolveToResource(false)); // for coverage, run with false
+
+    }
+
+    @Test
+    void isTypeReturnsFalse() {
+        assertFalse(queryReverseStep.isType());
     }
 }

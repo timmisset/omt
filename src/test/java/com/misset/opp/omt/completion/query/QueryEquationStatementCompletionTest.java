@@ -25,7 +25,7 @@ class QueryEquationStatementCompletionTest extends OMTCompletionTestSuite {
     @Test
     void equationStatementImplementation() {
         String content = "queries: |\n" +
-                "   DEFINE QUERY myQuery => /ont:ClassC [rdf:type == <caret>]";
+                "   DEFINE QUERY myQuery => /ont:ClassC / ^rdf:type [rdf:type == <caret>]";
         final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
         assertCompletionContainsGlobalVariables(completionLookupElements);
         assertContainsElements(completionLookupElements, "/ont:ClassCImpl", "/ont:ClassCImpl2");
