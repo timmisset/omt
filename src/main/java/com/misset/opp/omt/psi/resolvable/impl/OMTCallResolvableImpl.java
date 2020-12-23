@@ -28,7 +28,7 @@ public abstract class OMTCallResolvableImpl extends OMTCallImpl implements OMTCa
     public List<Resource> resolveToResource() {
         final OMTCallable callable = getMemberUtil().getCallable(this);
         OMTQueryStep queryStep = (OMTQueryStep) getParent();
-        List<Resource> previousStep = getQueryUtil().getPreviousStep(queryStep);
+        List<Resource> previousStep = getQueryUtil().getPreviousStepResources(queryStep);
         if (callable != null) {
             if (operatorsThatReturnFirstArgumentAsType.contains(getName())) {
                 return queryStep.filter(getFirstArgumentType());

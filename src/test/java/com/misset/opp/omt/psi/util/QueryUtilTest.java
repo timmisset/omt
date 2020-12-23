@@ -1,10 +1,20 @@
 package com.misset.opp.omt.psi.util;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTTestSuite;
+import com.misset.opp.omt.psi.OMTQueryReverseStep;
+import com.misset.opp.omt.psi.OMTQueryStep;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static com.misset.opp.omt.psi.util.UtilManager.getQueryUtil;
 
 public class QueryUtilTest extends OMTTestSuite {
+
+    private QueryUtil queryUtil = getQueryUtil();
 
     @Override
     @BeforeEach
@@ -19,6 +29,46 @@ public class QueryUtilTest extends OMTTestSuite {
     @AfterEach
     protected void tearDown() throws Exception {
         super.tearDown();
+    }
+
+    @Test
+    void isPreviousStepATypeReturnTrueWhenPreviousStepIsCurieConstantOfClassType() {
+        String content = withPrefixes("queries: |\n" +
+                "   DEFINE QUERY query => /ont:ClassA / ^rdf:type");
+        final PsiFile psiFile = myFixture.configureByText(getFileName(), content);
+        ApplicationManager.getApplication().runReadAction(
+                () -> {
+                    final OMTQueryReverseStep reverseStep = PsiTreeUtil.findChildOfType(psiFile, OMTQueryReverseStep.class);
+                    assertTrue(queryUtil.isPreviousStepAType(reverseStep));
+                }
+        );
+    }
+
+    @Test
+    void isPreviousStepATypeReturnTrueWhenPreviousStepIsFilterContainer() {
+        String content = withPrefixes("queries: |\n" +
+                "   DEFINE QUERY query => /ont:ClassA [ . ]");
+        final PsiFile psiFile = myFixture.configureByText(getFileName(), content);
+        ApplicationManager.getApplication().runReadAction(
+                () -> {
+                    final OMTQueryStep dotStep = PsiTreeUtil.findChildrenOfType(psiFile, OMTQueryStep.class)
+                            .stream().filter(queryStep -> queryStep.getText().equals(".")).findFirst().orElse(null);
+                    assertTrue(queryUtil.isPreviousStepAType(dotStep));
+                }
+        );
+    }
+
+    @Test
+    void isPreviousStepATypeReturnFalseWhenNoPreviousStep() {
+        String content = withPrefixes("queries: |\n" +
+                "   DEFINE QUERY query => /ont:ClassA");
+        final PsiFile psiFile = myFixture.configureByText(getFileName(), content);
+        ApplicationManager.getApplication().runReadAction(
+                () -> {
+                    final OMTQueryStep queryStep = PsiTreeUtil.findChildOfType(psiFile, OMTQueryStep.class);
+                    assertFalse(queryUtil.isPreviousStepAType(queryStep));
+                }
+        );
     }
 
 }

@@ -55,7 +55,7 @@ public class QueryFirstStepCompletion extends QueryCompletion {
                 // The first step of the query will suggest starting points of the query
                 PsiElement element = parameters.getPosition();
                 // all classes and types, which can be traversed using: /ont:ClassA / ^rdf:type ...
-                setResolvedElementsForClasses(element);
+                setResolvedElementsForClasses(element, true);
                 // all known variables at this point
                 setResolvedElementsForVariables(element);
                 // all accessible queries

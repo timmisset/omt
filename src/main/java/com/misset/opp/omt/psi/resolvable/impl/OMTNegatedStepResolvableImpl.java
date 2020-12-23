@@ -33,4 +33,9 @@ public abstract class OMTNegatedStepResolvableImpl extends OMTQueryImpl implemen
     public List<Resource> filter(List<Resource> resources) {
         return getQuery().filter(resources);
     }
+
+    @Override
+    public boolean isType() {
+        return false;
+    }
 }

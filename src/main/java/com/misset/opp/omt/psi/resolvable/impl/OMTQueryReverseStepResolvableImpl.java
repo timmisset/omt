@@ -21,7 +21,7 @@ public abstract class OMTQueryReverseStepResolvableImpl extends OMTQueryStepImpl
 
     @Override
     public List<Resource> resolveToResource(boolean filter) {
-        List<Resource> resources = getQueryUtil().getPreviousStep(this);
+        List<Resource> resources = getQueryUtil().getPreviousStepResources(this);
         final OMTCurieElement curieElement = getCurieElement();
         if (curieElement == null) {
             return resources;
@@ -35,5 +35,11 @@ public abstract class OMTQueryReverseStepResolvableImpl extends OMTQueryStepImpl
                 rdfModelUtil.getPredicateSubjects(curieElement.getAsResource()) : // only by predicate
                 rdfModelUtil.listSubjectsWithPredicateObjectClass(curieElement.getAsResource(), resources);// by predicate and object
         return filter ? filter(resolvedResources) : resolvedResources;
+    }
+
+    @Override
+    public boolean isType() {
+        // a reverse step can never resolve to a type but always to an instance of the type
+        return false;
     }
 }

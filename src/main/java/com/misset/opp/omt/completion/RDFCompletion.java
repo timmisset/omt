@@ -13,9 +13,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 public abstract class RDFCompletion extends OMTCompletion {
-    protected void setResolvedElementsForClasses(PsiElement element) {
+    protected void setResolvedElementsForClasses(PsiElement element, boolean addPathStart) {
         getProjectUtil().getRDFModelUtil().getAllClasses().stream().filter(resource -> resource.getURI() != null).forEach(
-                resource -> setCurieSuggestion(element, resource, false, CLASSES_PRIORITY)
+                resource -> setCurieSuggestion(element, resource, false, CLASSES_PRIORITY, addPathStart)
         );
         Arrays.asList("string", "integer", "boolean", "date").forEach(
                 type -> addPriorityElement("string", 1)
@@ -25,12 +25,16 @@ public abstract class RDFCompletion extends OMTCompletion {
     protected void setResolvedElementsForComparableTypes(PsiElement element, List<Resource> resources) {
         if (!resources.isEmpty()) {
             getRDFModelUtil().getComparableOptions(resources).forEach(
-                    resource -> setCurieSuggestion(element, resource, false, EQUATION_PRIORITY)
+                    resource -> setCurieSuggestion(element, resource, false, EQUATION_PRIORITY, true)
             );
         }
     }
 
     protected void setCurieSuggestion(PsiElement elementAt, Resource resource, boolean reverse, int priority) {
+        setCurieSuggestion(elementAt, resource, reverse, priority, false);
+    }
+
+    protected void setCurieSuggestion(PsiElement elementAt, Resource resource, boolean reverse, int priority, boolean addPathStart) {
         OMTFile omtFile = (OMTFile) elementAt.getContainingFile();
         String curieElement = omtFile.resourceToCurie(resource);
         String title = curieElement;
@@ -48,13 +52,16 @@ public abstract class RDFCompletion extends OMTCompletion {
         } else {
             resolvesTo = getRDFModelUtil().getPredicateObjects(resource, false);
         }
+        if (addPathStart) {
+            curieElement = "/" + curieElement;
+        }
 
         addPriorityElement(curieElement, priority, title, (context, item) ->
                         // if the iri is not registered in the page, do it
                         ApplicationManager.getApplication().runWriteAction(() -> {
                             if (registerPrefix.get()) {
                                 getCurieUtil().addPrefixToBlock(context.getFile(),
-                                        item.getLookupString().split(":")[0].substring(reverse ? 1 : 0),
+                                        item.getLookupString().split(":")[0].substring(reverse || addPathStart ? 1 : 0),
                                         resource.getNameSpace());
                             }
                         }),

@@ -4,7 +4,6 @@ import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.OMTCurieConstantElement;
 import com.misset.opp.omt.psi.OMTQueryFilter;
 import com.misset.opp.omt.psi.OMTQueryStep;
 import com.misset.opp.omt.psi.OMTTypes;
@@ -32,20 +31,25 @@ public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement im
     }
 
     @Override
+    public boolean isType() {
+        return getCurieElement() != null &&
+                getRDFModelUtil().isTypePredicate(getCurieElement().getAsResource());
+    }
+
+    @Override
     public List<Resource> resolveToResource() {
         return resolveToResource(true);
     }
 
     @Override
     public List<Resource> resolveToResource(boolean filter) {
-        // steps that do not include preceeding info
         List<Resource> resources = new ArrayList<>();
         if (getConstantValue() != null) {
             resources = getConstantValue().resolveToResource();
         } else if (getVariable() != null) {
             resources = getVariable().getType();
         } else if (getCurieElement() != null) {
-            List<Resource> previousStep = getQueryUtil().getPreviousStep(this);
+            List<Resource> previousStep = getQueryUtil().getPreviousStepResources(this);
             if (canLookBack() && !previousStep.isEmpty()) {
                 return getRDFModelUtil().listObjectsWithSubjectPredicate(previousStep, getCurieElement().getAsResource());
             }
@@ -56,17 +60,14 @@ public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement im
         return filter ? filter(resources) : resources;
     }
 
-    protected boolean canLookBack() {
-        if (this instanceof OMTCurieConstantElement) {
-            return false;
-        }
+    @Override
+    public boolean canLookBack() {
         if (!firstStepInParent()) {
             return true;
         }
         final PsiElement prevLeaf = PsiTreeUtil.prevVisibleLeaf(this);
 
         return prevLeaf == null || prevLeaf.getNode().getElementType() != OMTTypes.FORWARD_SLASH;
-
     }
 
     protected boolean firstStepInParent() {

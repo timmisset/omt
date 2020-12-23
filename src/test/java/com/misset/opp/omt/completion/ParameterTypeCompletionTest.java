@@ -27,7 +27,7 @@ class ParameterTypeCompletionTest extends OMTCompletionTestSuite {
                 "       - $paramA (<caret>)";
 
         final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
-        assertCompletionContainsClasses(completionLookupElements);
+        assertCompletionContainsClasses(completionLookupElements, false);
     }
 
     @Test
@@ -38,7 +38,7 @@ class ParameterTypeCompletionTest extends OMTCompletionTestSuite {
                 "       - $paramA (ont:<caret>)";
 
         final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
-        assertCompletionContainsClasses(completionLookupElements);
+        assertCompletionContainsClasses(completionLookupElements, false);
     }
 
     @Test
@@ -50,7 +50,7 @@ class ParameterTypeCompletionTest extends OMTCompletionTestSuite {
                 "   DEFINE QUERY query($myParam) => 'test';";
 
         final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
-        assertCompletionContainsClasses(completionLookupElements);
+        assertCompletionContainsClasses(completionLookupElements, false);
     }
 
 }

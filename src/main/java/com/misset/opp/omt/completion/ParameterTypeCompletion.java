@@ -31,7 +31,7 @@ public class ParameterTypeCompletion extends RDFCompletion {
                 // The first step of the query will suggest starting points of the query
                 PsiElement element = parameters.getPosition();
                 // all classes and types, which can be traversed using: /ont:ClassA / ^rdf:type ...
-                setResolvedElementsForClasses(element);
+                setResolvedElementsForClasses(element, false);
 
                 complete(result);
             }

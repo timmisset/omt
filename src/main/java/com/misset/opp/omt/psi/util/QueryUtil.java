@@ -65,17 +65,17 @@ public class QueryUtil {
      * $myVariable [rdf:type == CURRENT_STEP]               CURRENT_STEP is the start of it's own query path, will return the types of the step that contains the filter
      * $myVariable / SOME_OPERATOR(CURRENT_STEP)            Contained in a signature argument, cannot inherit types
      */
-    public List<Resource> getPreviousStep(PsiElement step) {
+    public List<Resource> getPreviousStepResources(PsiElement step) {
         PsiElement previous = PsiImplUtil.getPreviousSibling(step, OMTQueryPath.class, OMTQueryStep.class);
         if (previous == null) {
             // retrieve the previous value via the parent
             final PsiElement container = PsiImplUtil.getParent(step, OMTSubQuery.class, OMTQueryFilter.class, OMTSignatureArgument.class);
             if (container instanceof OMTQueryFilter) {
                 // resolve the filter
-                return getPreviousStep((OMTQueryFilter) container);
+                return getPreviousStepResources((OMTQueryFilter) container);
             } else if (container instanceof OMTSubQuery) {
                 // resolve the step before the subquery
-                return getPreviousStep(container);
+                return getPreviousStepResources(container);
             }
             // OMTSignatureArgument doesn't inherit values from it's previous step
             return new ArrayList<>();
@@ -85,10 +85,19 @@ public class QueryUtil {
         return getRDFModelUtil().getDistinctResources(typesForStep);
     }
 
-    public List<Resource> getPreviousStep(OMTQueryFilter filter) {
+    public List<Resource> getPreviousStepResources(OMTQueryFilter filter) {
         final List<Resource> resources = ((OMTQueryStep) filter.getParent()).resolveToResource(false);
         resources.addAll(getRDFModelUtil().allSubClasses(resources));
         return getRDFModelUtil().getDistinctResources(resources);
+    }
+
+    public boolean isPreviousStepAType(OMTQueryStep step) {
+        OMTQueryStep previous = (OMTQueryStep) PsiImplUtil.getPreviousSibling(step, OMTQueryStep.class);
+        if (previous == null) {
+            final OMTQueryFilter filter = PsiTreeUtil.getParentOfType(step, OMTQueryFilter.class);
+            return filter != null && ((OMTQueryStep) filter.getParent()).isType();
+        }
+        return previous.isType();
     }
 
 }

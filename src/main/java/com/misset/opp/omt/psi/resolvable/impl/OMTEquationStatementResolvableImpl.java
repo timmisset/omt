@@ -63,4 +63,9 @@ public abstract class OMTEquationStatementResolvableImpl extends OMTQueryImpl im
                 queryPath.getQueryStepList().get(0).getCurieElement() != null ? queryPath.getQueryStepList().get(0).getCurieElement() : null;
         return curieElement != null && getRDFModelUtil().isTypePredicate(curieElement.getAsResource());
     }
+
+    @Override
+    public boolean isType() {
+        return false;
+    }
 }

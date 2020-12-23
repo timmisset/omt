@@ -9,6 +9,8 @@ public interface OMTQueryResolvable extends OMTResolvableResource {
 
     List<Resource> filter(List<Resource> resources);
 
+    boolean isType();
+
     boolean isBooleanType();
 
 }

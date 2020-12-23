@@ -27,7 +27,7 @@ class QueryFirstStepCompletionTest extends OMTCompletionTestSuite {
         String content = "queries: |\n" +
                 "   DEFINE QUERY myQuery => <caret>";
         final List<String> completionLookupElements = getCompletionLookupElements(content);
-        assertCompletionContainsClasses(completionLookupElements);
+        assertCompletionContainsClasses(completionLookupElements, true);
         assertCompletionContainsGlobalVariables(completionLookupElements);
         assertCompletionContainsBuiltinOperators(completionLookupElements);
     }

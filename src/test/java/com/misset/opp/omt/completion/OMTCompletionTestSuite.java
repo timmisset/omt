@@ -81,19 +81,16 @@ public class OMTCompletionTestSuite extends OMTTestSuite {
         assertContainsElements(completionResult, builtInCommandsAsSuggestions);
     }
 
-    protected void assertCompletionContainsClasses(String content) {
-        assertCompletionContainsClasses(getCompletionLookupElements(content));
-    }
-
-    protected void assertCompletionContainsClasses(List<String> completionResult) {
+    protected void assertCompletionContainsClasses(List<String> completionResult, boolean startPath) {
+        String prefix = startPath ? "/" : "";
         Arrays.stream(new String[]{"ClassA", "ClassB", "ClassC"})
                 .forEach(
                         className -> assertTrue(completionResult
                                 .stream()
                                 .anyMatch(s ->
-                                        s.equals(String.format("http://ontologie#%s", className)) ||
-                                                s.equals(String.format("ont:%s", className)))
-                        ));
+                                        s.equals(String.format("%shttp://ontologie#%s", prefix, className)) ||
+                                                s.equals(String.format("%sont:%s", prefix, className))))
+                );
     }
 
 }

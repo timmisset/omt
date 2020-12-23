@@ -30,6 +30,17 @@ class QueryNextStepCompletionTest extends OMTCompletionTestSuite {
         assertCompletionContainsBuiltinOperators(completionLookupElements);
         assertCompletionNOTContainsGlobalVariables(completionLookupElements);
         assertContainsElements(completionLookupElements, "ont:booleanProperty", "ont:classProperty", "ont:stringProperty", "rdf:type");
+        assertDoesntContain(completionLookupElements, "^rdf:type");
+    }
+
+    @Test
+    void nextQueryStepShowsReverseType() {
+        String content = "queries: |\n" +
+                "   DEFINE QUERY myQuery => /ont:ClassA / <caret>";
+        final List<String> completionLookupElements = getCompletionLookupElements(withPrefixes(content));
+        assertCompletionContainsBuiltinOperators(completionLookupElements);
+        assertCompletionNOTContainsGlobalVariables(completionLookupElements);
+        assertContainsElements(completionLookupElements, "^rdf:type");
     }
 
 }

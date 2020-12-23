@@ -69,7 +69,7 @@ class OMTCallResolvableImplTest extends OMTTestSuite {
     void resolveToResourceReturnsPreviousStepWhenNoCallable() {
         doReturn(null).when(memberUtil).getCallable(eq(operatorCall));
         List<Resource> resources = new ArrayList<>();
-        doReturn(resources).when(queryUtil).getPreviousStep(Mockito.eq(queryStep));
+        doReturn(resources).when(queryUtil).getPreviousStepResources(Mockito.eq(queryStep));
 
         assertSame(resources, operatorCall.resolveToResource());
     }
@@ -89,7 +89,7 @@ class OMTCallResolvableImplTest extends OMTTestSuite {
         List<Resource> firstArgumentType = Collections.singletonList(mock(Resource.class));
         doReturn("IF_EMPTY").when(operatorCall).getName();
         doReturn(firstArgumentType).when(operatorCall).getFirstArgumentType();
-        doReturn(previousStep).when(queryUtil).getPreviousStep(eq(queryStep));
+        doReturn(previousStep).when(queryUtil).getPreviousStepResources(eq(queryStep));
 
         final List<Resource> combinedResources = operatorCall.resolveToResource();
 
@@ -100,7 +100,7 @@ class OMTCallResolvableImplTest extends OMTTestSuite {
     void resolveToResourceReturnsPreviousStepWhenAny() {
         List<Resource> previousStep = Collections.singletonList(mock(Resource.class));
         doReturn("SOME_OPERATOR_CALL").when(operatorCall).getName();
-        doReturn(previousStep).when(queryUtil).getPreviousStep(eq(queryStep));
+        doReturn(previousStep).when(queryUtil).getPreviousStepResources(eq(queryStep));
         doReturn(true).when(callable).returnsAny();
 
         assertSame(previousStep, operatorCall.resolveToResource());
@@ -111,7 +111,7 @@ class OMTCallResolvableImplTest extends OMTTestSuite {
         List<Resource> previousStep = Collections.singletonList(mock(Resource.class));
         List<Resource> callableReturnType = Collections.singletonList(mock(Resource.class));
         doReturn("SOME_OPERATOR_CALL").when(operatorCall).getName();
-        doReturn(previousStep).when(queryUtil).getPreviousStep(eq(queryStep));
+        doReturn(previousStep).when(queryUtil).getPreviousStepResources(eq(queryStep));
         doReturn(false).when(callable).returnsAny();
         doReturn(callableReturnType).when(callable).getReturnType();
 

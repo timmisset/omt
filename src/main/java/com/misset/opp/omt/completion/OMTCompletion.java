@@ -187,6 +187,12 @@ public abstract class OMTCompletion {
         setResolvedElementsForDefinedCommands(element);
     }
 
+    protected void setResolvedElementsForOperators(PsiElement element) {
+        setResolvedElementsForBuiltinOperators();
+        setResolvedElementsForExportedOperators();
+        setResolvedElementsForDefinedQueries(element);
+    }
+
     private void setResolvedElementsForImportMembers(OMTExportMember exportMember) {
         final PsiElement resolvingElement = exportMember.getResolvingElement();
         final PsiFile containingFile = resolvingElement != null ? resolvingElement.getContainingFile() : null;

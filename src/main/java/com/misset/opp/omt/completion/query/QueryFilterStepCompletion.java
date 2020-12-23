@@ -31,19 +31,16 @@ public class QueryFilterStepCompletion extends QueryCompletion {
     }
 
     public CompletionProvider<CompletionParameters> getCompletionProvider() {
-        return new CompletionProvider<CompletionParameters>() {
+        return new CompletionProvider<>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                 // The first step of the query will suggest starting points of the query
                 PsiElement element = parameters.getPosition();
-                // all classes and types, which can be traversed using: /ont:ClassA / ^rdf:type ...
-                setResolvedElementsForClasses(element);
+
                 // all known variables at this point
                 setResolvedElementsForVariables(element);
-                // all accessible queries
-                setResolvedElementsForDefinedQueries(element);
-                // all builtin operators
-                setResolvedElementsForBuiltinOperators();
+                // all operators
+                setResolvedElementsForOperators(element);
                 // all traverse options at this position
                 setResolvedElementsForQueryTraverse(element);
 
