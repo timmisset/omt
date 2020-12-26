@@ -6,6 +6,7 @@ import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.PsiParserFacade;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTFileType;
+import com.misset.opp.omt.psi.support.OMTCall;
 
 public class OMTElementFactory {
     public static OMTVariable createVariable(Project project, String name) {
@@ -75,6 +76,14 @@ public class OMTElementFactory {
 
     }
 
+    public static OMTCall createCall(Project project, String name, String flagSignature, String signature, boolean commandToken) {
+        OMTFile file = createFile(project, String.format("model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        onStart: |\n" +
+                "            %s%s%s%s;", commandToken ? "@" : "", name, flagSignature, signature));
+        return PsiTreeUtil.findChildOfType(file, OMTCall.class);
+    }
+
     public static OMTCommandCall createCommandCall(Project project, String name, String flagSignature, String signature) {
         OMTFile file = createFile(project, String.format("model:\n" +
                 "    MijnActiviteit: !Activity\n" +
@@ -82,7 +91,6 @@ public class OMTElementFactory {
                 "            @%s%s%s;", name, flagSignature, signature));
         return PsiTreeUtil.findChildOfType(file, OMTCommandCall.class);
     }
-
 
     public static PsiElement createImportSource(Project project, String name) {
         OMTFile file = createFile(project, String.format("import:\n" +

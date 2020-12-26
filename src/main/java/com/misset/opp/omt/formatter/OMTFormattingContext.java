@@ -6,6 +6,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.impl.DocumentImpl;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
@@ -26,7 +27,6 @@ import java.util.Optional;
 import static com.misset.opp.omt.psi.OMTIgnored.END_OF_LINE_COMMENT;
 import static com.misset.opp.omt.psi.OMTTypes.*;
 import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
-import static com.misset.opp.omt.psi.util.UtilManager.getTokenFinderUtil;
 
 /**
  * The formatter has 2 main functions, indentation and alignment
@@ -409,7 +409,7 @@ public class OMTFormattingContext {
     }
 
     private Alignment alignEOLComment(ASTNode node) {
-        if (!getTokenFinderUtil().isStartOfLine(node)) {
+        if (isStartOfLine(node)) {
             return null;
         } // only align applicable comments
         node = getEOLCommentSibling(node);
@@ -476,5 +476,21 @@ public class OMTFormattingContext {
         return node.getTreeParent() == null;
     }
 
+    private boolean isStartOfLine(ASTNode node) {
+        if (node.getTreePrev() == null) {
+            return true;
+        }
+        while (node != null && OMTTokenSets.WHITESPACE.contains(node.getElementType())) {
+            if (node.getTreePrev() != null && node.getTreePrev().getText().equals("\n")) {
+                return true;
+            }
+            node = node.getTreePrev();
+        }
+        return false;
+    }
+
+    private boolean isStartOfLine(PsiElement element) {
+        return isStartOfLine(element.getNode());
+    }
 }
 

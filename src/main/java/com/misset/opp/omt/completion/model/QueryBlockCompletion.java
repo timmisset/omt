@@ -9,6 +9,7 @@ import com.intellij.patterns.PlatformPatterns;
 import com.intellij.patterns.PsiElementPattern;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.completion.OMTCompletion;
 import com.misset.opp.omt.completion.OMTCompletionContributor;
@@ -17,6 +18,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static com.misset.opp.omt.psi.OMTTypes.CARET;
 
 public class QueryBlockCompletion extends OMTCompletion {
     private static final String SIMPLE_TEMPLATE = "DEFINE QUERY yourQueryName => 'Hello world';";
@@ -52,6 +55,7 @@ public class QueryBlockCompletion extends OMTCompletion {
                 public boolean accepts(@NotNull PsiElement element, ProcessingContext context) {
                     final PsiElement parent = element.getParent();
                     return parent instanceof PsiErrorElement &&
+                            (PsiTreeUtil.prevLeaf(element) == null || PsiTreeUtil.prevLeaf(element).getNode().getElementType() != CARET) &&
                             PlaceholderProvider.getExpectedTypesFromError((PsiErrorElement) parent).contains(DEFINE_QUERY_STATEMENT_EXPECTED);
                 }
             };

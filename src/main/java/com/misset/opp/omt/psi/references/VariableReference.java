@@ -2,7 +2,6 @@ package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
-import com.intellij.util.IncorrectOperationException;
 import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.psi.util.PsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -46,14 +45,8 @@ public class VariableReference extends PsiReferenceBase<PsiElement> implements P
         return resolveResults.length == 1 ? resolveResults[0].getElement() : null;
     }
 
-    @NotNull
     @Override
-    public Object[] getVariants() {
-        return new Object[0];
-    }
-
-    @Override
-    public PsiElement handleElementRename(@NotNull String newElementName) throws IncorrectOperationException {
+    public PsiElement handleElementRename(@NotNull String newElementName) {
         return PsiImplUtil.setName(variable, newElementName);
     }
 }

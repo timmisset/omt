@@ -56,7 +56,7 @@ public class VariableUtil {
 
     public Optional<OMTVariable> getDeclaredByVariable(OMTVariable variable) {
         if (variable.isDeclaredVariable()) {
-            return Optional.of(variable);
+            return Optional.empty();
         }
 
         List<OMTVariable> declaredVariables = getDeclaredVariables(variable);

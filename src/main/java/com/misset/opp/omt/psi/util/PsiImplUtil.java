@@ -1,6 +1,5 @@
 package com.misset.opp.omt.psi.util;
 
-
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -192,32 +191,6 @@ public class PsiImplUtil {
 
     public static PsiElement getNameIdentifier(OMTImportSource importSource) {
         return importSource;
-    }
-
-    // ////////////////////////////////////////////////////////////////////////////
-    // Operator call
-    // ////////////////////////////////////////////////////////////////////////////
-    public static OMTOperatorCall setName(OMTOperatorCall operatorCall, String newName) {
-        OMTOperatorCall replacement = OMTElementFactory.createOperatorCall(
-                operatorCall.getProject(),
-                newName,
-                operatorCall.getFlagSignature() != null ? operatorCall.getFlagSignature().getText() : "",
-                operatorCall.getSignature() != null ? operatorCall.getSignature().getText() : "");
-        operatorCall.replace(replacement);
-        return replacement;
-    }
-
-    // ////////////////////////////////////////////////////////////////////////////
-    // Operator call
-    // ////////////////////////////////////////////////////////////////////////////
-    public static PsiElement setName(OMTCommandCall commandCall, String newName) {
-        PsiElement replacement = OMTElementFactory.createCommandCall(
-                commandCall.getProject(),
-                newName,
-                commandCall.getFlagSignature() != null ? commandCall.getFlagSignature().getText() : "",
-                commandCall.getSignature() != null ? commandCall.getSignature().getText() : "");
-        commandCall.replace(replacement);
-        return replacement;
     }
 
     // ////////////////////////////////////////////////////////////////////////////

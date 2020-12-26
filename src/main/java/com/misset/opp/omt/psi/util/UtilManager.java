@@ -17,7 +17,6 @@ public class UtilManager {
     private static ModelUtil modelUtil;
     private static BuiltInUtil builtInUtil;
     private static TokenUtil tokenUtil;
-    private static TokenFinderUtil tokenFinderUtil;
     private static VariableUtil variableUtil;
     private static CurieUtil curieUtil;
 
@@ -81,13 +80,6 @@ public class UtilManager {
             variableUtil = new VariableUtil();
         }
         return variableUtil;
-    }
-
-    public static TokenFinderUtil getTokenFinderUtil() {
-        if (tokenFinderUtil == null) {
-            tokenFinderUtil = new TokenFinderUtil();
-        }
-        return tokenFinderUtil;
     }
 
     public static TokenUtil getTokenUtil() {

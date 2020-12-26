@@ -1,11 +1,13 @@
 package com.misset.opp.omt.completion;
 
 import com.intellij.codeInsight.completion.CompletionInitializationContext;
+import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.TokenType;
 import com.misset.opp.omt.psi.OMTBlock;
 import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTQueryPath;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -36,6 +38,7 @@ public class PlaceholderProvider {
     private static final String PROVIDE_MODEL_ITEM_TYPE = "!MODEL_ITEM_TYPE"; // must be prefixed with an !
     private static final String PROVIDE_MODEL_ENTRY = "MODEL: ENTRY";
     private static final String PROVIDE_QUERY = "Operator();";
+    private static final String PROVIDE_QUERY_STEP_WITH_SEPARATOR = "QueryStep /";
 
     private final CompletionInitializationContext context;
     private PsiElement elementAtCaret;
@@ -62,6 +65,9 @@ public class PlaceholderProvider {
             // Model or Block entry at the start of the line (including indentation), set an entry placeholder
             return PROVIDE_MODEL_ENTRY;
         }
+        if (provideQueryStepWithSeperator()) {
+            return PROVIDE_QUERY_STEP_WITH_SEPARATOR;
+        }
         return context.getDummyIdentifier();
     }
 
@@ -71,6 +77,13 @@ public class PlaceholderProvider {
                 elementParent instanceof OMTBlockEntry ||
                         elementParent instanceof OMTBlock               // includes all block types
         );
+    }
+
+    private boolean provideQueryStepWithSeperator() {
+        return PlatformPatterns.psiElement()
+                .inside(OMTQueryPath.class)
+                .afterLeaf("/")
+                .accepts(contextElement);
     }
 
     private boolean hasErrorState() {

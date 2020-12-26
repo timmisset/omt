@@ -1,5 +1,6 @@
 package com.misset.opp.omt.completion.query;
 
+import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.patterns.ElementPattern;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
@@ -14,6 +15,8 @@ import org.apache.jena.rdf.model.Resource;
 
 import java.util.List;
 
+import static com.misset.opp.omt.psi.OMTTypes.CARET;
+import static com.misset.opp.omt.psi.OMTTypes.NAMESPACE_MEMBER;
 import static com.misset.opp.omt.psi.util.UtilManager.getQueryUtil;
 import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
@@ -56,5 +59,22 @@ public abstract class QueryCompletion extends RDFCompletion {
                     PREDICATE_REVERSE_PRIORITY));
             setCurieSuggestion(element, RDFModelUtil.RDF_TYPE.asResource(), false, PREDICATE_FORWARD_PRIORITY);
         }
+    }
+
+    protected CompletionResultSet getResult(PsiElement element, CompletionResultSet resultSet) {
+        if (element == null || element.getNode() == null) {
+            return resultSet;
+        }
+        String prefix = resultSet.getPrefixMatcher().getPrefix();
+        if (element.getNode().getElementType() == NAMESPACE_MEMBER) {
+            // namespace member, add the prefix to the prefix matcher:
+            prefix = element.getPrevSibling().getText() + prefix;
+            element = element.getPrevSibling();
+        }
+        element = PsiTreeUtil.prevLeaf(element);
+        if (element != null && element.getNode().getElementType() == CARET) {
+            prefix = "^" + prefix;
+        }
+        return resultSet.withPrefixMatcher(prefix);
     }
 }

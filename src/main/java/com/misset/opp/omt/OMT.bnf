@@ -56,7 +56,7 @@ exportBlock ::=                             leading? EXPORT_START memberList? { 
 memberList ::=                              memberListItem+ | (indentToken memberListItem+ dedentToken?)
 memberListItem ::=                          (leading? SEQUENCE_BULLET member?) { methods=[getName] }
 member ::=                                  OPERATOR {
-                                                       mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
+                                                       mixin="com.misset.opp.omt.psi.impl.named.OMTMemberAbstract"
                                                        implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                        methods=[getName setName getNameIdentifier]
                                                      }
@@ -107,7 +107,7 @@ curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FOR
 modelBlock::=                               leading? MODEL_BLOCK_START (indentToken modelItemBlock+ dedentToken)? { extends=specificBlock }
 modelItemBlock::=                           leading? modelItemLabel indentedBlock? {extends=blockEntry methods=[getType getBlock]}
 modelItemLabel::=                           propertyLabel modelItemTypeElement  {
-                                                                                 mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
+                                                                                 mixin="com.misset.opp.omt.psi.impl.named.OMTModelItemAbstract"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                                                  methods=[getName setName getNameIdentifier]
                                                                                  }
@@ -174,9 +174,8 @@ scriptContent ::=                           declareVariable | variableAssignment
 // and finally, all runnable OMT modelitems are available as Commands (Activity, Procedure) or Operator (StandAloneQuery)
 // only the Defined members are part of set of the grammar parser
 defineName ::=                              NAME | OPERATOR    {
-                                                           mixin="com.misset.opp.omt.psi.impl.OMTMemberNamedElementImpl"
+                                                           mixin="com.misset.opp.omt.psi.impl.named.OMTDefineNameAbstract"
                                                            implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
-                                                           methods=[getName setName getNameIdentifier]
                                                          }
 defineQueryStatement ::=                    leading? DEFINE_START DEFINE_QUERY defineName defineParam? LAMBDA query SEMICOLON* {
                                                             implements="com.misset.opp.omt.psi.support.OMTDefinedStatement"
@@ -193,14 +192,12 @@ defineParam ::=                             PARENTHESES_OPEN (variable (COMMA va
 // A call to either an Operator or a Command. In case of the latter, it's always prefixed with @
 operatorCall ::=                            OPERATOR flagSignature? signature? {
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
-                                                             extends="com.misset.opp.omt.psi.resolvable.impl.OMTCallResolvableImpl"
-                                                             methods=[getName setName getNameIdentifier]
+                                                             extends="com.misset.opp.omt.psi.resolvable.impl.OMTCallResolvableAbstract"
                                                            }
 commandCall ::=                             COMMAND flagSignature? signature?
                                                             {
                                                              implements="com.misset.opp.omt.psi.support.OMTCall"
-                                                             extends="com.misset.opp.omt.psi.resolvable.impl.OMTCallResolvableImpl"
-                                                             methods=[getName setName getNameIdentifier]
+                                                             extends="com.misset.opp.omt.psi.resolvable.impl.OMTCallResolvableAbstract"
                                                            }
 signature ::=                               PARENTHESES_OPEN (signatureArgument (COMMA signatureArgument)*)? PARENTHESES_CLOSE {
                                                              methods=[numberOfParameters]

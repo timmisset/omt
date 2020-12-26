@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
 
-
 public class ModelUtil {
     private static final String ATTRIBUTES = "attributes";
     private static final String MAPOF = "mapOf";
@@ -89,19 +88,30 @@ public class ModelUtil {
      * MyActivity: !Activity
      * payload:
      * myPayloadParameter: myValue
+     * will return payload for myValue
      */
     public String getModelItemEntryLabel(PsiElement element) {
-        List<OMTBlockEntry> blockEntries = getAncestorEntries(element);
-        // blockEntries:
-        // last item = modelItem itself (Activity, Procedure etc)
-        // last item - 1 = entryblock (params, variables etc);
-        final int i = blockEntries.size() - 2;
-        if (i < 0) {
-            return null;
-        }
-        OMTBlockEntry omtBlockEntry = blockEntries.get(blockEntries.size() - 2);
+        return getEntryBlockLabel(getModelItemBlockEntry(element));
+    }
 
-        return getEntryBlockLabel(omtBlockEntry);
+    /**
+     * Returns the model item entry of the element
+     * model:
+     * MyActivity: !Activity
+     * payload:
+     * myPayloadParameter: myValue
+     * will return payload for myValue
+     *
+     * @param element
+     * @return
+     */
+    public OMTBlockEntry getModelItemBlockEntry(PsiElement element) {
+        return (OMTBlockEntry) PsiTreeUtil.findFirstParent(element, parent ->
+                // model item entries are always indented
+                // in the tree they are the grandchildren of the modelItemBlock
+                parent instanceof OMTBlockEntry &&
+                        parent.getParent() instanceof OMTIndentedBlock &&
+                        parent.getParent().getParent() instanceof OMTModelItemBlock);
     }
 
     public JsonObject getAttributes(String memberName) {
@@ -124,8 +134,6 @@ public class ModelUtil {
         return jsonInfo.has(NODE) && jsonInfo.get(NODE).getAsString().equals(MAP) ||
                 jsonInfo.has(MAPOF);
     }
-
-
 
     public List<String> getLocalCommands(PsiElement element) {
 
@@ -215,7 +223,6 @@ public class ModelUtil {
      * <p>
      * When the input element is a (scalar) value, it returns the properties / type of that value
      * to get the entry block attributes instead, use getJsonAttributes
-     *
      */
     public JsonObject getJson(PsiElement element) {
         return getJsonAtDepth(element, -1);
