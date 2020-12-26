@@ -18,7 +18,6 @@ import com.misset.opp.omt.settings.OMTSettingsState;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -53,6 +52,9 @@ public abstract class OMTCompletion {
     private final List<LookupElement> resolvedElements = new ArrayList<>();
     private final List<String> resolvedSuggestions = new ArrayList<>();
 
+    private static final InsertHandler<LookupElement> NO_INSERT_HANDLER = (context, item) -> {
+    };
+
     public CompletionProvider<CompletionParameters> getCompletionProvider() {
         return null;
     }
@@ -64,23 +66,37 @@ public abstract class OMTCompletion {
     }
 
     protected void addPriorityElement(String text, int priority) {
-        addPriorityElement(text, priority, text, (context, item) -> {
-        }, null, null);
+        addPriorityElement(text, priority, text, NO_INSERT_HANDLER, null, null);
     }
 
-    protected void addPriorityElement(String text, int priority, String title, InsertHandler<LookupElement> insertHandler,
-                                      String tailText, String typeText) {
+    protected void addPriorityElement(String text, int priority, List<String> withLookupStrings) {
+        addPriorityElement(text, priority, text, NO_INSERT_HANDLER, null, null, withLookupStrings);
+    }
+
+    protected void addPriorityElement(String text,
+                                      int priority,
+                                      String title,
+                                      InsertHandler<LookupElement> insertHandler,
+                                      String tailText,
+                                      String typeText) {
+        addPriorityElement(text, priority, title, insertHandler, tailText, typeText, new ArrayList<>());
+    }
+
+    protected void addPriorityElement(String text,
+                                      int priority,
+                                      String title,
+                                      InsertHandler<LookupElement> insertHandler,
+                                      String tailText,
+                                      String typeText,
+                                      List<String> withLookupStrings) {
         if (resolvedSuggestions.contains(title)) {
             return;
         }
         LookupElementBuilder lookupElementBuilder = LookupElementBuilder
                 .create(text)
                 .withPresentableText(title)
-                .withInsertHandler(insertHandler);
-        if (text.contains(":")) {
-            lookupElementBuilder = lookupElementBuilder.withLookupStrings(
-                    Arrays.asList(text.split(":")));
-        }
+                .withInsertHandler(insertHandler)
+                .withLookupStrings(withLookupStrings);
         if (tailText != null) {
             lookupElementBuilder = lookupElementBuilder.withTailText(tailText);
         }

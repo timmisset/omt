@@ -21,7 +21,8 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 class CurieUtilTest extends OMTTestSuite {
 
@@ -72,7 +73,7 @@ class CurieUtilTest extends OMTTestSuite {
     void testGetDefinedByPrefixForOMTParameterType() {
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTParameterType parameterType = exampleFiles.getPsiElementFromRootDocument(OMTParameterType.class, rootBlock);
-            Optional<OMTPrefix> definedByPrefix = curieUtil.getDefinedByPrefix(parameterType);
+            Optional<OMTPrefix> definedByPrefix = curieUtil.getDefinedByPrefix(parameterType.getNamespacePrefix());
 
             assertTrue(definedByPrefix.isPresent());
             assertEquals(definedByPrefix.get().getNamespacePrefix().getName(), parameterType.getNamespacePrefix().getName());
@@ -83,7 +84,7 @@ class CurieUtilTest extends OMTTestSuite {
     void testGetDefinedByPrefixForOMTCurieElement() {
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTCurieElement curieElement = exampleFiles.getPsiElementFromRootDocument(OMTCurieElement.class, rootBlock);
-            Optional<OMTPrefix> definedByPrefix = curieUtil.getDefinedByPrefix(curieElement);
+            Optional<OMTPrefix> definedByPrefix = curieUtil.getDefinedByPrefix(curieElement.getNamespacePrefix());
 
             assertTrue(definedByPrefix.isPresent());
             assertEquals(definedByPrefix.get().getNamespacePrefix().getName(), curieElement.getNamespacePrefix().getName());
@@ -91,21 +92,11 @@ class CurieUtilTest extends OMTTestSuite {
     }
 
     @Test
-    void testGetDefinedByPrefixOMTCurieElementReturnsEmpty() {
-        assertEquals(Optional.empty(), curieUtil.getDefinedByPrefix(null, mock(OMTCurieElement.class)));
-    }
-
-    @Test
-    void testGetDefinedByPrefixOMTParameterTypeReturnsEmpty() {
-        assertEquals(Optional.empty(), curieUtil.getDefinedByPrefix(null, mock(OMTParameterType.class)));
-    }
-
-    @Test
     void getPrefixBlockReturnsExisting() {
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTCurieElement curieElement = exampleFiles.getPsiElementFromRootDocument(OMTCurieElement.class, rootBlock);
             OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
-            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixBlock(curieElement);
+            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixRootBlock(curieElement);
             assertEquals(prefixBlock, returnedPrefixBlock);
         });
     }
@@ -115,7 +106,7 @@ class CurieUtilTest extends OMTTestSuite {
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTCurieElement curieElement = exampleFiles.getPsiElementFromRootDocument(OMTCurieElement.class, rootBlock);
             OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
-            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixBlock(curieElement);
+            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixRootBlock(curieElement);
             assertEquals(prefixBlock, returnedPrefixBlock);
         });
     }
@@ -125,7 +116,7 @@ class CurieUtilTest extends OMTTestSuite {
         PsiElement activityWithoutPrefixBlock = exampleFiles.getActivityWithQueryWatcher();
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, activityWithoutPrefixBlock);
-            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixBlock(variable);
+            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixRootBlock(variable);
             assertNull(returnedPrefixBlock);
         });
     }

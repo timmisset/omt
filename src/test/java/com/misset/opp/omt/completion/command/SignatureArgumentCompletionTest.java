@@ -37,7 +37,7 @@ class SignatureArgumentCompletionTest extends OMTCompletionTestSuite {
                 "\n" +
                 "commands:|\n" +
                 "   DEFINE COMMAND myCommand => {\n" +
-                "       @callableQuery(<caret>)\n" +
+                "       callableQuery(<caret>)\n" +
                 "   }";
         final List<String> completionLookupElements = getCompletionLookupElements(content);
         assertContainsElements(completionLookupElements, "myQuery");
@@ -64,7 +64,7 @@ class SignatureArgumentCompletionTest extends OMTCompletionTestSuite {
                 "\n" +
                 "commands:|\n" +
                 "   DEFINE COMMAND myCommand => {\n" +
-                "       @callableQuery('test', <caret>)\n" +
+                "       callableQuery('test', <caret>);\n" +
                 "   }";
         final List<String> completionLookupElements = getCompletionLookupElements(content);
         assertDoesntContain(completionLookupElements, "myQuery");

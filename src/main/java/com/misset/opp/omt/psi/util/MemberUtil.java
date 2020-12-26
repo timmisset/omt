@@ -8,7 +8,10 @@ import com.misset.opp.omt.psi.impl.OMTExportMemberImpl;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.support.*;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.util.UtilManager.*;
@@ -34,11 +37,13 @@ public class MemberUtil {
             return Optional.of(definedStatement);
         }
 
-        // check if it's part of this page's exports:
+        // check if it's part of this page's modelItems:
         OMTFile currentFile = (OMTFile) call.getContainingFile();
-        HashMap<String, OMTExportMember> currentFileMembers = currentFile.getExportedMembers();
-        if (currentFileMembers.containsKey(callName)) {
-            return Optional.of(currentFileMembers.get(callName).getResolvingElement());
+        final Map<String, OMTModelItemLabel> modelItemLabels = PsiTreeUtil.findChildrenOfType(currentFile, OMTModelItemLabel.class).stream().collect(Collectors.toMap(
+                OMTModelItemLabel::getName, modelItemLabel -> modelItemLabel
+        ));
+        if (modelItemLabels.containsKey(callName)) {
+            return Optional.of(modelItemLabels.get(callName));
         }
 
         // or of locally available ontology declarations:

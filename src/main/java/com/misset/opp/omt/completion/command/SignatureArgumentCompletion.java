@@ -49,14 +49,14 @@ public class SignatureArgumentCompletion extends RDFCompletion {
                 PsiElement element = parameters.getPosition();
 
                 // retrieve the signature argument and determine it's position in the signature
-                OMTSignatureArgument signatureArgument = (OMTSignatureArgument) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTSignatureArgument);
+                OMTSignatureArgument signatureArgument = PsiTreeUtil.getParentOfType(element, OMTSignatureArgument.class);
                 if (signatureArgument == null || signatureArgument.getParent() == null) {
                     return;
                 }
                 OMTSignatureImpl signature = (OMTSignatureImpl) signatureArgument.getParent();
 
                 // then retrieve this call to resolve it to the callable method
-                OMTCall call = (OMTCall) PsiTreeUtil.findFirstParent(signatureArgument, parent -> parent instanceof OMTCall);
+                OMTCall call = PsiTreeUtil.getParentOfType(signatureArgument, OMTCall.class);
                 if (call == null) {
                     return;
                 }

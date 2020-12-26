@@ -1,60 +1,46 @@
 package com.misset.opp.omt.psi.util;
 
 import com.intellij.application.options.CodeStyle;
-import com.intellij.lang.annotation.AnnotationHolder;
-import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.codeStyle.CodeStyleManager;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.intentions.prefix.RegisterPrefixIntention;
-import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
 
 public class CurieUtil {
 
-    private final RegisterPrefixIntention registerPrefixIntention = new RegisterPrefixIntention();
-
-    public Optional<OMTPrefix> getDefinedByPrefix(OMTParameterType parameterType) {
-        // Otherwise the main prefixes block:
-        return getDefinedByPrefix(getPrefixBlock(parameterType), parameterType);
-    }
-
-    public Optional<OMTPrefix> getDefinedByPrefix(OMTCurieElement curieElement) {
-        return getDefinedByPrefix(getPrefixBlock(curieElement), curieElement);
-    }
-
-    public Optional<OMTPrefix> getDefinedByPrefix(PsiElement containingElement, OMTCurieElement curieElement) {
-        if (containingElement == null) {
+    public Optional<OMTPrefix> getDefinedByPrefix(OMTNamespacePrefix namespacePrefix) {
+        if (namespacePrefix.getParent() instanceof OMTPrefix) {
             return Optional.empty();
         }
-        Collection<OMTPrefix> prefixes = PsiTreeUtil.findChildrenOfType(containingElement, OMTPrefix.class);
-        return prefixes.stream()
-                .filter(curieElement::isDefinedByPrefix)
+        return getDefinedByPrefix(getPrefixModelBlock(namespacePrefix), namespacePrefix)
+                .or(() -> getDefinedByPrefix(getPrefixRootBlock(namespacePrefix), namespacePrefix));
+    }
+
+    private Optional<OMTPrefix> getDefinedByPrefix(OMTPrefixBlock prefixBlock, OMTNamespacePrefix namespacePrefix) {
+        if (prefixBlock == null) {
+            return Optional.empty();
+        }
+        return prefixBlock.getPrefixList().stream()
+                .filter(prefix ->
+                        prefix.getNamespacePrefix() != namespacePrefix &&
+                                prefix.getNamespacePrefix().getName().equals(namespacePrefix.getName()))
                 .findFirst();
     }
 
-    public Optional<OMTPrefix> getDefinedByPrefix(PsiElement containingElement, OMTParameterType parameterType) {
-        if (containingElement == null) {
-            return Optional.empty();
-        }
-        Collection<OMTPrefix> prefixes = PsiTreeUtil.findChildrenOfType(containingElement, OMTPrefix.class);
-        return prefixes.stream()
-                .filter(parameterType::isDefinedByPrefix)
-                .findFirst();
-    }
-
-    public OMTPrefixBlock getPrefixBlock(PsiElement element) {
+    public OMTPrefixBlock getPrefixRootBlock(PsiElement element) {
         Optional<OMTPrefixBlock> prefixes = ((OMTFile) element.getContainingFile()).getSpecificBlock(OMTFile.PREFIXES, OMTPrefixBlock.class);
         return prefixes.orElse(null);
+    }
+
+    public OMTPrefixBlock getPrefixModelBlock(PsiElement element) {
+        return (OMTPrefixBlock) getModelUtil().getModelItemBlockEntry(element, "prefixes").orElse(null);
     }
 
     public void addPrefixToBlock(PsiElement element, String addNamespacePrefix, String addNamespaceIri) {
@@ -66,7 +52,7 @@ public class CurieUtil {
     }
 
     private void resetPrefixBlock(PsiElement element, @NotNull String addNamespacePrefix, @NotNull String addNamespaceIri) {
-        OMTPrefixBlock prefixBlock = getPrefixBlock(element);
+        OMTPrefixBlock prefixBlock = getPrefixRootBlock(element);
         Project project = element.getProject();
         // do not use %n instead of \n, this is not accepted by IntelliJ
         if (!addNamespaceIri.startsWith("<")) {
@@ -86,15 +72,5 @@ public class CurieUtil {
             CodeStyleManager.getInstance(project).reformat(prefixBlock);
         }
         prefixBlock.replace(OMTElementFactory.removeBlankLinesInside(prefixBlock, OMTPrefixBlock.class, "\n"));
-    }
-
-    public void annotateCurieElement(OMTCurieElement curieElement, AnnotationHolder annotationHolder) {
-        annotateAsResource(curieElement.getAsResource(), annotationHolder);
-    }
-
-    private void annotateAsResource(Resource resource, AnnotationHolder annotationHolder) {
-        annotationHolder.newAnnotation(HighlightSeverity.INFORMATION, resource.toString())
-                .tooltip(getRDFModelUtil().describeResource(resource))
-                .create();
     }
 }

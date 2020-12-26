@@ -25,14 +25,17 @@ public class ModelItemCompletion extends OMTCompletion {
     }
 
     public CompletionProvider<CompletionParameters> getCompletionProvider() {
-        return new CompletionProvider<CompletionParameters>() {
+        return new CompletionProvider<>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                 getModelUtil().getModelRootItems()
-                        .stream()
-                        .map(label -> "!" + label)
+                        .stream().map(s -> "!" + s)
                         .forEach(label -> addPriorityElement(label, MODEL_ITEM_TYPE_PRIORITY));
-
+                if (!result.getPrefixMatcher().getPrefix().isEmpty()) {
+                    // the default prefix matcher will trim the flag symbol from the prefix
+                    // this would result to the insert results to become: !!Activity
+                    result = result.withPrefixMatcher("!" + result.getPrefixMatcher().getPrefix());
+                }
                 complete(result);
             }
         };

@@ -1,8 +1,13 @@
 package com.misset.opp.omt;
 
+import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
@@ -168,7 +173,6 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
             ModelUtil modelUtil = getModelUtil();
             BuiltInUtil builtInUtil = getBuiltinUtil();
             TokenUtil tokenUtil = getTokenUtil();
-            TokenFinderUtil tokenFinderUtil = getTokenFinderUtil();
             VariableUtil variableUtil = getVariableUtil();
             CurieUtil curieUtil = getCurieUtil();
             RDFModelUtil rdfModelUtil = getRDFModelUtil();
@@ -182,7 +186,6 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
             utilManager.when(UtilManager::getModelUtil).thenReturn(modelUtil);
             utilManager.when(UtilManager::getBuiltinUtil).thenReturn(builtInUtil);
             utilManager.when(UtilManager::getTokenUtil).thenReturn(tokenUtil);
-            utilManager.when(UtilManager::getTokenFinderUtil).thenReturn(tokenFinderUtil);
             utilManager.when(UtilManager::getVariableUtil).thenReturn(variableUtil);
             utilManager.when(UtilManager::getCurieUtil).thenReturn(curieUtil);
             utilManager.when(UtilManager::getRDFModelUtil).thenReturn(rdfModelUtil);
@@ -261,7 +264,7 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
     }
 
     protected <T> T fromContent(String content, Class<? extends PsiElement> clazz, Predicate<T> condition) {
-        assertNotNull("Fixture is not created, run setup", myFixture);
+        assertFixtureExists();
         final PsiFile psiFile = myFixture.configureByText("test.omt", content);
 
         final Collection<PsiElement> allPsiElement =
@@ -270,6 +273,14 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
                 .map(element -> (T) element)
                 .filter(element -> condition.test(element))
                 .findFirst().orElse(null);
+    }
+
+    protected PsiFile addFile(String name, String content) {
+        return myFixture.addFileToProject("./" + name, content);
+    }
+
+    private void assertFixtureExists() {
+        assertNotNull("Fixture is not created, run setup", myFixture);
     }
 
     protected String getFileName() {
@@ -296,4 +307,85 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
                 "\n", queryStatement));
 
     }
+
+    protected void withProgress(Runnable runnable) {
+        ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                runnable, "Test", false, getProject()
+        );
+    }
+
+    protected void assertNoErrors() {
+        assertNoHighlighting(HighlightSeverity.ERROR);
+    }
+
+    protected void assertNoWarnings() {
+        assertNoHighlighting(HighlightSeverity.WARNING);
+    }
+
+    private void assertNoHighlighting(HighlightSeverity severity) {
+        final List<HighlightInfo> highlighting = getHighlighting(severity);
+        if (!highlighting.isEmpty()) {
+            fail(String.format("All highlighting%n%s", allHighlightingAsMessage())); // cannot use assertEmpty since it will call object.toString() which is not accessible unless in read-mode
+        }
+    }
+
+    protected void assertHasError(String message) {
+        assertHasHighlightingMessage(HighlightSeverity.ERROR, message);
+    }
+
+    protected void assertHasWarning(String message) {
+        assertHasHighlightingMessage(HighlightSeverity.WARNING, message);
+    }
+
+    protected void assertHasWeakWarning(String message) {
+        assertHasHighlightingMessage(HighlightSeverity.WEAK_WARNING, message);
+    }
+
+    protected void assertHasInformation(String message) {
+        assertHasHighlightingMessage(HighlightSeverity.INFORMATION, message);
+    }
+
+    private void assertHasHighlightingMessage(HighlightSeverity severity, String message) {
+        assertFixtureExists();
+        final List<HighlightInfo> highlighting = getHighlighting(severity);
+        assertTrue(
+                allHighlightingAsMessage(),
+                highlighting.stream().anyMatch(
+                        highlightInfo -> highlightInfo.getDescription().equals(message)
+                ));
+    }
+
+    private List<HighlightInfo> getHighlighting(HighlightSeverity severity) {
+        return myFixture.doHighlighting().stream().filter(
+                highlightInfo -> highlightInfo.getSeverity() == severity
+        ).collect(Collectors.toList());
+    }
+
+    private String allHighlightingAsMessage() {
+        return myFixture.doHighlighting().stream()
+                .map(highlightInfo -> String.format(
+                        "%s: %s", highlightInfo.getSeverity().myName, highlightInfo.getDescription()
+                )).collect(Collectors.joining("\n"));
+    }
+
+    protected void getElementAtCaret(String content, Consumer<PsiElement> elementConsumer, Class<? extends PsiElement> elementAtCaretClass, boolean consumeInReader) {
+        myFixture.configureByText(getFileName(), content);
+        final PsiElement elementAtCaret = ApplicationManager.getApplication().runReadAction((Computable<PsiElement>) () -> {
+            PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
+            if (element instanceof PsiWhiteSpace) {
+                fail("Whitespace element, move the caret to the start of the PsiElement");
+            }
+            element = PsiTreeUtil.getParentOfType(element, elementAtCaretClass, false); // not strict will return itself if match
+            assertNotNull("No element found at caret of " + elementAtCaretClass.getName(), element);
+
+            if (consumeInReader) {
+                elementConsumer.accept(element);
+            }
+            return element;
+        });
+        if (!consumeInReader) {
+            elementConsumer.accept(elementAtCaret);
+        }
+    }
+
 }

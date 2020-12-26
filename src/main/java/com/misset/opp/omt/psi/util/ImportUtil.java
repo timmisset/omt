@@ -8,6 +8,7 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 
@@ -104,7 +105,7 @@ public class ImportUtil {
 
     public Optional<PsiElement> resolveImportMember(OMTMember member) {
         // resolve the import member to an import
-        OMTImport omtImport = (OMTImport) member.getParent().getParent().getParent();
+        OMTImport omtImport = PsiTreeUtil.getParentOfType(member, OMTImport.class);
         if (omtImport == null) {
             return Optional.of(member);
         }
@@ -117,7 +118,7 @@ public class ImportUtil {
                 return exportedMember.map(OMTExportMember::getResolvingElement);
             }
         }
-        return Optional.of(member);
+        return Optional.empty();
     }
 
     public void addImportMemberToBlock(PsiElement element, String importPath, String importMember) {

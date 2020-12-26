@@ -5,7 +5,9 @@ import com.intellij.psi.PsiFile;
 import com.misset.opp.omt.OMTTestSuite;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getBuiltinUtil;
@@ -20,6 +22,11 @@ public class OMTCompletionTestSuite extends OMTTestSuite {
 
     protected void assertCompletionSameContents(String content, List<String> expected) {
         assertSameElements(getCompletionLookupElements(content), expected);
+    }
+
+    protected void assertCompletionAutocompleted(String content, String expectedContentAfterCompletion) {
+        getCompletionLookupElements(content);
+        assertEquals(expectedContentAfterCompletion, myFixture.getEditor().getDocument().getText());
     }
 
     protected void assertCompletionContains(String content, String... expected) {
@@ -42,7 +49,10 @@ public class OMTCompletionTestSuite extends OMTTestSuite {
     }
 
     protected List<String> parseSuggestions(LookupElement[] lookupElements) {
-        return Arrays.stream(lookupElements).map(LookupElement::getLookupString).collect(Collectors.toList());
+        if (lookupElements == null || lookupElements.length == 0) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(lookupElements).filter(Objects::nonNull).map(LookupElement::getLookupString).collect(Collectors.toList());
     }
 
     protected void assertCompletionContainsGlobalVariables(String content) {

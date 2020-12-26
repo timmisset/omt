@@ -36,10 +36,4 @@ public class ImportReference extends PsiReferenceBase<PsiElement> implements Psi
         return resolveResults.length == 1 ? resolveResults[0].getElement() : null;
     }
 
-    @NotNull
-    @Override
-    public Object[] getVariants() {
-        return new Object[0];
-    }
-
 }

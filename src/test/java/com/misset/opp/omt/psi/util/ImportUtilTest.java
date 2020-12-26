@@ -93,12 +93,12 @@ class ImportUtilTest extends OMTTestSuite {
     }
 
     @Test
-    void resolveImportMember_returnsInput() {
+    void resolveImportMember_returnsEmpty() {
         ApplicationManager.getApplication().runReadAction(() -> {
             importUtil = spy(importUtil);
             doReturn(virtualFile).when(importUtil).getImportedFile(any(OMTImport.class));
             OMTMember member = exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock);
-            assertEquals(Optional.of(member), importUtil.resolveImportMember(member));
+            assertEquals(Optional.empty(), importUtil.resolveImportMember(member));
         });
     }
 
