@@ -175,7 +175,7 @@ public class OMTFile extends PsiFileBase {
         prefixes.ifPresent(omtPrefixBlock -> omtPrefixBlock.getPrefixList().forEach(omtPrefix ->
         {
             prefixHashMap.put(omtPrefix.getNamespacePrefix().getName(), omtPrefix);
-            prefixHashMap.put(omtPrefix.getNamespaceIri().getNamespace(), omtPrefix);
+            prefixHashMap.put(omtPrefix.getNamespaceIri().getName(), omtPrefix);
         }));
         return prefixHashMap;
     }

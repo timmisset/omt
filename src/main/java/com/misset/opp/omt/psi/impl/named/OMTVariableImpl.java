@@ -18,9 +18,9 @@ import java.util.List;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getVariableUtil;
 
-public abstract class OMTVariableAbstract extends NamedElementAbstract<OMTVariable> implements OMTVariableNamedElement {
+public abstract class OMTVariableImpl extends NameIdentifierOwnerImpl<OMTVariable> implements OMTVariableNamedElement {
 
-    public OMTVariableAbstract(@NotNull ASTNode node) {
+    public OMTVariableImpl(@NotNull ASTNode node) {
         super(node);
     }
 

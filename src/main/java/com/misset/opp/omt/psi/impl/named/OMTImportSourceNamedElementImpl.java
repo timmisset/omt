@@ -11,7 +11,7 @@ import com.misset.opp.omt.psi.references.ImportSourceReference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class OMTImportSourceNamedElementImpl extends NamedElementAbstract<OMTImportSource> implements OMTImportNamedElement {
+public abstract class OMTImportSourceNamedElementImpl extends NameIdentifierOwnerImpl<OMTImportSource> implements OMTImportNamedElement {
     public OMTImportSourceNamedElementImpl(@NotNull ASTNode node) {
         super(node);
     }
