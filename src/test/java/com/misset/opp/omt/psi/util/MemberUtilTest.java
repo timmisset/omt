@@ -11,7 +11,7 @@ import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.impl.BuiltInMember;
 import com.misset.opp.omt.psi.named.NamedMemberType;
-import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.util.BuiltInUtil;
@@ -142,7 +142,7 @@ class MemberUtilTest extends OMTTestSuite {
             );
             Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(commandCall);
             assertTrue(declaringMember.isPresent());
-            assertEquals("MijnProcedure", ((OMTModelItemLabel) declaringMember.get()).getPropertyLabel().getPropertyLabelName());
+            assertEquals("MijnProcedure", ((OMTModelItemLabel) declaringMember.get()).getPropertyLabel().getName());
         });
     }
 

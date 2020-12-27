@@ -17,5 +17,6 @@ public interface OMTMemberNamedElement extends PsiNameIdentifierOwner {
     NamedMemberType getType();
 
     @NotNull
+    @Override
     String getName();
 }

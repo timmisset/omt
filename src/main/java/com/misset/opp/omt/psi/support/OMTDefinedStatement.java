@@ -5,6 +5,9 @@ import com.misset.opp.omt.psi.OMTDefineName;
 import com.misset.opp.omt.psi.OMTLeading;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Interface for Query and Command DEFINE statements statements
+ */
 public interface OMTDefinedStatement extends PsiElement {
 
     boolean isCommand();

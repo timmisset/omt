@@ -6,8 +6,8 @@ import com.intellij.psi.PsiReference;
 import com.misset.opp.omt.psi.named.OMTMemberNamedElement;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class MemberNamedElementAbstract<T extends PsiElement> extends NamedElementAbstract<T> implements OMTMemberNamedElement {
-    public MemberNamedElementAbstract(@NotNull ASTNode node) {
+public abstract class MemberNamedElementImpl<T extends PsiElement> extends NamedElementAbstract<T> implements OMTMemberNamedElement {
+    public MemberNamedElementImpl(@NotNull ASTNode node) {
         super(node);
     }
 

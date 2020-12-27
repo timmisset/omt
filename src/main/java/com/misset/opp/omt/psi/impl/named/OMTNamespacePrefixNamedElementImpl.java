@@ -14,8 +14,8 @@ import org.jetbrains.annotations.Nullable;
 /**
  * A curie prefix is the prefix part of the prefix (prefix == prefix:iri)
  */
-public abstract class OMTNamespacePrefixNamedElementAbstract extends NamedElementAbstract<OMTNamespacePrefix> implements OMTNamespacePrefixNamedElement {
-    public OMTNamespacePrefixNamedElementAbstract(@NotNull ASTNode node) {
+public abstract class OMTNamespacePrefixNamedElementImpl extends NamedElementAbstract<OMTNamespacePrefix> implements OMTNamespacePrefixNamedElement {
+    public OMTNamespacePrefixNamedElementImpl(@NotNull ASTNode node) {
         super(node);
     }
 

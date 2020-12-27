@@ -1,6 +1,6 @@
 package com.misset.opp.omt.exceptions;
 
-import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 
 public class CallCallableMismatchException extends Throwable {

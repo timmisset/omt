@@ -14,6 +14,7 @@ import java.util.List;
 public interface OMTVariableNamedElement extends PsiNameIdentifierOwner {
 
     @NotNull
+    @Override
     String getName();
 
     boolean isDeclaredVariable();

@@ -6,6 +6,7 @@ import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.impl.BuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTExportMemberImpl;
 import com.misset.opp.omt.psi.named.NamedMemberType;
+import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.*;
 
 import java.util.Collection;

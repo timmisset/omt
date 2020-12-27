@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public interface OMTNamespacePrefixNamedElement extends PsiNameIdentifierOwner {
 
     @NotNull
+    @Override
     String getName();
 
 }

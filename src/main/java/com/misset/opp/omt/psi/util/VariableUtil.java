@@ -8,8 +8,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.impl.BuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTQueryReverseStepImpl;
+import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.BuiltInType;
-import com.misset.opp.omt.psi.support.OMTCall;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 

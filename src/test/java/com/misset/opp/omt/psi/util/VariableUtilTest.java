@@ -59,7 +59,7 @@ class VariableUtilTest extends OMTTestSuite {
             onStartBlock = exampleFiles.getPsiElementFromRootDocument(
                     OMTGenericBlock.class, rootBlock,
                     genericBlock ->
-                            genericBlock.getPropertyLabel().getPropertyLabelName().equals("onStart")
+                            genericBlock.getPropertyLabel().getName().equals("onStart")
             );
         });
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());

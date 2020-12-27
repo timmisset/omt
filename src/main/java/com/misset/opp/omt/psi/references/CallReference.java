@@ -3,7 +3,7 @@ package com.misset.opp.omt.psi.references;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveResult;
-import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.named.OMTCall;
 import org.jetbrains.annotations.NotNull;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getMemberUtil;
