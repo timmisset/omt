@@ -3,30 +3,17 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 import static com.misset.opp.omt.psi.util.UtilManager.getVariableUtil;
 
 public class PsiImplUtil {
-    // ////////////////////////////////////////////////////////////////////////////
-    // OMTDefinedBlocks
-    // ////////////////////////////////////////////////////////////////////////////
-    public static List<OMTDefinedStatement> getStatements(OMTQueriesBlock omtQueriesBlock) {
-        return omtQueriesBlock.getDefineQueryStatementList().stream().map(statement -> (OMTDefinedStatement) statement).collect(Collectors.toList());
-    }
-
-    public static List<OMTDefinedStatement> getStatements(OMTCommandsBlock omtCommandsBlock) {
-        return omtCommandsBlock.getDefineCommandStatementList().stream().map(statement -> (OMTDefinedStatement) statement).collect(Collectors.toList());
-    }
 
     // ////////////////////////////////////////////////////////////////////////////
     // Prefixes
@@ -34,16 +21,6 @@ public class PsiImplUtil {
 
     public static boolean isDefinedByPrefix(OMTParameterType parameterType, OMTPrefix prefix) {
         return parameterType.getText().startsWith(prefix.getNamespacePrefix().getText());
-    }
-
-    public static String getName(OMTNamespaceIri namespaceIri) {
-        String name = namespaceIri.getText();
-        return name.substring(name.indexOf("<"), name.indexOf(">") + 1);
-    }
-
-    public static String getNamespace(OMTNamespaceIri namespaceIri) {
-        String name = namespaceIri.getText();
-        return name.substring(name.indexOf("<") + 1, name.indexOf(">"));
     }
 
     /**
@@ -75,15 +52,6 @@ public class PsiImplUtil {
             element = element.getNextSibling();
         }
         return null;
-    }
-
-    // ////////////////////////////////////////////////////////////////////////////
-    // PropertyLabel
-    // ////////////////////////////////////////////////////////////////////////////
-
-    public static String getType(OMTModelItemBlock modelItemBlock) {
-        final OMTModelItemTypeElement modelItemTypeElement = modelItemBlock.getModelItemLabel().getModelItemTypeElement();
-        return modelItemTypeElement.getText().substring(1); // return type without flag token
     }
 
     // ////////////////////////////////////////////////////////////////////////////
@@ -141,16 +109,6 @@ public class PsiImplUtil {
 
     public static List<Resource> getType(OMTParameterWithType parameterWithType) {
         return getVariableUtil().getType(parameterWithType);
-    }
-
-    public static List<OMTBlockEntry> getBlockEntryList(OMTBlock block) {
-        if (block instanceof OMTIndentedBlock) {
-            return ((OMTIndentedBlock) block).getBlockEntryList();
-        }
-        if (block instanceof OMTRootBlock) {
-            return ((OMTRootBlock) block).getBlockEntryList();
-        }
-        return new ArrayList<>();
     }
 
 }
