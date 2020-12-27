@@ -7,7 +7,7 @@ import com.google.gson.JsonParser;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import com.misset.opp.omt.psi.impl.BuiltInMember;
+import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTCallableImpl;
 import com.misset.opp.omt.psi.impl.OMTParameterImpl;
 import com.misset.opp.omt.psi.support.BuiltInType;
@@ -30,9 +30,9 @@ public class BuiltInUtil {
     private static final String COMMAND_NAME_PREFIX = "COMMAND";
     private static final String OPERATOR_NAME_PREFIX = "OPERATOR";
 
-    private final HashMap<String, BuiltInMember> builtInMembers = new HashMap<>();
+    private final HashMap<String, OMTBuiltInMember> builtInMembers = new HashMap<>();
 
-    public BuiltInMember getBuiltInMember(String name, BuiltInType type) {
+    public OMTBuiltInMember getBuiltInMember(String name, BuiltInType type) {
         return builtInMembers.get(getIndexedName(name, type));
     }
 
@@ -224,7 +224,7 @@ public class BuiltInUtil {
                 }
             }
 
-            BuiltInMember builtInMember = new BuiltInMember(name, inputParameters, type, localVariables, flagsAsList, dataType);
+            OMTBuiltInMember builtInMember = new OMTBuiltInMember(name, inputParameters, type, localVariables, flagsAsList, dataType);
 
             if (doc != null && !doc.isJsonNull()) {
                 String docAsString = doc.getAsString();

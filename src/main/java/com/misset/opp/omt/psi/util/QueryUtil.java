@@ -7,6 +7,7 @@ import org.apache.jena.rdf.model.Resource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
@@ -66,10 +67,10 @@ public class QueryUtil {
      * $myVariable / SOME_OPERATOR(CURRENT_STEP)            Contained in a signature argument, cannot inherit types
      */
     public List<Resource> getPreviousStepResources(PsiElement step) {
-        PsiElement previous = PsiImplUtil.getPreviousSibling(step, OMTQueryPath.class, OMTQueryStep.class);
+        PsiElement previous = getPreviousSibling(step, OMTQueryPath.class, OMTQueryStep.class);
         if (previous == null) {
             // retrieve the previous value via the parent
-            final PsiElement container = PsiImplUtil.getParent(step, OMTSubQuery.class, OMTQueryFilter.class, OMTSignatureArgument.class);
+            final PsiElement container = getParent(step, OMTSubQuery.class, OMTQueryFilter.class, OMTSignatureArgument.class);
             if (container instanceof OMTQueryFilter) {
                 // resolve the filter
                 return getPreviousStepResources((OMTQueryFilter) container);
@@ -92,12 +93,40 @@ public class QueryUtil {
     }
 
     public boolean isPreviousStepAType(OMTQueryStep step) {
-        OMTQueryStep previous = (OMTQueryStep) PsiImplUtil.getPreviousSibling(step, OMTQueryStep.class);
+        OMTQueryStep previous = (OMTQueryStep) getPreviousSibling(step, OMTQueryStep.class);
         if (previous == null) {
             final OMTQueryFilter filter = PsiTreeUtil.getParentOfType(step, OMTQueryFilter.class);
             return filter != null && ((OMTQueryStep) filter.getParent()).isType();
         }
         return previous.isType();
+    }
+
+    private PsiElement getPreviousSibling(PsiElement element, Class<? extends PsiElement>... ofTypes) {
+        return getElementOrContinueWith(element, PsiElement::getPrevSibling, ofTypes);
+    }
+
+    private PsiElement getParent(PsiElement element, Class<? extends PsiElement>... ofTypes) {
+        return getElementOrContinueWith(element, PsiElement::getParent, ofTypes);
+    }
+
+    private PsiElement getElementOrContinueWith(PsiElement element, UnaryOperator<PsiElement> continueWith, Class<? extends PsiElement>... ofTypes) {
+        if (element == null) {
+            return null;
+        }
+        PsiElement continueWithElement = continueWith.apply(element);
+        while (continueWithElement != null && !isAssignableFrom(continueWithElement, ofTypes)) {
+            continueWithElement = continueWith.apply(continueWithElement);
+        }
+        return continueWithElement;
+    }
+
+    private boolean isAssignableFrom(PsiElement element, Class<? extends PsiElement>... ofTypes) {
+        for (Class<? extends PsiElement> clazz : ofTypes) {
+            if (clazz.isAssignableFrom(element.getClass())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

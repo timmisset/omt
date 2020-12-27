@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
@@ -33,10 +34,12 @@ public class OMTCallableImplTest_NoFixture {
         final OMTCall call = mock(OMTCall.class);
         final OMTSignature signature = mock(OMTSignature.class);
         final OMTFlagSignature flagSignature = mock(OMTFlagSignature.class);
+        final List<OMTSignature> signatureList = mock(List.class);
 
         doReturn(true).when(call).canCallCommand();
         doReturn(signature).when(call).getSignature();
-        doReturn(1).when(signature).numberOfParameters();
+        doReturn(signatureList).when(signature).getSignatureArgumentList();
+        doReturn(0).when(signatureList).size();
         doReturn(flagSignature).when(call).getFlagSignature();
         doReturn("!flag").when(flagSignature).getText();
 
@@ -49,10 +52,12 @@ public class OMTCallableImplTest_NoFixture {
         final OMTCall call = mock(OMTCall.class);
         final OMTSignature signature = mock(OMTSignature.class);
         final OMTFlagSignature flagSignature = mock(OMTFlagSignature.class);
+        final List<OMTSignature> signatureList = mock(List.class);
 
         doReturn(true).when(call).canCallCommand();
         doReturn(signature).when(call).getSignature();
-        doReturn(1).when(signature).numberOfParameters();
+        doReturn(signatureList).when(signature).getSignatureArgumentList();
+        doReturn(1).when(signatureList).size();
         doReturn(flagSignature).when(call).getFlagSignature();
         doReturn("!invalidFlag").when(flagSignature).getText();
 
@@ -64,10 +69,13 @@ public class OMTCallableImplTest_NoFixture {
         final OMTCallableImpl callable = getCallable(true);
         final OMTCall call = mock(OMTCall.class);
         final OMTSignature signature = mock(OMTSignature.class);
+        final List<OMTSignature> signatureList = mock(List.class);
+
         doReturn(true).when(call).canCallCommand();
         doReturn(signature).when(call).getSignature();
 
-        doReturn(2).when(signature).numberOfParameters();
+        doReturn(signatureList).when(signature).getSignatureArgumentList();
+        doReturn(2).when(signatureList).size();
         doReturn(1).when(callable).getMinExpected();
         doReturn(1).when(callable).getMaxExpected();
         assertThrows(NumberOfInputParametersMismatchException.class, () -> callable.validateSignature(call));
@@ -78,10 +86,12 @@ public class OMTCallableImplTest_NoFixture {
         final OMTCallableImpl callable = getCallable(true);
         final OMTCall call = mock(OMTCall.class);
         final OMTSignature signature = mock(OMTSignature.class);
+        final List<OMTSignature> signatureList = mock(List.class);
         doReturn(true).when(call).canCallCommand();
         doReturn(signature).when(call).getSignature();
 
-        doReturn(0).when(signature).numberOfParameters();
+        doReturn(signatureList).when(signature).getSignatureArgumentList();
+        doReturn(0).when(signatureList).size();
         doReturn(1).when(callable).getMinExpected();
         doReturn(1).when(callable).getMaxExpected();
         assertThrows(NumberOfInputParametersMismatchException.class, () -> callable.validateSignature(call));

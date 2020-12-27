@@ -39,46 +39,46 @@ class OMTCallableImplTest extends OMTTestSuite {
 
     @Test
     void hasFlags() {
-        final BuiltInMember contains = getBuiltinUtil().getBuiltInMember("CONTAINS", BuiltInType.Operator);
-        final BuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
+        final OMTBuiltInMember contains = getBuiltinUtil().getBuiltInMember("CONTAINS", BuiltInType.Operator);
+        final OMTBuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
         assertTrue(contains.hasFlags());
         assertFalse(first.hasFlags());
     }
 
     @Test
     void getFlags() {
-        final BuiltInMember contains = getBuiltinUtil().getBuiltInMember("CONTAINS", BuiltInType.Operator);
+        final OMTBuiltInMember contains = getBuiltinUtil().getBuiltInMember("CONTAINS", BuiltInType.Operator);
         assertContainsElements(contains.getFlags(), "ignoreCase");
     }
 
     @Test
     void isOperator() {
-        final BuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
-        final BuiltInMember log = getBuiltinUtil().getBuiltInMember("LOG", BuiltInType.Command);
+        final OMTBuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
+        final OMTBuiltInMember log = getBuiltinUtil().getBuiltInMember("LOG", BuiltInType.Command);
         assertTrue(first.isOperator());
         assertFalse(log.isOperator());
     }
 
     @Test
     void isCommand() {
-        final BuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
-        final BuiltInMember log = getBuiltinUtil().getBuiltInMember("LOG", BuiltInType.Command);
+        final OMTBuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
+        final OMTBuiltInMember log = getBuiltinUtil().getBuiltInMember("LOG", BuiltInType.Command);
         assertFalse(first.isCommand());
         assertTrue(log.isCommand());
     }
 
     @Test
     void getMinExpected() {
-        final BuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
-        final BuiltInMember log = getBuiltinUtil().getBuiltInMember("LOG", BuiltInType.Command);
+        final OMTBuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
+        final OMTBuiltInMember log = getBuiltinUtil().getBuiltInMember("LOG", BuiltInType.Command);
         assertEquals(0, first.getMinExpected());
         assertEquals(1, log.getMinExpected());
     }
 
     @Test
     void getMaxExpected() {
-        final BuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
-        final BuiltInMember log = getBuiltinUtil().getBuiltInMember("LOG", BuiltInType.Command);
+        final OMTBuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
+        final OMTBuiltInMember log = getBuiltinUtil().getBuiltInMember("LOG", BuiltInType.Command);
         assertEquals(1, first.getMaxExpected());
         assertEquals(-1, log.getMaxExpected());
     }
@@ -89,22 +89,22 @@ class OMTCallableImplTest extends OMTTestSuite {
         callable.setHTMLDescription("test");
         assertEquals("test", callable.htmlDescription());
 
-        final BuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
+        final OMTBuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
         assertEquals("<b>FIRST</b><br>Type: Operator<br><br>Params:<br>$param0 (optionalBoolean)", first.htmlDescription().trim());
     }
 
     @Test
     void shortDescription() {
-        final BuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
+        final OMTBuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
         assertEquals("Operator: FIRST", first.shortDescription());
     }
 
     @Test
     void asSuggestion() {
-        final BuiltInMember newTransientGraph = getBuiltinUtil().getBuiltInMember("NEW_TRANSIENT_GRAPH", BuiltInType.Command);
-        final BuiltInMember newGraph = getBuiltinUtil().getBuiltInMember("NEW_GRAPH", BuiltInType.Command);
-        final BuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
-        final BuiltInMember currentDate = getBuiltinUtil().getBuiltInMember("CURRENT_DATE", BuiltInType.Operator);
+        final OMTBuiltInMember newTransientGraph = getBuiltinUtil().getBuiltInMember("NEW_TRANSIENT_GRAPH", BuiltInType.Command);
+        final OMTBuiltInMember newGraph = getBuiltinUtil().getBuiltInMember("NEW_GRAPH", BuiltInType.Command);
+        final OMTBuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
+        final OMTBuiltInMember currentDate = getBuiltinUtil().getBuiltInMember("CURRENT_DATE", BuiltInType.Operator);
         assertEquals("@NEW_TRANSIENT_GRAPH()", newTransientGraph.getAsSuggestion());
         assertEquals("@NEW_GRAPH($param0)", newGraph.getAsSuggestion());
         assertEquals("FIRST($param0)", first.getAsSuggestion());
@@ -113,16 +113,16 @@ class OMTCallableImplTest extends OMTTestSuite {
 
     @Test
     void getReturnType() {
-        final BuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
-        final BuiltInMember exists = getBuiltinUtil().getBuiltInMember("EXISTS", BuiltInType.Operator);
+        final OMTBuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
+        final OMTBuiltInMember exists = getBuiltinUtil().getBuiltInMember("EXISTS", BuiltInType.Operator);
         assertEquals(first.getReturnType().get(0), getRDFModelUtil().getResource("http://www.w3.org/2001/XMLSchema#any"));
         assertEquals(exists.getReturnType().get(0), getRDFModelUtil().getResource("http://www.w3.org/2001/XMLSchema#boolean"));
     }
 
     @Test
     void returnsAny() {
-        final BuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
-        final BuiltInMember exists = getBuiltinUtil().getBuiltInMember("EXISTS", BuiltInType.Operator);
+        final OMTBuiltInMember first = getBuiltinUtil().getBuiltInMember("FIRST", BuiltInType.Operator);
+        final OMTBuiltInMember exists = getBuiltinUtil().getBuiltInMember("EXISTS", BuiltInType.Operator);
         assertTrue(first.returnsAny());
         assertFalse(exists.returnsAny());
     }

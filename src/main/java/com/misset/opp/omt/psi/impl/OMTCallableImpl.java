@@ -178,7 +178,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
         if ((isOperator() && !call.canCallOperator()) || (isCommand() && !call.canCallCommand())) {
             throw new CallCallableMismatchException(this, call);
         }
-        int intputParameters = call.getSignature() != null ? call.getSignature().numberOfParameters() : 0;
+        int intputParameters = call.getSignature() != null ? call.getSignature().getSignatureArgumentList().size() : 0;
         if (intputParameters < getMinExpected() || (!hasRest() && intputParameters > getMaxExpected())) {
             throw new NumberOfInputParametersMismatchException(name, getMinExpected(), getMaxExpected(), intputParameters);
         }

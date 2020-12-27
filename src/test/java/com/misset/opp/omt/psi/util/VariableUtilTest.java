@@ -9,7 +9,7 @@ import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTGenericBlock;
 import com.misset.opp.omt.psi.OMTVariable;
-import com.misset.opp.omt.psi.impl.BuiltInMember;
+import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
 import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.util.BuiltInUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -123,7 +123,7 @@ class VariableUtilTest extends OMTTestSuite {
 
     @Test
     void getLocalVariablesForBuiltInCommands() {
-        BuiltInMember forEachCommand = new BuiltInMember("FOREACH", new ArrayList<>(), BuiltInType.Command, Arrays.asList("$value"));
+        OMTBuiltInMember forEachCommand = new OMTBuiltInMember("FOREACH", new ArrayList<>(), BuiltInType.Command, Arrays.asList("$value"));
         doReturn(forEachCommand).when(builtInUtil).getBuiltInMember(eq("FOREACH"), eq(BuiltInType.Command));
         ApplicationManager.getApplication().runReadAction(() -> {
             OMTVariable localVariable = exampleFiles.getPsiElementFromRootDocument(

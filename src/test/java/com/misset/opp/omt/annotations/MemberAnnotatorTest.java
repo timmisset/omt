@@ -13,7 +13,7 @@ import com.misset.opp.omt.intentions.members.MemberIntention;
 import com.misset.opp.omt.psi.OMTInterpolationTemplate;
 import com.misset.opp.omt.psi.OMTSignature;
 import com.misset.opp.omt.psi.OMTSignatureArgument;
-import com.misset.opp.omt.psi.impl.BuiltInMember;
+import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
 import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTExportMember;
@@ -49,7 +49,7 @@ class MemberAnnotatorTest extends OMTAnnotationTest {
     OMTExportMember exportMember;
 
     @Mock
-    BuiltInMember builtInMember;
+    OMTBuiltInMember builtInMember;
 
     @Mock
     OMTSignature signature;
