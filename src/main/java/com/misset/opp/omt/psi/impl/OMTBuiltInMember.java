@@ -9,13 +9,13 @@ import java.util.List;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getBuiltinUtil;
 
-public class BuiltInMember extends OMTCallableImpl implements OMTCallable {
+public class OMTBuiltInMember extends OMTCallableImpl implements OMTCallable {
 
-    public BuiltInMember(String name, List<OMTParameter> params, BuiltInType type, List<String> localVariables) {
+    public OMTBuiltInMember(String name, List<OMTParameter> params, BuiltInType type, List<String> localVariables) {
         super(type.name(), name, params, getBuiltinUtil().isCommand(type), localVariables);
     }
 
-    public BuiltInMember(String name, List<OMTParameter> params, BuiltInType type, List<String> localVariables, List<String> flags, String dataType) {
+    public OMTBuiltInMember(String name, List<OMTParameter> params, BuiltInType type, List<String> localVariables, List<String> flags, String dataType) {
         super(type.name(), name, params, getBuiltinUtil().isCommand(type), localVariables, flags, dataType);
     }
 

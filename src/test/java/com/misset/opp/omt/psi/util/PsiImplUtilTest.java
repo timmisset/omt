@@ -3,11 +3,9 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTTestSuite;
-import com.misset.opp.omt.psi.ExampleFiles;
-import com.misset.opp.omt.psi.OMTFile;
-import com.misset.opp.omt.psi.OMTParameterWithType;
-import com.misset.opp.omt.psi.OMTQuery;
+import com.misset.opp.omt.psi.*;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -260,7 +258,7 @@ class PsiImplUtilTest extends OMTTestSuite {
                 "    DEFINE QUERY myQuery($mijnParameter) => $mijnParameter / CEIL;\n" +
                 "    DEFINE QUERY myQuery2() => myQuery;";
 
-        OMTQuery query = parseQueryFromContent(content, omtQuery -> omtQuery.getDefinedName().equals("myQuery2"));
+        OMTQuery query = parseQueryFromContent(content, omtQuery -> PsiTreeUtil.getParentOfType(omtQuery, OMTDefineQueryStatement.class).getDefineName().getName().equals("myQuery2"));
         ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://www.w3.org/2001/XMLSchema#decimal"));
     }
 

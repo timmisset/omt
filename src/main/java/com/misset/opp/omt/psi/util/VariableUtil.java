@@ -6,7 +6,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.impl.BuiltInMember;
+import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTQueryReverseStepImpl;
 import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.BuiltInType;
@@ -112,7 +112,7 @@ public class VariableUtil {
             // from builtIn members
             if (element instanceof OMTCall) {
                 OMTCall call = (OMTCall) element;
-                BuiltInMember builtInMember = getBuiltinUtil().getBuiltInMember(call.getName(),
+                OMTBuiltInMember builtInMember = getBuiltinUtil().getBuiltInMember(call.getName(),
                         call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
                 if (builtInMember != null) {
                     builtInMember.getLocalVariables().forEach(

@@ -9,7 +9,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.impl.BuiltInMember;
+import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
@@ -50,7 +50,7 @@ class MemberUtilTest extends OMTTestSuite {
     @Mock
     BuiltInUtil builtInUtil;
     @Mock
-    BuiltInMember builtInMember;
+    OMTBuiltInMember builtInMember;
     @Spy
     ModelUtil modelUtil;
     @Spy

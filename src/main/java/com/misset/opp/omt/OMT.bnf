@@ -11,9 +11,6 @@
   elementTypeHolderClass="com.misset.opp.omt.psi.OMTTypes"
   elementTypeClass="com.misset.opp.omt.psi.OMTElementType"
   tokenTypeClass="com.misset.opp.omt.psi.OMTTokenType"
-
-  psiImplUtilClass="com.misset.opp.omt.psi.util.PsiImplUtil"
-
 }
 
 // the end of the file (or the entire file) can be a (set of) comment(s)
@@ -172,10 +169,14 @@ variable ::=                                VARIABLE_NAME | ignoredVariable | gl
 // the lexer should determine if operating in a state of declare and provide a difference response for the discovered variable name
 globalVariable ::=                          GLOBAL_VARIABLE_NAME
 ignoredVariable ::=                         IGNORE_VARIABLE_NAME
-parameterWithType ::=                       variable PARENTHESES_OPEN parameterType? PARENTHESES_CLOSE { methods=[ getType ]}
+parameterWithType ::=                       variable PARENTHESES_OPEN parameterType? PARENTHESES_CLOSE {
+                                                implements="com.misset.opp.omt.psi.support.OMTParameterWithTypeSup"
+                                                mixin="com.misset.opp.omt.psi.impl.OMTParameterWithTypeSupImpl"
+}
 
 parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) | OPERATOR | NAMESPACE_MEMBER {
-    methods = [isDefinedByPrefix getAsResource]
+                                            implements="com.misset.opp.omt.psi.support.OMTCurie"
+                                            mixin="com.misset.opp.omt.psi.impl.OMTParameterTypeSupImpl"
 }
 
 // SCRIPT
@@ -223,9 +224,7 @@ commandCall ::=                             COMMAND flagSignature? signature?
                                                              implements="com.misset.opp.omt.psi.named.OMTCall"
                                                              extends="com.misset.opp.omt.psi.resolvable.impl.OMTCallResolvableImpl"
                                                            }
-signature ::=                               PARENTHESES_OPEN (signatureArgument (COMMA signatureArgument)*)? PARENTHESES_CLOSE {
-                                                             methods=[numberOfParameters]
-}
+signature ::=                               PARENTHESES_OPEN (signatureArgument (COMMA signatureArgument)*)? PARENTHESES_CLOSE
 signatureArgument ::=                       resolvableValue | commandBlock {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
                                                 extends="com.misset.opp.omt.psi.resolvable.impl.OMTSignatureArgumentResolvableImpl" }
@@ -252,8 +251,7 @@ endPath ::=                                 END_OPERATOR
 // with regular bnf -> psi generation, the query would encapsulate the queryPath, ... items
 // by using the extension mechanism, it only becomes their superclass
 query     ::=                               queryPath | queryArray | booleanStatement | equationStatement
-                                            { methods = [getDefinedName ]
-                                              implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable" }
+                                            { implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable" }
 // The queryPath is the base, eventually all queries will descent into a queryPath even for single steps
 // For example, a queryArray can consist of 'a' | 'b' in which both 'a' and 'b' are encapsulated
 // into a queryPath and subsequently a queryStep

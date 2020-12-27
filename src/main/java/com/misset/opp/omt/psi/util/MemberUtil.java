@@ -3,7 +3,7 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.impl.BuiltInMember;
+import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTExportMemberImpl;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.named.OMTCall;
@@ -134,7 +134,7 @@ public class MemberUtil {
     }
 
     public OMTCallable getCallable(OMTCall call) {
-        BuiltInMember builtInMember = getBuiltinUtil().getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
+        OMTBuiltInMember builtInMember = getBuiltinUtil().getBuiltInMember(call.getName(), call.canCallCommand() ? BuiltInType.Command : BuiltInType.Operator);
         if (builtInMember != null) {
             return builtInMember;
         }

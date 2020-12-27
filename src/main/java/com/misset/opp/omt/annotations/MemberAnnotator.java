@@ -13,7 +13,7 @@ import com.misset.opp.omt.intentions.members.MemberIntention;
 import com.misset.opp.omt.psi.OMTInterpolationTemplate;
 import com.misset.opp.omt.psi.OMTSignature;
 import com.misset.opp.omt.psi.OMTSignatureArgument;
-import com.misset.opp.omt.psi.impl.BuiltInMember;
+import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
 import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTCallable;
@@ -137,7 +137,7 @@ public class MemberAnnotator extends AbstractAnnotator {
     }
 
     private boolean annotateAsBuiltInMember(OMTCall call) {
-        BuiltInMember builtInMember = getBuiltinUtil().getBuiltInMember(call.getName(), call.isCommandCall() ? BuiltInType.Command : BuiltInType.Operator);
+        OMTBuiltInMember builtInMember = getBuiltinUtil().getBuiltInMember(call.getName(), call.isCommandCall() ? BuiltInType.Command : BuiltInType.Operator);
         if (builtInMember != null) {
             setInformation(builtInMember.shortDescription(),
                     annotationBuilder -> annotationBuilder.tooltip(builtInMember.htmlDescription()));
