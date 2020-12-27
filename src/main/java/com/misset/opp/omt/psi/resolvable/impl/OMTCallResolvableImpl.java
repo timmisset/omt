@@ -3,7 +3,7 @@ package com.misset.opp.omt.psi.resolvable.impl;
 import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.psi.OMTQueryStep;
 import com.misset.opp.omt.psi.OMTSignatureArgument;
-import com.misset.opp.omt.psi.impl.named.OMTCallAbstract;
+import com.misset.opp.omt.psi.impl.named.OMTCallImpl;
 import com.misset.opp.omt.psi.resolvable.OMTCallResolvable;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import org.apache.jena.rdf.model.Resource;
@@ -15,12 +15,12 @@ import java.util.List;
 
 import static com.misset.opp.omt.psi.util.UtilManager.*;
 
-public abstract class OMTCallResolvableAbstract extends OMTCallAbstract implements OMTCallResolvable {
+public abstract class OMTCallResolvableImpl extends OMTCallImpl implements OMTCallResolvable {
 
     private static final List<String> operatorsThatReturnFirstArgumentAsType = Arrays.asList("CAST", "PLUS", "MINUS");
     private static final List<String> operatorsThatAppendFirstArgumentAsType = Arrays.asList("IF_EMPTY", "CATCH");
 
-    public OMTCallResolvableAbstract(@NotNull ASTNode node) {
+    public OMTCallResolvableImpl(@NotNull ASTNode node) {
         super(node);
     }
 

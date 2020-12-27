@@ -13,7 +13,7 @@ import com.misset.opp.omt.completion.OMTCompletionContributor;
 import com.misset.opp.omt.completion.RDFCompletion;
 import com.misset.opp.omt.psi.OMTSignatureArgument;
 import com.misset.opp.omt.psi.impl.OMTSignatureImpl;
-import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import org.jetbrains.annotations.NotNull;
 

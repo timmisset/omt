@@ -1,6 +1,6 @@
 package com.misset.opp.omt.psi.resolvable;
 
-import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.named.OMTCall;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.List;

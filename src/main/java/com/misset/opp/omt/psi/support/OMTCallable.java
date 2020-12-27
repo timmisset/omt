@@ -6,6 +6,7 @@ import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.IncorrectSignatureArgument;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.psi.OMTSignatureArgument;
+import com.misset.opp.omt.psi.named.OMTCall;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.HashMap;

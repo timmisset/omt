@@ -6,7 +6,7 @@ import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.PsiParserFacade;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTFileType;
-import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.named.OMTCall;
 
 public class OMTElementFactory {
     public static OMTVariable createVariable(Project project, String name) {

@@ -132,7 +132,7 @@ class ModelUtilTest extends OMTTestSuite {
         ApplicationManager.getApplication().runReadAction(() -> {
             Optional<OMTBlockEntry> variables = modelUtil.getModelItemBlockEntry(variable, "variables");
             assertTrue(variables.isPresent());
-            assertEquals("variables", Objects.requireNonNull(((OMTGenericBlock) variables.get()).getPropertyLabel()).getPropertyLabelName());
+            assertEquals("variables", Objects.requireNonNull(((OMTGenericBlock) variables.get()).getPropertyLabel()).getName());
         });
     }
 

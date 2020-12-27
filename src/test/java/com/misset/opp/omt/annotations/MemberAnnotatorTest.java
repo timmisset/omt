@@ -14,7 +14,7 @@ import com.misset.opp.omt.psi.OMTInterpolationTemplate;
 import com.misset.opp.omt.psi.OMTSignature;
 import com.misset.opp.omt.psi.OMTSignatureArgument;
 import com.misset.opp.omt.psi.impl.BuiltInMember;
-import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.psi.support.OMTParameter;

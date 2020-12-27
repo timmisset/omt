@@ -7,17 +7,17 @@ import com.misset.opp.omt.psi.OMTCommandCall;
 import com.misset.opp.omt.psi.OMTElementFactory;
 import com.misset.opp.omt.psi.OMTOperatorCall;
 import com.misset.opp.omt.psi.named.NamedMemberType;
+import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.references.CallReference;
-import com.misset.opp.omt.psi.support.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getMemberUtil;
 
-public abstract class OMTCallAbstract extends MemberNamedElementAbstract<OMTCall> implements OMTCall {
+public abstract class OMTCallImpl extends MemberNamedElementImpl<OMTCall> implements OMTCall {
 
-    public OMTCallAbstract(@NotNull ASTNode node) {
+    public OMTCallImpl(@NotNull ASTNode node) {
         super(node);
     }
 
@@ -43,7 +43,7 @@ public abstract class OMTCallAbstract extends MemberNamedElementAbstract<OMTCall
     @Override
     @NotNull
     public PsiElement getNameIdentifier() {
-        return getNode().getPsi().getFirstChild();
+        return getFirstChild();
     }
 
     @Override

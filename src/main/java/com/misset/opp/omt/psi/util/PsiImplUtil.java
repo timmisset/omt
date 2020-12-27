@@ -1,11 +1,9 @@
 package com.misset.opp.omt.psi.util;
 
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.TokenType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,31 +14,10 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.psi.util.UtilManager.*;
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.omt.psi.util.UtilManager.getVariableUtil;
 
 public class PsiImplUtil {
-
-    // ////////////////////////////////////////////////////////////////////////////
-    // OMTDefineName
-    // ////////////////////////////////////////////////////////////////////////////
-    @NotNull
-    public static String getName(OMTDefineName defineName) {
-        return defineName.getText();
-    }
-
-    public static PsiElement setName(OMTDefineName defineName, String newName) {
-        PsiElement replacement = OMTElementFactory.createOperator(defineName.getProject(), newName);
-        if (replacement != null) {
-            defineName.replace(replacement);
-        }
-        return replacement;
-    }
-
-    @NotNull
-    public static PsiElement getNameIdentifier(OMTDefineName defineName) {
-        return defineName;
-    }
-
     // ////////////////////////////////////////////////////////////////////////////
     // OMTDefinedBlocks
     // ////////////////////////////////////////////////////////////////////////////
@@ -50,24 +27,6 @@ public class PsiImplUtil {
 
     public static List<OMTDefinedStatement> getStatements(OMTCommandsBlock omtCommandsBlock) {
         return omtCommandsBlock.getDefineCommandStatementList().stream().map(statement -> (OMTDefinedStatement) statement).collect(Collectors.toList());
-    }
-
-    // ////////////////////////////////////////////////////////////////////////////
-    // Members
-    // ////////////////////////////////////////////////////////////////////////////
-    public static String getName(OMTMember member) {
-        return getNameIdentifier(member).getText();
-    }
-
-    public static PsiElement setName(OMTMember member, String newName) {
-        OMTMember replacement = OMTElementFactory.createMember(member.getProject(), newName);
-        member.getNameIdentifier().replace(replacement.getNameIdentifier());
-        return replacement;
-    }
-
-    @NotNull
-    public static PsiElement getNameIdentifier(OMTMember member) {
-        return member.getFirstChild();
     }
 
     public static String getName(OMTMemberListItem memberListItem) {
@@ -104,50 +63,8 @@ public class PsiImplUtil {
     }
 
     // ////////////////////////////////////////////////////////////////////////////
-    // ModelItemLabel
-    // ////////////////////////////////////////////////////////////////////////////
-    public static String getName(OMTModelItemLabel itemLabel) {
-        return itemLabel.getPropertyLabel().getPropertyLabelName();
-    }
-
-    public static PsiElement setName(OMTModelItemLabel itemLabel, String newName) {
-        OMTModelItemLabel replacement = OMTElementFactory.createModelItemLabelPropertyLabel(itemLabel.getProject(), newName, itemLabel.getModelItemTypeElement().getText());
-        itemLabel.replace(replacement);
-        return replacement;
-    }
-
-    @NotNull
-    public static PsiElement getNameIdentifier(OMTModelItemLabel itemLabel) {
-        return itemLabel.getPropertyLabel();
-    }
-
-    // ////////////////////////////////////////////////////////////////////////////
-    // Import source
-    // ////////////////////////////////////////////////////////////////////////////
-    public static String getName(OMTImportSource importSource) {
-        return importSource.getText();
-    }
-
-    public static PsiElement setName(OMTImportSource importSource, String newName) {
-        PsiElement replacement = OMTElementFactory.createImportSource(importSource.getProject(), newName);
-        importSource.replace(replacement);
-        return replacement;
-    }
-
-    public static PsiElement getNameIdentifier(OMTImportSource importSource) {
-        return importSource;
-    }
-
-    // ////////////////////////////////////////////////////////////////////////////
     // Prefixes
     // ////////////////////////////////////////////////////////////////////////////
-    public static PsiElement getPrefix(OMTCurieElement curieElement) {
-        return curieElement.getFirstChild();
-    }
-
-    public static String getPrefixName(OMTCurieElement curieElement) {
-        return getPrefix(curieElement).getText().replace(":", "");
-    }
 
     public static boolean isDefinedByPrefix(OMTCurieElement curieElement, OMTPrefix prefix) {
         return curieElement.getText().startsWith(prefix.getNamespacePrefix().getText());
@@ -174,19 +91,6 @@ public class PsiImplUtil {
     /**
      * Returns the curie resolved to the full iri as a Resource in the loaded ontology model
      */
-    public static Resource getAsResource(OMTCurieElement curieElement) {
-        String resolvedIri = String.format("%s%s",
-                ((OMTFile) curieElement.getContainingFile()).getPrefixIri(curieElement.getPrefixName()),
-                curieElement.getPrefix().getNextSibling().getText()
-        );
-
-        Model ontologyModel = getProjectUtil().getOntologyModel();
-        return ontologyModel.getResource(resolvedIri);
-    }
-
-    /**
-     * Returns the curie resolved to the full iri as a Resource in the loaded ontology model
-     */
     public static Resource getAsResource(OMTParameterType parameterType) {
         if (parameterType.getNamespacePrefix() == null) {
             final String type = parameterType.getFirstChild().getText().trim();
@@ -204,26 +108,6 @@ public class PsiImplUtil {
         return signature.getSignatureArgumentList().size();
     }
 
-    // ////////////////////////////////////////////////////////////////////////////
-    // BlockEntry
-    // ////////////////////////////////////////////////////////////////////////////
-    public static String getName(OMTBlockEntry blockEntry) {
-        return getPropertyLabelName(getLabel(blockEntry));
-    }
-
-    public static PsiElement getLabel(OMTBlockEntry blockEntry) {
-        if (blockEntry instanceof OMTSpecificBlock) {
-            return blockEntry.getFirstChild() instanceof OMTLeading ?
-                    getSibling(blockEntry.getFirstChild(),
-                            element -> element.getNode().getElementType() != TokenType.WHITE_SPACE) :
-                    blockEntry.getFirstChild();
-        }
-        if (blockEntry instanceof OMTModelItemBlock) {
-            return ((OMTModelItemBlock) blockEntry).getModelItemLabel().getPropertyLabel();
-        }
-        return ((OMTGenericBlock) blockEntry).getPropertyLabel();
-    }
-
     public static PsiElement getSibling(@NotNull PsiElement element, Predicate<PsiElement> condition) {
         element = element.getNextSibling();
         while (element != null) {
@@ -238,16 +122,7 @@ public class PsiImplUtil {
     // ////////////////////////////////////////////////////////////////////////////
     // PropertyLabel
     // ////////////////////////////////////////////////////////////////////////////
-    public static String getPropertyLabelName(OMTPropertyLabel propertyLabel) {
-        return getPropertyLabelName((PsiElement) propertyLabel);
-    }
 
-    private static String getPropertyLabelName(PsiElement element) {
-        String propertyLabelText = element.getText();
-        return propertyLabelText.endsWith(":") ?
-                propertyLabelText.substring(0, propertyLabelText.length() - 1) :
-                propertyLabelText;
-    }
     public static String getType(OMTModelItemBlock modelItemBlock) {
         final OMTModelItemTypeElement modelItemTypeElement = modelItemBlock.getModelItemLabel().getModelItemTypeElement();
         return modelItemTypeElement.getText().substring(1); // return type without flag token
@@ -318,14 +193,6 @@ public class PsiImplUtil {
             return ((OMTRootBlock) block).getBlockEntryList();
         }
         return new ArrayList<>();
-    }
-
-    public static OMTBlock getBlock(OMTGenericBlock genericBlock) {
-        return genericBlock.getIndentedBlock();
-    }
-
-    public static OMTBlock getBlock(OMTModelItemBlock modelItemBlock) {
-        return modelItemBlock.getIndentedBlock();
     }
 
 }

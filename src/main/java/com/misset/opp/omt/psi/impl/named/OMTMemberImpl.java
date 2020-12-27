@@ -5,38 +5,40 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.psi.OMTElementFactory;
 import com.misset.opp.omt.psi.OMTImportSource;
 import com.misset.opp.omt.psi.OMTMember;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.references.ExportMemberReference;
 import com.misset.opp.omt.psi.references.ImportMemberReference;
-import com.misset.opp.omt.psi.util.PsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class OMTMemberAbstract extends MemberNamedElementAbstract<OMTMember> implements OMTMember {
+public abstract class OMTMemberImpl extends MemberNamedElementImpl<OMTMember> implements OMTMember {
 
     private NamedMemberType type;
 
-    public OMTMemberAbstract(@NotNull ASTNode node) {
+    public OMTMemberImpl(@NotNull ASTNode node) {
         super(node);
     }
 
     @NotNull
     @Override
     public String getName() {
-        return PsiImplUtil.getName(this);
+        return getNameIdentifier().getText();
     }
 
     @Override
-    public PsiElement setName(String newName) {
-        return PsiImplUtil.setName(this, newName);
+    public PsiElement setName(@NotNull String newName) {
+        OMTMember replacement = OMTElementFactory.createMember(getProject(), newName);
+        getNameIdentifier().replace(replacement.getNameIdentifier());
+        return replacement;
     }
 
     @Override
     @NotNull
     public PsiElement getNameIdentifier() {
-        return PsiImplUtil.getNameIdentifier(this);
+        return getFirstChild();
     }
 
     @Nullable

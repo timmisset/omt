@@ -67,7 +67,7 @@ public class OMTFindUsageProvider implements FindUsagesProvider {
     @Override
     public String getNodeText(@NotNull PsiElement element, boolean useFullName) {
         if (element instanceof OMTModelItemLabel) {
-            return ((OMTModelItemLabel) element).getPropertyLabel().getPropertyLabelName();
+            return ((OMTModelItemLabel) element).getPropertyLabel().getName();
         }
         return element.getText();
     }

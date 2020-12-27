@@ -5,7 +5,7 @@ import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.psi.OMTFlagSignature;
 import com.misset.opp.omt.psi.OMTSignature;
-import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.named.OMTCall;
 import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 

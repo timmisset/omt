@@ -8,7 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.misset.opp.omt.psi.OMTFile;
-import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import org.jetbrains.annotations.NotNull;
 

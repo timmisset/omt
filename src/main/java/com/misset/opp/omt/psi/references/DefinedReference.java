@@ -3,7 +3,6 @@ package com.misset.opp.omt.psi.references;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.OMTDefineName;
-import com.misset.opp.omt.psi.util.PsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class DefinedReference extends MemberReference<OMTDefineName> {
@@ -13,6 +12,6 @@ public class DefinedReference extends MemberReference<OMTDefineName> {
 
     @Override
     public PsiElement handleElementRename(@NotNull String newElementName) {
-        return PsiImplUtil.setName(myElement, newElementName);
+        return myElement.setName(newElementName);
     }
 }

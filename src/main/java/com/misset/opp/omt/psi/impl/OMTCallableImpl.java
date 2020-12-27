@@ -6,7 +6,7 @@ import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.IncorrectSignatureArgument;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.psi.support.OMTCall;
+import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
 import com.misset.opp.omt.util.RDFModelUtil;
@@ -146,7 +146,7 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     void setParametersFromModelItem(OMTModelItemBlock block) {
         Optional<OMTBlockEntry> params = getModelUtil().getModelItemBlockEntry(block, "params");
-        if (!params.isPresent()) {
+        if (params.isEmpty()) {
             return;
         }
         final OMTGenericBlock paramsBlock = (OMTGenericBlock) params.get();

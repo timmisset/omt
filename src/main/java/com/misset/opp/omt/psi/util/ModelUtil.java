@@ -303,7 +303,7 @@ public class ModelUtil {
             final OMTPropertyLabel propertyLabel = node.getElementType() == OMTTypes.PROPERTY ?
                     (OMTPropertyLabel) psiElement.getParent() :
                     (OMTPropertyLabel) node.getPsi();
-            final String propertyLabelName = propertyLabel.getPropertyLabelName();
+            final String propertyLabelName = propertyLabel.getName();
             final JsonObject parentJson = UtilManager.getModelUtil().getJsonAtParentLevel(psiElement);
             final JsonObject attributes = parentJson.getAsJsonObject(ATTRIBUTES);
             if (attributes == null || attributes.isJsonNull() || !attributes.has(propertyLabelName)) {
