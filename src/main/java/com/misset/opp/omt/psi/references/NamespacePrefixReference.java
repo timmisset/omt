@@ -4,7 +4,6 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
 import com.misset.opp.omt.psi.OMTPrefix;
-import com.misset.opp.omt.psi.util.PsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,7 +16,7 @@ import static com.misset.opp.omt.psi.util.UtilManager.getCurieUtil;
  * a defined PREFIX statement when used in a script.
  * The CurieUtil will find the declaring statement of the prefix
  */
-public class NamespacePrefixReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
+public class NamespacePrefixReference extends PsiReferenceBase<OMTNamespacePrefix> implements PsiPolyVariantReference {
     public NamespacePrefixReference(@NotNull OMTNamespacePrefix namespacePrefix, TextRange textRange) {
         super(namespacePrefix, textRange);
     }
@@ -25,9 +24,7 @@ public class NamespacePrefixReference extends PsiReferenceBase<PsiElement> imple
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
-        OMTNamespacePrefix namespacePrefix = (OMTNamespacePrefix) myElement;
-
-        Optional<OMTPrefix> definedByPrefix = getCurieUtil().getDefinedByPrefix(namespacePrefix);
+        Optional<OMTPrefix> definedByPrefix = getCurieUtil().getDefinedByPrefix(myElement);
         return definedByPrefix
                 .map(prefix -> new ResolveResult[]{new PsiElementResolveResult(prefix.getNamespacePrefix())})
                 .orElseGet(() -> new ResolveResult[0]);
@@ -42,6 +39,6 @@ public class NamespacePrefixReference extends PsiReferenceBase<PsiElement> imple
 
     @Override
     public PsiElement handleElementRename(@NotNull String newElementName) {
-        return PsiImplUtil.setName((OMTNamespacePrefix) getElement(), newElementName);
+        return myElement.setName(newElementName);
     }
 }

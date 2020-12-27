@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getImportUtil;
 
-public class ImportReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
+public class ImportReference extends PsiReferenceBase<OMTImportSource> implements PsiPolyVariantReference {
     public ImportReference(@NotNull OMTImportSource importSource, TextRange textRange) {
         super(importSource, textRange);
     }

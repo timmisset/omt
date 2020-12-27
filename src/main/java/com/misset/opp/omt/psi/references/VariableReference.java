@@ -3,7 +3,6 @@ package com.misset.opp.omt.psi.references;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.misset.opp.omt.psi.OMTVariable;
-import com.misset.opp.omt.psi.util.PsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,22 +16,19 @@ import static com.misset.opp.omt.psi.util.UtilManager.getVariableUtil;
  * provide a quick usages window when resolving the DeclaredVariable from the text editor.
  * The actual declaration should is resolved to itself, it then magically shows the usage instead of navigating to itself
  */
-public class VariableReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
-
-    private final OMTVariable variable;
+public class VariableReference extends PsiReferenceBase<OMTVariable> implements PsiPolyVariantReference {
 
     /**
      * The reference created for this variable usage
      */
     public VariableReference(@NotNull OMTVariable variable, TextRange textRange) {
         super(variable, textRange);
-        this.variable = variable;
     }
 
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
-        Optional<OMTVariable> declaredByVariable = getVariableUtil().getDeclaredByVariable(variable);
+        Optional<OMTVariable> declaredByVariable = getVariableUtil().getDeclaredByVariable(myElement);
         return declaredByVariable
                 .map(omtVariable -> new ResolveResult[]{new PsiElementResolveResult(omtVariable)})
                 .orElseGet(() -> new ResolveResult[0]);
@@ -47,6 +43,6 @@ public class VariableReference extends PsiReferenceBase<PsiElement> implements P
 
     @Override
     public PsiElement handleElementRename(@NotNull String newElementName) {
-        return PsiImplUtil.setName(variable, newElementName);
+        return myElement.setName(newElementName);
     }
 }

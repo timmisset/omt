@@ -11,7 +11,7 @@ import com.misset.opp.omt.psi.util.PsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class OMTModelItemAbstract extends OMTMemberNamedElementAbstract implements OMTModelItemLabel {
+public abstract class OMTModelItemAbstract extends MemberNamedElementAbstract<OMTModelItemLabel> implements OMTModelItemLabel {
 
   public OMTModelItemAbstract(@NotNull ASTNode node) {
     super(node);

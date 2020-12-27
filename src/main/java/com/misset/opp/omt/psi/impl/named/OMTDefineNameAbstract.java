@@ -11,7 +11,7 @@ import com.misset.opp.omt.psi.util.PsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class OMTDefineNameAbstract extends OMTMemberNamedElementAbstract implements OMTDefineName {
+public abstract class OMTDefineNameAbstract extends MemberNamedElementAbstract<OMTDefineName> implements OMTDefineName {
 
   public OMTDefineNameAbstract(@NotNull ASTNode node) {
     super(node);

@@ -14,7 +14,7 @@ import com.misset.opp.omt.psi.util.PsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class OMTMemberAbstract extends OMTMemberNamedElementAbstract implements OMTMember {
+public abstract class OMTMemberAbstract extends MemberNamedElementAbstract<OMTMember> implements OMTMember {
 
     private NamedMemberType type;
 

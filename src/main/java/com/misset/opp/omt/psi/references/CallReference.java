@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getMemberUtil;
 
-public class CallReference extends MemberReference {
+public class CallReference extends MemberReference<OMTCall> {
     public CallReference(@NotNull OMTCall member, TextRange textRange) {
         super(member, textRange);
     }
@@ -16,11 +16,11 @@ public class CallReference extends MemberReference {
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
-        return declaringMemberToResolveResult(getMemberUtil().getDeclaringMember((OMTCall) myElement).orElse(null));
+        return declaringMemberToResolveResult(getMemberUtil().getDeclaringMember(myElement).orElse(null));
     }
 
     @Override
     public PsiElement handleElementRename(@NotNull String newElementName) {
-        return ((OMTCall) super.myElement).setName(newElementName);
+        return myElement.setName(newElementName);
     }
 }
