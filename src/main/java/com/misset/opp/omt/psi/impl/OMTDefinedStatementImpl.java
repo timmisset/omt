@@ -30,4 +30,5 @@ public abstract class OMTDefinedStatementImpl extends ASTWrapperPsiElement imple
     public PsiElement getDefineLabel() {
         return findChildByType(DEFINE_START);
     }
+
 }
