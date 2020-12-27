@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getMemberUtil;
 
-public abstract class OMTCallAbstract extends OMTMemberNamedElementAbstract implements OMTCall {
+public abstract class OMTCallAbstract extends MemberNamedElementAbstract<OMTCall> implements OMTCall {
 
     public OMTCallAbstract(@NotNull ASTNode node) {
         super(node);
@@ -74,7 +74,7 @@ public abstract class OMTCallAbstract extends OMTMemberNamedElementAbstract impl
     @Nullable
     @Override
     public PsiReference getReference() {
-        return new CallReference((OMTCall) getPsi(), getNameIdentifier().getTextRangeInParent());
+        return new CallReference(getPsi(), getNameIdentifier().getTextRangeInParent());
     }
 
     @NotNull

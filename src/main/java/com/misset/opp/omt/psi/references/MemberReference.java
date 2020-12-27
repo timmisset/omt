@@ -11,9 +11,9 @@ import org.jetbrains.annotations.Nullable;
 /**
  * A member reference takes care of all references from operator/command calls to their declarations
  */
-public abstract class MemberReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
+public abstract class MemberReference<T extends PsiElement> extends PsiReferenceBase<T> implements PsiPolyVariantReference {
 
-    public MemberReference(@NotNull PsiElement member, TextRange textRange) {
+    public MemberReference(@NotNull T member, TextRange textRange) {
         super(member, textRange);
     }
 

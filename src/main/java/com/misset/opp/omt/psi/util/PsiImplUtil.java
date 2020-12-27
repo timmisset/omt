@@ -20,61 +20,6 @@ import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 public class PsiImplUtil {
 
-    private static final String BOOLEAN = "boolean";
-
-    // ////////////////////////////////////////////////////////////////////////////
-    // Variable
-    // ////////////////////////////////////////////////////////////////////////////
-    @NotNull
-    public static String getName(OMTVariable variable) {
-        return variable.getText();
-    }
-
-    public static OMTVariable setName(OMTVariable variable, String newName) {
-        if (newName.startsWith("$")) {
-            OMTVariable replacement = OMTElementFactory.createVariable(variable.getProject(), newName);
-            variable.replace(replacement);
-            return replacement;
-        }
-        return variable;
-    }
-
-    public static PsiElement getNameIdentifier(OMTVariable variable) {
-        return variable;
-    }
-
-    public static boolean isDeclaredVariable(OMTVariable variable) {
-
-        return getVariableUtil().isDeclaredVariable(variable);
-    }
-
-    public static boolean isGlobalVariable(OMTVariable variable) {
-        return variable.getGlobalVariable() != null;
-    }
-
-    public static boolean isIgnoredVariable(OMTVariable variable) {
-        return variable.getIgnoredVariable() != null;
-    }
-
-    // ////////////////////////////////////////////////////////////////////////////
-    // Namespace prefixes
-    // ////////////////////////////////////////////////////////////////////////////
-    public static String getName(OMTNamespacePrefix curieElement) {
-        String prefix = curieElement.getText();
-        prefix = prefix.endsWith(":") ? prefix.substring(0, prefix.length() - 1) : prefix;
-
-        return prefix;
-    }
-
-    public static OMTNamespacePrefix setName(OMTNamespacePrefix namespacePrefix, String newName) {
-        OMTNamespacePrefix replacement = OMTElementFactory.createNamespacePrefix(namespacePrefix.getProject(), newName);
-        return (OMTNamespacePrefix) namespacePrefix.replace(replacement);
-    }
-
-    public static PsiElement getNameIdentifier(OMTNamespacePrefix namespacePrefix) {
-        return namespacePrefix;
-    }
-
     // ////////////////////////////////////////////////////////////////////////////
     // OMTDefineName
     // ////////////////////////////////////////////////////////////////////////////
@@ -361,20 +306,8 @@ public class PsiImplUtil {
         }
     }
 
-    public static List<Resource> getType(OMTVariable variable) {
-        return getVariableUtil().getType(variable);
-    }
-
     public static List<Resource> getType(OMTParameterWithType parameterWithType) {
         return getVariableUtil().getType(parameterWithType);
-    }
-
-    public static OMTVariableValue getValue(OMTVariable variable) {
-        return getVariableUtil().getValue(variable);
-    }
-
-    public static List<OMTVariableAssignment> getAssignments(OMTVariable variable) {
-        return getVariableUtil().getAssignments(variable);
     }
 
     public static List<OMTBlockEntry> getBlockEntryList(OMTBlock block) {

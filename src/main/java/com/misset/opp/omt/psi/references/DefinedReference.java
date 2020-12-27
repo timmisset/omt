@@ -6,13 +6,13 @@ import com.misset.opp.omt.psi.OMTDefineName;
 import com.misset.opp.omt.psi.util.PsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
-public class DefinedReference extends MemberReference {
-    public DefinedReference(@NotNull PsiElement member, TextRange textRange) {
+public class DefinedReference extends MemberReference<OMTDefineName> {
+    public DefinedReference(@NotNull OMTDefineName member, TextRange textRange) {
         super(member, textRange);
     }
 
     @Override
     public PsiElement handleElementRename(@NotNull String newElementName) {
-        return PsiImplUtil.setName((OMTDefineName) super.myElement, newElementName);
+        return PsiImplUtil.setName(myElement, newElementName);
     }
 }

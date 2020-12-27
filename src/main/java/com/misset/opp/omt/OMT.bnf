@@ -89,9 +89,8 @@ importLocation ::=                          (MODULE_START indentToken PROPERTY d
 prefixBlock::=                              leading? PREFIX_BLOCK_START indentToken prefix+ dedentToken { extends=specificBlock }
 prefix::=                                   leading? namespacePrefix namespaceIri { methods=[getName] }
 namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)            {
-                                                                                         mixin="com.misset.opp.omt.psi.impl.OMTNamespacePrefixNamedElementImpl"
+                                                                                         mixin="com.misset.opp.omt.psi.impl.named.OMTNamespacePrefixNamedElementAbstract"
                                                                                          implements="com.misset.opp.omt.psi.named.OMTNamespacePrefixNamedElement"
-                                                                                         methods=[getName setName getNameIdentifier]
                                                                                    }
 namespaceIri ::=                            IRI                                   { methods = [getName getNamespace] }
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       {
@@ -141,9 +140,8 @@ variableValue ::=                           query | commandCall
 
 // a parameter type is used to typecast input parameters in OMT model items
 variable ::=                                VARIABLE_NAME | ignoredVariable | globalVariable {
-                                                                                 mixin="com.misset.opp.omt.psi.impl.OMTVariableNamedElementImpl"
+                                                                                 mixin="com.misset.opp.omt.psi.impl.named.OMTVariableAbstract"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTVariableNamedElement"
-                                                                                 methods=[getName setName isDeclaredVariable isIgnoredVariable isGlobalVariable getNameIdentifier getType getValue getAssignments]
                                                                                }
 // the lexer should determine if operating in a state of declare and provide a difference response for the discovered variable name
 globalVariable ::=                          GLOBAL_VARIABLE_NAME
@@ -256,11 +254,9 @@ booleanStatement ::=                        query (BOOLEAN_OPERATOR query)+
 // The equationStatement uses a conditional operator (like ==, >=, <=) to split the statement
 // it only allows a left-hand and right-hand query, both should be resolved to boolean type
 equationStatement ::=                       query CONDITIONAL_OPERATOR query
-{                                               methods=[getOpposite]
-                                                implements="com.misset.opp.omt.psi.resolvable.OMTQueryResolvable"
+                                            {   implements="com.misset.opp.omt.psi.resolvable.OMTEquationStatementResolvable"
                                                 mixin="com.misset.opp.omt.psi.resolvable.impl.OMTEquationStatementResolvableImpl"
-                                                extends=query
-                                                }
+                                                extends=query }
 // The negated statement detects the usage of the NOT operator
 // This can be used as '.. / NOT IN (...)' OR '.. / NOT'. In the former the negation is based on the subsequent
 // query whereas the latter it's based on the preceding query

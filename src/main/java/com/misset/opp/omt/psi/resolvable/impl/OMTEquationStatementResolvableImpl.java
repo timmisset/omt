@@ -33,6 +33,13 @@ public abstract class OMTEquationStatementResolvableImpl extends OMTQueryImpl im
     }
 
     @Override
+    public OMTQuery getOpposite(OMTQuery query) {
+        return getQueryList().stream().filter(
+                query1 -> query != query1
+        ).findFirst().orElse(null);
+    }
+
+    @Override
     public List<Resource> filter(List<Resource> resources) {
         final List<Resource> compareTo = new ArrayList<>();
 
