@@ -194,7 +194,7 @@ public class ProjectUtil {
 
 
     private void registerPrefixes(OMTFile file) {
-        file.getPrefixes().forEach((namespacePrefix, omtPrefix) -> Arrays.asList(omtPrefix.getNamespacePrefix().getName(), omtPrefix.getNamespaceIri().getNamespace())
+        file.getPrefixes().forEach((namespacePrefix, omtPrefix) -> Arrays.asList(omtPrefix.getNamespacePrefix().getName(), omtPrefix.getNamespaceIri().getName())
                 .forEach(key -> {
                     // register the prefix by namespace and prefix
                     ArrayList<OMTPrefix> prefixes = knownPrefixes.getOrDefault(key, new ArrayList<>());

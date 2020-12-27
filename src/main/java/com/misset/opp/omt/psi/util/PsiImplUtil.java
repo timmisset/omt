@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -29,46 +28,9 @@ public class PsiImplUtil {
         return omtCommandsBlock.getDefineCommandStatementList().stream().map(statement -> (OMTDefinedStatement) statement).collect(Collectors.toList());
     }
 
-    public static String getName(OMTMemberListItem memberListItem) {
-        return memberListItem.getMember() == null ? "" : memberListItem.getMember().getName();
-    }
-
-    public static String getName(OMTSequenceItem sequenceItem) {
-        if (sequenceItem.getScalarValue() != null) {
-            final OMTScalarValue scalarValue = sequenceItem.getScalarValue();
-            if (scalarValue.getParameterWithType() != null) {
-                return scalarValue.getParameterWithType().getVariable().getName();
-            }
-            if (scalarValue.getVariableAssignment() != null) {
-                return scalarValue.getVariableAssignment().getVariableList().get(0).getName();
-            }
-            if (scalarValue.getQuery() != null) {
-                return scalarValue.getQuery().getText();
-            }
-            if (scalarValue.getIndentedBlock() != null) {
-                // a name can only be returned for a scalar value when the block contains the name: property
-                return scalarValue.getIndentedBlock().getBlockEntryList()
-                        .stream().filter(
-                                blockEntry ->
-                                        blockEntry instanceof OMTGenericBlock &&
-                                                blockEntry.getName().equals("name"))
-                        .map(blockEntry -> ((OMTGenericBlock) blockEntry).getScalar())
-                        .filter(Objects::nonNull)
-                        .map(omtScalar -> omtScalar.getText().trim())
-                        .findFirst()
-                        .orElse(null);
-            }
-        }
-        return null;
-    }
-
     // ////////////////////////////////////////////////////////////////////////////
     // Prefixes
     // ////////////////////////////////////////////////////////////////////////////
-
-    public static boolean isDefinedByPrefix(OMTCurieElement curieElement, OMTPrefix prefix) {
-        return curieElement.getText().startsWith(prefix.getNamespacePrefix().getText());
-    }
 
     public static boolean isDefinedByPrefix(OMTParameterType parameterType, OMTPrefix prefix) {
         return parameterType.getText().startsWith(prefix.getNamespacePrefix().getText());
@@ -82,10 +44,6 @@ public class PsiImplUtil {
     public static String getNamespace(OMTNamespaceIri namespaceIri) {
         String name = namespaceIri.getText();
         return name.substring(name.indexOf("<") + 1, name.indexOf(">"));
-    }
-
-    public static String getName(OMTPrefix prefix) {
-        return String.format("%s:%s", prefix.getNamespacePrefix().getName(), prefix.getNamespaceIri().getNamespace());
     }
 
     /**
