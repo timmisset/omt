@@ -21,7 +21,7 @@ import static com.misset.opp.omt.psi.util.UtilManager.getVariableUtil;
 public abstract class OMTVariableImpl extends NameIdentifierOwnerImpl<OMTVariable> implements OMTVariableNamedElement {
 
     public OMTVariableImpl(@NotNull ASTNode node) {
-        super(node);
+        super(node, OMTVariable.class);
     }
 
     @NotNull

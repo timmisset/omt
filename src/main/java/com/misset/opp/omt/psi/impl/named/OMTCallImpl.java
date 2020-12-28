@@ -18,7 +18,7 @@ import static com.misset.opp.omt.psi.util.UtilManager.getMemberUtil;
 public abstract class OMTCallImpl extends MemberNamedElementImpl<OMTCall> implements OMTCall {
 
     public OMTCallImpl(@NotNull ASTNode node) {
-        super(node);
+        super(node, OMTCall.class);
     }
 
     @NotNull

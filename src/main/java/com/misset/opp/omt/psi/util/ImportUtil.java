@@ -46,7 +46,7 @@ public class ImportUtil {
         // The fixture will copy files in a temp memory index only so the files do not exist
         // and thus cannot be resolved. Also there is no method to stub this behavior since
         // most of the process is performed using static classes
-        // ugly solition: defer the virtualfile via the FilenameIndex:
+        // ugly solution: defer the VirtualFile via the FilenameIndex:
         if (importingFile.getUrl().startsWith("temp:///")) {
             String[] split = importLocation.split("/");
             final PsiFile[] filesByName = FilenameIndex.getFilesByName(omtImport.getProject(), split[split.length - 1], GlobalSearchScope.allScope(omtImport.getProject()));
@@ -92,10 +92,6 @@ public class ImportUtil {
             module = module.substring(MODULE.length());
         }
         return String.format("frontend/libs/%s/src/%s.module.omt", module, module);
-    }
-
-    public OMTFile getFile(OMTImport omtImport) {
-        return getFile(omtImport, omtImport.getContainingFile());
     }
 
     public OMTFile getFile(OMTImport omtImport, PsiFile originalFile) {

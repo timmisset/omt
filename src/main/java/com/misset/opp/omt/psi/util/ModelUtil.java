@@ -1,4 +1,4 @@
-package com.misset.opp.omt.psi.util;//package com.misset.opp.omt.domain.util;
+package com.misset.opp.omt.psi.util;
 
 import com.google.gson.JsonObject;
 import com.intellij.lang.ASTNode;
@@ -18,14 +18,14 @@ import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
 
 public class ModelUtil {
     private static final String ATTRIBUTES = "attributes";
-    private static final String MAPOF = "mapOf";
+    private static final String MAP_OF = "mapOf";
     private static final String MAP = "map";
     private static final String NODE = "node";
     private static final String TYPE = "type";
     private static final String DEF = "Def";
 
     /**
-     * Returns the modelitem block containing the element, for example an Activity or Procedure block
+     * Returns the ModelItem block containing the element, for example an Activity or Procedure block
      */
     public Optional<OMTModelItemBlock> getModelItemBlock(PsiElement element) {
         if (element instanceof OMTModelItemBlock) {
@@ -43,7 +43,7 @@ public class ModelUtil {
 
     public Optional<OMTBlockEntry> getModelItemBlockEntry(PsiElement element, String propertyLabel) {
         Optional<OMTModelItemBlock> modelItemBlock = getModelItemBlock(element);
-        if (!modelItemBlock.isPresent()) {
+        if (modelItemBlock.isEmpty()) {
             return Optional.empty();
         }
 
@@ -83,7 +83,7 @@ public class ModelUtil {
     }
 
     /**
-     * Returns the label of the block entry that is part of the root level attributes of the modelitem (MyActivity)
+     * Returns the label of the block entry that is part of the root level attributes of the ModelItem (MyActivity)
      * model:
      * MyActivity: !Activity
      * payload:
@@ -95,15 +95,12 @@ public class ModelUtil {
     }
 
     /**
-     * Returns the model item entry of the element
+     * Returns the ModelItem entry of the element
      * model:
      * MyActivity: !Activity
      * payload:
      * myPayloadParameter: myValue
      * will return payload for myValue
-     *
-     * @param element
-     * @return
      */
     public OMTBlockEntry getModelItemBlockEntry(PsiElement element) {
         return (OMTBlockEntry) PsiTreeUtil.findFirstParent(element, parent ->
@@ -132,7 +129,7 @@ public class ModelUtil {
 
     public boolean isMapNode(JsonObject jsonInfo) {
         return jsonInfo.has(NODE) && jsonInfo.get(NODE).getAsString().equals(MAP) ||
-                jsonInfo.has(MAPOF);
+                jsonInfo.has(MAP_OF);
     }
 
     public List<String> getLocalCommands(PsiElement element) {
@@ -197,8 +194,8 @@ public class ModelUtil {
     }
 
     private JsonObject addMapOfKeyElements(JsonObject member, List<JsonObject> branch) {
-        while (member.has(MAPOF)) {
-            String type = member.get(MAPOF).getAsString();
+        while (member.has(MAP_OF)) {
+            String type = member.get(MAP_OF).getAsString();
             if (type.endsWith(DEF)) {
                 member = getAttributes(type.substring(0, type.length() - 3));
                 branch.add(member);
@@ -238,7 +235,7 @@ public class ModelUtil {
 
     /**
      * use depth: -1 to get the last item in the tree
-     * only use this to get the exact modeltree information
+     * only use this to get the exact ModelTree information
      * for example, to get the Payload: mapOf PayloadPropertyDef information (combine with getModelDepth)
      * To know what attributes a payload property has, use getJson instead
      */
@@ -251,7 +248,7 @@ public class ModelUtil {
     }
 
     /**
-     * returns the level this item has in the model by looking at the entryblock
+     * returns the level this item has in the model by looking at the EntryBlock
      * 0 based, meaning an entry at the model root,like title, will receive level 0.
      * a payload item will receive 1 etc
      */

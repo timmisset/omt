@@ -8,12 +8,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class NameIdentifierOwnerImpl<T extends PsiElement> extends ASTWrapperPsiElement implements PsiNameIdentifierOwner {
-    public NameIdentifierOwnerImpl(@NotNull ASTNode node) {
+    private final Class<T> clazz;
+
+    public NameIdentifierOwnerImpl(@NotNull ASTNode node, Class<T> clazz) {
         super(node);
+        this.clazz = clazz;
     }
 
     protected T getPsi() {
-        return (T) getNode().getPsi();
+        return clazz.cast(getNode().getPsi());
     }
 
     @Nullable

@@ -50,7 +50,7 @@ public class ScriptUtil {
         return items;
     }
 
-    public <T> List<T> getRelatableElements(PsiElement element, Class<T> type, Predicate<T> condition) {
+    public <T extends PsiElement> List<T> getRelatableElements(PsiElement element, Class<T> type, Predicate<T> condition) {
         List<T> items = new ArrayList<>();
         if (!PsiElement.class.isAssignableFrom(type)) {
             return items;
@@ -58,7 +58,7 @@ public class ScriptUtil {
         OMTScriptLine currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTScriptLine);
         while (currentScriptLine != null) {
             getPrecedingScriptLines(currentScriptLine)
-                    .forEach(scriptLine -> PsiTreeUtil.findChildrenOfType(scriptLine, (Class<? extends PsiElement>) type)
+                    .forEach(scriptLine -> PsiTreeUtil.findChildrenOfType(scriptLine, type)
                             .stream()
                             .map(type::cast)
                             .filter(condition)
@@ -125,7 +125,7 @@ public class ScriptUtil {
     public boolean isBefore(PsiElement isElement, PsiElement beforeElement) {
         List<OMTScriptLine> scriptLinesAtSameDepth = getScriptLinesAtSameDepth(isElement, beforeElement);
         if (scriptLinesAtSameDepth.isEmpty()) {
-            throw new Error("Cannot resolve scriptlines for elements");
+            return false;
         }
         return scriptLinesAtSameDepth.get(0).getStartOffsetInParent() <
                 scriptLinesAtSameDepth.get(1).getStartOffsetInParent();

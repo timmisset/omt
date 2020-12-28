@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class OMTModelItemLabelImpl extends MemberNamedElementImpl<OMTModelItemLabel> implements OMTModelItemLabel {
 
   public OMTModelItemLabelImpl(@NotNull ASTNode node) {
-    super(node);
+    super(node, OMTModelItemLabel.class);
   }
 
   @Override

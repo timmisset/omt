@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public abstract class OMTNamespacePrefixNamedElementImpl extends NameIdentifierOwnerImpl<OMTNamespacePrefix> implements OMTNamespacePrefixNamedElement {
     public OMTNamespacePrefixNamedElementImpl(@NotNull ASTNode node) {
-        super(node);
+        super(node, OMTNamespacePrefix.class);
     }
 
     @Nullable
@@ -34,6 +34,7 @@ public abstract class OMTNamespacePrefixNamedElementImpl extends NameIdentifierO
     }
 
     @Override
+    @NotNull
     public String getName() {
         String prefix = getPsi().getText();
         prefix = prefix.endsWith(":") ? prefix.substring(0, prefix.length() - 1) : prefix;

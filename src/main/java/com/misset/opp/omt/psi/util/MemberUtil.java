@@ -67,7 +67,6 @@ public class MemberUtil {
         Optional<OMTMember> importedMember = importedMembers.stream()
                 .filter(member ->
                         member != null &&
-                                member.getName() != null &&
                                 member.getName().trim().equals(nameIdentifier))
                 .findFirst();
         if (importedMember.isPresent()) {
