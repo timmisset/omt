@@ -54,7 +54,7 @@ public class ModelCompletion extends OMTCompletion {
     }
 
     public CompletionProvider<CompletionParameters> getCompletionProvider(boolean fromBlockParent) {
-        return new CompletionProvider<CompletionParameters>() {
+        return new CompletionProvider<>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                 setAttributeSuggestions(parameters.getPosition(), fromBlockParent);

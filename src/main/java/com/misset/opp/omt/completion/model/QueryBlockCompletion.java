@@ -50,7 +50,7 @@ public class QueryBlockCompletion extends OMTCompletion {
     // <caret>              <-- not valid
 
     private static final PatternCondition<PsiElement> DEFINE_QUERY_STATEMENT_EXPECTED_PATTERN =
-            new PatternCondition<PsiElement>("Define Query Statement expected") {
+            new PatternCondition<>("Define Query Statement expected") {
                 @Override
                 public boolean accepts(@NotNull PsiElement element, ProcessingContext context) {
                     final PsiElement parent = element.getParent();
@@ -71,7 +71,7 @@ public class QueryBlockCompletion extends OMTCompletion {
     }
 
     public CompletionProvider<CompletionParameters> getCompletionProvider() {
-        return new CompletionProvider<CompletionParameters>() {
+        return new CompletionProvider<>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                 setQueryTemplates();

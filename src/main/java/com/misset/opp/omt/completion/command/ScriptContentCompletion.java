@@ -29,7 +29,7 @@ public class ScriptContentCompletion extends RDFCompletion {
     }
 
     public CompletionProvider<CompletionParameters> getCompletionProvider() {
-        return new CompletionProvider<CompletionParameters>() {
+        return new CompletionProvider<>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                 PsiElement element = parameters.getPosition();

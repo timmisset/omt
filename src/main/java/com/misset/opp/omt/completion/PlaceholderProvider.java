@@ -106,9 +106,8 @@ public class PlaceholderProvider {
         return expectedTypes;
     }
 
-    private boolean setPlaceholder(String placeholder) {
+    private void setPlaceholder(String placeholder) {
         this.placeholder = placeholder;
-        return true;
     }
 
     private PsiErrorElement getErrorElement() {
@@ -125,15 +124,18 @@ public class PlaceholderProvider {
         }
         final List<String> expectedTypesFromError = getExpectedTypesFromError(errorElement);
         if (expectedTypesFromError.contains(EXPECTED_MODEL_ITEM_TYPE)) {
-            return setPlaceholder(PROVIDE_MODEL_ITEM_TYPE);
+            setPlaceholder(PROVIDE_MODEL_ITEM_TYPE);
+            return true;
         }
         if (expectedTypesFromError.contains(EXPECTED_BLOCK) ||
                 expectedTypesFromError.contains(EXPECTED_MODEL_ITEM_BLOCK)) {
-            return setPlaceholder(PROVIDE_MODEL_ENTRY);
+            setPlaceholder(PROVIDE_MODEL_ENTRY);
+            return true;
         }
         if (expectedTypesFromError.contains(EXPECTED_QUERY) ||
                 expectedTypesFromError.contains(EXPECTED_QUERY_STEP)) {
-            return setPlaceholder(PROVIDE_QUERY);
+            setPlaceholder(PROVIDE_QUERY);
+            return true;
         }
         return false;
     }

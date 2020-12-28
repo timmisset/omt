@@ -25,7 +25,7 @@ public class ParameterTypeCompletion extends RDFCompletion {
     }
 
     public CompletionProvider<CompletionParameters> getCompletionProvider() {
-        return new CompletionProvider<CompletionParameters>() {
+        return new CompletionProvider<>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                 // The first step of the query will suggest starting points of the query
