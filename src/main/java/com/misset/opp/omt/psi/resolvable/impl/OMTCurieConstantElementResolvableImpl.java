@@ -2,13 +2,14 @@ package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.psi.OMTCurieConstantElement;
+import com.misset.opp.omt.psi.OMTCurieElement;
 import com.misset.opp.omt.psi.impl.OMTQueryStepImpl;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
@@ -20,20 +21,22 @@ public abstract class OMTCurieConstantElementResolvableImpl extends OMTQueryStep
 
     @Override
     public List<Resource> resolveToResource() {
-        if (getCurieElement() == null) {
-            return new ArrayList<>();
-        }
         return filter(Collections.singletonList(getCurieElement().getAsResource()));
     }
 
     @Override
     public boolean isType() {
-        return getCurieElement() != null &&
-                getRDFModelUtil().isClassOrType(getCurieElement().getAsResource());
+        return getRDFModelUtil().isClassOrType(getCurieElement().getAsResource());
     }
 
     @Override
     public boolean canLookBack() {
         return false;
+    }
+
+    @NotNull
+    @Override
+    public OMTCurieElement getCurieElement() {
+        return Objects.requireNonNull(super.getCurieElement());
     }
 }

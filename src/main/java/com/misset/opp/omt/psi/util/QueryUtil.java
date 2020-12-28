@@ -62,7 +62,7 @@ public class QueryUtil {
     /**
      * Returns the previous step that is able to pass the type to the current step
      * /ont:ClassA / rdf:type / CURRENT_STEP                will be the result of rdf:type which will get the result of /ont:ClassA
-     * /ont:ClassA / rdf:type / (CURRENT_STEP)*             will resolve to it's parent (Subquery) and then the previous step
+     * /ont:ClassA / rdf:type / (CURRENT_STEP)*             will resolve to it's parent (SubQuery) and then the previous step
      * $myVariable [rdf:type == CURRENT_STEP]               CURRENT_STEP is the start of it's own query path, will return the types of the step that contains the filter
      * $myVariable / SOME_OPERATOR(CURRENT_STEP)            Contained in a signature argument, cannot inherit types
      */
@@ -75,7 +75,7 @@ public class QueryUtil {
                 // resolve the filter
                 return getPreviousStepResources((OMTQueryFilter) container);
             } else if (container instanceof OMTSubQuery) {
-                // resolve the step before the subquery
+                // resolve the step before the SubQuery
                 return getPreviousStepResources(container);
             }
             // OMTSignatureArgument doesn't inherit values from it's previous step
@@ -101,14 +101,17 @@ public class QueryUtil {
         return previous.isType();
     }
 
+    @SafeVarargs
     private PsiElement getPreviousSibling(PsiElement element, Class<? extends PsiElement>... ofTypes) {
         return getElementOrContinueWith(element, PsiElement::getPrevSibling, ofTypes);
     }
 
+    @SafeVarargs
     private PsiElement getParent(PsiElement element, Class<? extends PsiElement>... ofTypes) {
         return getElementOrContinueWith(element, PsiElement::getParent, ofTypes);
     }
 
+    @SafeVarargs
     private PsiElement getElementOrContinueWith(PsiElement element, UnaryOperator<PsiElement> continueWith, Class<? extends PsiElement>... ofTypes) {
         if (element == null) {
             return null;
@@ -120,6 +123,7 @@ public class QueryUtil {
         return continueWithElement;
     }
 
+    @SafeVarargs
     private boolean isAssignableFrom(PsiElement element, Class<? extends PsiElement>... ofTypes) {
         for (Class<? extends PsiElement> clazz : ofTypes) {
             if (clazz.isAssignableFrom(element.getClass())) {

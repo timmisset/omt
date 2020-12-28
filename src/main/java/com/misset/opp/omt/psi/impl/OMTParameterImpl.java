@@ -26,10 +26,6 @@ public class OMTParameterImpl implements OMTParameter {
         this(variable, null, required);
     }
 
-    public OMTParameterImpl(OMTVariable variable, Object defaultValue) {
-        this(variable, defaultValue, true);
-    }
-
     public OMTParameterImpl(OMTVariable variable, Object defaultValue, boolean required) {
         this.variable = variable;
         this.defaultValue = defaultValue;

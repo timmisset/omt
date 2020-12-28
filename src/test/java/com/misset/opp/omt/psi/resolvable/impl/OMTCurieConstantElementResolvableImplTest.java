@@ -11,8 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 
-import java.util.Collections;
-
 import static org.mockito.Mockito.*;
 
 class OMTCurieConstantElementResolvableImplTest extends OMTTestSuite {
@@ -33,12 +31,6 @@ class OMTCurieConstantElementResolvableImplTest extends OMTTestSuite {
     void canBeInstantiated() {
         curieConstantElement = new OMTCurieConstantElementImpl(mock(ASTNode.class));
         assertNotNull(curieConstantElement);
-    }
-
-    @Test
-    void resolveToResourceReturnsEmptyListWhenNoCurieElement() {
-        doReturn(null).when(curieConstantElement).getCurieElement();
-        assertEquals(Collections.EMPTY_LIST, curieConstantElement.resolveToResource());
     }
 
     @Test

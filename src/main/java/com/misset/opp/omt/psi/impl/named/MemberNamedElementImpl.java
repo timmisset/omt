@@ -7,8 +7,8 @@ import com.misset.opp.omt.psi.named.OMTMemberNamedElement;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class MemberNamedElementImpl<T extends PsiElement> extends NameIdentifierOwnerImpl<T> implements OMTMemberNamedElement {
-    public MemberNamedElementImpl(@NotNull ASTNode node) {
-        super(node);
+    public MemberNamedElementImpl(@NotNull ASTNode node, Class<T> clazz) {
+        super(node, clazz);
     }
 
     @NotNull
@@ -16,5 +16,17 @@ public abstract class MemberNamedElementImpl<T extends PsiElement> extends NameI
     public PsiReference[] getReferences() {
         PsiReference reference = getReference();
         return reference == null ? new PsiReference[0] : new PsiReference[]{reference};
+    }
+
+    @Override
+    @NotNull
+    public String getName() {
+        return getText();
+    }
+
+    @NotNull
+    @Override
+    public PsiElement getNameIdentifier() {
+        return this;
     }
 }

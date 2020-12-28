@@ -122,7 +122,7 @@ public class OMTFile extends PsiFileBase {
 
     public Map<OMTImport, VirtualFile> getImportedFiles() {
         Optional<OMTImportBlock> importBlock = getSpecificBlock(IMPORT, OMTImportBlock.class);
-        if (!importBlock.isPresent()) {
+        if (importBlock.isEmpty()) {
             return new HashMap<>();
         }
 
@@ -235,28 +235,28 @@ public class OMTFile extends PsiFileBase {
         }
     }
 
-    public OMTPrefixBlock setRootBlock(OMTPrefixBlock prefixBlock) {
+    public void setRootBlock(OMTPrefixBlock prefixBlock) {
         if (prefixBlock == null) {
-            return null;
+            return;
         }
-        return setRootBlock(prefixBlock, PREFIXES);
+        setRootBlock(prefixBlock, PREFIXES);
     }
 
-    public OMTImportBlock setRootBlock(OMTImportBlock importBlock) {
+    public void setRootBlock(OMTImportBlock importBlock) {
         if (importBlock == null) {
-            return null;
+            return;
         }
-        return setRootBlock(importBlock, IMPORT);
+        setRootBlock(importBlock, IMPORT);
     }
 
-    private <T> T setRootBlock(OMTBlockEntry blockEntry, String rootLabel) {
+    private void setRootBlock(OMTBlockEntry blockEntry, String rootLabel) {
         Optional<OMTBlockEntry> rootBlock = getRootBlock(rootLabel);
         if (rootBlock.isPresent()) {
-            return (T) rootBlock.get().replace(blockEntry);
+            rootBlock.get().replace(blockEntry);
         } else {
             // always add the imports to the top of the page
             // add the parent (block entry) to the root block
-            return (T) getRoot().addBefore(blockEntry, getBeforeAnchor(rootLabel));
+            getRoot().addBefore(blockEntry, getBeforeAnchor(rootLabel));
         }
     }
 
@@ -265,7 +265,7 @@ public class OMTFile extends PsiFileBase {
      */
     public boolean hasImportFor(OMTExportMember exportMember) {
         Optional<OMTBlockEntry> imports = getRootBlock(IMPORT);
-        if (!imports.isPresent()) {
+        if (imports.isEmpty()) {
             return false;
         }
         Collection<OMTMember> importingMembers = PsiTreeUtil.findChildrenOfType(imports.get(), OMTMember.class);

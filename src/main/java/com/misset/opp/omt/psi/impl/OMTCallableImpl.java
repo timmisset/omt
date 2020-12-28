@@ -47,10 +47,6 @@ public abstract class OMTCallableImpl implements OMTCallable {
         this(type, name, parameterList, isCommand, localVariables, flags, "any");
     }
 
-    public OMTCallableImpl(String type, String name, List<OMTParameter> parameterList, boolean isCommand) {
-        this(type, name, parameterList, isCommand, new ArrayList<>());
-    }
-
     public OMTCallableImpl(String type, String name, List<OMTParameter> parameterList, boolean isCommand, List<String> localVariables) {
         this(type, name, parameterList, isCommand, localVariables, new ArrayList<>());
     }

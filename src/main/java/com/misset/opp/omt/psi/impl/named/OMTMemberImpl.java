@@ -19,7 +19,7 @@ public abstract class OMTMemberImpl extends MemberNamedElementImpl<OMTMember> im
     private NamedMemberType type;
 
     public OMTMemberImpl(@NotNull ASTNode node) {
-        super(node);
+        super(node, OMTMember.class);
     }
 
     @NotNull

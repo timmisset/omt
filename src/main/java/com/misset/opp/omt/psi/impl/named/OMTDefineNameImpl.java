@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class OMTDefineNameImpl extends MemberNamedElementImpl<OMTDefineName> implements OMTDefineName {
 
     public OMTDefineNameImpl(@NotNull ASTNode node) {
-        super(node);
+        super(node, OMTDefineName.class);
     }
 
     @Override

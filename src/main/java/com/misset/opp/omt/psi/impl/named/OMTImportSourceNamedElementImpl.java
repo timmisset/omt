@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class OMTImportSourceNamedElementImpl extends NameIdentifierOwnerImpl<OMTImportSource> implements OMTImportNamedElement {
     public OMTImportSourceNamedElementImpl(@NotNull ASTNode node) {
-        super(node);
+        super(node, OMTImportSource.class);
     }
 
     @Nullable
@@ -32,5 +32,11 @@ public abstract class OMTImportSourceNamedElementImpl extends NameIdentifierOwne
     @Override
     public PsiElement setName(@NotNull String name) {
         return replace(OMTElementFactory.createImportSource(getProject(), name));
+    }
+
+    @Override
+    @NotNull
+    public String getName() {
+        return getText();
     }
 }

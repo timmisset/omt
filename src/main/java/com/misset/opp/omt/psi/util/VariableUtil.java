@@ -27,7 +27,7 @@ public class VariableUtil {
     private static final String NAME = "name";
 
     private static final String GLOBAL_VARIABLE_USERNAME = "$username";
-    private static final String GLOBAL_VARIABLE_MEDEWERKERGRAPH = "$medewerkerGraph";
+    private static final String GLOBAL_VARIABLE_MEDEWERKER_GRAPH = "$medewerkerGraph";
     private static final String GLOBAL_VARIABLE_OFFLINE = "$offline";
 
     public Optional<OMTVariable> getFirstAppearance(OMTVariable variable, PsiElement container) {
@@ -206,7 +206,7 @@ public class VariableUtil {
 
     public List<Resource> getType(OMTVariable variable, String propertyLabel) {
         final Optional<OMTBlockEntry> blockEntry = getModelUtil().getModelItemBlockEntry(variable, propertyLabel);
-        if (!blockEntry.isPresent()) {
+        if (blockEntry.isEmpty()) {
             return new ArrayList<>();
         }
 
@@ -334,12 +334,12 @@ public class VariableUtil {
     }
 
     public List<String> getGlobalVariables() {
-        return Arrays.asList(GLOBAL_VARIABLE_USERNAME, GLOBAL_VARIABLE_MEDEWERKERGRAPH, GLOBAL_VARIABLE_OFFLINE);
+        return Arrays.asList(GLOBAL_VARIABLE_USERNAME, GLOBAL_VARIABLE_MEDEWERKER_GRAPH, GLOBAL_VARIABLE_OFFLINE);
     }
 
     public List<String> getGlobalVariables(Resource type) {
         if (type.equals(getRDFModelUtil().getAnyType())) {
-            return Arrays.asList(GLOBAL_VARIABLE_USERNAME, GLOBAL_VARIABLE_MEDEWERKERGRAPH, GLOBAL_VARIABLE_OFFLINE);
+            return Arrays.asList(GLOBAL_VARIABLE_USERNAME, GLOBAL_VARIABLE_MEDEWERKER_GRAPH, GLOBAL_VARIABLE_OFFLINE);
         }
         if (type.equals(getRDFModelUtil().getBooleanType())) {
             return Collections.singletonList(GLOBAL_VARIABLE_OFFLINE);
