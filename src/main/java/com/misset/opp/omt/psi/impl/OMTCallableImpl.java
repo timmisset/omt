@@ -9,7 +9,6 @@ import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
-import com.misset.opp.omt.util.RDFModelUtil;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.*;
@@ -29,7 +28,6 @@ public abstract class OMTCallableImpl implements OMTCallable {
 
     private String description;
 
-    private RDFModelUtil rdfModelUtil;
     public OMTCallableImpl(String type, boolean isCommand) {
         this.type = type;
         this.isCommand = isCommand;

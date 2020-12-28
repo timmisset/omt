@@ -16,6 +16,7 @@ import java.util.Stack;
 %function advance
 %type IElementType
 %column
+%line
 
 %eof{  return;
 %eof}
@@ -58,6 +59,7 @@ INITIAL_TOKENS=                {PROPERTY_KEY} | "-" | {JDSTART}    // the valid 
 %{
 /* globals to track current indentation */
 int yycolumn;
+int yyline;
 Stack<Integer> indents = new Stack();
 void log(String message) {
     if(logging) { System.out.println(message); }
@@ -165,14 +167,16 @@ void setTemplateInScalar(boolean state) {
 * Returns an indent, dedent or whitespace for the current leading space
 * @return
 */
+int lastIndentLine = -1;
 IElementType dent(IElementType returnType) {
     int indentAtToken = indentAtToken();
     int currentIndentation = currentIndentation();
     int nonWhitespaceSize = currentNonWhiteSpaceSize();
 
-    if(indentAtToken > currentIndentation) {
+    if(indentAtToken > currentIndentation && yyline > lastIndentLine) {
         yypushback(nonWhitespaceSize, "nwst");                          // pushback the non-whitespace token
         indents.push(indentAtToken);                                    // register the indentation
+        lastIndentLine = yyline;                                        // keep track of the last indented line, no supported for multiple indentations on the same line
         return returnElement(getIndent());                              // return whitespace as indent
     } else if (indentAtToken < currentIndentation) {
         indents.pop();                                                  // remove the current indentation
@@ -185,6 +189,12 @@ IElementType dent(IElementType returnType) {
         }                                                               // for another dedent token to be returned
         return returnElement(getDedent());                              // return whitespace as dedent
     } else {
+        if(returnType == OMTTypes.SEQUENCE_BULLET) {
+            // only for sequence items, an additional indentation is accepted for destructed elements
+            // -    property:
+            //      anotherProperty:
+            lastIndentLine -= 1;
+        }
         return returnLeadingWhitespaceFirst(returnType);                // return the actual element
     }
 }

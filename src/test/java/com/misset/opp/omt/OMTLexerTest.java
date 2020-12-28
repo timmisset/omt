@@ -329,5 +329,13 @@ class OMTLexerTest {
         );
     }
 
+    @Test
+    void testAdjecentPrefixes() {
+        String contentToTest = "prefixes:\n" +
+                "    ont:     <http://ontologie> ont2: <http://ontologie2>";
+        System.out.println(
+                String.join("\n", getElements(contentToTest))
+        );
+    }
 
 }
