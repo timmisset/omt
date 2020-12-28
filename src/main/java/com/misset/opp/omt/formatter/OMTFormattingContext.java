@@ -85,6 +85,7 @@ public class OMTFormattingContext {
                 .around(IMPORT).blankLines(0)
                 .around(IMPORT_SOURCE).blankLines(0)
                 .aroundInside(MEMBER_LIST_ITEM, MEMBER_LIST).blankLines(0)
+                .aroundInside(PREFIX, PREFIX_BLOCK).blankLines(0)
                 ;
     }
 

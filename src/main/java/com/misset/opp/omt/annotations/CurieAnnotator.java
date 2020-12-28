@@ -4,6 +4,7 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.intentions.prefix.RegisterPrefixIntention;
 import com.misset.opp.omt.psi.OMTCurieElement;
+import com.misset.opp.omt.psi.OMTNamespaceIri;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
 import com.misset.opp.omt.psi.OMTPrefix;
 
@@ -31,7 +32,7 @@ public class CurieAnnotator extends AbstractAnnotator {
                     annotationBuilder -> getProjectUtil().getKnownPrefixes(namespacePrefix.getName())
                             .stream()
                             .map(OMTPrefix::getNamespaceIri)
-                            .map(PsiElement::getText)
+                            .map(OMTNamespaceIri::getName)
                             .distinct()
                             .map(iri -> RegisterPrefixIntention.getRegisterPrefixIntention(namespacePrefix, iri))
                             .forEach(annotationBuilder::withFix)

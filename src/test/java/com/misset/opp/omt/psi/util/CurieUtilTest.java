@@ -3,11 +3,15 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.misset.opp.omt.OMTTestSuite;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.ExampleFiles;
+import com.misset.opp.omt.psi.OMTCurieElement;
+import com.misset.opp.omt.psi.OMTNamespacePrefix;
+import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.util.ProjectUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +26,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.mock;
 
 class CurieUtilTest extends OMTTestSuite {
 
@@ -30,6 +34,9 @@ class CurieUtilTest extends OMTTestSuite {
     AnnotationHolder annotationHolder;
     @Mock
     AnnotationBuilder annotationBuilder;
+    @Mock
+    OMTNamespacePrefix namespacePrefix;
+
     @Spy
     ProjectUtil projectUtil;
 
@@ -38,11 +45,6 @@ class CurieUtilTest extends OMTTestSuite {
 
     private ExampleFiles exampleFiles;
     PsiElement rootBlock;
-
-    private OMTNamespacePrefix abcDeclared;
-    private OMTNamespacePrefix abcUsage;
-    private OMTNamespacePrefix def;
-    private OMTNamespacePrefix ghi;
 
     @BeforeEach
     @Override
@@ -70,113 +72,83 @@ class CurieUtilTest extends OMTTestSuite {
     }
 
     @Test
-    void testGetDefinedByPrefixForOMTParameterType() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTParameterType parameterType = exampleFiles.getPsiElementFromRootDocument(OMTParameterType.class, rootBlock);
-            Optional<OMTPrefix> definedByPrefix = curieUtil.getDefinedByPrefix(parameterType.getNamespacePrefix());
+    void getDefinedByPrefixReturnsEmptyWhenPrefix() {
+        doReturn(mock(OMTPrefix.class)).when(namespacePrefix).getParent();
+        assertTrue(curieUtil.getDefinedByPrefix(namespacePrefix).isEmpty());
+    }
 
-            assertTrue(definedByPrefix.isPresent());
-            assertEquals(definedByPrefix.get().getNamespacePrefix().getName(), parameterType.getNamespacePrefix().getName());
+    @Test
+    void getDefinedByPrefixReturnsPrefixFromRoot() {
+        String content = "" +
+                "prefixes:\n" +
+                "   ont: <http://ontologie>\n" +
+                "queries: |\n" +
+                "   DEFINE QUERY query => /ont:ClassA;";
+        myFixture.configureByText(getFileName(), content);
+        ReadAction.run(() -> {
+            final OMTCurieElement curieElement = myFixture.findElementByText("ont:ClassA", OMTCurieElement.class);
+            final Optional<OMTPrefix> definedByPrefix = curieUtil.getDefinedByPrefix(curieElement.getNamespacePrefix());
+            definedByPrefix.get().getNamespaceIri().getName().equals("http://ontologie");
         });
     }
 
     @Test
-    void testGetDefinedByPrefixForOMTCurieElement() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCurieElement curieElement = exampleFiles.getPsiElementFromRootDocument(OMTCurieElement.class, rootBlock);
-            Optional<OMTPrefix> definedByPrefix = curieUtil.getDefinedByPrefix(curieElement.getNamespacePrefix());
-
-            assertTrue(definedByPrefix.isPresent());
-            assertEquals(definedByPrefix.get().getNamespacePrefix().getName(), curieElement.getNamespacePrefix().getName());
+    void getDefinedByPrefixReturnsPrefixFromModel() {
+        String content = "" +
+                "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       prefixes:\n" +
+                "           ont: <http://ontologie>\n" +
+                "       queries: |\n" +
+                "           DEFINE QUERY query => /ont:ClassA;";
+        myFixture.configureByText(getFileName(), content);
+        ReadAction.run(() -> {
+            final OMTCurieElement curieElement = myFixture.findElementByText("ont:ClassA", OMTCurieElement.class);
+            final Optional<OMTPrefix> definedByPrefix = curieUtil.getDefinedByPrefix(curieElement.getNamespacePrefix());
+            definedByPrefix.get().getNamespaceIri().getName().equals("http://ontologie");
         });
     }
 
     @Test
-    void getPrefixBlockReturnsExisting() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCurieElement curieElement = exampleFiles.getPsiElementFromRootDocument(OMTCurieElement.class, rootBlock);
-            OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
-            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixRootBlock(curieElement);
-            assertEquals(prefixBlock, returnedPrefixBlock);
-        });
-    }
+    void addPrefixToExistingBlock() {
+        String content = "prefixes:\n" +
+                "    ont: <http://ontologie>\n" +
+                "\n" +
+                "model:\n" +
+                "    Activiteit: !Activity\n";
 
-    @Test
-    void getPrefixBlockReturnsExistingWhenNew() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCurieElement curieElement = exampleFiles.getPsiElementFromRootDocument(OMTCurieElement.class, rootBlock);
-            OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
-            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixRootBlock(curieElement);
-            assertEquals(prefixBlock, returnedPrefixBlock);
-        });
-    }
+        String expected = "prefixes:\n" +
+                "    ont:    <http://ontologie>\n" +
+                "    abc:    <http://ontologie.alfabet.nl/abc#>\n" +
+                "\n" +
+                "model:\n" +
+                "    Activiteit: !Activity\n";
 
-    @Test
-    void getPrefixBlockReturnsNull() {
-        PsiElement activityWithoutPrefixBlock = exampleFiles.getActivityWithQueryWatcher();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, activityWithoutPrefixBlock);
-            OMTPrefixBlock returnedPrefixBlock = curieUtil.getPrefixRootBlock(variable);
-            assertNull(returnedPrefixBlock);
-        });
-    }
+        final PsiFile psiFile = myFixture.configureByText(getFileName(), content);
 
-    @Test
-    void addPrefixToBlockFromString() {
         WriteCommandAction.runWriteCommandAction(getProject(), () -> {
-            OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
-            curieUtil.addPrefixToBlock(prefix, "def", "<http://ontologie.alfabet.nl/def#>");
-            OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
-            String asText = prefixBlock.getText();
-            assertSameContent("prefixes:\n" +
-                    "    /**\n" +
-                    "    * Some info about abc\n" +
-                    "    */\n" +
-                    "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
-                    "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#> // and about foaf\n" +
-                    "    def:    <http://ontologie.alfabet.nl/def#>\n" +
-                    "\n", asText);
+            curieUtil.addPrefixToBlock(psiFile, "abc", "http://ontologie.alfabet.nl/abc#");
+            assertEquals(expected, myFixture.getEditor().getDocument().getText());
         });
     }
 
     @Test
-    void addNewPrefixToBlockFromString() {
+    void addPrefixToNewBlock() {
+        String content =
+                "model:\n" +
+                        "    Activiteit: !Activity\n";
+
+        String expected = "prefixes:\n" +
+                "    abc:    <http://ontologie.alfabet.nl/abc#>\n" +
+                "\n" +
+                "model:\n" +
+                "    Activiteit: !Activity\n";
+
+        final PsiFile psiFile = myFixture.configureByText(getFileName(), content);
+
         WriteCommandAction.runWriteCommandAction(getProject(), () -> {
-            OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
-
-            OMTFile file = (OMTFile) spy(prefix.getContainingFile());
-            OMTPrefix prefixSpy = spy(prefix);
-            doReturn(file).when(prefixSpy).getContainingFile();
-            doReturn(Optional.empty()).when(file).getRootBlock("prefixes");
-
-            curieUtil.addPrefixToBlock(prefixSpy, "def", "<http://ontologie.alfabet.nl/def#>");
-            OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
-            String asText = prefixBlock.getText();
-            assertSameContent("prefixes:\n" +
-                    "    def:    <http://ontologie.alfabet.nl/def#>\n" +
-                    "\n", asText);
+            curieUtil.addPrefixToBlock(psiFile, "abc", "http://ontologie.alfabet.nl/abc#");
+            assertEquals(expected, myFixture.getEditor().getDocument().getText());
         });
-    }
-
-    @Test
-    void addPrefixToBlockFromPrefix() {
-        WriteCommandAction.runWriteCommandAction(getProject(), () -> {
-            OMTPrefix prefix = exampleFiles.getPsiElementFromRootDocument(OMTPrefix.class, rootBlock);
-            curieUtil.addPrefixToBlock(prefix, prefix);
-            OMTPrefixBlock prefixBlock = exampleFiles.getPsiElementFromRootDocument(OMTPrefixBlock.class, rootBlock);
-            String asText = prefixBlock.getText();
-            assertSameContent("prefixes:\n" +
-                    "    /**\n" +
-                    "    * Some info about abc\n" +
-                    "    */\n" +
-                    "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
-                    "    foaf:   <http://ontologie.foaf.nl/friendOfAfriend#> // and about foaf\n" +
-                    "    abc:    <http://ontologie.alfabet.nl/alfabet#>\n" +
-                    "\n", asText);
-        });
-    }
-
-    private void assertSameContent(String expected, String value) {
-        assertEquals(expected.replaceAll("\\s+", ""), value.replaceAll("\\s+", ""));
     }
 }

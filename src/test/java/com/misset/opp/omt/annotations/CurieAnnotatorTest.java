@@ -62,7 +62,7 @@ class CurieAnnotatorTest extends OMTAnnotationTest {
         doReturn(reference).when(namespacePrefix).getReference();
         doReturn("prefix").when(namespacePrefix).getName();
         doReturn(namespaceIri).when(knownPrefix).getNamespaceIri();
-        doReturn("http://iri").when(namespaceIri).getText();
+        doReturn("http://iri").when(namespaceIri).getName();
         List<OMTPrefix> knownPrefixes = new ArrayList<>();
         knownPrefixes.add(knownPrefix);
         doReturn(knownPrefixes).when(projectUtil).getKnownPrefixes(anyString());

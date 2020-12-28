@@ -1,4 +1,4 @@
-package com.misset.opp.omt.psi.util;
+package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Computable;
@@ -19,14 +19,14 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-class PsiImplUtilTest extends OMTTestSuite {
+class ResolvableTest extends OMTTestSuite {
 
     private final ExampleFiles exampleFiles = new ExampleFiles(this, myFixture);
 
     @BeforeEach
     @Override
     public void setUp() throws Exception {
-        super.setName("OMTPsiImplUtilTest");
+        super.setName("ResolvableTest");
         super.setUp();
 
         setBuiltinOperators();
