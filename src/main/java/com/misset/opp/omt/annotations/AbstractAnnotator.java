@@ -15,7 +15,7 @@ import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
 public abstract class AbstractAnnotator {
 
-    private AnnotationHolder holder;
+    private final AnnotationHolder holder;
 
     protected AbstractAnnotator(AnnotationHolder holder) {
         this.holder = holder;

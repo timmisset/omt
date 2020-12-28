@@ -51,7 +51,6 @@ public class OMTAnnotator implements Annotator {
         final IElementType elementType = element.getNode().getElementType();
         if (element instanceof LeafPsiElement) {
             annotateLeaf(element, holder);
-            return;
         } else if (QUERY_ANNOTATIONS.contains(elementType)) {
             new QueryAnnotator(holder).annotate(element);
         } else if (IMPORT_ANNOTATIONS.contains(elementType)) {

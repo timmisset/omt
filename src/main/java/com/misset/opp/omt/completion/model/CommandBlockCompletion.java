@@ -31,7 +31,7 @@ public class CommandBlockCompletion extends OMTCompletion {
 
     // See QueryBlockCompletion for details
     private static final PatternCondition<PsiElement> DEFINE_COMMAND_STATEMENT_EXPECTED_PATTERN =
-            new PatternCondition<PsiElement>("Define Command Statement expected") {
+            new PatternCondition<>("Define Command Statement expected") {
                 @Override
                 public boolean accepts(@NotNull PsiElement element, ProcessingContext context) {
                     final PsiElement parent = element.getParent();
@@ -51,7 +51,7 @@ public class CommandBlockCompletion extends OMTCompletion {
     }
 
     public CompletionProvider<CompletionParameters> getCompletionProvider() {
-        return new CompletionProvider<CompletionParameters>() {
+        return new CompletionProvider<>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                 setCommandTemplates();
