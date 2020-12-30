@@ -40,6 +40,8 @@
                                  instance="com.misset.opp.omt.settings.OMTConfigurable">
         </applicationConfigurable>
         <applicationService serviceImplementation="com.misset.opp.omt.settings.OMTSettingsState"/>
+        <toolWindow anchor="right" id="graphViewer" icon="AllIcons.Actions.Search"
+                    factoryClass="com.misset.opp.omt.viewer.GraphToolWindowFactory"/>
     </extensions>
 
     <actions>

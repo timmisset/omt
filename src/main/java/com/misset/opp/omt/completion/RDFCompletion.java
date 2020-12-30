@@ -18,7 +18,7 @@ public abstract class RDFCompletion extends OMTCompletion {
                 resource -> setCurieSuggestion(element, resource, false, CLASSES_PRIORITY, addPathStart)
         );
         Arrays.asList("string", "integer", "boolean", "date").forEach(
-                type -> addPriorityElement("string", 1)
+                type -> addPriorityElement(type, 1)
         );
     }
 

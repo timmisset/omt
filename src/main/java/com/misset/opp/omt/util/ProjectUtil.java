@@ -47,12 +47,17 @@ public class ProjectUtil {
     private Model model;
     private WindowManager windowManager;
     private FileDocumentManager fileDocumentManager;
+    private List<Consumer<RDFModelUtil>> onModelChange = new ArrayList<>();
 
     public ProjectUtil() {
         if (ApplicationManager.getApplication() != null) {
             windowManager = WindowManager.getInstance();
             fileDocumentManager = FileDocumentManager.getInstance();
         }
+    }
+
+    public void addModelChangeListener(Consumer<RDFModelUtil> rdfModelUtilConsumer) {
+        onModelChange.add(rdfModelUtilConsumer);
     }
 
     private RDFModelUtil rdfModelUtil;
@@ -145,6 +150,10 @@ public class ProjectUtil {
         model = new RDFModelUtil(rootFolderPath).readModel();
         updateModelUtil();
         setStatusbarMessage(project, "Finished loading ontology");
+
+        onModelChange.forEach(
+                rdfModelUtilConsumer -> rdfModelUtilConsumer.accept(getRDFModelUtil())
+        );
     }
 
     private void loadBuiltInMembersViaSettingsOrFromFilename(Project project,

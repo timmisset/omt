@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 public class RDFModelUtil {
 
     public static final Property SHACL_PROPERTY = new PropertyImpl("http://www.w3.org/ns/shacl#property");
+    public static final Property SHACL_PROPERTY_SHAPE = new PropertyImpl("http://www.w3.org/ns/shacl#PropertyShape");
     public static final Property SHACL_PATH = new PropertyImpl("http://www.w3.org/ns/shacl#path");
     public static final Property SHACL_CLASS = new PropertyImpl("http://www.w3.org/ns/shacl#class");
     public static final Property SHACL_DATATYPE = new PropertyImpl("http://www.w3.org/ns/shacl#datatype");
@@ -174,8 +175,12 @@ public class RDFModelUtil {
         return lineage;
     }
 
-    public List<Resource> getAllClasses() {
+    public List<Resource> getAllTypes() {
         return model.listSubjectsWithProperty(RDF_TYPE).toList();
+    }
+
+    public List<Resource> getAllClasses() {
+        return model.listSubjectsWithProperty(RDF_TYPE, getOwlClass()).toList();
     }
 
     public List<Resource> allSuperClasses(List<Resource> resources) {
@@ -188,6 +193,23 @@ public class RDFModelUtil {
         return getDistinctResources(resources.stream().map(
                 this::getClassDescendants
         ).flatMap(Collection::stream).distinct().collect(Collectors.toList()));
+    }
+
+    /**
+     * Returns the direct parents only
+     *
+     * @param resource
+     * @return
+     */
+    public List<Resource> getParents(Resource resource) {
+        return resource.listProperties(RDFS_SUBCLASS).toList()
+                .stream().map(statement ->
+                        statement.getObject() != null &&
+                                statement.getObject().asResource() != resource ?
+                                statement.getObject().asResource() : null
+                )
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     public boolean isNumeric(Resource resource) {
@@ -217,7 +239,7 @@ public class RDFModelUtil {
     }
 
     public List<Resource> getComparableOptions(List<Resource> resources) {
-        return getAllClasses().stream().filter(
+        return getAllTypes().stream().filter(
                 classAsResource ->
                         !resources.contains(classAsResource) &&
                                 resources.stream().anyMatch(
@@ -343,6 +365,21 @@ public class RDFModelUtil {
             }
         });
         return resources;
+    }
+
+    /**
+     * Only the predicates defined by this SubClass, not any inherited predicates
+     *
+     * @param subject
+     * @return
+     */
+    public List<Resource> listSubClassOwnPredicates(Resource subject) {
+        return subject.listProperties(SHACL_PROPERTY).toList()
+                .stream()
+                .map(statement -> statement.getProperty(SHACL_PATH))
+                .filter(Objects::nonNull)
+                .map(statement -> statement.getObject().asResource())
+                .collect(Collectors.toList());
     }
 
     public Map<Resource, Resource> listPredicatesForSubjectClass(List<Resource> subjectClasses) {
