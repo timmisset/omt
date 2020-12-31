@@ -1,9 +1,9 @@
 package com.misset.opp.omt.psi.resolvable.impl;
 
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.psi.OMTCurieElement;
 import com.misset.opp.omt.psi.OMTQueryStep;
+import com.misset.opp.omt.psi.impl.named.OMTCurieElementImpl;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,7 +12,7 @@ import java.util.List;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
-public abstract class OMTCurieElementResolvableImpl extends ASTWrapperPsiElement implements OMTCurieElement {
+public abstract class OMTCurieElementResolvableImpl extends OMTCurieElementImpl implements OMTCurieElement {
 
     public OMTCurieElementResolvableImpl(@NotNull ASTNode node) {
         super(node);
