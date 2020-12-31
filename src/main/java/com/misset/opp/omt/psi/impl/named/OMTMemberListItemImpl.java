@@ -14,6 +14,6 @@ public abstract class OMTMemberListItemImpl extends OMTNamedElementImpl implemen
     @Override
     public String getName() {
         final OMTMemberListItem listItem = getNode().getPsi(OMTMemberListItem.class);
-        return listItem.getMember() == null ? "" : listItem.getName();
+        return listItem.getMember() == null ? "" : listItem.getMember().getName();
     }
 }
