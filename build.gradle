@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.1'
+version '2.1.1'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -45,6 +45,9 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
+        <string>2.1.1</strong><br />
+        Bugfix for MemberListItem<br />
+        Improved Patterns for Queries to determine completion suggestions<br />
         <string>2.1</strong><br />
         Resolving types and their instances separately when resolving query paths and code completion<br />
         <br />
