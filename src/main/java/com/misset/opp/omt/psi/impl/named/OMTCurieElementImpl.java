@@ -14,9 +14,6 @@ import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.List;
-
 import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
 
 public abstract class OMTCurieElementImpl extends NameIdentifierOwnerImpl<OMTCurieElement> implements OMTCurie {
@@ -54,11 +51,6 @@ public abstract class OMTCurieElementImpl extends NameIdentifierOwnerImpl<OMTCur
     @Override
     public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
         return this;
-    }
-
-    @Override
-    public List<Resource> resolveToResource() {
-        return Collections.singletonList(getAsResource());
     }
 
     @Override

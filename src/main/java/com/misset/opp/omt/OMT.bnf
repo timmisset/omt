@@ -116,7 +116,7 @@ namespaceIri ::=                            IRI                                 
                                                 }
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       {
                                                 implements="com.misset.opp.omt.psi.named.OMTCurie"
-                                                mixin="com.misset.opp.omt.psi.impl.named.OMTCurieElementImpl"
+                                                mixin="com.misset.opp.omt.psi.resolvable.impl.OMTCurieElementResolvableImpl"
                                                 }
 curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FORWARD_SLASH) curieElement queryFilter*
 {
