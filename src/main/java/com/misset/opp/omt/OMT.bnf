@@ -115,8 +115,8 @@ namespaceIri ::=                            IRI                                 
                                                     implements="com.misset.opp.omt.psi.support.OMTNamedElement"
                                                 }
 curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       {
-                                                implements="com.misset.opp.omt.psi.support.OMTCurie"
-                                                mixin="com.misset.opp.omt.psi.impl.OMTCurieImpl"
+                                                implements="com.misset.opp.omt.psi.named.OMTCurie"
+                                                mixin="com.misset.opp.omt.psi.impl.named.OMTCurieElementImpl"
                                                 }
 curieConstantElement ::=                    (CURIE_CONSTANT_ELEMENT_PREFIX | FORWARD_SLASH) curieElement queryFilter*
 {
@@ -175,7 +175,7 @@ parameterWithType ::=                       variable PARENTHESES_OPEN parameterT
 }
 
 parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) | OPERATOR | NAMESPACE_MEMBER {
-                                            implements="com.misset.opp.omt.psi.support.OMTCurie"
+                                            implements="com.misset.opp.omt.psi.named.OMTCurie"
                                             mixin="com.misset.opp.omt.psi.impl.OMTParameterTypeSupImpl"
 }
 

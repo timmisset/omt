@@ -6,7 +6,7 @@ import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTParameterType;
 import com.misset.opp.omt.psi.OMTPrefix;
-import com.misset.opp.omt.psi.support.OMTCurie;
+import com.misset.opp.omt.psi.named.OMTCurie;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
