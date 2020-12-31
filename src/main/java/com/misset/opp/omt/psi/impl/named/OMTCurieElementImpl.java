@@ -1,0 +1,78 @@
+package com.misset.opp.omt.psi.impl.named;
+
+import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
+import com.intellij.util.IncorrectOperationException;
+import com.misset.opp.omt.psi.OMTCurieElement;
+import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTPrefix;
+import com.misset.opp.omt.psi.named.OMTCurie;
+import com.misset.opp.omt.psi.references.CurieReference;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Collections;
+import java.util.List;
+
+import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
+
+public abstract class OMTCurieElementImpl extends NameIdentifierOwnerImpl<OMTCurieElement> implements OMTCurie {
+    public OMTCurieElementImpl(@NotNull ASTNode node) {
+        super(node, OMTCurieElement.class);
+    }
+
+    @Nullable
+    @Override
+    public PsiReference getReference() {
+        return new CurieReference(getPsi(), getNameIdentifier().getTextRangeInParent());
+    }
+
+    @NotNull
+    @Override
+    public PsiElement getNameIdentifier() {
+        return getPsi().getLastChild();
+    }
+
+    @Override
+    public String getName() {
+        return getText().contains(":") ? getText().split(":")[1] : "";
+    }
+
+    @Override
+    public PsiElement getPrefix() {
+        return getFirstChild();
+    }
+
+    @Override
+    public String getPrefixName() {
+        return getPrefix().getText().replace(":", "");
+    }
+
+    @Override
+    public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
+        return this;
+    }
+
+    @Override
+    public List<Resource> resolveToResource() {
+        return Collections.singletonList(getAsResource());
+    }
+
+    @Override
+    public boolean isDefinedByPrefix(OMTPrefix prefix) {
+        return prefix.getNamespacePrefix().getName().equals(getPrefixName());
+    }
+
+    @Override
+    public Resource getAsResource() {
+        String resolvedIri = String.format("%s%s",
+                ((OMTFile) getContainingFile()).getPrefixIri(getPrefixName()),
+                getPrefix().getNextSibling().getText()
+        );
+        Model ontologyModel = getProjectUtil().getOntologyModel();
+        return ontologyModel.getResource(resolvedIri);
+    }
+}
