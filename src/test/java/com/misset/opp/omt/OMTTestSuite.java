@@ -139,7 +139,7 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
 
     protected void setOntologyModel() {
         myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
-        ApplicationManager.getApplication().runReadAction(() -> getProjectUtil().loadOntologyModel(getProject()));
+        ApplicationManager.getApplication().runReadAction(() -> getProjectUtil().loadOntologyModel(getProject(), false));
     }
 
     protected void setBuiltinOperators() {

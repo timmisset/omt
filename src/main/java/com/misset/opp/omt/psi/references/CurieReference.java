@@ -1,21 +1,18 @@
 package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.util.TextRange;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
-import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.psi.OMTQueryReverseStep;
+import com.misset.opp.omt.psi.OMTQueryStep;
 import com.misset.opp.omt.psi.named.OMTCurie;
 import org.apache.jena.rdf.model.Resource;
-import org.eclipse.collections.api.RichIterable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import tech.lnkd.editor.intellij.turtle.TurtleFile;
-import tech.lnkd.editor.intellij.turtle.psi.TurtleSubject;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+
+import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 /**
  * The curie reference resolves to the declaration of the curie prefix in either the prefixes: node or
@@ -23,34 +20,29 @@ import java.util.stream.Collectors;
  * The CurieUtil will find the declaring statement of the prefix
  */
 public class CurieReference extends PsiReferenceBase<OMTCurie> implements PsiPolyVariantReference {
-    Resource resource;
-
     public CurieReference(@NotNull OMTCurie omtCurie, TextRange textRange) {
         super(omtCurie, textRange);
-        resource = omtCurie.getAsResource();
     }
 
     // This reference uses the LNKD.tech Editor plugin
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
-        final Collection<VirtualFile> ttlFiles = FilenameIndex.getAllFilesByExt(getElement().getProject(), "ttl");
-        final List<TurtleFile> ttlPsiFiles = ttlFiles.stream().map(
-                virtualFile -> {
-                    PsiFile file = PsiManager.getInstance(myElement.getProject()).findFile(virtualFile);
-                    return file instanceof TurtleFile ? (TurtleFile) file : null;
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        // look in all the available turtle files if any of the subjects resolve to the curie element
-        for (TurtleFile ttlFile : ttlPsiFiles) {
-            if (ttlFile.resources().containsKey(resource.toString())) {
-                final RichIterable<TurtleSubject> turtleSubjects = ttlFile.resources().get(resource.toString());
-                final TurtleSubject subject = turtleSubjects.getOnly();
-                return new ResolveResult[]{new PsiElementResolveResult(subject)};
-            }
+        final OMTQueryStep queryStep = PsiTreeUtil.getParentOfType(myElement, OMTQueryStep.class);
+        if (queryStep == null) {
+            return ResolveResult.EMPTY_ARRAY;
         }
-        return ResolveResult.EMPTY_ARRAY;
+
+        List<Resource> previousStepResources =
+                myElement.getParent() instanceof OMTQueryReverseStep ?
+                        queryStep.resolveToResource() :                         // for reverse path, resolve to the result and then check the predicate
+                        getQueryUtil().getPreviousStepResources(queryStep);     // for forward path, resolve to the previous step and then check the predicate
+        previousStepResources = getRDFModelUtil().allSuperClasses(previousStepResources);
+        return getProjectUtil()
+                .getTTLReference(myElement, previousStepResources)
+                .stream()
+                .map(PsiElementResolveResult::new)
+                .toArray(ResolveResult[]::new);
     }
 
     @Nullable
