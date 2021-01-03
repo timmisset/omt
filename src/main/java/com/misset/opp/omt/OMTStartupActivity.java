@@ -2,6 +2,7 @@ package com.misset.opp.omt;
 
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.impl.ProjectExImpl;
 import com.intellij.openapi.startup.StartupActivity;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -37,7 +38,9 @@ public class OMTStartupActivity implements StartupActivity {
             getProjectUtil().getParsedModel();
 
             // load the ontology model
-            getProjectUtil().loadOntologyModel(project);
+            if (!isInTestMode(project)) {
+                getProjectUtil().loadOntologyModel(project, true);
+            }
 
             // finally, analyze all OMT files for exporting members and prefixess
             analyzeAllOMTFiles(project);
@@ -59,18 +62,22 @@ public class OMTStartupActivity implements StartupActivity {
         getProjectUtil().setStatusbarMessage(project, "Analyzed " + processedPaths.size() + " file(s)");
     }
 
+    private boolean isInTestMode(Project project) {
+        return ((ProjectExImpl) project).isLight();
+    }
+
     private void setFileListeners(@NotNull Project project) {
-                project.getMessageBus().connect().subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
-                    @Override
-                    public void after(@NotNull List<? extends VFileEvent> events) {
-                        events
-                                .stream()
-                                .map(VFileEvent::getFile)
-                                .filter(Objects::nonNull)
-                                .filter(VirtualFile::isValid)
-                                .forEach(virtualFile -> {
-                                    switch (virtualFile.getName()) {
-                                        case ProjectUtil.BUILTIN_COMMANDS:
+        project.getMessageBus().connect().subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
+            @Override
+            public void after(@NotNull List<? extends VFileEvent> events) {
+                events
+                        .stream()
+                        .map(VFileEvent::getFile)
+                        .filter(Objects::nonNull)
+                        .filter(VirtualFile::isValid)
+                        .forEach(virtualFile -> {
+                            switch (virtualFile.getName()) {
+                                case ProjectUtil.BUILTIN_COMMANDS:
                                 case ProjectUtil.BUILTIN_HTTP_COMMANDS:
                                 case ProjectUtil.BUILTIN_JSON_PARSE_COMMAND:
                                 case ProjectUtil.BUILTIN_OPERATORS:
@@ -88,7 +95,9 @@ public class OMTStartupActivity implements StartupActivity {
                 }
                 String extension = virtualFile.getExtension();
                 if ("ttl".equals(extension)) {
-                    getProjectUtil().loadOntologyModel(project);
+                    if (!isInTestMode(project)) {
+                        getProjectUtil().loadOntologyModel(project, true);
+                    }
                 } else if ("omt".equals(extension)) {
                     final OMTFile file = (OMTFile) PsiManager.getInstance(project).findFile(virtualFile);
                     if (file == null) {

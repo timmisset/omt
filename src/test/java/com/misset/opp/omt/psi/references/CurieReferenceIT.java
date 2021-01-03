@@ -1,9 +1,12 @@
 package com.misset.opp.omt.psi.references;
 
+import com.intellij.openapi.application.ReadAction;
 import com.misset.opp.omt.psi.OMTCurieElement;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
 
 public class CurieReferenceIT extends ReferenceTest {
 
@@ -13,6 +16,8 @@ public class CurieReferenceIT extends ReferenceTest {
         super.setName("CurieReferenceIT");
         super.setUp(OMTCurieElement.class);
         setOntologyModel();
+        // re-run to process copied files correctly into TTL files
+        ReadAction.run(() -> getProjectUtil().loadOntologyModel(getProject(), true));
     }
 
     @Override
@@ -22,9 +27,24 @@ public class CurieReferenceIT extends ReferenceTest {
     }
 
     @Test
-    void hasReferenceToTTLModel() {
+    void hasReferenceToTTLModelClass() {
         String content = "queries: |\n" +
                 "   DEFINE QUERY query => /ont:<caret>ClassA;";
+        assertHasReference(withPrefixes(content));
+    }
+
+    @Test
+    void hasReferenceToTTLRDFType() {
+        // provided by the rdf ontology part of the LNKD.tech plugin
+        String content = "queries: |\n" +
+                "   DEFINE QUERY query => /ont:ClassA / rdf:<caret>type;";
+        assertHasReference(withPrefixes(content));
+    }
+
+    @Test
+    void hasReferenceToTTLRDFPredicate() {
+        String content = "queries: |\n" +
+                "   DEFINE QUERY query => /ont:ClassA / ^rdf:type / ont:<caret>booleanProperty;";
         assertHasReference(withPrefixes(content));
     }
 

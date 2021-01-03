@@ -13,15 +13,25 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.impl.FakePsiElement;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
+import com.misset.opp.omt.psi.named.OMTCurie;
+import com.misset.opp.omt.psi.references.TTLReferenceElement;
 import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.settings.OMTSettingsState;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
+import org.eclipse.collections.api.multimap.Multimap;
+import tech.lnkd.editor.intellij.turtle.TurtleFile;
+import tech.lnkd.editor.intellij.turtle.psi.TurtleObject;
+import tech.lnkd.editor.intellij.turtle.psi.TurtleSubject;
 
 import java.io.File;
 import java.util.*;
@@ -31,12 +41,15 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.misset.opp.omt.psi.references.TTLReferenceElement.getSubjectClassIri;
 import static com.misset.opp.omt.psi.util.UtilManager.getBuiltinUtil;
 import static util.Helper.getResources;
 
 public class ProjectUtil {
     private final HashMap<String, ArrayList<OMTPrefix>> knownPrefixes = new HashMap<>();
     private final HashMap<String, ArrayList<OMTExportMember>> exportingMembers = new HashMap<>();
+    private final HashMap<String, ArrayList<FakePsiElement>> ttlSubjectReferences = new HashMap<>();
+    private final HashMap<String, HashMap<String, ArrayList<FakePsiElement>>> ttlPredicateReferences = new HashMap<>();
     private final JsonObject parsedModel = new JsonObject();
 
     public static final String BUILTIN_COMMANDS = "builtinCommands.ts";
@@ -98,7 +111,6 @@ public class ProjectUtil {
         return model;
     }
 
-
     public List<VirtualFile> getVirtualFilesByName(Project project, String filename) {
         return
                 new ArrayList<>(FilenameIndex.getVirtualFilesByName(project, filename, GlobalSearchScope.projectScope(project)));
@@ -130,6 +142,10 @@ public class ProjectUtil {
     }
 
     public void loadOntologyModel(Project project) {
+        loadOntologyModel(project, false);
+    }
+
+    public void loadOntologyModel(Project project, boolean resetOntologyPsiReferences) {
         setStatusbarMessage(project, "Loading ontology");
         VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
         OMTSettingsState settings = OMTSettingsState.getInstance();
@@ -144,7 +160,63 @@ public class ProjectUtil {
         }
         model = new RDFModelUtil(rootFolderPath).readModel();
         updateModelUtil();
+        if (resetOntologyPsiReferences) {
+            ApplicationManager.getApplication().invokeLater(() -> resetOntologyPsiReferences(project));
+        }
         setStatusbarMessage(project, "Finished loading ontology");
+    }
+
+    /**
+     * Make references to the TTL ontology files in order to resolve them from OMTCurieElements
+     * Since the TTL files are structured by the LNKD.tech plugin this needs to be installed and will be used
+     */
+    private void resetOntologyPsiReferences(Project project) {
+        ttlSubjectReferences.clear();
+        ttlPredicateReferences.clear();
+        final Collection<VirtualFile> ttlFiles = FilenameIndex.getAllFilesByExt(project, "ttl");
+        ttlFiles.stream().map(
+                virtualFile -> {
+                    PsiFile file = PsiManager.getInstance(project).findFile(virtualFile);
+                    return file instanceof TurtleFile ? (TurtleFile) file : null;
+                })
+                .filter(Objects::nonNull)
+                .forEach(turtleFile -> {
+                    final Multimap<String, TurtleSubject> resources = turtleFile.resources();
+                    resources.forEachKey(s -> resources.get(s).forEach(
+                            subject -> {
+                                ArrayList<FakePsiElement> fakePsiElements = ttlSubjectReferences.getOrDefault(s, new ArrayList<>());
+                                fakePsiElements.add(new TTLReferenceElement(subject));
+                                ttlSubjectReferences.put(s, fakePsiElements);
+                            }
+                    ));
+
+                    PsiTreeUtil.findChildrenOfType(turtleFile, TurtleObject.class).stream()
+                            .filter(turtleObject -> turtleObject.getRef() != null &&
+                                    turtleObject.getRef().decompiledValue() != null &&
+                                    turtleObject.getRef().decompiledValue().iri() != null)
+                            .forEach(turtleObject -> {
+                                final String iri = turtleObject.getRef().decompiledValue().iri();
+                                final String subjectClassIri = getSubjectClassIri(turtleObject, false);
+                                final HashMap<String, ArrayList<FakePsiElement>> predicateReferencesBySubject = ttlPredicateReferences.getOrDefault(iri, new HashMap<>());
+                                ArrayList<FakePsiElement> fakePsiElements = predicateReferencesBySubject.getOrDefault(subjectClassIri, new ArrayList<>());
+                                fakePsiElements.add(new TTLReferenceElement(turtleObject));
+                                predicateReferencesBySubject.put(subjectClassIri, fakePsiElements);
+                                ttlPredicateReferences.put(iri, predicateReferencesBySubject);
+                            });
+                });
+    }
+
+    public List<FakePsiElement> getTTLReference(OMTCurie curie, List<Resource> subjectFilter) {
+        String iri = curie.getAsResource().getURI();
+        return ttlSubjectReferences.getOrDefault(iri,
+                ttlPredicateReferences.getOrDefault(iri, new HashMap<>())
+                        .keySet()
+                        .stream()
+                        .filter(subjectIri -> subjectFilter == null || subjectFilter.isEmpty() ||
+                                subjectFilter.contains(getOntologyModel().createResource(subjectIri)))
+                        .map(subjectIri -> ttlPredicateReferences.get(iri).get(subjectIri))
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toCollection(ArrayList::new)));
     }
 
     private void loadBuiltInMembersViaSettingsOrFromFilename(Project project,
@@ -191,7 +263,6 @@ public class ProjectUtil {
             return false;
         }
     }
-
 
     private void registerPrefixes(OMTFile file) {
         file.getPrefixes().forEach((namespacePrefix, omtPrefix) -> Arrays.asList(omtPrefix.getNamespacePrefix().getName(), omtPrefix.getNamespaceIri().getName())

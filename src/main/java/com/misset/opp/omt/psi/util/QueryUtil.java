@@ -4,6 +4,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 import org.apache.jena.rdf.model.Resource;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +68,8 @@ public class QueryUtil {
      * $myVariable [rdf:type == CURRENT_STEP]               CURRENT_STEP is the start of it's own query path, will return the types of the step that contains the filter
      * $myVariable / SOME_OPERATOR(CURRENT_STEP)            Contained in a signature argument, cannot inherit types
      */
-    public List<Resource> getPreviousStepResources(PsiElement step) {
+    @NotNull
+    public List<Resource> getPreviousStepResources(@Nullable PsiElement step) {
         PsiElement previous = getPreviousSibling(step, OMTQueryPath.class, OMTQueryStep.class);
         if (previous == null) {
             // retrieve the previous value via the parent
