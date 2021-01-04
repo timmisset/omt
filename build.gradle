@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.2'
+version '2.2.1'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -43,40 +43,10 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
+        <strong>2.2.1</strong><br />
+        Exclude model ttl files that are located in output/target folders<br />
         <strong>2.2</strong><br />
         Integrated LNKD.tech plugin and resolvable references to TTL files directly from ODT query paths<br />
-        <strong>2.1.1</strong><br />
-        Bugfix for MemberListItem<br />
-        Improved Patterns for Queries to determine completion suggestions<br />
-        <strong>2.1</strong><br />
-        Resolving types and their instances separately when resolving query paths and code completion<br />
-        <br />
-        <strong>2.0.5</strong><br />
-        Bugfix for MemberIntention nullpointer on unresolvable imports<br />
-        <br />
-        <strong>2.0.4</strong><br />
-        Variables in string fields are resolvable<br />
-        Fix for Highlighting Lexer<br />
-        <br />
-        <strong>2.0.3</strong><br />
-        Added reference annotation for Queries, Command, ModelItems<br />
-        String model entries are resolved in the lexer directly<br />
-        Fix for StandaloneQuery parsing, query: doesn't accept semicolon ending<br />
-        Formatter updated<br />
-        Auto-import and code completion for exporting members from other files<br />
-        <br />
-        <strong>2.0.2</strong><br />
-        Performance improvement by resolving references with the IntelliJ indexed ReferenceSearch<br />
-        <br />
-        <strong>2.0.1</strong><br />
-        Improved formatter for blank lines and spaces<br />
-        <br />
-        <strong>2.0</strong><br />
-        RDF Ontology is included in most parts of the validation and completion providers<br />
-        Typing is checked where possible, 
-        resolves to an 'any' type for unknown or unresovable query-steps to prevent false-positive error annotations. <br />
-        Annotation of parameters is possible (and suggested with light warnings) which will help to resolve the types. <br />
-        Formatter is implemented, mostly based on YAML style, it also adds some formatting within queries.
       """
 }
 tasks{
