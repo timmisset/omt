@@ -141,10 +141,6 @@ public class ProjectUtil {
 
     }
 
-    public void loadOntologyModel(Project project) {
-        loadOntologyModel(project, false);
-    }
-
     public void loadOntologyModel(Project project, boolean resetOntologyPsiReferences) {
         setStatusbarMessage(project, "Loading ontology");
         VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
@@ -174,11 +170,13 @@ public class ProjectUtil {
         ttlSubjectReferences.clear();
         ttlPredicateReferences.clear();
         final Collection<VirtualFile> ttlFiles = FilenameIndex.getAllFilesByExt(project, "ttl");
-        ttlFiles.stream().map(
-                virtualFile -> {
-                    PsiFile file = PsiManager.getInstance(project).findFile(virtualFile);
-                    return file instanceof TurtleFile ? (TurtleFile) file : null;
-                })
+        ttlFiles.stream()
+                .filter(virtualFile -> !virtualFile.getPath().contains("target"))
+                .map(
+                        virtualFile -> {
+                            PsiFile file = PsiManager.getInstance(project).findFile(virtualFile);
+                            return file instanceof TurtleFile ? (TurtleFile) file : null;
+                        })
                 .filter(Objects::nonNull)
                 .forEach(turtleFile -> {
                     final Multimap<String, TurtleSubject> resources = turtleFile.resources();
