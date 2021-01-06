@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.2.1'
+version '2.3'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -26,7 +26,7 @@ dependencies {
 test {
     useJUnitPlatform()
     // used for ITs
-    systemProperty "idea.home.path", "C:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2020.2"
+    systemProperty "idea.home.path", "C:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2020.3.1"
     finalizedBy jacocoTestReport // report is always generated after tests run
 }
 jacocoTestReport {
@@ -35,7 +35,7 @@ jacocoTestReport {
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
-    version '2020.2'
+    version '2020.3'
     plugins = [
             'java',
             'tech.lnkd.LNKD-tech-Editor:0.7-EARLY_ACCESS'
@@ -43,6 +43,8 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
+        <strong>2.3</strong><br />
+        Compatible with IntelliJ version 2020.3<br />
         <strong>2.2.1</strong><br />
         Exclude model ttl files that are located in output/target folders<br />
         <strong>2.2</strong><br />
