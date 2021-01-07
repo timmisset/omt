@@ -50,6 +50,7 @@ class ImportAnnotatorTest extends OMTAnnotationTest {
         doReturn(MEMBER_NAME).when(member).getName();
         doReturn(MEMBER_NAME).when(member).getText();
         doReturn(FILENAME).when(importSource).getText();
+        doReturn(FILENAME).when(importSource).getName();
         doReturn(reference).when(importSource).getReference();
         importAnnotator = new ImportAnnotator(getHolder());
     }

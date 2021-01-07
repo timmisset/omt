@@ -34,7 +34,7 @@ public class ImportAnnotator extends AbstractAnnotator {
         validateReference(importSource, String.format("%s could not be resolved to a file", importSource.getText()));
 
         final String name = importSource.getName();
-        if (name != null && name.startsWith("'.")) {
+        if (name.startsWith("'.")) {
             setWeakWarning("Unnecessary wrapping of import statement",
                     annotationBuilder -> annotationBuilder.withFix(getUnwrapIntention(importSource)));
         }
