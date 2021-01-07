@@ -31,9 +31,6 @@ public class UnwrapIntention {
 
             @Override
             public void invoke(@NotNull Project project, Editor editor, PsiFile file) {
-                if (importSource.getName() == null) {
-                    return;
-                }
                 importSource.setName(
                         importSource.getName().replace("'", "")
                 );

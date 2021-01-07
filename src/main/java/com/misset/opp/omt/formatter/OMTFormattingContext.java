@@ -6,6 +6,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.impl.DocumentImpl;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
@@ -59,6 +60,19 @@ public class OMTFormattingContext {
         customCodeStyleSettings = settings.getCustomSettings(OMTCodeStyleSettings.class);
         spacingBuilder = getDefaultSpacingBuilder(settings);
 
+    }
+
+    public OMTFormattingContext(FormattingContext formattingContext) {
+        final PsiFile file = formattingContext.getContainingFile();
+        final VirtualFile virtualFile = file.getVirtualFile();
+        final CodeStyleSettings settings = formattingContext.getCodeStyleSettings();
+        document = virtualFile != null ?
+                FileDocumentManager.getInstance().getDocument(virtualFile) :
+                new DocumentImpl(file.getText());
+
+        common = settings.getCommonSettings(OMTLanguage.INSTANCE);
+        customCodeStyleSettings = settings.getCustomSettings(OMTCodeStyleSettings.class);
+        spacingBuilder = getDefaultSpacingBuilder(settings);
     }
 
     private SpacingBuilder getDefaultSpacingBuilder(@NotNull CodeStyleSettings settings) {

@@ -3,8 +3,8 @@ package com.misset.opp.omt.psi;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.testFramework.UsefulTestCase;
 import com.intellij.testFramework.fixtures.JavaCodeInsightTestFixture;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,10 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ExampleFiles {
 
-    private final LightJavaCodeInsightFixtureTestCase testCase;
+    private final UsefulTestCase testCase;
     private final JavaCodeInsightTestFixture fixture;
 
-    public ExampleFiles(LightJavaCodeInsightFixtureTestCase testCase, JavaCodeInsightTestFixture myFixture) {
+    public ExampleFiles(UsefulTestCase testCase, JavaCodeInsightTestFixture myFixture) {
         this.testCase = testCase;
         this.fixture = myFixture;
     }

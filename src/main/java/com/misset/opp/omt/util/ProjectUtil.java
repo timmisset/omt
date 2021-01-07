@@ -28,7 +28,6 @@ import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.settings.OMTSettingsState;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
-import org.eclipse.collections.api.multimap.Multimap;
 import tech.lnkd.editor.intellij.turtle.TurtleFile;
 import tech.lnkd.editor.intellij.turtle.psi.TurtleObject;
 import tech.lnkd.editor.intellij.turtle.psi.TurtleSubject;
@@ -179,18 +178,19 @@ public class ProjectUtil {
                         })
                 .filter(Objects::nonNull)
                 .forEach(turtleFile -> {
-                    final Multimap<String, TurtleSubject> resources = turtleFile.resources();
-                    resources.forEachKey(s -> resources.get(s).forEach(
-                            subject -> {
-                                ArrayList<FakePsiElement> fakePsiElements = ttlSubjectReferences.getOrDefault(s, new ArrayList<>());
-                                fakePsiElements.add(new TTLReferenceElement(subject));
-                                ttlSubjectReferences.put(s, fakePsiElements);
-                            }
-                    ));
+                    PsiTreeUtil.findChildrenOfType(turtleFile, TurtleSubject.class).stream()
+                            .filter(turtleSubject ->
+                                    turtleSubject.getRef() != null &&
+                                            turtleSubject.getRef().iri() != null)
+                            .forEach(turtleSubject -> {
+                                String iri = turtleSubject.getRef().iri().toString();
+                                ArrayList<FakePsiElement> fakePsiElements = ttlSubjectReferences.getOrDefault(iri, new ArrayList<>());
+                                fakePsiElements.add(new TTLReferenceElement(turtleSubject));
+                                ttlSubjectReferences.put(iri, fakePsiElements);
+                            });
 
                     PsiTreeUtil.findChildrenOfType(turtleFile, TurtleObject.class).stream()
                             .filter(turtleObject -> turtleObject.getRef() != null &&
-                                    turtleObject.getRef().decompiledValue() != null &&
                                     turtleObject.getRef().decompiledValue().iri() != null)
                             .forEach(turtleObject -> {
                                 final String iri = turtleObject.getRef().decompiledValue().iri();
@@ -205,6 +205,9 @@ public class ProjectUtil {
     }
 
     public List<FakePsiElement> getTTLReference(OMTCurie curie, List<Resource> subjectFilter) {
+        if (getOntologyModel() == null) {
+            return new ArrayList<>();
+        } // not loaded
         String iri = curie.getAsResource().getURI();
         return ttlSubjectReferences.getOrDefault(iri,
                 ttlPredicateReferences.getOrDefault(iri, new HashMap<>())

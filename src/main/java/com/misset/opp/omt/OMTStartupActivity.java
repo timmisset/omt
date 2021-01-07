@@ -2,7 +2,6 @@ package com.misset.opp.omt;
 
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.impl.ProjectExImpl;
 import com.intellij.openapi.startup.StartupActivity;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -38,7 +37,7 @@ public class OMTStartupActivity implements StartupActivity {
             getProjectUtil().getParsedModel();
 
             // load the ontology model
-            if (!isInTestMode(project)) {
+            if (isInProductionMode(project)) {
                 getProjectUtil().loadOntologyModel(project, true);
             }
 
@@ -62,8 +61,8 @@ public class OMTStartupActivity implements StartupActivity {
         getProjectUtil().setStatusbarMessage(project, "Analyzed " + processedPaths.size() + " file(s)");
     }
 
-    private boolean isInTestMode(Project project) {
-        return ((ProjectExImpl) project).isLight();
+    private boolean isInProductionMode(Project project) {
+        return !project.getName().startsWith("light_temp");
     }
 
     private void setFileListeners(@NotNull Project project) {
@@ -95,7 +94,7 @@ public class OMTStartupActivity implements StartupActivity {
                 }
                 String extension = virtualFile.getExtension();
                 if ("ttl".equals(extension)) {
-                    if (!isInTestMode(project)) {
+                    if (isInProductionMode(project)) {
                         getProjectUtil().loadOntologyModel(project, true);
                     }
                 } else if ("omt".equals(extension)) {

@@ -18,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import static com.misset.opp.omt.psi.OMTTypes.CARET;
 
@@ -55,7 +56,7 @@ public class QueryBlockCompletion extends OMTCompletion {
                 public boolean accepts(@NotNull PsiElement element, ProcessingContext context) {
                     final PsiElement parent = element.getParent();
                     return parent instanceof PsiErrorElement &&
-                            (PsiTreeUtil.prevLeaf(element) == null || PsiTreeUtil.prevLeaf(element).getNode().getElementType() != CARET) &&
+                            (PsiTreeUtil.prevLeaf(element) == null || Objects.requireNonNull(PsiTreeUtil.prevLeaf(element)).getNode().getElementType() != CARET) &&
                             PlaceholderProvider.getExpectedTypesFromError((PsiErrorElement) parent).contains(DEFINE_QUERY_STATEMENT_EXPECTED);
                 }
             };

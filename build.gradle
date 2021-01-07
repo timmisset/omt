@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.3'
+version '2.3.1'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -43,6 +43,8 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
+        <strong>2.3.1</strong><br />
+        Resolved some compatibility issues with LNKD.tech after upgrade<br />
         <strong>2.3</strong><br />
         Compatible with IntelliJ version 2020.3<br />
         <strong>2.2.1</strong><br />

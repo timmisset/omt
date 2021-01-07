@@ -10,7 +10,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class RDFModelUtil {
@@ -273,9 +272,7 @@ public class RDFModelUtil {
     }
 
     public List<Resource> getClasses(List<Resource> implementantions) {
-        return getOrCache(
-                () -> implementantions.stream().map(this::getClass).collect(Collectors.toList())
-                , implementantions.toArray());
+        return implementantions.stream().map(this::getClass).collect(Collectors.toList());
     }
 
     public boolean hasPredicate(Resource subject, Resource predicate) {
@@ -578,20 +575,5 @@ public class RDFModelUtil {
             description.append("</ul>");
         }
         return description.toString();
-    }
-
-    private <T> T getOrCache(Supplier<Object> method, Object... keyIds) {
-        if (1 == 1) {
-            return (T) method.get();
-        }
-        String methodName = Thread.currentThread().getStackTrace()[2].getMethodName();
-        String keyId = methodName + "." + Arrays.stream(keyIds).map(Object::toString).collect(Collectors.joining("."));
-
-        if (cache.containsKey(keyId)) {
-            return (T) cache.get(keyId);
-        }
-        final Object oneTimeResult = method.get();
-        cache.put(keyId, oneTimeResult);
-        return (T) oneTimeResult;
     }
 }
