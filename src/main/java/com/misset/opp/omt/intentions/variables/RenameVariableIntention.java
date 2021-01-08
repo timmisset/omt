@@ -5,7 +5,6 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import com.misset.opp.omt.psi.OMTVariable;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 public class RenameVariableIntention {
@@ -13,16 +12,14 @@ public class RenameVariableIntention {
     public IntentionAction getRenameVariableIntention(OMTVariable variable, String newName) {
         return new IntentionAction() {
             @Override
-            public @Nls(capitalization = Nls.Capitalization.Sentence)
             @NotNull
-            String getText() {
+            public String getText() {
                 return String.format("Rename to %s", newName);
             }
 
             @Override
-            public @NotNull
-            @Nls(capitalization = Nls.Capitalization.Sentence)
-            String getFamilyName() {
+            @NotNull
+            public String getFamilyName() {
                 return "Variables";
             }
 

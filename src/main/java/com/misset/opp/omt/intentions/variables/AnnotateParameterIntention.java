@@ -12,7 +12,6 @@ import com.misset.opp.omt.psi.OMTElementFactory;
 import com.misset.opp.omt.psi.OMTJdComment;
 import com.misset.opp.omt.psi.OMTLeading;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 public class AnnotateParameterIntention {
@@ -20,16 +19,13 @@ public class AnnotateParameterIntention {
     public IntentionAction getAnnotateParameterIntention(OMTDefineParam defineParam, String variableName, String type) {
         return new IntentionAction() {
             @Override
-            public @Nls(capitalization = Nls.Capitalization.Sentence)
             @NotNull
-            String getText() {
+            public String getText() {
                 return String.format("Add annotation as %s", type);
             }
 
             @Override
-            public @NotNull
-            @Nls(capitalization = Nls.Capitalization.Sentence)
-            String getFamilyName() {
+            public String getFamilyName() {
                 return "Parameters";
             }
 
