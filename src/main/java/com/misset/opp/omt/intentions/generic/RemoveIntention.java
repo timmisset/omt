@@ -8,7 +8,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -20,14 +19,12 @@ public class RemoveIntention {
 
     public IntentionAction getRemoveIntention(PsiElement element, String text) {
         return new IntentionAction() {
-            @Nls(capitalization = Nls.Capitalization.Sentence)
             @NotNull
             @Override
             public String getText() {
                 return text;
             }
 
-            @Nls(capitalization = Nls.Capitalization.Sentence)
             @NotNull
             @Override
             public String getFamilyName() {
