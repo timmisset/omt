@@ -5,6 +5,7 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.rdf.model.impl.PropertyImpl;
 import org.apache.jena.shared.PropertyNotFoundException;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -84,6 +85,9 @@ public class RDFModelUtil {
     }
 
     private void setPredicateIndexes() {
+        if (model == null) {
+            return;
+        }
         model.listSubjectsWithProperty(SHACL_PATH).toList()
                 .forEach(shaclInstance -> {
                     final ResIterator iterator = model.listSubjectsWithProperty(SHACL_PROPERTY, shaclInstance);
@@ -234,6 +238,9 @@ public class RDFModelUtil {
 
     public List<Resource> getClassDescendants(Resource resource, boolean includeSelf) {
         List<Resource> descendants = new ArrayList<>();
+        if (model == null) {
+            return descendants;
+        }
         if (includeSelf) {
             descendants.add(resource);
         }
@@ -302,6 +309,9 @@ public class RDFModelUtil {
      * Returns the classes that point to the given class using the specified predicate, traversing the shacl structure
      */
     public List<Resource> listSubjectsWithPredicateObjectClass(Resource predicate, Resource object) {
+        if (model == null) {
+            return Collections.emptyList();
+        }
         if (isTypePredicate(predicate)) {
             return Collections.singletonList(object);
         }
@@ -328,6 +338,9 @@ public class RDFModelUtil {
     }
 
     public Map<Resource, Resource> listPredicatesForObjectClass(List<Resource> objectClasses) {
+        if (model == null) {
+            return Collections.emptyMap();
+        }
         Map<Resource, Resource> resources = new HashMap<>();
         superClassesSortedByLevel(objectClasses).forEach(object -> {
             ResIterator shaclsPointingToTargetClass = object.getNameSpace().equals(XSD) ?
@@ -373,7 +386,11 @@ public class RDFModelUtil {
         return resource != null && resource.equals(RDF_TYPE);
     }
 
+    @Nullable
     public Resource getPrimitiveTypeAsResource(String name) {
+        if (model == null) {
+            return null;
+        }
         return model.createResource(String.format("%s%s", XSD, name));
     }
 
@@ -393,7 +410,11 @@ public class RDFModelUtil {
         return resource.toString().startsWith(XSD) && !resource.toString().endsWith("#any");
     }
 
+    @Nullable
     public Resource createResource(String iri) {
+        if (model == null) {
+            return null;
+        }
         return model.createResource(iri);
     }
 
@@ -447,7 +468,11 @@ public class RDFModelUtil {
     }
 
     private List<File> getModelFiles(String modelRoot) {
-        return (List<File>) FileUtils.listFiles(new File(modelRoot), new String[]{"ttl"}, true);
+        File file = new File(modelRoot);
+        if (!file.isDirectory()) {
+            return Collections.emptyList();
+        }
+        return (List<File>) FileUtils.listFiles(file, new String[]{"ttl"}, true);
     }
 
     public String describeResource(Resource resource) {
@@ -516,8 +541,9 @@ public class RDFModelUtil {
         return false;
     }
 
+    @Nullable
     public Resource getResource(String iri) {
-        return model.getResource(iri);
+        return model != null ? model.getResource(iri) : null;
     }
 
     public List<Resource> getAnyTypeAsList() {

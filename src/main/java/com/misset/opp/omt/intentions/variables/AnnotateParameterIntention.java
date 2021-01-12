@@ -25,6 +25,7 @@ public class AnnotateParameterIntention {
             }
 
             @Override
+            @NotNull
             public String getFamilyName() {
                 return "Parameters";
             }
