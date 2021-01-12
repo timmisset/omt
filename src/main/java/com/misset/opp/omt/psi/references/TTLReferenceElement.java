@@ -11,10 +11,11 @@ import tech.lnkd.editor.intellij.turtle.psi.TurtleObject;
 import tech.lnkd.editor.intellij.turtle.psi.TurtleSubject;
 
 import javax.swing.*;
+import java.util.Objects;
 
 public class TTLReferenceElement extends FakePsiElement {
 
-    PsiElement psiElement;
+    final PsiElement psiElement;
 
     public TTLReferenceElement(PsiElement psiElement) {
         this.psiElement = psiElement;
@@ -28,7 +29,7 @@ public class TTLReferenceElement extends FakePsiElement {
         }
         return rawValue ?
                 subjectClass.getRef().rawValue() :
-                subjectClass.getRef().decompiledValue().iri();
+                Objects.requireNonNull(subjectClass.getRef().decompiledValue()).iri();
     }
 
     @NotNull

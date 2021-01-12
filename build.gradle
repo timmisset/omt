@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.3.1'
+version '2.3.2'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -32,7 +32,7 @@ test {
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
 }
-
+buildSearchableOptions.enabled = false
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     version '2020.3'
@@ -43,6 +43,9 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
+        <strong>2.3.2</strong><br />
+        Some bugfixes for null-pointers during indexing<br />
+        Added readonly as property to variable<br />
         <strong>2.3.1</strong><br />
         Resolved some compatibility issues with LNKD.tech after upgrade<br />
         <strong>2.3</strong><br />

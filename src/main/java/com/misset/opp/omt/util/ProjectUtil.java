@@ -190,10 +190,11 @@ public class ProjectUtil {
                             });
 
                     PsiTreeUtil.findChildrenOfType(turtleFile, TurtleObject.class).stream()
-                            .filter(turtleObject -> turtleObject.getRef() != null &&
-                                    turtleObject.getRef().decompiledValue().iri() != null)
+                            .filter(turtleObject ->
+                                    turtleObject.getRef() != null &&
+                                            Objects.requireNonNull(turtleObject.getRef().decompiledValue()).iri() != null)
                             .forEach(turtleObject -> {
-                                final String iri = turtleObject.getRef().decompiledValue().iri();
+                                final String iri = Objects.requireNonNull(turtleObject.getRef().decompiledValue()).iri();
                                 final String subjectClassIri = getSubjectClassIri(turtleObject, false);
                                 final HashMap<String, ArrayList<FakePsiElement>> predicateReferencesBySubject = ttlPredicateReferences.getOrDefault(iri, new HashMap<>());
                                 ArrayList<FakePsiElement> fakePsiElements = predicateReferencesBySubject.getOrDefault(subjectClassIri, new ArrayList<>());

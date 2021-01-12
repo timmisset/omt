@@ -90,7 +90,7 @@ public abstract class AbstractAnnotator {
 
     protected void annotateBoolean(List<Resource> valueType) {
         final Resource booleanType = getRDFModelUtil().getPrimitiveTypeAsResource("boolean");
-        if (valueType == null || valueType.isEmpty()) {
+        if (valueType == null || valueType.isEmpty() || booleanType == null) {
             return;
         }
         if (valueType.stream().noneMatch(

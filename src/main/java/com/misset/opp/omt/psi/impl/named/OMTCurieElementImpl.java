@@ -59,12 +59,16 @@ public abstract class OMTCurieElementImpl extends NameIdentifierOwnerImpl<OMTCur
     }
 
     @Override
+    @Nullable
     public Resource getAsResource() {
         String resolvedIri = String.format("%s%s",
                 ((OMTFile) getContainingFile()).getPrefixIri(getPrefixName()),
                 getPrefix().getNextSibling().getText()
         );
         Model ontologyModel = getProjectUtil().getOntologyModel();
+        if (ontologyModel == null) {
+            return null;
+        }
         return ontologyModel.getResource(resolvedIri);
     }
 }

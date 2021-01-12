@@ -294,10 +294,6 @@ public class OMTFormattingContext {
                 grandParentType instanceof IFileElementType;
     }
 
-    public SpacingBuilder getSpacingBuilder() {
-        return spacingBuilder;
-    }
-
     private ASTNode getTreePrev(ASTNode node, TokenSet tokenSet) {
         node = node.getTreePrev();
         while (node != null && !tokenSet.contains(node.getElementType())) {
