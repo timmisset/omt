@@ -23,7 +23,8 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
     private final ExportMemberType type;
 
     public OMTExportMemberImpl(PsiElement exportMemberPsi, ExportMemberType type) {
-        super(type.name(), type == ExportMemberType.Command || type == ExportMemberType.Procedure || type == ExportMemberType.Activity);
+        super(type.name(),
+                type == ExportMemberType.Command || type == ExportMemberType.Procedure || type == ExportMemberType.Activity);
         element = exportMemberPsi;
         this.type = type;
         set();
@@ -71,12 +72,12 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
     public boolean returnsAny() {
         switch (type) {
             case Activity:
-            case StandaloneQuery:
             case Procedure:
             case Command:
             default:
                 return true;
 
+            case StandaloneQuery:
             case Query:
                 return
                         getReturnType().isEmpty() || getReturnType().get(0).equals(

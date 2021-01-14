@@ -88,7 +88,7 @@ public abstract class AbstractAnnotator {
         }
     }
 
-    protected void annotateBoolean(List<Resource> valueType) {
+    protected void annotateBoolean(List<Resource> valueType, String source) {
         final Resource booleanType = getRDFModelUtil().getPrimitiveTypeAsResource("boolean");
         if (valueType == null || valueType.isEmpty() || booleanType == null) {
             return;
@@ -96,8 +96,10 @@ public abstract class AbstractAnnotator {
         if (valueType.stream().noneMatch(
                 booleanType::equals
         )) {
-            final String message = String.format("Expected boolean, got %s",
-                    valueType.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")));
+            String causedBy = source != null ? String.format(", caused by: %s", source, "") : "";
+            final String message = String.format("Expected boolean, got %s%s",
+                    valueType.stream().map(Resource::getLocalName).sorted().collect(Collectors.joining(", ")),
+                    causedBy);
             setError(message);
         }
     }

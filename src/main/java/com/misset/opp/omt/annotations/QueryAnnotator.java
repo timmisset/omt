@@ -121,7 +121,8 @@ public class QueryAnnotator extends AbstractAnnotator {
 
     private void annotate(OMTBooleanStatement booleanStatement) {
         booleanStatement.getQueryList().forEach(
-                query -> annotateBoolean(query.resolveToResource())
+                query ->
+                        annotateBoolean(query.resolveToResource(), query.getText())
         );
     }
 

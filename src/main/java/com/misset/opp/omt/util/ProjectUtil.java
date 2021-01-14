@@ -352,12 +352,11 @@ public class ProjectUtil {
         java.util.List<String> allModelFiles = Arrays.asList(
                 "action.json", "activity.json", "binding.json", "component.json", "declare.json", "graphSelection.json",
                 "module.json", "onChange.json", "ontology.json", "param.json", "payload.json", "procedure.json",
-                "queryWatcher.json", "service.json", "standaloneQuery.json", "variable.json"
+                "rules.json", "queryWatcher.json", "service.json", "standaloneQuery.json", "variable.json"
         );
         List<String> files = getResources(allModelFiles, "model");
 
         for (String content : files) {
-
             JsonElement jsonElement = JsonParser.parseString(content);
             if (jsonElement.isJsonArray()) {
                 ((JsonArray) jsonElement).forEach(this::addToJsonModel);

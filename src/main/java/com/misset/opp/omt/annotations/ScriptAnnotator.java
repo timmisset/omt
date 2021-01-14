@@ -39,7 +39,7 @@ public class ScriptAnnotator extends AbstractAnnotator {
     }
 
     private void annotate(OMTIfBlock omtIfBlock) {
-        annotateBoolean(omtIfBlock.getQuery().resolveToResource());
+        annotateBoolean(omtIfBlock.getQuery().resolveToResource(), null);
     }
 
     private void annotate(OMTScriptLine scriptLine) {
