@@ -64,13 +64,20 @@ public class ModelAnnotator extends AbstractAnnotator {
     private void annotateMissingEntries(OMTBlock block) {
         List<String> entryLabels = block.getBlockEntryList().stream().map(OMTBlockEntry::getName).collect(Collectors.toList());
         final JsonObject jsonAttributes = getModelUtil().getJsonAttributes(block);
-        if (jsonAttributes.has("shortcut")) {
+        if (jsonAttributes.has("shortcut") && entryLabels.isEmpty()) {
+            // shortcut is being used, no validation yet
+            return;
+        }
+        if (getModelUtil().isMapNode(getModelUtil().getJsonAtElementLevel(block))) {
+            // Do not annotate blocks that consist of custom labelled properties, like payload, rules etc
+            // The entries themselves are annotated
             return;
         }
         final JsonObject attributes = jsonAttributes.getAsJsonObject(ATTRIBUTES);
         List<String> missingElements = attributes.entrySet().stream()
                 .filter(entry ->
-                        entry.getValue().getAsJsonObject().has("required") &&
+                        entry.getValue().isJsonObject() &&
+                                entry.getValue().getAsJsonObject().has("required") &&
                                 entry.getValue().getAsJsonObject().get("required").getAsBoolean() &&
                                 !entryLabels.contains(entry.getKey()))
                 .map(Map.Entry::getKey)

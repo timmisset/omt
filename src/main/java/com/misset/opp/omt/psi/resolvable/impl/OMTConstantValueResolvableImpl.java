@@ -26,6 +26,9 @@ public abstract class OMTConstantValueResolvableImpl extends ASTWrapperPsiElemen
             return Collections.emptyList();
         }
         Model ontologyModel = getProjectUtil().getOntologyModel();
+        if (ontologyModel == null) {
+            return Collections.emptyList();
+        }
         final String dataType = ontologyModel.createTypedLiteral(typedLiteral).getDatatype().getURI();
         return Collections.singletonList(ontologyModel.createResource(dataType));
     }

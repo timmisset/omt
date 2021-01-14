@@ -244,7 +244,8 @@ public class ModelUtil {
         if (attributesBranch.isEmpty()) {
             return new JsonObject();
         }
-        return attributesBranch.get(depth == -1 ? attributesBranch.size() - 1 : depth);
+        final int finalDepth = depth == -1 ? attributesBranch.size() - 1 : depth;
+        return finalDepth < attributesBranch.size() ? attributesBranch.get(finalDepth) : new JsonObject();
     }
 
     /**

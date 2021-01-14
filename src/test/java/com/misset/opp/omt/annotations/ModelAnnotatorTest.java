@@ -148,6 +148,28 @@ class ModelAnnotatorTest extends OMTAnnotationTest {
     }
 
     @Test
+    void annotateMissingEntriesThrowsErrorWhenShortcutIsDestructed() {
+        String content = "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       variables:\n" +
+                "           - readonly: true\n";
+        myFixture.configureByText(getFileName(), content);
+        assertHasError("variables is missing attribute(s): name");
+    }
+
+    @Test
+    void annotateMissingEntriesThrowsNoErrorWhenShortcutIsDestructed() {
+        String content = "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       rules:\n" +
+                "           mijnRegel:\n" +
+                "               query: ''\n" +
+                "               strict: false\n";
+        myFixture.configureByText(getFileName(), content);
+        assertNoErrors();
+    }
+
+    @Test
     void annotateMissingEntriesThrowsErrorWhenMissingAttribute() {
         doReturn(container).when(modelUtil).getJsonAttributes(eq(block));
         JsonObject requiredAttribute = new JsonObject();

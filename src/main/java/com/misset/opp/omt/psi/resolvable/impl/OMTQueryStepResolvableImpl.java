@@ -11,6 +11,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getQueryUtil;
@@ -60,6 +61,8 @@ public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement im
             return getCurieElement().resolveToResource();
         } else if (getOperatorCall() != null) {
             return getOperatorCall().resolveToResource();
+        } else if (getNegatedStep() != null) {
+            return Collections.singletonList(getRDFModelUtil().getBooleanType());
         }
         return filter ? filter(resources) : resources;
     }

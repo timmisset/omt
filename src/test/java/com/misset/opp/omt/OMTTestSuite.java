@@ -37,6 +37,11 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
 
     private MockedStatic<ReferencesSearch> referencesSearchMockedStatic;
 
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+    }
+
     protected static final String XSD_BOOLEAN = "http://www.w3.org/2001/XMLSchema#boolean";
     protected static final String XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
     protected static final String XSD_INTEGER = "http://www.w3.org/2001/XMLSchema#int";
