@@ -147,6 +147,7 @@ class OMTLexerTest {
                 "       - $test\n" +
                 "";
         List<String> elements = getElements(contentToTest);
+        assertThat(elements, not(hasItem("BAD_CHARACTER")));
     }
 
     @Test
