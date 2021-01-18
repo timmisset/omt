@@ -35,7 +35,8 @@ public class OMTAnnotator implements Annotator {
     );
     private static final TokenSet MODEL_ANNOTATIONS = TokenSet.create(
             MODEL_ITEM_TYPE, BLOCK, GENERIC_BLOCK, BLOCK_ENTRY,
-            INDENTED_BLOCK, ROOT_BLOCK, MODEL_ITEM_LABEL, DEFINE_NAME
+            INDENTED_BLOCK, ROOT_BLOCK, MODEL_ITEM_LABEL, DEFINE_NAME,
+            SCALAR_VALUE, SCALAR_VALUE
     );
     private static final TokenSet PARAMETER_ANNOTATIONS = TokenSet.create(
             PARAMETER_WITH_TYPE, PARAMETER_TYPE, DEFINE_PARAM
@@ -55,8 +56,6 @@ public class OMTAnnotator implements Annotator {
             new QueryAnnotator(holder).annotate(element);
         } else if (IMPORT_ANNOTATIONS.contains(elementType)) {
             new ImportAnnotator(holder).annotate(element);
-        } else if (COLLECTION_ANNOTATIONS.contains(elementType)) {
-            new CollectionAnnotator(holder).annotate(element);
         } else if (VARIABLE_ANNOTATIONS.contains(elementType)) {
             new VariableAnnotator(holder).annotate(element);
         } else if (SCRIPT_ANNOTATIONS.contains(elementType)) {
@@ -69,6 +68,10 @@ public class OMTAnnotator implements Annotator {
             new MemberAnnotator(holder).annotate(element);
         } else if (CURIE_ANNOTATIONS.contains(elementType)) {
             new CurieAnnotator(holder).annotate(element);
+        }
+        // Collections are annotated additionally for duplication errors
+        if (COLLECTION_ANNOTATIONS.contains(elementType)) {
+            new CollectionAnnotator(holder).annotate(element);
         }
     }
 

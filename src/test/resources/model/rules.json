@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Rules",
+    "mapOf": "RulesPropertyDef"
+  },
+  {
+    "shortcut": {
+      "assignTo": "query"
+    },
+    "name": "RulesProperty",
+    "attributes": {
+      "query": {
+        "node": "scalar",
+        "required": true
+      },
+      "strict": {
+        "type": "boolean",
+        "node": "scalar",
+        "required": false
+      }
+    }
+  }
+]

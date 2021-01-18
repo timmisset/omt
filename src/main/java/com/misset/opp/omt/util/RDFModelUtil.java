@@ -202,6 +202,15 @@ public class RDFModelUtil {
                 numericTypes.contains(resource.getLocalName());
     }
 
+    public boolean isString(Resource resource) {
+        if (resource == null || resource.getNameSpace() == null || resource.getLocalName() == null) {
+            return false;
+        }
+        List<String> stringList = Arrays.asList("string", "interpolatedString");
+        return resource.getNameSpace().equals(XSD) &&
+                stringList.contains(resource.getLocalName());
+    }
+
     public boolean isDate(Resource resource) {
         if (resource == null || resource.getNameSpace() == null || resource.getLocalName() == null) {
             return false;
@@ -216,6 +225,7 @@ public class RDFModelUtil {
                 (resource1.equals(resource2) ||
                         getClass(resource1).equals(getClass(resource2)) ||
                         (isNumeric(resource1) && isNumeric(resource2)) ||
+                        (isString(resource1) && isString(resource2)) ||
                         (isDate(resource1) && isDate(resource2)));
     }
 
