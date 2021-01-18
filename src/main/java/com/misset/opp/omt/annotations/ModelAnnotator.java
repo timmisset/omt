@@ -6,6 +6,7 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.intentions.generic.RemoveIntention;
 import com.misset.opp.omt.psi.*;
+import org.apache.jena.rdf.model.Resource;
 
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
+import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
 public class ModelAnnotator extends AbstractAnnotator {
     private static final String ATTRIBUTES = "attributes";
@@ -33,6 +35,8 @@ public class ModelAnnotator extends AbstractAnnotator {
             annotateUsage(element); // usage check of activities, procedures, etc
         } else if (element instanceof OMTDefineName) {
             annotateUsage(element); // usage of defined queries and commands
+        } else if (element instanceof OMTScalarValue) {
+            annotateScalarValue((OMTScalarValue) element);
         }
     }
 
@@ -41,6 +45,20 @@ public class ModelAnnotator extends AbstractAnnotator {
         String modelItemType = getModelUtil().getModelItemType(modelItemTypeElement);
         if (!modelRootItems.contains(modelItemType)) {
             setError(String.format("Unknown model type: %s", modelItemType));
+        }
+    }
+
+    private void annotateScalarValue(OMTScalarValue scalarValue) {
+        final List<Resource> resources = scalarValue.resolveToResource();
+        final JsonObject jsonAttributes = getModelUtil().getJsonAtElementLevel(scalarValue);
+        if (!resources.isEmpty() && jsonAttributes.has("type")) {
+            List<Resource> acceptableTypes = getRDFModelUtil().getPrimitiveTypeAsResourceList(jsonAttributes.get("type").getAsString());
+            final boolean validInput = getRDFModelUtil().validateType(acceptableTypes, resources);
+            if (!validInput) {
+                setError(String.format("Expected: %s, got: %s",
+                        jsonAttributes.get("type").getAsString(),
+                        resources.get(0).getLocalName()));
+            }
         }
     }
 

@@ -61,7 +61,6 @@ class ModelAnnotatorTest extends OMTAnnotationTest {
         attributes = new JsonObject();
         attributes.addProperty("property", "");
         container.add("attributes", attributes);
-
     }
 
     @AfterEach
@@ -158,6 +157,16 @@ class ModelAnnotatorTest extends OMTAnnotationTest {
     }
 
     @Test
+    void annotateMissingEntriesThrowsErrorWhenShortcutIsDestructedWithWrongProperty() {
+        String content = "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       variables:\n" +
+                "           - property: true\n";
+        myFixture.configureByText(getFileName(), content);
+        assertHasError("property is not a known attribute for Variable");
+    }
+
+    @Test
     void annotateMissingEntriesThrowsNoErrorWhenShortcutIsDestructed() {
         String content = "model:\n" +
                 "   Activiteit: !Activity\n" +
@@ -165,6 +174,28 @@ class ModelAnnotatorTest extends OMTAnnotationTest {
                 "           mijnRegel:\n" +
                 "               query: ''\n" +
                 "               strict: false\n";
+        myFixture.configureByText(getFileName(), content);
+        assertNoErrors();
+    }
+
+    @Test
+    void annotateEntryTypeThrowsErrorWhenWrongType() {
+        setOntologyModel();
+        String content = "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       rules:\n" +
+                "           mijnRegel:\n" +
+                "               strict: 'false'\n";
+        myFixture.configureByText(getFileName(), content);
+        assertHasError("Expected: boolean, got: string");
+    }
+
+    @Test
+    void annotateEntryTypeThrowsNoErrorWhenStringOrInterpolatedString() {
+        setOntologyModel();
+        String content = "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       title: titel";
         myFixture.configureByText(getFileName(), content);
         assertNoErrors();
     }

@@ -3,7 +3,8 @@
   "modelRoot": true,
   "flags": [
     "nested",
-    "autonomous"
+    "autonomous",
+    "sibling"
   ],
   "localCommands": [
     "COMMIT"
