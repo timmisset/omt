@@ -102,7 +102,7 @@ importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                            mixin="com.misset.opp.omt.psi.impl.named.OMTImportSourceNamedElementImpl"
                                                                            implements="com.misset.opp.omt.psi.named.OMTImportNamedElement"
                                                                          }
-importLocation ::=                          (MODULE_START indentToken PROPERTY dedentToken) | PROPERTY | IMPORT_PATH
+importLocation ::=                          (MODULE_START indentToken PROPERTY dedentToken) | (MODULE_START PROPERTY) | PROPERTY | IMPORT_PATH
 
 prefixBlock::=                              leading? PREFIX_BLOCK_START indentToken prefix+ dedentToken { extends=specificBlock }
 prefix::=                                   leading? namespacePrefix namespaceIri {
