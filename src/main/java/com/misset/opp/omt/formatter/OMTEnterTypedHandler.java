@@ -15,6 +15,7 @@ import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.psi.OMTBlock;
 import com.misset.opp.omt.psi.OMTJdComment;
 import com.misset.opp.omt.psi.OMTSequenceItem;
 import com.misset.opp.omt.psi.OMTTypes;
@@ -79,7 +80,11 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
     }
 
     private boolean isSequenceItem() {
-        return PsiTreeUtil.findFirstParent(elementAtCaretOnEnter, element -> element instanceof OMTSequenceItem) != null;
+        return
+                // the entry of a sequence item
+                PsiTreeUtil.findFirstParent(elementAtCaretOnEnter, element -> element instanceof OMTSequenceItem) != null &&
+                        // but only as shortcut or single value
+                        PsiTreeUtil.findChildOfType(PsiTreeUtil.findFirstParent(elementAtCaretOnEnter, element -> element instanceof OMTSequenceItem), OMTBlock.class) == null;
     }
 
     private String getAfterSequenceBulletSpacing(PsiFile file) {

@@ -131,6 +131,22 @@ class OMTFormattingBulletTest extends OMTFormattingTest {
     }
 
     @Test
+    void notAfterDestructedSequenceItem() {
+        String content = "" +
+                "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       params:\n" +
+                "           -   name: 'test'<caret>";
+        String expected = "" +
+                "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       params:\n" +
+                "           -   name: 'test'\n" +
+                "               ";
+        assertBullet(content, expected, false);
+    }
+
+    @Test
     void sequenceSpacingAfterBullet() {
         String content = "" +
                 "model:\n" +
