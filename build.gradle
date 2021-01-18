@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.3.3'
+version '2.3.4'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -43,6 +43,8 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
+        <strong>2.3.4</strong><br />
+        Type checks on model values, for example strict in rules must be a boolean<br />
         <strong>2.3.3</strong><br />
         Resolves StandaloneQuery outcome type(s)<br />
         Added strict as property for rules<br />
