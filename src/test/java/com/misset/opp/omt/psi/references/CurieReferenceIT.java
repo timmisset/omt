@@ -16,7 +16,6 @@ public class CurieReferenceIT extends ReferenceTest {
         super.setName("CurieReferenceIT");
         super.setUp(OMTCurieElement.class);
         setOntologyModel();
-        // re-run to process copied files correctly into TTL files
         ReadAction.run(() -> getProjectUtil().loadOntologyModel(getProject(), true));
     }
 

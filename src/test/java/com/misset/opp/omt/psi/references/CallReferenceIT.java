@@ -119,6 +119,28 @@ class CallReferenceIT extends ReferenceTest {
     }
 
     @Test
+    void testRootQueryCanReferenceDeferredImportedQuery() {
+        // Whenever an OMT file imports a member, it is also available to any file that imports that file
+        String importedQuery = "" +
+                "queries: |\n" +
+                "   DEFINE QUERY importedQuery => '';\n";
+        addFile("imported.omt", importedQuery);
+        String deferred = "" +
+                "import:\n" +
+                "   ./imported.omt:\n" +
+                "   - importedQuery";
+        addFile("deferred.omt", deferred);
+        String content = "" +
+                "import:\n" +
+                "   ./deferred.omt:\n" +
+                "   - importedQuery\n" +
+                "queries: |\n" +
+                "   DEFINE QUERY myQuery => <caret>importedQuery;\n";
+        assertHasReference(content);
+        assertNoErrors();
+    }
+
+    @Test
     void testRootQueryHasNoReferenceWhenImportedFileDoesNotExist() {
         String content = "" +
                 "import:\n" +

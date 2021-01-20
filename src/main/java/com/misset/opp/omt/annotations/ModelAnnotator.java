@@ -71,6 +71,9 @@ public class ModelAnnotator extends AbstractAnnotator {
         String containerName = container.has(NAME) ? container.get(NAME).getAsString() : "";
 
         if (!keys.contains(label) && !getModelUtil().isMapNode(container)) {
+            if (omtBlockEntry.getContainingFile() != null && ((OMTFile) omtBlockEntry.getContainingFile()).isModuleFile()) {
+                return;
+            }
             String errorMessage = String.format("%s is not a known attribute for %s",
                     label, containerName);
 
@@ -102,6 +105,9 @@ public class ModelAnnotator extends AbstractAnnotator {
                 .collect(Collectors.toList());
 
         if (!missingElements.isEmpty()) {
+            if (block.getContainingFile() != null && ((OMTFile) block.getContainingFile()).isModuleFile()) {
+                return;
+            }
             final String allMissingElements = String.join(", ", missingElements);
             final String entryBlockLabel = getModelUtil().getEntryBlockLabel(block);
             setError(String.format("%s is missing attribute(s): %s", entryBlockLabel, allMissingElements));

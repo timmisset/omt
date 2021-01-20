@@ -36,8 +36,8 @@ blockEntry ::=                              specificBlock | genericBlock {
                                                 implements="com.misset.opp.omt.psi.support.OMTBlockEntrySup"
                                                 }
 propertyLabel ::=                           PROPERTY {
-                                                implements="com.misset.opp.omt.psi.support.OMTLabelledElement"
-                                                mixin="com.misset.opp.omt.psi.impl.OMTLabelledElementImpl"
+                                                implements="com.misset.opp.omt.psi.support.OMTNamedElement"
+                                                mixin="com.misset.opp.omt.psi.impl.named.OMTPropertyLabelImpl"
 }
 
 // a scalar single statement (multiline optional) following a property label

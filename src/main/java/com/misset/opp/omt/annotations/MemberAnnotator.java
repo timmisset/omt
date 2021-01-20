@@ -10,6 +10,7 @@ import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.IncorrectSignatureArgument;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.intentions.members.MemberIntention;
+import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTInterpolationTemplate;
 import com.misset.opp.omt.psi.OMTSignature;
 import com.misset.opp.omt.psi.OMTSignatureArgument;
@@ -79,6 +80,10 @@ public class MemberAnnotator extends AbstractAnnotator {
         if (resolved == null) {
             if (annotateAsBuiltInMember(call)) return;
             if (annotateAsLocalCommand(call)) return;
+
+            // do not error on module files
+            // TODO: create specific handler for Module files
+            if (call.getContainingFile() != null && ((OMTFile) call.getContainingFile()).isModuleFile()) return;
 
             // unknown, annotate with error:
             setError(String.format("%s could not be resolved", call.getName()),
