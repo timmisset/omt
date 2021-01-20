@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.3.4'
+version '2.3.5'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -38,11 +38,14 @@ intellij {
     version '2020.3'
     plugins = [
             'java',
-            'tech.lnkd.LNKD-tech-Editor:0.7-EARLY_ACCESS'
+            'tech.lnkd.LNKD-tech-Editor:0.9'
     ]
 }
 patchPluginXml {
     changeNotes """
+        <strong>2.3.5</strong><br />
+        Some fixes for the module files<br />
+        Imports from imports are recognized and resolvable as both reference and usage<br />
         <strong>2.3.4</strong><br />
         Type checks on model values, for example strict in rules must be a boolean<br />
         <strong>2.3.3</strong><br />
