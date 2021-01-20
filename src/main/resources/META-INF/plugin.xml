@@ -27,6 +27,7 @@
                                 implementationClass="com.misset.opp.omt.completion.OMTCompletionContributor"/>
         <lang.findUsagesProvider language="OMT"
                                  implementationClass="com.misset.opp.omt.OMTFindUsageProvider"/>
+        <findUsagesHandlerFactory implementation="com.misset.opp.omt.OMTFindUsageHandlerFactory"/>
         <postStartupActivity implementation="com.misset.opp.omt.OMTStartupActivity"/>
         <lang.commenter language="OMT" implementationClass="com.misset.opp.omt.OMTCommenter"/>
         <lang.psiStructureViewFactory language="OMT"

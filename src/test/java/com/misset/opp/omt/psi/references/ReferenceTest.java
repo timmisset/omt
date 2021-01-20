@@ -3,6 +3,7 @@ package com.misset.opp.omt.psi.references;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.misset.opp.omt.OMTTestSuite;
+import com.misset.opp.omt.psi.OMTFile;
 
 public class ReferenceTest extends OMTTestSuite {
 
@@ -34,7 +35,11 @@ public class ReferenceTest extends OMTTestSuite {
     protected void assertHasUsages(String content, int usages) {
         getElementAtCaret(content, element ->
                 withProgress(() -> assertEquals(usages,
-                        ReferencesSearch.search(element).findAll().size())), elementAtCaretClass, false);
+                        ReferencesSearch
+                                .search(element)
+                                .filtering(psiReference -> psiReference.getElement().getContainingFile() instanceof OMTFile)
+                                .findAll()
+                                .size())), elementAtCaretClass, false);
     }
 
 }
