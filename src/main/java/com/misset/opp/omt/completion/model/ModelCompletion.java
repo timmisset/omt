@@ -57,7 +57,7 @@ public class ModelCompletion extends OMTCompletion {
         return new CompletionProvider<>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
-                setAttributeSuggestions(parameters.getPosition(), fromBlockParent);
+                setAttributeSuggestions(parameters.getPosition(), fromBlockParent && !((OMTFile) parameters.getOriginalFile()).isModuleFile());
                 complete(result);
             }
         };

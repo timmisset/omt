@@ -28,7 +28,7 @@ public class ReferenceTest extends OMTTestSuite {
 
     private void assertReference(String content, boolean expectToHaveReference) {
         getElementAtCaret(content, element ->
-                assertEquals(expectToHaveReference, element.getReference().resolve() != null), elementAtCaretClass, true);
+                assertEquals(expectToHaveReference, element.getReference() != null && element.getReference().resolve() != null), elementAtCaretClass, true);
     }
 
     protected void assertHasUsages(String content, int usages) {

@@ -345,22 +345,27 @@ public class OMTFile extends PsiFileBase {
                 .forEach(omtExportMember -> exported.put(omtExportMember.getName(), omtExportMember))
         );
 
-        // exporting members from module:
-        Optional<OMTExportBlock> optionalOMTExportBlock = getSpecificBlock(EXPORT, OMTExportBlock.class);
-        optionalOMTExportBlock.ifPresent(
-                omtExportBlock ->
-                {
-                    final Map<String, OMTExportMember> importedMembersAsExportedMembers = getImportedMembersAsExportedMembers();
-                    if (omtExportBlock.getMemberList() != null) {
-                        omtExportBlock.getMemberList().getMemberListItemList()
-                                .stream().map(OMTMemberListItem::getMember)
-                                .filter(member -> member != null && importedMembersAsExportedMembers.containsKey(member.getName()))
-                                .forEach(
-                                        member -> exported.put(member.getName(), importedMembersAsExportedMembers.get(member.getName()))
-                                );
+        if (isModuleFile()) {
+            // modules must specify exporting members explicitely via the export: block
+            Optional<OMTExportBlock> optionalOMTExportBlock = getSpecificBlock(EXPORT, OMTExportBlock.class);
+            optionalOMTExportBlock.ifPresent(
+                    omtExportBlock ->
+                    {
+                        final Map<String, OMTExportMember> importedMembersAsExportedMembers = getImportedMembersAsExportedMembers();
+                        if (omtExportBlock.getMemberList() != null) {
+                            omtExportBlock.getMemberList().getMemberListItemList()
+                                    .stream().map(OMTMemberListItem::getMember)
+                                    .filter(member -> member != null && importedMembersAsExportedMembers.containsKey(member.getName()))
+                                    .forEach(
+                                            member -> exported.put(member.getName(), importedMembersAsExportedMembers.get(member.getName()))
+                                    );
+                        }
                     }
-                }
-        );
+            );
+        } else {
+            // other omt files export anything that they import
+            exported.putAll(getImportedMembersAsExportedMembers());
+        }
 
         exportMembers = exported;
     }

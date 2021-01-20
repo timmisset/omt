@@ -20,7 +20,8 @@ public class OMTFindUsageProvider implements FindUsagesProvider {
                         OMTTypes.OPERATOR,
                         OMTTypes.COMMAND,
                         OMTTypes.OPERATOR_CALL,
-                        OMTTypes.COMMAND_CALL
+                        OMTTypes.COMMAND_CALL,
+                        OMTTypes.PROPERTY_LABEL
                 ),
                 TokenSet.EMPTY,
                 TokenSet.EMPTY);
