@@ -17,8 +17,9 @@ import static com.misset.opp.omt.psi.util.UtilManager.*;
 
 public abstract class OMTCallResolvableImpl extends OMTCallImpl implements OMTCallResolvable {
 
-    private static final List<String> operatorsThatReturnFirstArgumentAsType = Arrays.asList("CAST", "PLUS", "MINUS");
+    private static final List<String> operatorsThatReturnFirstArgumentAsType = Arrays.asList("CAST", "PLUS", "MINUS", "PICK");
     private static final List<String> operatorsThatAppendFirstArgumentAsType = Arrays.asList("IF_EMPTY", "CATCH");
+    private static final List<String> operatorsThatReturnAnyAsType = Arrays.asList("TRAVERSE");
 
     public OMTCallResolvableImpl(@NotNull ASTNode node) {
         super(node);
@@ -37,6 +38,8 @@ public abstract class OMTCallResolvableImpl extends OMTCallImpl implements OMTCa
                 resources.addAll(
                         queryStep.filter(getFirstArgumentType()));
                 return resources;
+            } else if (operatorsThatReturnAnyAsType.contains(getName())) {
+                return getRDFModelUtil().getAnyTypeAsList();
             }
             return callable.returnsAny() ? previousStep : callable.getReturnType();
         }

@@ -2,10 +2,7 @@ package com.misset.opp.omt.annotations;
 
 import com.google.gson.JsonObject;
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.OMTBlock;
-import com.misset.opp.omt.psi.OMTBlockEntry;
-import com.misset.opp.omt.psi.OMTGenericBlock;
-import com.misset.opp.omt.psi.OMTModelItemTypeElement;
+import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.util.ModelUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,6 +96,7 @@ class ModelAnnotatorTest extends OMTAnnotationTest {
         doReturn("Unknown").when(modelUtil).getEntryBlockLabel(eq(genericBlock));
         doReturn(container).when(modelUtil).getJsonAtElementLevel(eq(genericBlock));
         doReturn(false).when(modelUtil).isMapNode(eq(container));
+        doReturn(mock(OMTPropertyLabel.class)).when(genericBlock).getPropertyLabel();
 
         modelAnnotator.annotate(genericBlock);
 
@@ -130,6 +128,7 @@ class ModelAnnotatorTest extends OMTAnnotationTest {
     void annotateBlockEntryThrowsUnknownAttributeErrorWhenNoAttributesCanBeResolved() {
         doReturn("property").when(modelUtil).getEntryBlockLabel(eq(genericBlock));
         doReturn(container).when(modelUtil).getJsonAtElementLevel(eq(genericBlock));
+        doReturn(mock(OMTPropertyLabel.class)).when(genericBlock).getPropertyLabel();
         container.remove("name");
         container.remove("attributes");
 

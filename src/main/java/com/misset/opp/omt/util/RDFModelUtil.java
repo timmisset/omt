@@ -31,24 +31,34 @@ public class RDFModelUtil {
     private final String rootFolder;
 
     public static final Function<Model, Resource> OWL_CLASS = (Model model) -> model.createResource("http://www.w3.org/2002/07/owl#Class");
+    public static final Function<Model, Resource> OWL_THING = (Model model) -> model.createResource("http://www.w3.org/2002/07/owl#Thing");
     public static final Function<Model, Resource> NODE_SHAPE = (Model model) -> model.createResource("http://www.w3.org/ns/shacl#NodeShape");
 
     private static final HashMap<Resource, List<Resource>> predicateObjects = new HashMap<>();
     private static final HashMap<Resource, List<Resource>> predicateSubjects = new HashMap<>();
 
     private Resource owlClass;
+    private Resource owlThing;
     // The ontology is completely refreshed when a change is made to the ttl files in the project
     // while this doesn't happen the same ontology queries will always return the same result
     final Map<String, Object> cache = new HashMap<>();
     private Resource nodeShape;
     private Model model;
 
-    private Resource getOwlClass() {
+    public Resource getOwlClass() {
         if (owlClass == null) {
             owlClass = OWL_CLASS.apply(model);
         }
         return owlClass;
     }
+
+    public Resource getOwlThing() {
+        if (owlThing == null) {
+            owlThing = OWL_THING.apply(model);
+        }
+        return owlThing;
+    }
+
     public RDFModelUtil(String rootFolder) {
         this.rootFolder = rootFolder;
         this.model = null;
@@ -134,7 +144,6 @@ public class RDFModelUtil {
         return getDistinctResources(subjects);
     }
 
-
     /**
      * Will return the sh:properties of this resource or its parent classes
      */
@@ -197,7 +206,7 @@ public class RDFModelUtil {
         if (resource == null || resource.getNameSpace() == null || resource.getLocalName() == null) {
             return false;
         }
-        List<String> numericTypes = Arrays.asList("integer", "int", "double", "decimal");
+        List<String> numericTypes = Arrays.asList("integer", "int", "double", "decimal", "number");
         return resource.getNameSpace().equals(XSD) &&
                 numericTypes.contains(resource.getLocalName());
     }
@@ -220,13 +229,26 @@ public class RDFModelUtil {
                 dateTypes.contains(resource.getLocalName());
     }
 
+    public boolean isAnyType(Resource resource) {
+        if (resource == getAnyType()) {
+            return true;
+        }
+        if (resource == null || resource.getNameSpace() == null || resource.getLocalName() == null) {
+            return false;
+        }
+        return resource == getOwlThing();
+    }
+
     public boolean areComparable(Resource resource1, Resource resource2) {
         return (resource1 != null && resource2 != null) &&
-                (resource1.equals(resource2) ||
-                        getClass(resource1).equals(getClass(resource2)) ||
-                        (isNumeric(resource1) && isNumeric(resource2)) ||
-                        (isString(resource1) && isString(resource2)) ||
-                        (isDate(resource1) && isDate(resource2)));
+                (
+                        isAnyType(resource1) ||
+                                isAnyType(resource2) ||
+                                resource1.equals(resource2) ||
+                                getClass(resource1).equals(getClass(resource2)) ||
+                                (isNumeric(resource1) && isNumeric(resource2)) ||
+                                (isString(resource1) && isString(resource2)) ||
+                                (isDate(resource1) && isDate(resource2)));
     }
 
     public List<Resource> getComparableOptions(List<Resource> resources) {
@@ -454,7 +476,6 @@ public class RDFModelUtil {
     public int getMaxCount(Resource subject, Resource predicate) {
         return getInt(subject, predicate, SHACL_MAXCOUNT);
     }
-
 
     private int getInt(Resource subject, Resource predicate, Property property) {
         Optional<Statement> optionalPredicate = getSubjectPredicate(subject, predicate);
