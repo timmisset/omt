@@ -71,6 +71,12 @@ public class ModelAnnotator extends AbstractAnnotator {
         String containerName = container.has(NAME) ? container.get(NAME).getAsString() : "";
 
         if (!keys.contains(label) && !getModelUtil().isMapNode(container)) {
+            if (omtBlockEntry.getPropertyLabel().getReference() != null &&
+                    omtBlockEntry.getPropertyLabel().getReference().resolve() != null) {
+                // might be known references that are added as ad-hoc entries, or in some cases prefixes
+                // in any-case, if it's resolvable it's fine
+                return;
+            }
             if (omtBlockEntry.getContainingFile() != null && ((OMTFile) omtBlockEntry.getContainingFile()).isModuleFile()) {
                 return;
             }

@@ -289,7 +289,7 @@ public class ModelUtil {
     }
 
     public boolean isOntology(PsiElement element) {
-        return element instanceof OMTModelItemBlock &&
+        return element != null &&
                 getModelItemType(element).equals("Ontology");
     }
 
