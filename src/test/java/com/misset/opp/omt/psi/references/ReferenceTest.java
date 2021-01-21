@@ -2,6 +2,7 @@ package com.misset.opp.omt.psi.references;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.searches.ReferencesSearch;
+import com.misset.opp.omt.OMTFindUsageHandlerFactory;
 import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.OMTFile;
 
@@ -33,10 +34,15 @@ public class ReferenceTest extends OMTTestSuite {
     }
 
     protected void assertHasUsages(String content, int usages) {
-        getElementAtCaret(content, element ->
+        assertHasUsages(getFileName(), content, usages);
+    }
+
+    protected void assertHasUsages(String filename, String content, int usages) {
+        final OMTFindUsageHandlerFactory omtFindUsageHandlerFactory = new OMTFindUsageHandlerFactory();
+        getElementAtCaret(filename, content, element ->
                 withProgress(() -> assertEquals(usages,
                         ReferencesSearch
-                                .search(element)
+                                .search(OMTFindUsageHandlerFactory.getSearchParameters(element, null))
                                 .filtering(psiReference -> psiReference.getElement().getContainingFile() instanceof OMTFile)
                                 .findAll()
                                 .size())), elementAtCaretClass, false);
