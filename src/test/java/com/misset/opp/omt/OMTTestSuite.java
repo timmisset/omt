@@ -374,7 +374,11 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
     }
 
     protected void getElementAtCaret(String content, Consumer<PsiElement> elementConsumer, Class<? extends PsiElement> elementAtCaretClass, boolean consumeInReader) {
-        myFixture.configureByText(getFileName(), content);
+        getElementAtCaret(getFileName(), content, elementConsumer, elementAtCaretClass, consumeInReader);
+    }
+
+    protected void getElementAtCaret(String filename, String content, Consumer<PsiElement> elementConsumer, Class<? extends PsiElement> elementAtCaretClass, boolean consumeInReader) {
+        myFixture.configureByText(filename, content);
         final PsiElement elementAtCaret = ApplicationManager.getApplication().runReadAction((Computable<PsiElement>) () -> {
             PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
             if (element instanceof PsiWhiteSpace) {

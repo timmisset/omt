@@ -36,4 +36,22 @@ public class PropertyLabelReferenceIT extends ReferenceTest {
         assertHasReference(content);
     }
 
+    @Test
+    void findUsageInOtherFile() {
+        String content = "" +
+                "model:\n" +
+                "   Activiteit<caret>: !Activity";
+        String usageFile = "" +
+                "import:\n" +
+                "   ./activityFile.omt:\n" +
+                "       - Activiteit\n" +
+                "\n" +
+                "model:\n" +
+                "   Activiteit2: !Activity\n" +
+                "       onStart: |\n" +
+                "           @Activiteit();";
+        addFile("usageFile.omt", usageFile);
+        assertHasUsages("activityFile.omt", content, 2);
+    }
+
 }
