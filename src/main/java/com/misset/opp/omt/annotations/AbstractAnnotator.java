@@ -1,5 +1,6 @@
 package com.misset.opp.omt.annotations;
 
+import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static com.misset.opp.omt.psi.util.UtilManager.getInspectionUtil;
 import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
 public abstract class AbstractAnnotator {
@@ -79,13 +81,16 @@ public abstract class AbstractAnnotator {
         });
     }
 
+
     protected void annotateUsage(PsiElement element, Consumer<AnnotationBuilder> builder) {
         if (!ReferencesSearch.search(element)
                 .anyMatch(psiReference ->
                         psiReference.getElement().getContainingFile() instanceof OMTFile &&
                                 element != psiReference.getElement())) {
             String message = String.format("%s is never used", element.getText());
-            final AnnotationBuilder annotationBuilder = holder.newAnnotation(HighlightSeverity.WARNING, message);
+            final AnnotationBuilder annotationBuilder =
+                    holder.newAnnotation(HighlightSeverity.WARNING, message)
+                            .highlightType(ProblemHighlightType.LIKE_UNUSED_SYMBOL);
             builder.accept(annotationBuilder);
             annotationBuilder.create();
         }

@@ -1,5 +1,6 @@
 package com.misset.opp.omt.annotations;
 
+import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -49,7 +50,7 @@ public class VariableAnnotator extends AbstractAnnotator {
         if (localVariables.containsKey(variable.getName())) {
             setInformation(String.format("%s is locally available in %s", variable.getName(), localVariables.get(variable.getName())));
         } else {
-            validateReference(variable, String.format("%s is not declared", variable.getText()));
+            validateReference(variable, String.format("%s is not declared", variable.getText()), annotationBuilder -> annotationBuilder.highlightType(ProblemHighlightType.LIKE_UNKNOWN_SYMBOL));
         }
     }
 

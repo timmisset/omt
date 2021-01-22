@@ -2,6 +2,7 @@ package com.misset.opp.omt.annotations;
 
 import com.google.gson.JsonObject;
 import com.intellij.codeInsight.intention.IntentionAction;
+import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -92,6 +93,7 @@ public class MemberAnnotator extends AbstractAnnotator {
                         for (IntentionAction action : MemberIntention.getImportMemberIntentions(call)) {
                             annotationBuilder = annotationBuilder.withFix(action);
                         }
+                        annotationBuilder.highlightType(ProblemHighlightType.LIKE_UNKNOWN_SYMBOL);
                     });
         } else {
             annotateReference(resolved);
