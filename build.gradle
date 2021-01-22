@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.3.7'
+version '2.4'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -43,6 +43,8 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
+        <strong>2.4</strong><br />
+        Added folding support for OMT blocks and some ODT elements<br />
         <strong>2.3.7</strong><br />
         owl:Thing is correctly processed as an 'any' type <br />
         Ontology references are recognized<br />
