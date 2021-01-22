@@ -1,6 +1,7 @@
 package com.misset.opp.omt.annotations;
 
 import com.intellij.codeInsight.intention.IntentionAction;
+import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
@@ -30,6 +31,7 @@ public class OMTAnnotationTest extends OMTTestSuite {
         doReturn(builder).when(builder).range(any(PsiElement.class));
         doReturn(builder).when(builder).range(any(ASTNode.class));
         doReturn(builder).when(builder).range(any(TextRange.class));
+        doReturn(builder).when(builder).highlightType(any(ProblemHighlightType.class));
         doReturn(builder).when(builder).tooltip(anyString());
     }
 
