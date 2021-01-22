@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getInspectionUtil;
 import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
 
 public abstract class AbstractAnnotator {
