@@ -287,6 +287,9 @@ public class RDFModelUtil {
     }
 
     public Resource getClass(Resource implementation) {
+        if (implementation == null) {
+            return null;
+        }
         final Resource classResource = implementation.getPropertyResourceValue(RDF_TYPE);
         if (classResource == null) {
             return implementation;

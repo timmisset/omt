@@ -38,9 +38,9 @@ public abstract class OMTCompletion {
     protected static final int MODEL_ITEM_TYPE_PRIORITY = 13;
     protected static final int ATTRIBUTES_PRIORITY = 12;              // model entry attributes
     protected static final int EQUATION_PRIORITY = 11;                // the other side of the equation, shows a limited set of options based on the resolved type of the other side
-    protected static final int CLASSES_PRIORITY = 10;                  // list with available classes
-    protected static final int PREDICATE_FORWARD_PRIORITY = 9;
-    protected static final int PREDICATE_REVERSE_PRIORITY = 8;
+    protected static final int PREDICATE_FORWARD_PRIORITY = 10;
+    protected static final int PREDICATE_REVERSE_PRIORITY = 9;
+    protected static final int CLASSES_PRIORITY = 8;                  // list with available classes
     protected static final int LOCAL_VARIABLE_PRIORITY = 7;
     protected static final int DECLARED_VARIABLE_PRIORITY = 6;
     protected static final int GLOBAL_VARIABLE_PRIORITY = 5;
