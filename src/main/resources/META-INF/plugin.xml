@@ -20,6 +20,7 @@
         <colorSettingsPage implementation="com.misset.opp.omt.style.OMTColorSettingsPage"/>
         <annotator language="OMT" implementationClass="com.misset.opp.omt.annotations.OMTAnnotator"/>
         <codeStyleSettingsProvider implementation="com.misset.opp.omt.settings.OMTCodeStyleSettingsProvider"/>
+        <lang.foldingBuilder language="OMT" implementationClass="com.misset.opp.omt.OMTFoldingBuilder"/>
         <langCodeStyleSettingsProvider
                 implementation="com.misset.opp.omt.settings.OMTLanguageCodeStyleSettingsProvider"/>
         <completion.contributor language="OMT"
