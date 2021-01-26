@@ -114,6 +114,7 @@ public int getScalarState() {
     return getScalarState(currentBlockLabel);
 }
 public static int getScalarState(String entry) {
+    if(entry == null) { return YAML_SCALAR; }
     switch(entry) {
         case "title:":
             return INTERPOLATED_STRING;
