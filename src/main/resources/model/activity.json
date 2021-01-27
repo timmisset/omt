@@ -14,7 +14,9 @@
       "CANCEL",
       "DONE",
       "DRAFT",
-      "ROLLBACK"
+      "ROLLBACK",
+      "HAS_ERROR",
+      "GET_ERROR_STATE"
     ],
     "attributes": {
       "title": {
