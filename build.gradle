@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.4'
+version '2.4.1'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -43,34 +43,12 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-        <strong>2.4</strong><br />
-        Added folding support for OMT blocks and some ODT elements<br />
-        <strong>2.3.7</strong><br />
-        owl:Thing is correctly processed as an 'any' type <br />
-        Ontology references are recognized<br />
-        in-line prefixes are recognized (for example types in ontology definitions <br />
-        <strong>2.3.6</strong><br />
-        Upgrade compatibility to LNKD.tech to 0.9<br />
-        FindUsages limited to only OMT files<br />
-        <strong>2.3.5</strong><br />
-        Some fixes for the module files<br />
-        Imports from imports are recognized and resolvable as both reference and usage<br />
-        <strong>2.3.4</strong><br />
-        Type checks on model values, for example strict in rules must be a boolean<br />
-        <strong>2.3.3</strong><br />
-        Resolves StandaloneQuery outcome type(s)<br />
-        Added strict as property for rules<br />
-        <strong>2.3.2</strong><br />
-        Some bugfixes for null-pointers during indexing<br />
-        Added readonly as property to variable<br />
-        <strong>2.3.1</strong><br />
-        Resolved some compatibility issues with LNKD.tech after upgrade<br />
-        <strong>2.3</strong><br />
-        Compatible with IntelliJ version 2020.3<br />
-        <strong>2.2.1</strong><br />
-        Exclude model ttl files that are located in output/target folders<br />
-        <strong>2.2</strong><br />
-        Integrated LNKD.tech plugin and resolvable references to TTL files directly from ODT query paths<br />
+        <strong>2.4.1</strong><br />
+        Import annotation extended with same file detection<br />
+        When a file is imported using the @client shortcut and relative path (../..)<br />
+        it is annotated as a warning with option to merge the 2 import statements<br />
+        <br />
+        Added HAS_ERROR and GET_ERROR_STATE as local commands
       """
 }
 tasks{

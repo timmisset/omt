@@ -1,8 +1,19 @@
 package com.misset.opp.omt.annotations;
 
+import com.intellij.codeInsight.intention.IntentionAction;
+import com.intellij.codeInspection.util.IntentionFamilyName;
+import com.intellij.codeInspection.util.IntentionName;
 import com.intellij.lang.annotation.AnnotationHolder;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.util.ImportUtil;
+import org.jetbrains.annotations.NotNull;
+
+import static com.misset.opp.omt.psi.util.UtilManager.getImportUtil;
 
 public class CollectionAnnotator extends AbstractAnnotator {
     private static final String DUPLICATION = "Duplication";
@@ -18,6 +29,8 @@ public class CollectionAnnotator extends AbstractAnnotator {
             annotate((OMTSequenceItem) element);
         } else if (element instanceof OMTBlockEntry) {
             annotate((OMTBlockEntry) element);
+        } else if (element instanceof OMTImportSource) {
+            annotate((OMTImportSource) element);
         }
     }
 
@@ -65,5 +78,77 @@ public class CollectionAnnotator extends AbstractAnnotator {
         ) {
             setError(DUPLICATION);
         }
+    }
+
+    private void annotate(OMTImportSource importSource) {
+        final ImportUtil importUtil = getImportUtil();
+
+        OMTImportBlock block = (OMTImportBlock) importSource.getParent().getParent();
+        final OMTImport currentImport = (OMTImport) importSource.getParent();
+
+        final VirtualFile importedFile = importUtil.getImportedFile(currentImport);
+        if (importedFile == null || !importedFile.exists()) {
+            return;
+        }
+
+        block.getImportList()
+                .stream()
+                .filter(omtImport -> omtImport != currentImport)
+                .filter(omtImport -> {
+                    final VirtualFile thisImport = importUtil.getImportedFile(omtImport);
+                    if (thisImport == null || !thisImport.exists()) {
+                        return false;
+                    }
+                    return thisImport.equals(importedFile);
+                })
+                .forEach(omtImport -> setWarning(
+                        String.format("%s and %s refer to the same file", omtImport.getImportSource().getText(), importSource.getText()),
+                        annotationBuilder ->
+                                annotationBuilder
+                                        .withFix(getMergeIntention(currentImport, omtImport))
+                                        .withFix(getMergeIntention(omtImport, currentImport))
+                ));
+    }
+
+    private IntentionAction getMergeIntention(OMTImport omtImport, OMTImport obsolete) {
+        return new IntentionAction() {
+            @Override
+            public @IntentionName @NotNull String getText() {
+                return String.format("Merge into %s", omtImport.getImportSource().getText());
+            }
+
+            @Override
+            public @NotNull @IntentionFamilyName String getFamilyName() {
+                return "Merge imports";
+            }
+
+            @Override
+            public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
+                return true;
+            }
+
+            @Override
+            public void invoke(@NotNull Project project, Editor editor, PsiFile file) {
+
+                final OMTMemberList memberList = omtImport.getMemberList();
+                if (obsolete.getMemberList() == null || memberList == null) return;
+
+                obsolete.getMemberList().getMemberListItemList().forEach(
+                        omtMemberListItem -> {
+                            if (memberList.getMemberListItemList().stream().noneMatch(
+                                    existingItem -> existingItem.getName().equals(omtMemberListItem.getName())
+                            )) {
+                                memberList.addBefore(omtMemberListItem, memberList.getDedentToken());
+                            }
+                        }
+                );
+                obsolete.delete();
+            }
+
+            @Override
+            public boolean startInWriteAction() {
+                return true;
+            }
+        };
     }
 }
