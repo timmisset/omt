@@ -21,15 +21,22 @@ public class OMTFindUsageHandlerFactory extends FindUsagesHandlerFactory {
      * @return
      */
     public static ReferencesSearch.SearchParameters getSearchParameters(@NotNull PsiElement target, @Nullable FindUsagesOptions findUsagesOptions) {
-        return new ReferencesSearch.SearchParameters(getTargetElement(target),
-                GlobalSearchScope.FilesScope.getScopeRestrictedByFileTypes(
-                        GlobalSearchScope.allScope(target.getProject()),
-                        OMTFileType.INSTANCE
-                ),
+        final PsiElement targetElement = getTargetElement(target);
+        return new ReferencesSearch.SearchParameters(targetElement,
+                getSearchScope(targetElement),
                 false,
                 findUsagesOptions == null
                         ? null
                         : findUsagesOptions.fastTrack);
+    }
+
+    private static SearchScope getSearchScope(PsiElement target) {
+        return target instanceof OMTModelItemLabel ?
+                GlobalSearchScope.allScope(target.getProject()) :
+                GlobalSearchScope.FilesScope.getScopeRestrictedByFileTypes(
+                        GlobalSearchScope.allScope(target.getProject()),
+                        OMTFileType.INSTANCE
+                );
     }
 
     private static PsiElement getTargetElement(PsiElement element) {

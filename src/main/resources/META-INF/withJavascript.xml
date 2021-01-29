@@ -1,0 +1,6 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <psi.referenceContributor language="TypeScript"
+                                  implementation="com.misset.opp.omt.psi.references.OMTReferenceProvider"/>
+    </extensions>
+</idea-plugin>

@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.4.1'
+version '2.4.2'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -36,19 +36,19 @@ buildSearchableOptions.enabled = false
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     version '2020.3'
+    type 'IU'
     plugins = [
             'java',
-            'tech.lnkd.LNKD-tech-Editor:0.9'
+            'tech.lnkd.LNKD-tech-Editor:0.9',
+            'JavaScriptLanguage'
     ]
 }
 patchPluginXml {
     changeNotes """
-        <strong>2.4.1</strong><br />
-        Import annotation extended with same file detection<br />
-        When a file is imported using the @client shortcut and relative path (../..)<br />
-        it is annotated as a warning with option to merge the 2 import statements<br />
-        <br />
-        Added HAS_ERROR and GET_ERROR_STATE as local commands
+        <strong>2.4.2</strong><br />
+        Support for references to TypeScript components that use the OMT components and activities
+        with @ForOmtComponent and @ForOmtActivity decorators.
+        Only works with the Ultimate Edition of IntelliJ, when not detected this feature is ignored
       """
 }
 tasks{
