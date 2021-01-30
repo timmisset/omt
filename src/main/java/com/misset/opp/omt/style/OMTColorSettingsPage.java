@@ -20,6 +20,7 @@ public class OMTColorSettingsPage implements ColorSettingsPage {
             new AttributesDescriptor("Number", OMTSyntaxHighlighter.NUMBER),
             new AttributesDescriptor("Boolean, Null", OMTSyntaxHighlighter.CONSTANT),
             new AttributesDescriptor("Variable", OMTSyntaxHighlighter.VARIABLE),
+            new AttributesDescriptor("Readonly Variable", OMTSyntaxHighlighter.READ_ONLY_VARIABLE),
             new AttributesDescriptor("Comment Block", OMTSyntaxHighlighter.COMMENTBLOCK),
             new AttributesDescriptor("Comment Line", OMTSyntaxHighlighter.COMMENTLINE),
             new AttributesDescriptor("Operator & Command Names", OMTSyntaxHighlighter.OPERATOR_OR_COMMAND),

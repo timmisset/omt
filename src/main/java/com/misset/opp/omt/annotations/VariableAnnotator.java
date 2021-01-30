@@ -8,6 +8,8 @@ import com.misset.opp.omt.intentions.variables.RenameVariableIntention;
 import com.misset.opp.omt.psi.OMTParameterWithType;
 import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.psi.OMTVariableAssignment;
+import com.misset.opp.omt.psi.named.OMTVariableNamedElement;
+import com.misset.opp.omt.style.OMTSyntaxHighlighter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -42,7 +44,16 @@ public class VariableAnnotator extends AbstractAnnotator {
                 annotationBuilder.withFix(new RenameVariableIntention().getRenameVariableIntention(variable, "$_"));
             }
         });
+        if (variable.isReadOnly() && variable.getDefaultValue() == null) {
+            setError("Readonly variable should have a value");
+        }
         annotateUntypedParameter(variable);
+    }
+
+    private void annotateVariableAssignment(@NotNull final OMTVariableAssignment variableAssignment) {
+        if (variableAssignment.getVariableList().stream().anyMatch(OMTVariableNamedElement::isReadOnly)) {
+            setError("Cannot assign to readonly variable(s)");
+        }
     }
 
     private void annotateUsageVariable(@NotNull final OMTVariable variable) {
@@ -50,7 +61,11 @@ public class VariableAnnotator extends AbstractAnnotator {
         if (localVariables.containsKey(variable.getName())) {
             setInformation(String.format("%s is locally available in %s", variable.getName(), localVariables.get(variable.getName())));
         } else {
-            validateReference(variable, String.format("%s is not declared", variable.getText()), annotationBuilder -> annotationBuilder.highlightType(ProblemHighlightType.LIKE_UNKNOWN_SYMBOL));
+            validateReference(variable, String.format("%s is not declared", variable.getText()),
+                    annotationBuilder -> annotationBuilder.highlightType(ProblemHighlightType.LIKE_UNKNOWN_SYMBOL));
+            if (variable.isReadOnly()) {
+                highlight(String.format("%s is readonly", variable.getName()), OMTSyntaxHighlighter.READ_ONLY_VARIABLE);
+            }
         }
     }
 
@@ -66,6 +81,8 @@ public class VariableAnnotator extends AbstractAnnotator {
             } else {
                 annotateUsageVariable(variable);
             }
+        } else if (element instanceof OMTVariableAssignment) {
+            annotateVariableAssignment((OMTVariableAssignment) element);
         }
     }
 

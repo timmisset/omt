@@ -4,6 +4,7 @@ import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
+import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.misset.opp.omt.psi.OMTFile;
@@ -114,6 +115,12 @@ public abstract class AbstractAnnotator {
     protected void annotate(Resource resource) {
         holder.newAnnotation(HighlightSeverity.INFORMATION, resource.toString())
                 .tooltip(getRDFModelUtil().describeResource(resource))
+                .create();
+    }
+
+    protected void highlight(String message, TextAttributesKey key) {
+        holder.newAnnotation(HighlightSeverity.INFORMATION, message)
+                .textAttributes(key)
                 .create();
     }
 

@@ -38,6 +38,8 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
             createTextAttributesKey("CONSTANT", DefaultLanguageHighlighterColors.CONSTANT);
     public static final TextAttributesKey OPERATOR_OR_COMMAND =
             createTextAttributesKey("OPERATOR", DefaultLanguageHighlighterColors.IDENTIFIER);
+    public static final TextAttributesKey READ_ONLY_VARIABLE =
+            createTextAttributesKey("READ_ONLY_VARIABLE");
 
     private static final TextAttributesKey[] BAD_CHAR_KEYS = new TextAttributesKey[]{BAD_CHARACTER};
     private static final TextAttributesKey[] COMMENTLINE_KEYS = new TextAttributesKey[]{COMMENTLINE};

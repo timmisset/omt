@@ -1,6 +1,7 @@
 package com.misset.opp.omt.psi.named;
 
 import com.intellij.psi.PsiNameIdentifierOwner;
+import com.misset.opp.omt.psi.OMTScalarValue;
 import com.misset.opp.omt.psi.OMTVariableAssignment;
 import com.misset.opp.omt.psi.OMTVariableValue;
 import org.apache.jena.rdf.model.Resource;
@@ -27,6 +28,11 @@ public interface OMTVariableNamedElement extends PsiNameIdentifierOwner {
 
     OMTVariableValue getValue();
 
+    OMTScalarValue getDefaultValue();
+
     List<OMTVariableAssignment> getAssignments();
 
+    boolean isReadOnly();
+
+    boolean isDestructedNotation();
 }
