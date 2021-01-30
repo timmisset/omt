@@ -82,7 +82,7 @@ public class ScriptUtil {
         @NotNull PsiElement[] children = element.getChildren();
         if (children.length > 0) {
             for (PsiElement child : children) {
-                if (!(child instanceof OMTCommandBlock)) {
+                if (!(child instanceof OMTCommandBlock) && element != child) {
                     allChildren.addAll(getChildrenOfTypeNotEnclosed(child, type));
                 }
             }

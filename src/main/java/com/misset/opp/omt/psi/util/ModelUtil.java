@@ -70,6 +70,10 @@ public class ModelUtil {
         return labelElement == null ? "" : labelElement.getText().replace(":", "");
     }
 
+    public OMTBlock getEntryBlock(PsiElement element) {
+        return (OMTBlock) PsiTreeUtil.getParentOfType(element, OMTBlock.class);
+    }
+
     public PsiElement getEntryBlockLabelElement(PsiElement element) {
         if (element == null) {
             return null;

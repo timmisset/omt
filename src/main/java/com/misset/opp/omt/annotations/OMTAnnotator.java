@@ -28,7 +28,7 @@ public class OMTAnnotator implements Annotator {
             MEMBER_LIST_ITEM, SEQUENCE_ITEM, BLOCK_ENTRY, GENERIC_BLOCK, SPECIFIC_BLOCK, IMPORT_SOURCE
     );
     private static final TokenSet VARIABLE_ANNOTATIONS = TokenSet.create(
-            VARIABLE
+            VARIABLE, VARIABLE_ASSIGNMENT
     );
     private static final TokenSet SCRIPT_ANNOTATIONS = TokenSet.create(
             IF_BLOCK, SCRIPT_CONTENT, SCRIPT_LINE
