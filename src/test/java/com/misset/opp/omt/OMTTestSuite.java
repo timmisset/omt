@@ -3,6 +3,7 @@ package com.misset.opp.omt;
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
@@ -158,11 +159,13 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
     protected void setBuiltin() {
         setBuiltinCommands();
         setBuiltinOperators();
+        ReadAction.run(() -> getProjectUtil().loadBuiltInMembers(myFixture.getProject()));
     }
 
     protected void setBuiltinAndModel() {
         setBuiltin();
         setOntologyModel();
+        System.out.println("TEST FLOW: Finished setting BuiltIn & Model");
     }
 
     private void startUtilMock() {

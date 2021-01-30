@@ -137,7 +137,6 @@ public class ProjectUtil {
                 BuiltInType.HttpCommands, settings.builtInHttpCommandsPath, virtualFileManager, s -> settings.builtInHttpCommandsPath = s);
         loadBuiltInMembersViaSettingsOrFromFilename(project, BUILTIN_JSON_PARSE_COMMAND,
                 BuiltInType.ParseJsonCommand, settings.builtInParseJsonPath, virtualFileManager, s -> settings.builtInParseJsonPath = s);
-
     }
 
     public void loadOntologyModel(Project project, boolean resetOntologyPsiReferences) {
