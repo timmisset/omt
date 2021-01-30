@@ -47,8 +47,11 @@ patchPluginXml {
     changeNotes """
         <strong>2.4.2</strong><br />
         Support for references to TypeScript components that use the OMT components and activities
-        with @ForOmtComponent and @ForOmtActivity decorators.
-        Only works with the Ultimate Edition of IntelliJ, when not detected this feature is ignored
+        with @ForOmtComponent and @ForOmtActivity decorators.<br />
+        Only works with the Ultimate Edition of IntelliJ, when not detected this feature is ignored<br />
+        <br />
+        Read-only variables get their own highlighting and are annotated with an error when re-assigned or
+        are not supplied with a default value.
       """
 }
 tasks{
