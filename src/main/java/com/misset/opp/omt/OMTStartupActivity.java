@@ -1,5 +1,6 @@
 package com.misset.opp.omt;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.intellij.openapi.project.NoAccessDuringPsiEvents.isInsideEventProcessing;
 import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
 
 /**
@@ -28,18 +30,17 @@ public class OMTStartupActivity implements StartupActivity {
     public void runActivity(@NotNull Project project) {
         DumbService.getInstance(project).runWhenSmart(() -> {
 
-            // the builtin members are loaded directly from the project content
-            // file changes result in reloading the loadBuiltInMembers
-            getProjectUtil().loadBuiltInMembers(project);
-            setFileListeners(project);
-
-            // parse the OMT Model, this is currently a static resource in the project
-            getProjectUtil().getParsedModel();
-
             // load the ontology model
             if (isInProductionMode(project)) {
+                // the builtin members are loaded directly from the project content
+                // file changes result in reloading the loadBuiltInMembers
+                getProjectUtil().loadBuiltInMembers(project);
+                setFileListeners(project);
+
                 getProjectUtil().loadOntologyModel(project, true);
             }
+            // parse the OMT Model, this is currently a static resource in the project
+            getProjectUtil().getParsedModel();
 
             // finally, analyze all OMT files for exporting members and prefixess
             analyzeAllOMTFiles(project);
@@ -69,23 +70,25 @@ public class OMTStartupActivity implements StartupActivity {
         project.getMessageBus().connect().subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
             @Override
             public void after(@NotNull List<? extends VFileEvent> events) {
-                events
-                        .stream()
-                        .map(VFileEvent::getFile)
-                        .filter(Objects::nonNull)
-                        .filter(VirtualFile::isValid)
-                        .forEach(virtualFile -> {
-                            switch (virtualFile.getName()) {
-                                case ProjectUtil.BUILTIN_COMMANDS:
-                                case ProjectUtil.BUILTIN_HTTP_COMMANDS:
-                                case ProjectUtil.BUILTIN_JSON_PARSE_COMMAND:
-                                case ProjectUtil.BUILTIN_OPERATORS:
-                                    getProjectUtil().loadBuiltInMembers(project);
-                                    return;
-                                default:
-                                    byExtension(virtualFile);
-                            }
-                        });
+                ApplicationManager.getApplication().invokeLater(
+                        () -> events
+                                .stream()
+                                .map(VFileEvent::getFile)
+                                .filter(Objects::nonNull)
+                                .filter(VirtualFile::isValid)
+                                .forEach(virtualFile -> {
+                                    switch (virtualFile.getName()) {
+                                        case ProjectUtil.BUILTIN_COMMANDS:
+                                        case ProjectUtil.BUILTIN_HTTP_COMMANDS:
+                                        case ProjectUtil.BUILTIN_JSON_PARSE_COMMAND:
+                                        case ProjectUtil.BUILTIN_OPERATORS:
+                                            getProjectUtil().loadBuiltInMembers(project);
+                                            return;
+                                        default:
+                                            byExtension(virtualFile);
+                                    }
+                                }), o -> !isInsideEventProcessing()
+                );
             }
 
             private void byExtension(VirtualFile virtualFile) {
