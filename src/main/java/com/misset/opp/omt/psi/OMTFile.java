@@ -280,7 +280,7 @@ public class OMTFile extends PsiFileBase {
 
     public boolean hasImport(String importPath) {
         return PsiTreeUtil.findChildrenOfType(this, OMTImport.class).stream().anyMatch(
-                omtImport -> omtImport.getImportSource().getImportLocation().getText().equals(importPath)
+                omtImport -> omtImport.getImportSource().getImportLocation().textMatches(importPath)
         );
     }
 

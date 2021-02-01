@@ -54,7 +54,7 @@ public class OMTReferenceProvider extends PsiReferenceContributor {
 
     private OMTFile getImportedOMTFile(ES6Decorator decorator) {
         final Optional<JSReferenceExpression> omt = PsiTreeUtil.findChildrenOfType(decorator, JSReferenceExpression.class).stream().filter(
-                jsReferenceExpression -> jsReferenceExpression.getText().equals("omt")
+                jsReferenceExpression -> jsReferenceExpression.textMatches("omt")
         ).findFirst();
         if (omt.isEmpty()) {
             return null;

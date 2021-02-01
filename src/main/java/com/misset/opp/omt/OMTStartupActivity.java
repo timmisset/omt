@@ -9,7 +9,8 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.newvfs.BulkFileListener;
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
 import com.intellij.psi.PsiManager;
-import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.FileTypeIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.util.ProjectUtil;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,7 @@ public class OMTStartupActivity implements StartupActivity {
     private void analyzeAllOMTFiles(@NotNull Project project) {
         PsiManager psiManager = PsiManager.getInstance(project);
         List<String> processedPaths = new ArrayList<>();
-        FilenameIndex.getAllFilesByExt(project, "omt")
+        FileTypeIndex.getFiles(OMTFileType.INSTANCE, GlobalSearchScope.allScope(project))
                 .forEach(virtualFile -> {
                             if (!processedPaths.contains(virtualFile.getPath())) {
                                 getProjectUtil().analyzeFile((OMTFile) psiManager.findFile(virtualFile));

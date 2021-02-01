@@ -97,7 +97,7 @@ public abstract class OMTVariableImpl extends NameIdentifierOwnerImpl<OMTVariabl
                 .map(omtBlockEntry -> (OMTGenericBlock) omtBlockEntry)
                 .findFirst()
                 .map(omtGenericBlock -> omtGenericBlock.getScalar() != null &&
-                        omtGenericBlock.getScalar().getScalarValue().getText().equals("true"))
+                        omtGenericBlock.getScalar().getScalarValue().textMatches("true"))
                 .orElse(false);
     }
 
