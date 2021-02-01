@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.4.2'
+version '2.4.3'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -45,13 +45,10 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-        <strong>2.4.2</strong><br />
-        Support for references to TypeScript components that use the OMT components and activities
-        with @ForOmtComponent and @ForOmtActivity decorators.<br />
-        Only works with the Ultimate Edition of IntelliJ, when not detected this feature is ignored<br />
-        <br />
-        Read-only variables get their own highlighting and are annotated with an error when re-assigned or
-        are not supplied with a default value.
+        <strong>2.4.3</strong><br />
+        Fix for Component FindUsage, the highlighting is now equal to the result of the actual usage result<br />
+        Fix for semi-colon ending errors in script blocks<br />
+        Optimizations in PsiTree operations based on best-practices of IntelliJ
       """
 }
 tasks{

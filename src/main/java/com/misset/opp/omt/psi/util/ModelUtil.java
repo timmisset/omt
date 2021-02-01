@@ -333,6 +333,9 @@ public class ModelUtil {
 
     private boolean isEntry(PsiElement element, String entryType) {
         final JsonObject json = getJson(element);
-        return json != null && json.has("type") && json.get("type").getAsString().equals(entryType);
+        return json != null && (
+                (json.has("type") && json.get("type").getAsString().equals(entryType)) ||
+                        (json.has("node") && json.get("node").getAsString().equals(entryType))
+        );
     }
 }
