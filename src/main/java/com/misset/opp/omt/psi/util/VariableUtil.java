@@ -32,7 +32,7 @@ public class VariableUtil {
 
     public Optional<OMTVariable> getFirstAppearance(OMTVariable variable, PsiElement container) {
         return PsiTreeUtil.findChildrenOfType(container, OMTVariable.class).stream()
-                .filter(scriptVariable -> scriptVariable.getText().equals(variable.getText()))
+                .filter(scriptVariable -> scriptVariable.textMatches(variable))
                 .findFirst();
     }
 

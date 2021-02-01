@@ -27,7 +27,7 @@ public class TokenUtil {
             return Double.parseDouble(constantValue.getText());
         }
         if (isToken(constantValue.getFirstChild(), BOOLEAN)) {
-            return constantValue.getText().equals(TRUE);
+            return constantValue.textMatches(TRUE);
         }
         if (isToken(constantValue.getFirstChild(), NULL)) {
             return null;
