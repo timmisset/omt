@@ -16,8 +16,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.HashMap;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
-import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
+import static com.misset.opp.omt.util.UtilManager.getModelUtil;
+import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
 
 public class ScalarValueCompletion extends OMTCompletion {
     public static void register(OMTCompletionContributor completionContributor) {
@@ -50,7 +50,7 @@ public class ScalarValueCompletion extends OMTCompletion {
     private void setReasons() {
         HashMap<String, String> reasons = getProjectUtil().getReasons();
         reasons.forEach((key, value) -> addPriorityElement(
-                key, ATTRIBUTES_PRIORITY, Collections.emptyList(), value));
+                key, ATTRIBUTES_PRIORITY, Collections.emptyList(), "", value));
     }
 
 }

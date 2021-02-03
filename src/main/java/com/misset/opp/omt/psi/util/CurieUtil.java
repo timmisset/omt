@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
+import static com.misset.opp.omt.util.UtilManager.getModelUtil;
 
 public class CurieUtil {
 

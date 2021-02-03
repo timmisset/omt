@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-import static com.misset.opp.omt.psi.util.UtilManager.*;
+import static com.misset.opp.omt.util.UtilManager.*;
 
 /**
  * The curie reference resolves to the declaration of the curie prefix in either the prefixes: node or

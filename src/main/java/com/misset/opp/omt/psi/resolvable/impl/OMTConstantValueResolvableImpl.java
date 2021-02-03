@@ -1,7 +1,7 @@
 package com.misset.opp.omt.psi.resolvable.impl;
 
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
+import com.misset.opp.omt.psi.CachedPsiElement;
 import com.misset.opp.omt.psi.OMTConstantValue;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -10,10 +10,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
-import static com.misset.opp.omt.psi.util.UtilManager.getTokenUtil;
+import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
+import static com.misset.opp.omt.util.UtilManager.getTokenUtil;
 
-public abstract class OMTConstantValueResolvableImpl extends ASTWrapperPsiElement implements OMTConstantValue {
+public abstract class OMTConstantValueResolvableImpl extends CachedPsiElement implements OMTConstantValue {
 
     public OMTConstantValueResolvableImpl(@NotNull ASTNode node) {
         super(node);

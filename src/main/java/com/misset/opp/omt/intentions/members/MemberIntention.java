@@ -17,8 +17,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getImportUtil;
-import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
+import static com.misset.opp.omt.util.UtilManager.getImportUtil;
+import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
 
 public class MemberIntention {
 

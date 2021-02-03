@@ -18,7 +18,7 @@ import org.mockito.invocation.InvocationOnMock;
 
 import java.util.HashMap;
 
-import static com.misset.opp.omt.psi.util.UtilManager.*;
+import static com.misset.opp.omt.util.UtilManager.*;
 import static org.mockito.Mockito.mock;
 
 class OMTCallableImplTest extends OMTTestSuite {

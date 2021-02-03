@@ -9,7 +9,7 @@ import org.apache.jena.rdf.model.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getVariableUtil;
+import static com.misset.opp.omt.util.UtilManager.getVariableUtil;
 
 public class ParameterAnnotator extends AbstractAnnotator {
 

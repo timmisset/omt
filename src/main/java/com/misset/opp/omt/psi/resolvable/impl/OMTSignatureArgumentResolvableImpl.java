@@ -1,7 +1,7 @@
 package com.misset.opp.omt.psi.resolvable.impl;
 
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
+import com.misset.opp.omt.psi.CachedPsiElement;
 import com.misset.opp.omt.psi.OMTSignatureArgument;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class OMTSignatureArgumentResolvableImpl extends ASTWrapperPsiElement implements OMTSignatureArgument {
+public abstract class OMTSignatureArgumentResolvableImpl extends CachedPsiElement implements OMTSignatureArgument {
     public OMTSignatureArgumentResolvableImpl(@NotNull ASTNode node) {
         super(node);
     }

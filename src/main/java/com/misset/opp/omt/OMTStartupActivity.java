@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.intellij.openapi.project.NoAccessDuringPsiEvents.isInsideEventProcessing;
-import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
+import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
 
 /**
  * Run the initial analysis on the project files after the Project has started

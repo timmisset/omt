@@ -27,7 +27,7 @@ import java.util.Optional;
 
 import static com.misset.opp.omt.psi.OMTIgnored.END_OF_LINE_COMMENT;
 import static com.misset.opp.omt.psi.OMTTypes.*;
-import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
+import static com.misset.opp.omt.util.UtilManager.getModelUtil;
 
 /**
  * The formatter has 2 main functions, indentation and alignment

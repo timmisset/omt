@@ -13,7 +13,7 @@ import com.misset.opp.omt.psi.*;
 import com.misset.opp.omt.psi.util.ImportUtil;
 import org.jetbrains.annotations.NotNull;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getImportUtil;
+import static com.misset.opp.omt.util.UtilManager.getImportUtil;
 
 public class CollectionAnnotator extends AbstractAnnotator {
     private static final String DUPLICATION = "Duplication";
