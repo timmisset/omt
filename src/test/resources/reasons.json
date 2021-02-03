@@ -1,0 +1,12 @@
+{
+	"reasons": [
+		{
+			"reason": "Naam",
+			"description": "Een omschrijving"
+		},
+		{
+			"reason": "Naam2",
+			"description": "Een tweede omschrijving"
+		}
+	]
+}
