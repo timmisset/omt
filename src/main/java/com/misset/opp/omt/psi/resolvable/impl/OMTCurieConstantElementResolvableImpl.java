@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
 
 public abstract class OMTCurieConstantElementResolvableImpl extends OMTQueryStepImpl implements OMTCurieConstantElement {
 

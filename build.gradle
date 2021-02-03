@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.4.3'
+version '2.5'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -45,10 +45,8 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-        <strong>2.4.3</strong><br />
-        Fix for Component FindUsage, the highlighting is now equal to the result of the actual usage result<br />
-        Fix for semi-colon ending errors in script blocks<br />
-        Optimizations in PsiTree operations based on best-practices of IntelliJ
+        <strong>2.5</strong><br />
+        All 'reason' JSON files are parsed from the project and added as Basic Completion suggestions<br />
       """
 }
 tasks{

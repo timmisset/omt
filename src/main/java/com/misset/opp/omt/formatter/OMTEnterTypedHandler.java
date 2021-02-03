@@ -22,7 +22,7 @@ import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.settings.OMTCodeStyleSettings;
 import org.jetbrains.annotations.NotNull;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
+import static com.misset.opp.omt.util.UtilManager.getModelUtil;
 
 public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
 

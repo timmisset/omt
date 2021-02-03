@@ -44,7 +44,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.psi.references.TTLReferenceElement.getSubjectClassIri;
-import static com.misset.opp.omt.psi.util.UtilManager.getBuiltinUtil;
+import static com.misset.opp.omt.util.UtilManager.getBuiltinUtil;
 import static util.Helper.getResources;
 
 public class ProjectUtil {
