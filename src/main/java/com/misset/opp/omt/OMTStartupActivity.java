@@ -39,6 +39,7 @@ public class OMTStartupActivity implements StartupActivity {
                 setFileListeners(project);
 
                 getProjectUtil().loadOntologyModel(project, true);
+                getProjectUtil().loadReasons(project);
             }
             // parse the OMT Model, this is currently a static resource in the project
             getProjectUtil().getParsedModel();

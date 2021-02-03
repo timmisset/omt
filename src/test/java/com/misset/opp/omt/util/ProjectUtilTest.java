@@ -63,8 +63,8 @@ class ProjectUtilTest extends OMTTestSuite {
         exampleFiles = new ExampleFiles(this, myFixture);
 
         setUtilMock(builtInUtil);
-
         projectUtil = spy(projectUtil);
+        setUtilMock(projectUtil);
 
         doReturn(statusBar).when(projectUtil).getStatusBar(eq(getProject()));
         rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
@@ -169,6 +169,13 @@ class ProjectUtilTest extends OMTTestSuite {
         prefixCollection.put("abc", prefixes);
 
         assertEquals(prefixes, projectUtil.getKnownPrefixes(prefix));
+    }
+
+    @Test
+    void getReasons() {
+        setReasons();
+        final HashMap<String, String> reasons = projectUtil.getReasons();
+        assertEquals("Een omschrijving", reasons.get("Naam"));
     }
 
     @Test
