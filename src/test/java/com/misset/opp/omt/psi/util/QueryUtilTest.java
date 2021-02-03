@@ -10,7 +10,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getQueryUtil;
+import static com.misset.opp.omt.util.UtilManager.getQueryUtil;
 
 public class QueryUtilTest extends OMTTestSuite {
 

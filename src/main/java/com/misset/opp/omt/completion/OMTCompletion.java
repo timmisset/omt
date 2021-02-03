@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static com.misset.opp.omt.psi.util.UtilManager.*;
+import static com.misset.opp.omt.util.UtilManager.*;
 
 public abstract class OMTCompletion {
 

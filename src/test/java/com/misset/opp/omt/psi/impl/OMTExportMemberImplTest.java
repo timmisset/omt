@@ -12,7 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
 
 class OMTExportMemberImplTest extends OMTTestSuite {
 

@@ -14,7 +14,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
+import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
 
 public abstract class OMTCurieElementImpl extends NameIdentifierOwnerImpl<OMTCurieElement> implements OMTCurie {
     public OMTCurieElementImpl(@NotNull ASTNode node) {

@@ -7,7 +7,7 @@ import com.intellij.psi.PsiFile;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
 import org.jetbrains.annotations.NotNull;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getCurieUtil;
+import static com.misset.opp.omt.util.UtilManager.getCurieUtil;
 
 public class RegisterPrefixIntention {
 

@@ -22,7 +22,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
+import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;

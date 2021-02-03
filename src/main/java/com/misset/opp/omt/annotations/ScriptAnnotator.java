@@ -5,7 +5,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.*;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
+import static com.misset.opp.omt.util.UtilManager.getModelUtil;
 
 public class ScriptAnnotator extends AbstractAnnotator {
 

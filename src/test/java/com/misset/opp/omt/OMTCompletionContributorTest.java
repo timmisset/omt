@@ -9,7 +9,7 @@
 //
 //import java.util.List;
 //
-//import static com.misset.opp.omt.psi.util.UtilManager.getBuiltinUtil;
+//import static com.misset.opp.omt.util.UtilManager.getBuiltinUtil;
 //
 //@Ignore("Uitgeschakeld, wordt vervangen door alle testen vanuit de afzonderlijke completion providerss")
 //class OMTCompletionContributorTest extends OMTTestSuite {

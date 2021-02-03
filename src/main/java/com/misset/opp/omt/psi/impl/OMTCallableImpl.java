@@ -13,7 +13,7 @@ import org.apache.jena.rdf.model.Resource;
 
 import java.util.*;
 
-import static com.misset.opp.omt.psi.util.UtilManager.*;
+import static com.misset.opp.omt.util.UtilManager.*;
 
 public abstract class OMTCallableImpl implements OMTCallable {
 
