@@ -1,12 +1,12 @@
 package com.misset.opp.omt.psi.impl;
 
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
+import com.misset.opp.omt.psi.CachedPsiElement;
 import com.misset.opp.omt.psi.support.OMTLabelledElement;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class OMTLabelledElementImpl extends ASTWrapperPsiElement implements OMTLabelledElement {
+public abstract class OMTLabelledElementImpl extends CachedPsiElement implements OMTLabelledElement {
 
     public OMTLabelledElementImpl(@NotNull ASTNode node) {
         super(node);

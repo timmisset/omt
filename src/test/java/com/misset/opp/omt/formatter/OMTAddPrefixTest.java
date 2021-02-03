@@ -5,7 +5,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getImportUtil;
+import static com.misset.opp.omt.util.UtilManager.getImportUtil;
 
 class OMTAddPrefixTest extends OMTFormattingTest {
 

@@ -1,8 +1,6 @@
-package com.misset.opp.omt.psi.util;
+package com.misset.opp.omt.util;
 
-import com.misset.opp.omt.util.BuiltInUtil;
-import com.misset.opp.omt.util.ProjectUtil;
-import com.misset.opp.omt.util.RDFModelUtil;
+import com.misset.opp.omt.psi.util.*;
 
 /**
  * Util manager to create and distribute singletons of the util classes

@@ -1,9 +1,9 @@
 package com.misset.opp.omt.psi.resolvable.impl;
 
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.psi.CachedPsiElement;
 import com.misset.opp.omt.psi.OMTQueryFilter;
 import com.misset.opp.omt.psi.OMTQueryStep;
 import com.misset.opp.omt.psi.OMTTypes;
@@ -14,10 +14,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getQueryUtil;
-import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.omt.util.UtilManager.getQueryUtil;
+import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
 
-public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement implements OMTQueryStep {
+public abstract class OMTQueryStepResolvableImpl extends CachedPsiElement implements OMTQueryStep {
 
     public OMTQueryStepResolvableImpl(@NotNull ASTNode node) {
         super(node);

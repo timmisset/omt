@@ -17,6 +17,7 @@ import com.misset.opp.omt.psi.util.*;
 import com.misset.opp.omt.util.BuiltInUtil;
 import com.misset.opp.omt.util.ProjectUtil;
 import com.misset.opp.omt.util.RDFModelUtil;
+import com.misset.opp.omt.util.UtilManager;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.mockito.MockedStatic;
@@ -31,7 +32,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.psi.util.UtilManager.*;
+import static com.misset.opp.omt.util.UtilManager.*;
 import static org.mockito.Mockito.mock;
 
 public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {

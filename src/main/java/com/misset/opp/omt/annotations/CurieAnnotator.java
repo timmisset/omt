@@ -8,7 +8,7 @@ import com.misset.opp.omt.psi.OMTNamespaceIri;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
 import com.misset.opp.omt.psi.OMTPrefix;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getProjectUtil;
+import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
 
 public class CurieAnnotator extends AbstractAnnotator {
 

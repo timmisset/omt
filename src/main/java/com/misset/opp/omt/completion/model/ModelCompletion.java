@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getModelUtil;
+import static com.misset.opp.omt.util.UtilManager.getModelUtil;
 
 public class ModelCompletion extends OMTCompletion {
     public static void register(OMTCompletionContributor completionContributor) {

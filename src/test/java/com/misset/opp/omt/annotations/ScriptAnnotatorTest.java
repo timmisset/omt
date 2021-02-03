@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.misset.opp.omt.psi.OMTTypes.SEMICOLON;
-import static com.misset.opp.omt.psi.util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
 import static org.mockito.Mockito.*;
 
 class ScriptAnnotatorTest extends OMTAnnotationTest {

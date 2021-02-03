@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getImportUtil;
+import static com.misset.opp.omt.util.UtilManager.getImportUtil;
 
 public class ImportCompletion extends RDFCompletion {
 

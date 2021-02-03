@@ -8,7 +8,7 @@ import com.misset.opp.omt.psi.OMTImportSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.misset.opp.omt.psi.util.UtilManager.getImportUtil;
+import static com.misset.opp.omt.util.UtilManager.getImportUtil;
 
 public class ImportSourceReference extends PsiReferenceBase<OMTImportSource> implements PsiPolyVariantReference {
     public ImportSourceReference(@NotNull OMTImportSource importSource, TextRange textRange) {
