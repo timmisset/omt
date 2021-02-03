@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.intellij.json.JsonFileType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -12,9 +13,11 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.impl.FakePsiElement;
+import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -49,12 +52,16 @@ public class ProjectUtil {
     private final HashMap<String, ArrayList<OMTExportMember>> exportingMembers = new HashMap<>();
     private final HashMap<String, ArrayList<FakePsiElement>> ttlSubjectReferences = new HashMap<>();
     private final HashMap<String, HashMap<String, ArrayList<FakePsiElement>>> ttlPredicateReferences = new HashMap<>();
+    private static final String REASONS = "reasons";
     private final JsonObject parsedModel = new JsonObject();
 
     public static final String BUILTIN_COMMANDS = "builtinCommands.ts";
     public static final String BUILTIN_OPERATORS = "builtinOperators.ts";
     public static final String BUILTIN_HTTP_COMMANDS = "http-commands.ts";
     public static final String BUILTIN_JSON_PARSE_COMMAND = "json-parse-command.ts";
+    private static final String REASON = "reason";
+    private static final String DESCRIPTION = "description";
+    private final HashMap<String, HashMap<String, String>> entriesOptions = new HashMap<>();
 
     private Model model;
     private WindowManager windowManager;
@@ -363,6 +370,41 @@ public class ProjectUtil {
                 addToJsonModel(jsonElement);
             }
         }
+    }
+
+    public void loadReasons(Project project) {
+        FileTypeIndex
+                .getFiles(JsonFileType.INSTANCE, GlobalSearchScope.projectScope(project))
+                .stream()
+                .filter(virtualFile -> virtualFile.getPath().contains("/reasons/"))
+                .map(virtualFile -> PsiManager.getInstance(project).findFile(virtualFile))
+                .filter(Objects::nonNull)
+                .map(PsiElement::getText)
+                .map(JsonParser::parseString)
+                .filter(jsonElement -> jsonElement.isJsonObject() && jsonElement.getAsJsonObject().has(REASONS))
+                .map(JsonElement::getAsJsonObject)
+                .forEach(jsonObject -> {
+                    final JsonArray reasons = jsonObject.getAsJsonArray(REASONS);
+                    reasons.forEach(
+                            jsonElement -> {
+                                if (jsonElement.isJsonObject()) {
+                                    final JsonObject elementAsJsonObject = jsonElement.getAsJsonObject();
+                                    if (elementAsJsonObject.has(REASON) && elementAsJsonObject.has(DESCRIPTION)) {
+                                        final HashMap<String, String> entryOptionsReasons = entriesOptions.getOrDefault(REASONS, new HashMap<>());
+                                        entryOptionsReasons.put(
+                                                elementAsJsonObject.get(REASON).getAsString(),
+                                                elementAsJsonObject.get(DESCRIPTION).getAsString()
+                                        );
+                                        entriesOptions.put(REASONS, entryOptionsReasons);
+                                    }
+                                }
+                            }
+                    );
+                });
+    }
+
+    public HashMap<String, String> getReasons() {
+        return entriesOptions.getOrDefault(REASONS, new HashMap<>());
     }
 
     private void addToJsonModel(JsonElement jsonElement) {

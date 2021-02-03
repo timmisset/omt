@@ -156,6 +156,11 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         myFixture.copyFileToProject(new File("src/test/resources/builtinCommands.ts").getAbsolutePath(), "builtinCommands.ts");
     }
 
+    protected void setReasons() {
+        myFixture.copyFileToProject(new File("src/test/resources/reasons.json").getAbsolutePath(), "reasons/reasons.json");
+        ReadAction.run(() -> getProjectUtil().loadReasons(myFixture.getProject()));
+    }
+
     protected void setBuiltin() {
         setBuiltinCommands();
         setBuiltinOperators();
