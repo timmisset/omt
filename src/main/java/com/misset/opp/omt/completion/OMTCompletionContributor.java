@@ -5,10 +5,7 @@ import com.intellij.codeInsight.completion.CompletionInitializationContext;
 import com.misset.opp.omt.completion.command.ScriptContentCompletion;
 import com.misset.opp.omt.completion.command.SignatureArgumentCompletion;
 import com.misset.opp.omt.completion.command.VariableAssignmentCompletion;
-import com.misset.opp.omt.completion.model.CommandBlockCompletion;
-import com.misset.opp.omt.completion.model.ModelCompletion;
-import com.misset.opp.omt.completion.model.ModelItemCompletion;
-import com.misset.opp.omt.completion.model.QueryBlockCompletion;
+import com.misset.opp.omt.completion.model.*;
 import com.misset.opp.omt.completion.query.QueryEquationStatementCompletion;
 import com.misset.opp.omt.completion.query.QueryFilterStepCompletion;
 import com.misset.opp.omt.completion.query.QueryFirstStepCompletion;
@@ -35,6 +32,7 @@ public class OMTCompletionContributor extends CompletionContributor {
     public OMTCompletionContributor() {
         ModelItemCompletion.register(this);
         ModelCompletion.register(this);
+        ScalarValueCompletion.register(this);
         QueryBlockCompletion.register(this);
         CommandBlockCompletion.register(this);
         QueryFirstStepCompletion.register(this);

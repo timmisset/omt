@@ -73,6 +73,14 @@ public abstract class OMTCompletion {
         addPriorityElement(text, priority, text, NO_INSERT_HANDLER, null, null, withLookupStrings);
     }
 
+    protected void addPriorityElement(String text, int priority, List<String> withLookupStrings, String tailText) {
+        addPriorityElement(text, priority, text, NO_INSERT_HANDLER, tailText, null, withLookupStrings);
+    }
+
+    protected void addPriorityElement(String text, int priority, List<String> withLookupStrings, String tailText, String typeText) {
+        addPriorityElement(text, priority, text, NO_INSERT_HANDLER, tailText, typeText, withLookupStrings);
+    }
+
     protected void addPriorityElement(String text,
                                       int priority,
                                       String title,
