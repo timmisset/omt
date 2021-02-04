@@ -93,7 +93,7 @@ commandsBlock::=                            leading? COMMAND_BLOCK_START (PIPE? 
                                                                 }
 
 moduleBlock::=                              leading? MODULE_NAME_START moduleName  { extends=specificBlock }
-moduleName::=                               NAME | OPERATOR
+moduleName::=                               stringEntry
 
 // maps
 importBlock ::=                             leading? IMPORT_START (indentToken import+ dedentToken)? { extends=specificBlock }

@@ -339,4 +339,12 @@ class OMTLexerTest {
         );
     }
 
+    @Test
+    void testModuleName() {
+        String contentToTest = "moduleName: Mijn module\n";
+        System.out.println(
+                String.join("\n", getElements(contentToTest))
+        );
+    }
+
 }
