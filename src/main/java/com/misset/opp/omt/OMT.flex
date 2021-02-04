@@ -43,6 +43,7 @@ END_OF_LINE_COMMENT=            ("#" | "\/\/")[^\r\n]*
 JDCOMMENTLINE=                  ("*")[^\*\@\r\n]*
 JDSTART=                         \/\*\*
 JDEND=                           \*\/ // all between /** and */
+MULTILINECOMMENT=                \/\*[^\*]+\*\/
 NAME=                           {ALPHA}({ALPHA}|{DIGIT}|{UNDERSCORE})*
 CURIE=                          ({NAME})?":"{SYMBOL}
 TYPED_VALUE=                    {STRING}"^^"({IRI}|{CURIE})
@@ -305,7 +306,6 @@ IElementType closeBracket() {
                                                                   }
                                                                   return element; // can be an indent/dedent token or JAVADOCS_START
                                                               }
-
     // When EOF is reached, resolve all open indentations with dedent tokens and close with null
     <<EOF>>                                                   { return finishLexer(); }
 }
@@ -471,6 +471,13 @@ IElementType closeBracket() {
           return dent(OMTIgnored.END_OF_LINE_COMMENT);
                                                                      }
     {END_OF_LINE_COMMENT}                                     { return returnElement(OMTIgnored.END_OF_LINE_COMMENT); }
+    ^{WHITE_SPACE}*{MULTILINECOMMENT}                      {
+          if(yystate() == YAML_SCALAR) {
+                return shouldExitScalar() ? exitScalar() : returnElement(OMTIgnored.MULTILINE_COMMENT);
+          }
+          return dent(OMTIgnored.MULTILINE_COMMENT);
+                                                                     }
+    {MULTILINECOMMENT}                                     { return returnElement(OMTIgnored.MULTILINE_COMMENT); }
 }
 
 // Anything not matches by the above blocks is capted using the [^] regex. Per state a certain response is required:

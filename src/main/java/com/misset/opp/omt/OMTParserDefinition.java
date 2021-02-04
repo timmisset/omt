@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class OMTParserDefinition implements ParserDefinition {
     public static final TokenSet WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE, OMTIgnored.START_TOKEN, OMTIgnored.END_TOKEN);
-    public static final TokenSet END_OF_LINE_COMMENTS = TokenSet.create(OMTIgnored.END_OF_LINE_COMMENT);
+    public static final TokenSet IGNORED_COMMENTS = TokenSet.create(OMTIgnored.END_OF_LINE_COMMENT, OMTIgnored.MULTILINE_COMMENT);
     public static final TokenSet STRINGS = TokenSet.create(OMTTypes.STRING);
 
     public static final IFileElementType FILE = new IFileElementType(OMTLanguage.INSTANCE);
@@ -39,7 +39,7 @@ public class OMTParserDefinition implements ParserDefinition {
     @NotNull
     @Override
     public TokenSet getCommentTokens() {
-        return END_OF_LINE_COMMENTS;
+        return IGNORED_COMMENTS;
     }
 
     @NotNull
