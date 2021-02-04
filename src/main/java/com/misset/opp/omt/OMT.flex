@@ -118,8 +118,11 @@ public static int getScalarState(String entry) {
     if(entry == null) { return YAML_SCALAR; }
     switch(entry) {
         case "title:":
+        case "description:":
             return INTERPOLATED_STRING;
         case "reason:":
+        case "moduleName:":
+        case "icon:":
             return STRING;
         default:
             return YAML_SCALAR;
