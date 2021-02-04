@@ -60,7 +60,7 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
         return new OMTLexerAdapter("Highlight Lexer");
     }
 
-    private static final TokenSet COMMENTLINE_TOKENS = TokenSet.create(OMTIgnored.END_OF_LINE_COMMENT);
+    private static final TokenSet COMMENTLINE_TOKENS = TokenSet.create(OMTIgnored.END_OF_LINE_COMMENT, OMTIgnored.MULTILINE_COMMENT);
     private static final TokenSet COMMENTBLOCK_TOKENS = TokenSet.create(OMTTypes.JAVADOCS_START, OMTTypes.JAVADOCS_CONTENT, OMTTypes.JAVADOCS_END);
     private static final TokenSet BAD_CHAR_TOKENS = TokenSet.create(TokenType.BAD_CHARACTER);
     private static final TokenSet TYPE_TOKENS = TokenSet.create(OMTTypes.MODEL_ITEM_TYPE);
