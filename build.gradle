@@ -45,8 +45,9 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-        <strong>2.5</strong><br />
-        All 'reason' JSON files are parsed from the project and added as Basic Completion suggestions<br />
+        <strong>2.5.1</strong><br />
+        Issue #19 Added moduleName, description and icon to string entries for the lexer<br />
+        Issue #18 Added support for multiline comments<br />
       """
 }
 tasks{
