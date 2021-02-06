@@ -1,7 +1,6 @@
 package com.misset.opp.omt.psi.impl;
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTTestSuite;
@@ -133,7 +132,7 @@ class OMTCallableImplTest extends OMTTestSuite {
                 "    activiteit: !Activity\n" +
                 "\n";
         final PsiFile psiFile = myFixture.configureByText("test.omt", content);
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             final OMTModelItemBlock modelItemBlock = PsiTreeUtil.findChildOfType(psiFile, OMTModelItemBlock.class);
             assertEquals("Activity", new OMTExportMemberImpl(modelItemBlock, ExportMemberType.Activity).getCallableType());
         });
@@ -155,7 +154,7 @@ class OMTCallableImplTest extends OMTTestSuite {
                 "\n";
 
         OMTCall call = getCallFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             final OMTCallable callable = getMemberUtil().getCallable(call);
             final HashMap<String, Resource> callArgumentTypes = callable.getCallArgumentTypes();
             assertTrue(callArgumentTypes.containsKey("$inputParam1"));
@@ -182,7 +181,7 @@ class OMTCallableImplTest extends OMTTestSuite {
                 "\n";
 
         OMTCall call = getCallFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             final OMTCallable callable = getMemberUtil().getCallable(call);
             final HashMap<String, Resource> callArgumentTypes = callable.getCallArgumentTypes();
             assertTrue(callArgumentTypes.containsKey("$inputParam1"));
@@ -192,6 +191,6 @@ class OMTCallableImplTest extends OMTTestSuite {
 
     private OMTCall getCallFromContent(String content) {
         final PsiFile psiFile = myFixture.configureByText("test.omt", content);
-        return ApplicationManager.getApplication().runReadAction((Computable<OMTCall>) () -> PsiTreeUtil.findChildOfType(psiFile, OMTCall.class));
+        return ReadAction.compute(() -> PsiTreeUtil.findChildOfType(psiFile, OMTCall.class));
     }
 }

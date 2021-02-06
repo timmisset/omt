@@ -4,10 +4,9 @@ import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.OMTTestSuite;
-import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTReturnStatement;
 import com.misset.opp.omt.psi.OMTScript;
 import com.misset.opp.omt.psi.OMTVariable;
@@ -34,9 +33,6 @@ class ScriptUtilTest extends OMTTestSuite {
     @InjectMocks
     ScriptUtil scriptUtil;
 
-    PsiElement rootBlock;
-
-    private ExampleFiles exampleFiles;
 
     @BeforeEach
     @Override
@@ -44,9 +40,8 @@ class ScriptUtilTest extends OMTTestSuite {
         super.setName("ModelUtilTest");
         super.setUp();
 
-        exampleFiles = new ExampleFiles(this, myFixture);
         MockitoAnnotations.openMocks(this);
-        rootBlock = exampleFiles.getProcedureWithScript();
+        setExampleFileProcedureWithScript();
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());
         doReturn(annotationBuilder).when(annotationBuilder).range(any(PsiElement.class));
         doReturn(annotationBuilder).when(annotationBuilder).withFix(any(IntentionAction.class));
@@ -60,8 +55,8 @@ class ScriptUtilTest extends OMTTestSuite {
 
     @Test
     void getScript() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock);
+        ReadAction.run(() -> {
+            OMTVariable variable = getElement(OMTVariable.class);
             Optional<OMTScript> script = scriptUtil.getScript(variable);
             assertTrue(script.isPresent());
         });
@@ -69,10 +64,10 @@ class ScriptUtilTest extends OMTTestSuite {
 
     @Test
     void getAccessibleElements_ReturnsAccessibleElements() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable variableA = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$variableA"));
-            OMTVariable variableB = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$variableB"));
-            OMTVariable variableC = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$variableC"));
+        ReadAction.run(() -> {
+            OMTVariable variableA = getElement(OMTVariable.class, omtVariable -> omtVariable.getName().equals("$variableA"));
+            OMTVariable variableB = getElement(OMTVariable.class, omtVariable -> omtVariable.getName().equals("$variableB"));
+            OMTVariable variableC = getElement(OMTVariable.class, omtVariable -> omtVariable.getName().equals("$variableC"));
             List<OMTVariable> accessibleElements = scriptUtil.getAccessibleElements(variableC, OMTVariable.class);
             assertNotNull(variableA);
             assertNotNull(variableB);
@@ -85,9 +80,9 @@ class ScriptUtilTest extends OMTTestSuite {
 
     @Test
     void getAccessibleElements_DoesNotReturnInAccessibleElements() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable variableC = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$variableC"));
-            OMTVariable variableD = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$variableD"));
+        ReadAction.run(() -> {
+            OMTVariable variableC = getElement(OMTVariable.class, omtVariable -> omtVariable.getName().equals("$variableC"));
+            OMTVariable variableD = getElement(OMTVariable.class, omtVariable -> omtVariable.getName().equals("$variableD"));
             assertNotNull(variableC);
             assertNotNull(variableD);
             List<OMTVariable> accessibleElements = scriptUtil.getAccessibleElements(variableC, OMTVariable.class);
@@ -97,13 +92,13 @@ class ScriptUtilTest extends OMTTestSuite {
 
     @Test
     void isBeforeReturnsTrue() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             OMTVariable variableADeclared =
-                    exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable ->
+                    getElement(OMTVariable.class, omtVariable ->
                             omtVariable.getName().equals("$variableA") &&
                                     omtVariable.isDeclaredVariable()
                     );
-            OMTVariable variableAUsed = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable ->
+            OMTVariable variableAUsed = getElement(OMTVariable.class, omtVariable ->
                     omtVariable.getName().equals("$variableA") &&
                             !omtVariable.isDeclaredVariable()
             );
@@ -115,12 +110,12 @@ class ScriptUtilTest extends OMTTestSuite {
 
     @Test
     void isBeforeReturnsTrueForDifferentLevels() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             OMTVariable variableA =
-                    exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable ->
+                    getElement(OMTVariable.class, omtVariable ->
                             omtVariable.getName().equals("$variableA")
                     );
-            OMTVariable variableC = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable ->
+            OMTVariable variableC = getElement(OMTVariable.class, omtVariable ->
                     omtVariable.getName().equals("$variableC")
             );
             assertNotNull(variableA);
@@ -132,12 +127,12 @@ class ScriptUtilTest extends OMTTestSuite {
 
     @Test
     void isBeforeReturnsFalseForDifferentLevels() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             OMTVariable variableA =
-                    exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable ->
+                    getElement(OMTVariable.class, omtVariable ->
                             omtVariable.getName().equals("$variableA")
                     );
-            OMTVariable variableC = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable ->
+            OMTVariable variableC = getElement(OMTVariable.class, omtVariable ->
                     omtVariable.getName().equals("$variableC")
             );
             assertNotNull(variableA);
@@ -148,13 +143,13 @@ class ScriptUtilTest extends OMTTestSuite {
 
     @Test
     void isBeforeReturnsFalse() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             OMTVariable variableBDeclared =
-                    exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable ->
+                    getElement(OMTVariable.class, omtVariable ->
                             omtVariable.getName().equals("$variableB") &&
                                     omtVariable.isDeclaredVariable()
                     );
-            OMTVariable variableBUsed = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock, omtVariable ->
+            OMTVariable variableBUsed = getElement(OMTVariable.class, omtVariable ->
                     omtVariable.getName().equals("$variableB") &&
                             !omtVariable.isDeclaredVariable()
             );
@@ -166,8 +161,8 @@ class ScriptUtilTest extends OMTTestSuite {
 
     @Test
     void annotateFinalStatement() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTReturnStatement returnStatement = exampleFiles.getPsiElementFromRootDocument(OMTReturnStatement.class, rootBlock);
+        ReadAction.run(() -> {
+            OMTReturnStatement returnStatement = getElement(OMTReturnStatement.class);
             scriptUtil.annotateFinalStatement(returnStatement, annotationHolder);
             verify(annotationHolder).newAnnotation(eq(HighlightSeverity.ERROR), eq("Unreachable code"));
             verify(annotationBuilder, times(1)).create();

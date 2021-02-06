@@ -1,7 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTTestSuite;
@@ -82,7 +81,7 @@ class VariableUtilTest_Fixture extends OMTTestSuite {
                 "           -   name:   $naam\n" +
                 "";
         final PsiFile psiFile = myFixture.configureByText("test.omt", content);
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             final OMTVariable variable = PsiTreeUtil.findChildOfType(psiFile, OMTVariable.class);
             assertEquals("$naam", variable.getName());
             assertTrue(variableUtil.isDeclaredVariable(variable));
@@ -98,7 +97,7 @@ class VariableUtilTest_Fixture extends OMTTestSuite {
                 "           $variable = 'test';\n" +
                 "           @LOG($variable);\n";
         final PsiFile psiFile = myFixture.configureByText("test.omt", content);
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             final List<OMTVariable> variables = new ArrayList<>(PsiTreeUtil.findChildrenOfType(psiFile, OMTVariable.class));
             List<Boolean> expected = Arrays.asList(true, false, false);
             for (int i = 0; i < variables.size(); i++) {
@@ -118,7 +117,7 @@ class VariableUtilTest_Fixture extends OMTTestSuite {
                 "           $variable = 'test2';\n" +
                 "           @LOG($variable);\n";
         final PsiFile psiFile = myFixture.configureByText("test.omt", content);
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             final List<OMTVariable> variables = new ArrayList<>(PsiTreeUtil.findChildrenOfType(psiFile, OMTVariable.class));
             final OMTVariable variable = variables.get(2); //  the variable usage in the first LOG
             final List<OMTVariableAssignment> assignments = variable.getAssignments();
@@ -138,7 +137,7 @@ class VariableUtilTest_Fixture extends OMTTestSuite {
                 "           $variable = 'test2';\n" +
                 "           @LOG($variable);\n";
         final PsiFile psiFile = myFixture.configureByText("test.omt", content);
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             final List<OMTVariable> variables = new ArrayList<>(PsiTreeUtil.findChildrenOfType(psiFile, OMTVariable.class));
             assertEquals("'test'", variables.get(2).getValue().getQuery().getText()); // the first usage
             assertEquals("'test2'", variables.get(4).getValue().getQuery().getText()); // the second usage
@@ -147,7 +146,7 @@ class VariableUtilTest_Fixture extends OMTTestSuite {
 
     List<Resource> getVariableType(String content) {
         final PsiFile psiFile = myFixture.configureByText("test.omt", content);
-        return ApplicationManager.getApplication().runReadAction((Computable<List<Resource>>) () -> {
+        return ReadAction.compute(() -> {
             final List<OMTVariable> variables = new ArrayList<>(PsiTreeUtil.findChildrenOfType(psiFile, OMTVariable.class));
             final OMTVariable variable = variables.get(variables.size() - 1);
             return variable.getType();

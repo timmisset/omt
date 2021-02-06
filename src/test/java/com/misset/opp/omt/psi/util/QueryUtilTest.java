@@ -1,6 +1,6 @@
 package com.misset.opp.omt.psi.util;
 
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTTestSuite;
@@ -36,7 +36,7 @@ public class QueryUtilTest extends OMTTestSuite {
         String content = withPrefixes("queries: |\n" +
                 "   DEFINE QUERY query => /ont:ClassA / ^rdf:type");
         final PsiFile psiFile = myFixture.configureByText(getFileName(), content);
-        ApplicationManager.getApplication().runReadAction(
+        ReadAction.run(
                 () -> {
                     final OMTQueryReverseStep reverseStep = PsiTreeUtil.findChildOfType(psiFile, OMTQueryReverseStep.class);
                     assertTrue(queryUtil.isPreviousStepAType(reverseStep));
@@ -49,7 +49,7 @@ public class QueryUtilTest extends OMTTestSuite {
         String content = withPrefixes("queries: |\n" +
                 "   DEFINE QUERY query => /ont:ClassA [ . ]");
         final PsiFile psiFile = myFixture.configureByText(getFileName(), content);
-        ApplicationManager.getApplication().runReadAction(
+        ReadAction.run(
                 () -> {
                     final OMTQueryStep dotStep = PsiTreeUtil.findChildrenOfType(psiFile, OMTQueryStep.class)
                             .stream().filter(queryStep -> queryStep.getText().equals(".")).findFirst().orElse(null);
@@ -63,7 +63,7 @@ public class QueryUtilTest extends OMTTestSuite {
         String content = withPrefixes("queries: |\n" +
                 "   DEFINE QUERY query => /ont:ClassA");
         final PsiFile psiFile = myFixture.configureByText(getFileName(), content);
-        ApplicationManager.getApplication().runReadAction(
+        ReadAction.run(
                 () -> {
                     final OMTQueryStep queryStep = PsiTreeUtil.findChildOfType(psiFile, OMTQueryStep.class);
                     assertFalse(queryUtil.isPreviousStepAType(queryStep));

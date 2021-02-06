@@ -1,6 +1,6 @@
 package com.misset.opp.omt.psi.impl;
 
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTTestSuite;
@@ -39,7 +39,7 @@ class OMTExportMemberImplTest extends OMTTestSuite {
         final PsiFile psiFile = myFixture.configureByText("test.omt", "" +
                 "queries:|\n" +
                 "   DEFINE QUERY myQuery() => 'test';\n");
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             final OMTDefineQueryStatement queryStatement = PsiTreeUtil.findChildOfType(psiFile, OMTDefineQueryStatement.class);
             final OMTExportMemberImpl omtExportMember = new OMTExportMemberImpl(queryStatement, ExportMemberType.Query);
             assertContainsElements(omtExportMember.getReturnType(), rdfModelUtil.getPrimitiveTypeAsResource("string"));
@@ -53,7 +53,7 @@ class OMTExportMemberImplTest extends OMTTestSuite {
                 "    MijnStandaloneQuery: !StandaloneQuery\n" +
                 "        query: |" +
                 "           'test'\n");
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             final OMTModelItemBlock modelItemBlock = PsiTreeUtil.findChildOfType(psiFile, OMTModelItemBlock.class);
             final OMTExportMemberImpl omtExportMember = new OMTExportMemberImpl(modelItemBlock, ExportMemberType.StandaloneQuery);
             assertContainsElements(omtExportMember.getReturnType(), rdfModelUtil.getPrimitiveTypeAsResource("string"));

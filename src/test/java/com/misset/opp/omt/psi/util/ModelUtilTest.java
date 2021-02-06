@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.*;
@@ -39,27 +39,20 @@ class ModelUtilTest extends OMTTestSuite {
     @InjectMocks
     ModelUtil modelUtil;
 
-
-    PsiElement rootBlock;
-
-    private ExampleFiles exampleFiles;
-
     @BeforeEach
     @Override
     public void setUp() throws Exception {
         super.setName("ModelUtilTest");
         super.setUp();
-        exampleFiles = new ExampleFiles(this, myFixture);
         MockitoAnnotations.openMocks(this);
 
         setUtilMock(projectUtil);
 
-        rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            activity = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, rootBlock);
-            importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock);
-            variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock);
-        });
+        setExampleFileActivityWithImportsPrefixesParamsVariablesGraphsPayload();
+        activity = getElement(OMTModelItemBlock.class);
+        importBlock = getElement(OMTImportBlock.class);
+        variable = getElement(OMTVariable.class);
+
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());
         doReturn(annotationBuilder).when(annotationBuilder).range(any(PsiElement.class));
         doReturn(annotationBuilder).when(annotationBuilder).withFix(any(IntentionAction.class));
@@ -74,7 +67,7 @@ class ModelUtilTest extends OMTTestSuite {
 
     @Test
     void getModelItemBlock_ReturnsSelfIfOMTModelItemBlock() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             Optional<OMTModelItemBlock> optionalOMTModelItemBlock = modelUtil.getModelItemBlock(activity);
             assertTrue(optionalOMTModelItemBlock.isPresent());
             assertEquals(activity, optionalOMTModelItemBlock.get());
@@ -83,7 +76,7 @@ class ModelUtilTest extends OMTTestSuite {
 
     @Test
     void getModelItemBlock_ReturnsEmpty() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             // import block is not contained by a modelitem block
             Optional<OMTModelItemBlock> optionalOMTModelItemBlock = modelUtil.getModelItemBlock(importBlock);
             assertFalse(optionalOMTModelItemBlock.isPresent());
@@ -92,7 +85,7 @@ class ModelUtilTest extends OMTTestSuite {
 
     @Test
     void getModelItemBlock_ReturnsModelItemBlock() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             Optional<OMTModelItemBlock> optionalOMTModelItemBlock = modelUtil.getModelItemBlock(variable);
             assertTrue(optionalOMTModelItemBlock.isPresent());
             assertEquals(activity, optionalOMTModelItemBlock.get());
@@ -101,35 +94,27 @@ class ModelUtilTest extends OMTTestSuite {
 
     @Test
     void getModelItemType_ReturnsNullWhenNoModelItemBlock() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            assertNull(modelUtil.getModelItemType(importBlock));
-        });
+        ReadAction.run(() -> assertNull(modelUtil.getModelItemType(importBlock)));
     }
 
     @Test
     void getModelItemType_ReturnsTextWhenModelItemBlock() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            assertEquals("Activity", modelUtil.getModelItemType(variable));
-        });
+        ReadAction.run(() -> assertEquals("Activity", modelUtil.getModelItemType(variable)));
     }
 
     @Test
     void getModelItemBlockEntry_ReturnsEmptyWhenNoModelItemBlock() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            assertEquals(Optional.empty(), modelUtil.getModelItemBlockEntry(importBlock, "SUPERVARIABLES"));
-        });
+        ReadAction.run(() -> assertEquals(Optional.empty(), modelUtil.getModelItemBlockEntry(importBlock, "SUPERVARIABLES")));
     }
 
     @Test
     void getModelItemBlockEntry_ReturnsEmptyWhenNoMatching() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            assertEquals(Optional.empty(), modelUtil.getModelItemBlockEntry(variable, "SUPERVARIABLES"));
-        });
+        ReadAction.run(() -> assertEquals(Optional.empty(), modelUtil.getModelItemBlockEntry(variable, "SUPERVARIABLES")));
     }
 
     @Test
     void getModelItemBlockEntry_ReturnsMatching() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             Optional<OMTBlockEntry> variables = modelUtil.getModelItemBlockEntry(variable, "variables");
             assertTrue(variables.isPresent());
             assertEquals("variables", Objects.requireNonNull(((OMTGenericBlock) variables.get()).getPropertyLabel()).getName());
@@ -159,29 +144,29 @@ class ModelUtilTest extends OMTTestSuite {
 
     @Test
     void getEntryBlockLabel_ReturnsEmptyStringWhenNull() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             // rootblock has no entryblock label and should return "" for label
-            assertEquals("", modelUtil.getEntryBlockLabel(rootBlock));
+            assertEquals("", modelUtil.getEntryBlockLabel(getFile()));
         });
     }
 
     @Test
     void getEntryBlockLabel_ReturnsLabelWithoutColon() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             assertEquals("import", modelUtil.getEntryBlockLabel(importBlock));
         });
     }
 
     @Test
     void getModelItemEntryLabel() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             assertEquals("params", modelUtil.getModelItemEntryLabel(variable));
         });
     }
 
     @Test
     void getLocalCommands_ContainsActivityCommands() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             List<String> localCommands = modelUtil.getLocalCommands(variable);
             assertTrue(localCommands.contains("COMMIT"));
             assertTrue(localCommands.contains("CANCEL"));
@@ -193,9 +178,9 @@ class ModelUtilTest extends OMTTestSuite {
 
     @Test
     void getLocalCommands_ContainsOntologyCommand() {
-        PsiElement modelWithLoadOntology = exampleFiles.getLoadOntology();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, modelWithLoadOntology);
+        setExampleFileLoadOntology();
+        ReadAction.run(() -> {
+            OMTCommandCall call = getElement(OMTCommandCall.class);
 
             List<String> localCommands = modelUtil.getLocalCommands(call);
             assertTrue(localCommands.contains("LOAD_ONTOLOGY"));
@@ -210,7 +195,7 @@ class ModelUtilTest extends OMTTestSuite {
 
     @Test
     void getJson_returnsJsonForSequenceItem() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             JsonObject json = modelUtil.getJson(variable);
             assertEquals("Param", json.get("name").getAsString());
         });
@@ -218,8 +203,8 @@ class ModelUtilTest extends OMTTestSuite {
 
     @Test
     void getJson_returnsJsonForMapItem() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            List<OMTVariable> variables = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, rootBlock);
+        ReadAction.run(() -> {
+            List<OMTVariable> variables = getElements(OMTVariable.class);
             // second to last variable is the the $variableA usage in the payload
             OMTVariable payloadVariable = variables.get(variables.size() - 2);
             JsonObject json = modelUtil.getJson(payloadVariable);
@@ -229,9 +214,9 @@ class ModelUtilTest extends OMTTestSuite {
 
     @Test
     void getJson_returnsJsonForMapOfItemScalarValue() {
-        PsiElement activityWithVariablesActions = exampleFiles.getActivityWithVariablesActions();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            List<OMTVariable> variables = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, activityWithVariablesActions);
+        setExampleFileActivityWithVariablesActions();
+        ReadAction.run(() -> {
+            List<OMTVariable> variables = getElements(OMTVariable.class);
             // last variable is in the action
             OMTVariable payloadVariable = variables.get(variables.size() - 1);
             JsonObject json = modelUtil.getJson(payloadVariable);
@@ -241,8 +226,8 @@ class ModelUtilTest extends OMTTestSuite {
 
     @Test
     void getJson_returnsNamedReferenceProperty() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            List<OMTOperatorCall> operatorCalls = exampleFiles.getPsiElementsFromRootDocument(OMTOperatorCall.class, rootBlock);
+        ReadAction.run(() -> {
+            List<OMTOperatorCall> operatorCalls = getElements(OMTOperatorCall.class);
             // last variable is in the action
             OMTOperatorCall operatorCall = operatorCalls.get(operatorCalls.size() - 1);
             JsonObject json = modelUtil.getJson(operatorCall);
@@ -252,9 +237,9 @@ class ModelUtilTest extends OMTTestSuite {
 
     @Test
     void getJsonAttributes_returnsJsonAttributesForMapOfItemScalarValue() {
-        PsiElement activityWithVariablesActions = exampleFiles.getActivityWithVariablesActions();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            List<OMTVariable> variables = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, activityWithVariablesActions);
+        setExampleFileActivityWithVariablesActions();
+        ReadAction.run(() -> {
+            List<OMTVariable> variables = getElements(OMTVariable.class);
             // last variable is in the action
             OMTVariable payloadVariable = variables.get(variables.size() - 1);
             JsonObject json = modelUtil.getJsonAttributes(payloadVariable);
@@ -264,9 +249,9 @@ class ModelUtilTest extends OMTTestSuite {
 
     @Test
     void isOntology() {
-        PsiElement loadOntology = exampleFiles.getLoadOntology();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            List<OMTModelItemBlock> modelBlocks = exampleFiles.getPsiElementsFromRootDocument(OMTModelItemBlock.class, loadOntology);
+        setExampleFileLoadOntology();
+        ReadAction.run(() -> {
+            List<OMTModelItemBlock> modelBlocks = getElements(OMTModelItemBlock.class);
             assertEquals(2, modelBlocks.size());
             assertFalse(modelUtil.isOntology(modelBlocks.get(0)));
             assertTrue(modelUtil.isOntology(modelBlocks.get(1)));
