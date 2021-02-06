@@ -1,0 +1,20 @@
+{
+  "key": "root",
+  "attributes": {
+    "model": {
+      "node": "map"
+    },
+    "moduleName": {
+      "node": "scalar"
+    },
+    "queries": {
+      "node": "scalar"
+    },
+    "commands": {
+      "node": "scalar"
+    },
+    "prefixes": {
+      "node": "map"
+    }
+  }
+}

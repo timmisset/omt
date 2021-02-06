@@ -1,7 +1,0 @@
-{
-  "name": "onChange",
-  "variables": [
-    "$newValue",
-    "$oldValue"
-  ]
-}

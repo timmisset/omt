@@ -358,7 +358,7 @@ public class ProjectUtil {
         java.util.List<String> allModelFiles = Arrays.asList(
                 "action.json", "activity.json", "binding.json", "component.json", "declare.json", "graphSelection.json",
                 "module.json", "onChange.json", "ontology.json", "param.json", "payload.json", "procedure.json",
-                "rules.json", "queryWatcher.json", "service.json", "standaloneQuery.json", "variable.json"
+                "root.json", "rules.json", "queryWatcher.json", "service.json", "standaloneQuery.json", "variable.json"
         );
         List<String> files = getResources(allModelFiles, "model");
 
