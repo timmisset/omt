@@ -3,7 +3,7 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -58,8 +58,6 @@ class ImportUtilTest extends OMTTestSuite {
     ImportUtil importUtil;
 
     OMTImport omtImport;
-    PsiElement rootBlock;
-    private ExampleFiles exampleFiles;
 
     @BeforeEach
     @Override
@@ -67,12 +65,11 @@ class ImportUtilTest extends OMTTestSuite {
         super.setName("ImportUtilTest");
         super.setUp();
 
-        exampleFiles = new ExampleFiles(this, myFixture);
         MockitoAnnotations.openMocks(this);
 
-        rootBlock = exampleFiles.getActivityWithImports();
-        ApplicationManager.getApplication().runReadAction(() -> {
-            omtImport = exampleFiles.getPsiElementFromRootDocument(OMTImport.class, rootBlock);
+        setExampleFileActivityWithImports();
+        ReadAction.run(() -> {
+            omtImport = getElement(OMTImport.class);
             omtImport = spy(omtImport);
 
             doReturn(psiFile).when(omtImport).getContainingFile();
@@ -94,24 +91,24 @@ class ImportUtilTest extends OMTTestSuite {
 
     @Test
     void resolveImportMember_returnsEmpty() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             importUtil = spy(importUtil);
             doReturn(virtualFile).when(importUtil).getImportedFile(any(OMTImport.class));
-            OMTMember member = exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock);
+            OMTMember member = getElement(OMTMember.class);
             assertEquals(Optional.empty(), importUtil.resolveImportMember(member));
         });
     }
 
     @Test
     void resolveImportMember_returnsResolved() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             importUtil = spy(importUtil);
             doReturn(virtualFile).when(importUtil).getImportedFile(any(OMTImport.class));
             doReturn(omtFile).when(psiManager).findFile(eq(virtualFile));
             doReturn(Optional.of(exportMember)).when(omtFile).getExportedMember(anyString());
             doReturn(psiElement).when(exportMember).getResolvingElement();
 
-            OMTMember member = exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock);
+            OMTMember member = getElement(OMTMember.class);
 
             assertEquals(Optional.of(psiElement), importUtil.resolveImportMember(member));
         });
@@ -119,7 +116,7 @@ class ImportUtilTest extends OMTTestSuite {
 
     @Test
     void getImportedFile_GetsRelativeFileFromClient() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             doReturn(new File("src/test/resources/examples").getAbsolutePath()).when(project).getBasePath();
             doReturn(new File("src/test/resources/examples/activity_with_imports.omt").getAbsolutePath()).when(virtualFile).getPath();
             importUtil.getImportedFile(omtImport);
@@ -130,7 +127,7 @@ class ImportUtilTest extends OMTTestSuite {
 
     @Test
     void getImportedFile_GetsRelativeFileFromRelative() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             OMTImportSource importSource = mock(OMTImportSource.class);
             OMTImportLocation importLocation = mock(OMTImportLocation.class);
             doReturn(importSource).when(omtImport).getImportSource();
@@ -147,7 +144,7 @@ class ImportUtilTest extends OMTTestSuite {
 
     @Test
     void getImportedFile_GetsFromModuleReturnsNull() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             OMTImportSource importSource = mock(OMTImportSource.class);
             OMTImportLocation importLocation = mock(OMTImportLocation.class);
             doReturn(importSource).when(omtImport).getImportSource();
@@ -165,7 +162,7 @@ class ImportUtilTest extends OMTTestSuite {
 
     @Test
     void getImportedFile_UnknownMappingReturnsNull() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             OMTImportSource importSource = mock(OMTImportSource.class);
             OMTImportLocation importLocation = mock(OMTImportLocation.class);
             doReturn(importSource).when(omtImport).getImportSource();
@@ -188,8 +185,8 @@ class ImportUtilTest extends OMTTestSuite {
     @Test
     void addImportMemberToBlock_ToExistingImport() {
         WriteCommandAction.runWriteCommandAction(getProject(), () -> {
-            importUtil.addImportMemberToBlock(rootBlock, "'@client/procedure_with_exporting_members.omt':", "AnotherMember");
-            OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock);
+            importUtil.addImportMemberToBlock(getFile(), "'@client/procedure_with_exporting_members.omt':", "AnotherMember");
+            OMTImportBlock importBlock = getElement(OMTImportBlock.class);
             String text = importBlock.getText();
             assertSameContent("import:\n" +
                     "    /**\n" +
@@ -208,8 +205,8 @@ class ImportUtilTest extends OMTTestSuite {
     @Test
     void addImportMemberToBlock_ToNewImport() {
         WriteCommandAction.runWriteCommandAction(getProject(), () -> {
-            importUtil.addImportMemberToBlock(rootBlock, "'@client/someModule/activity.omt':", "AnotherMember");
-            OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock);
+            importUtil.addImportMemberToBlock(getFile(), "'@client/someModule/activity.omt':", "AnotherMember");
+            OMTImportBlock importBlock = getElement(OMTImportBlock.class);
             String text = importBlock.getText();
             assertSameContent("import:\n" +
                     "    /**\n" +
@@ -228,10 +225,10 @@ class ImportUtilTest extends OMTTestSuite {
 
     @Test
     void addImportMemberToBlock_NewImport() {
-        PsiElement procedureWithScript = exampleFiles.getProcedureWithScript();
+        setExampleFileProcedureWithScript();
         WriteCommandAction.runWriteCommandAction(getProject(), () -> {
-            importUtil.addImportMemberToBlock(procedureWithScript, "'@client/someModule/activity.omt':", "AnotherMember");
-            OMTImportBlock importBlock = exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, procedureWithScript);
+            importUtil.addImportMemberToBlock(getFile(), "'@client/someModule/activity.omt':", "AnotherMember");
+            OMTImportBlock importBlock = getElement(OMTImportBlock.class);
             String text = importBlock.getText();
             assertEquals("import:\n" +
                     "    '@client/someModule/activity.omt':\n" +

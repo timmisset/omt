@@ -3,10 +3,9 @@ package com.misset.opp.omt.psi.util;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.OMTTestSuite;
-import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTGenericBlock;
 import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
@@ -38,9 +37,7 @@ class VariableUtilTest extends OMTTestSuite {
     AnnotationHolder annotationHolder;
     @Mock
     AnnotationBuilder annotationBuilder;
-    PsiElement rootBlock;
     OMTGenericBlock onStartBlock;
-    private ExampleFiles exampleFiles;
 
     @BeforeEach
     @Override
@@ -52,12 +49,11 @@ class VariableUtilTest extends OMTTestSuite {
 
         setUtilMock(builtInUtil);
 
-        exampleFiles = new ExampleFiles(this, myFixture);
-        rootBlock = exampleFiles.getActivityWithVariables();
+        setExampleFileActivityWithVariables();
 
-        ApplicationManager.getApplication().runReadAction(() -> {
-            onStartBlock = exampleFiles.getPsiElementFromRootDocument(
-                    OMTGenericBlock.class, rootBlock,
+        ReadAction.run(() -> {
+            onStartBlock = getElement(
+                    OMTGenericBlock.class,
                     genericBlock ->
                             genericBlock.getPropertyLabel().getName().equals("onStart")
             );
@@ -76,8 +72,8 @@ class VariableUtilTest extends OMTTestSuite {
 
     @Test
     void getFirstAppearance() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            List<OMTVariable> variableList = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, onStartBlock,
+        ReadAction.run(() -> {
+            List<OMTVariable> variableList = getElements(onStartBlock, OMTVariable.class,
                     omtVariable -> omtVariable.getName().equals("$variableA"));
             assertEquals(2, variableList.size());
             OMTVariable firstInstance = variableList.get(0);
@@ -89,8 +85,8 @@ class VariableUtilTest extends OMTTestSuite {
 
     @Test
     void getDeclaredVariables() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            List<OMTVariable> variableList = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, onStartBlock,
+        ReadAction.run(() -> {
+            List<OMTVariable> variableList = getElements(OMTVariable.class,
                     omtVariable -> omtVariable.getName().equals("$myDeclaredVariable"));
             assertEquals(2, variableList.size());
             OMTVariable firstInstance = variableList.get(0);
@@ -101,8 +97,8 @@ class VariableUtilTest extends OMTTestSuite {
 
     @Test
     void getDeclaredByVariable() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            List<OMTVariable> variableList = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, onStartBlock,
+        ReadAction.run(() -> {
+            List<OMTVariable> variableList = getElements(OMTVariable.class,
                     omtVariable -> omtVariable.getName().equals("$myDeclaredVariable"));
             assertEquals(2, variableList.size());
             OMTVariable declared = variableList.get(0);
@@ -113,9 +109,9 @@ class VariableUtilTest extends OMTTestSuite {
 
     @Test
     void getLocalVariables() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable localVariable = exampleFiles.getPsiElementFromRootDocument(
-                    OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$newValue")
+        ReadAction.run(() -> {
+            OMTVariable localVariable = getElement(
+                    OMTVariable.class, omtVariable -> omtVariable.getName().equals("$newValue")
             );
             assertTrue(variableUtil.getLocalVariables(localVariable).containsKey("$newValue"));
         });
@@ -123,11 +119,11 @@ class VariableUtilTest extends OMTTestSuite {
 
     @Test
     void getLocalVariablesForBuiltInCommands() {
-        OMTBuiltInMember forEachCommand = new OMTBuiltInMember("FOREACH", new ArrayList<>(), BuiltInType.Command, Arrays.asList("$value"));
-        doReturn(forEachCommand).when(builtInUtil).getBuiltInMember(eq("FOREACH"), eq(BuiltInType.Command));
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable localVariable = exampleFiles.getPsiElementFromRootDocument(
-                    OMTVariable.class, rootBlock, omtVariable -> omtVariable.getName().equals("$value")
+        ReadAction.run(() -> {
+            OMTBuiltInMember forEachCommand = new OMTBuiltInMember("FOREACH", new ArrayList<>(), BuiltInType.Command, Arrays.asList("$value"));
+            doReturn(forEachCommand).when(builtInUtil).getBuiltInMember(eq("FOREACH"), eq(BuiltInType.Command));
+            OMTVariable localVariable = getElement(
+                    OMTVariable.class, omtVariable -> omtVariable.getName().equals("$value")
             );
             assertTrue(variableUtil.getLocalVariables(localVariable).containsKey("$value"));
         });
@@ -135,8 +131,8 @@ class VariableUtilTest extends OMTTestSuite {
 
     @Test
     void isDeclaredVariable_DeclaredInScript() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            List<OMTVariable> variableList = exampleFiles.getPsiElementsFromRootDocument(OMTVariable.class, onStartBlock,
+        ReadAction.run(() -> {
+            List<OMTVariable> variableList = getElements(OMTVariable.class,
                     omtVariable -> omtVariable.getName().equals("$myDeclaredVariable"));
             assertEquals(2, variableList.size());
             OMTVariable declared = variableList.get(0);
@@ -144,13 +140,12 @@ class VariableUtilTest extends OMTTestSuite {
             assertTrue(variableUtil.isDeclaredVariable(declared));
             assertFalse(variableUtil.isDeclaredVariable(usage));
         });
-
     }
 
     @Test
     void isDeclaredVariable_DeclaredParamWithType() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock,
+        ReadAction.run(() -> {
+            OMTVariable variable = getElement(OMTVariable.class,
                     omtVariable -> omtVariable.getName().equals("$paramWithType"));
             assertTrue(variableUtil.isDeclaredVariable(variable));
         });
@@ -158,8 +153,8 @@ class VariableUtilTest extends OMTTestSuite {
 
     @Test
     void isDeclaredVariable_DeclaredBindingsVariable() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock,
+        ReadAction.run(() -> {
+            OMTVariable variable = getElement(OMTVariable.class,
                     omtVariable -> omtVariable.getName().equals("$bindingsVariable"));
             assertTrue(variableUtil.isDeclaredVariable(variable));
         });
@@ -167,8 +162,8 @@ class VariableUtilTest extends OMTTestSuite {
 
     @Test
     void isDeclaredVariable_DeclaredBaseVariable() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock,
+        ReadAction.run(() -> {
+            OMTVariable variable = getElement(OMTVariable.class,
                     omtVariable -> omtVariable.getName().equals("$baseVariable"));
             assertTrue(variableUtil.isDeclaredVariable(variable));
         });
@@ -176,12 +171,11 @@ class VariableUtilTest extends OMTTestSuite {
 
     @Test
     void isDeclaredVariable_DeclaredVariablesVariable() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTVariable variable = exampleFiles.getPsiElementFromRootDocument(OMTVariable.class, rootBlock,
+        ReadAction.run(() -> {
+            OMTVariable variable = getElement(OMTVariable.class,
                     omtVariable -> omtVariable.getName().equals("$declaredVariablesVariable"));
             assertTrue(variableUtil.isDeclaredVariable(variable));
         });
     }
-
 
 }

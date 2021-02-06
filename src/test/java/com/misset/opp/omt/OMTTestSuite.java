@@ -5,7 +5,6 @@ import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
@@ -24,6 +23,8 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
@@ -387,7 +388,7 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
 
     protected void getElementAtCaret(String filename, String content, Consumer<PsiElement> elementConsumer, Class<? extends PsiElement> elementAtCaretClass, boolean consumeInReader) {
         myFixture.configureByText(filename, content);
-        final PsiElement elementAtCaret = ApplicationManager.getApplication().runReadAction((Computable<PsiElement>) () -> {
+        final PsiElement elementAtCaret = ReadAction.compute(() -> {
             PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
             if (element instanceof PsiWhiteSpace) {
                 fail("Whitespace element, move the caret to the start of the PsiElement");
@@ -405,4 +406,74 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         }
     }
 
+    protected <T extends PsiElement> T getElement(Class<? extends T> className) {
+        return getElement(className, t -> true);
+    }
+
+    protected <T extends PsiElement> List<T> getElements(Class<? extends T> className) {
+        return getElements(className, t -> true);
+    }
+
+    protected <T extends PsiElement> T getElement(Class<? extends T> className, Predicate<T> condition) {
+        return className.cast(ReadAction.compute(() ->
+                        PsiTreeUtil.findChildrenOfType(myFixture.getFile(), className)
+                                .stream().filter(condition)
+                                .findFirst()
+                                .orElse(null)
+                )
+        );
+    }
+
+    protected <T extends PsiElement> List<T> getElements(Class<? extends T> className, Predicate<T> condition) {
+        return getElements(getFile(), className, condition);
+    }
+
+    protected <T extends PsiElement> List<T> getElements(PsiElement container, Class<? extends T> className, Predicate<T> condition) {
+        return ReadAction.compute(() ->
+                PsiTreeUtil.findChildrenOfType(container, className)
+                        .stream().filter(condition)
+                        .map(className::cast)
+                        .collect(Collectors.toList())
+        );
+    }
+
+    protected void setExampleFileActivityWithImportsPrefixesParamsVariablesGraphsPayload() {
+        process("examples/activity_with_imports_prefixes_params_variables_graphs_payload.omt");
+    }
+
+    protected void setExampleFileActivityWithVariablesActions() {
+        process("examples/activity_with_variables_actions.omt");
+    }
+
+    protected void setExampleFileLoadOntology() {
+        process("examples/load_ontology.omt");
+    }
+
+    protected void setExampleFileActivityWithMembers() {
+        process("examples/activity_with_members.omt");
+    }
+
+    protected void setExampleFileProcedureWithScript() {
+        process("examples/procedure_with_script.omt");
+    }
+
+    protected void setExampleFileActivityWithImports() {
+        process("examples/activity_with_imports.omt");
+    }
+
+    protected void setExampleFileActivityWithVariables() {
+        process("examples/activity_with_variables.omt");
+    }
+
+    private void process(String resourcePath) {
+
+        File file = new File(getClass().getClassLoader().getResource(resourcePath).getFile());
+        try {
+            String data = new String(Files.readAllBytes(file.toPath()));
+            myFixture.configureByText(getFileName(), data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 }

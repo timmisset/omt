@@ -1,17 +1,15 @@
 package com.misset.opp.omt.util;
 
 import com.google.gson.JsonObject;
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.misset.opp.omt.OMTTestSuite;
-import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.support.OMTExportMember;
@@ -45,13 +43,9 @@ class ProjectUtilTest extends OMTTestSuite {
     @InjectMocks
     ProjectUtil projectUtil;
 
-
-    ExampleFiles exampleFiles;
-
     @Mock
     StatusBar statusBar;
 
-    PsiElement rootBlock;
 
 
     @BeforeEach
@@ -60,14 +54,13 @@ class ProjectUtilTest extends OMTTestSuite {
         super.setName("ProjectUtilTest");
         super.setUp();
         MockitoAnnotations.openMocks(this);
-        exampleFiles = new ExampleFiles(this, myFixture);
 
         setUtilMock(builtInUtil);
         projectUtil = spy(projectUtil);
         setUtilMock(projectUtil);
 
         doReturn(statusBar).when(projectUtil).getStatusBar(eq(getProject()));
-        rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
+        setExampleFileActivityWithImportsPrefixesParamsVariablesGraphsPayload();
     }
 
     @AfterEach
@@ -82,7 +75,7 @@ class ProjectUtilTest extends OMTTestSuite {
                 any(Project.class), anyString()
         );
         doReturn(document).when(fileDocumentManager).getDocument(eq(virtualFile));
-        ApplicationManager.getApplication().runReadAction(() -> projectUtil.loadBuiltInMembers(getProject()));
+        ReadAction.run(() -> projectUtil.loadBuiltInMembers(getProject()));
         verify(statusBar).setInfo("OMT PLUGIN: Finished loading builtinCommands.ts");
         verify(statusBar).setInfo("OMT PLUGIN: Finished loading builtinOperators.ts");
     }
@@ -92,7 +85,7 @@ class ProjectUtilTest extends OMTTestSuite {
         doReturn(Arrays.asList(virtualFile)).when(projectUtil).getVirtualFilesByName(
                 any(Project.class), anyString()
         );
-        ApplicationManager.getApplication().runReadAction(() -> projectUtil.loadBuiltInMembers(getProject()));
+        ReadAction.run(() -> projectUtil.loadBuiltInMembers(getProject()));
         verify(statusBar).setInfo("OMT PLUGIN: Error loading builtinCommands.ts");
         verify(statusBar).setInfo("OMT PLUGIN: Error loading builtinOperators.ts");
     }
@@ -124,8 +117,8 @@ class ProjectUtilTest extends OMTTestSuite {
 
     @Test
     void analyzeFile() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            projectUtil.analyzeFile((OMTFile) rootBlock);
+        ReadAction.run(() -> {
+            projectUtil.analyzeFile((OMTFile) getFile());
             assertEquals(1, projectUtil.getExportMember("MijnActiviteit").size());
             assertEquals(1, projectUtil.getKnownPrefixes("abc").size());
             assertEquals(1, projectUtil.getKnownPrefixes("foaf").size());
@@ -144,7 +137,7 @@ class ProjectUtilTest extends OMTTestSuite {
 
     @Test
     void getFilesByName() {
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             String[] allFilenames = FilenameIndex.getAllFilenames(getProject());
             String firstFile = allFilenames[0];
             PsiFile[] filesByName = projectUtil.getFilesByName(getProject(), firstFile);

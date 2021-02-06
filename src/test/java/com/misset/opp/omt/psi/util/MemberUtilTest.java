@@ -4,7 +4,7 @@ import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.misset.opp.omt.OMTTestSuite;
@@ -57,9 +57,6 @@ class MemberUtilTest extends OMTTestSuite {
     ScriptUtil scriptUtil;
     @InjectMocks
     MemberUtil memberUtil;
-    private ExampleFiles exampleFiles;
-
-    PsiElement rootBlock;
 
     @BeforeEach
     @Override
@@ -73,8 +70,7 @@ class MemberUtilTest extends OMTTestSuite {
         setUtilMock(scriptUtil);
         setUtilMock(importUtil);
 
-        exampleFiles = new ExampleFiles(this, myFixture);
-        rootBlock = exampleFiles.getActivityWithMembers();
+        setExampleFileActivityWithMembers();
         doReturn(SHORT_DESCRIPTION).when(builtInMember).shortDescription();
         doReturn(HTML_DESCRIPTION).when(builtInMember).htmlDescription();
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(HighlightSeverity.class), anyString());
@@ -91,8 +87,8 @@ class MemberUtilTest extends OMTTestSuite {
 
     @Test
     void getDeclaringMember_ReturnsOperatorForOperatorCall() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTOperatorCall operatorCall = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
+        ReadAction.run(() -> {
+            OMTOperatorCall operatorCall = getElement(OMTOperatorCall.class,
                     call -> Objects.equals(call.getName(), "myThirdQuery")
             );
             Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(operatorCall);
@@ -103,8 +99,8 @@ class MemberUtilTest extends OMTTestSuite {
 
     @Test
     void getDeclaringMember_ReturnsEmptyWhenCallBeforeDefinedForOperatorCall() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTOperatorCall operatorCall = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
+        ReadAction.run(() -> {
+            OMTOperatorCall operatorCall = getElement(OMTOperatorCall.class,
                     call -> Objects.equals(call.getName(), "myFourthQuery")
             );
             Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(operatorCall);
@@ -114,8 +110,8 @@ class MemberUtilTest extends OMTTestSuite {
 
     @Test
     void getDeclaringMember_ReturnsEmptyWhenCallOnDifferentModelItemDefinedStatement() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall commandCall = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+        ReadAction.run(() -> {
+            OMTCommandCall commandCall = getElement(OMTCommandCall.class,
                     call -> Objects.equals(call.getName(), "myFirstCommand")
             );
             Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(commandCall);
@@ -125,8 +121,8 @@ class MemberUtilTest extends OMTTestSuite {
 
     @Test
     void getDeclaringMember_ReturnsWhenCallOnRootDefinedStatement() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall commandCall = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+        ReadAction.run(() -> {
+            OMTCommandCall commandCall = getElement(OMTCommandCall.class,
                     call -> Objects.equals(call.getName(), "myRootCommand")
             );
             Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(commandCall);
@@ -136,8 +132,8 @@ class MemberUtilTest extends OMTTestSuite {
 
     @Test
     void getDeclaringMember_ReturnsExportingMember() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall commandCall = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+        ReadAction.run(() -> {
+            OMTCommandCall commandCall = getElement(OMTCommandCall.class,
                     call -> Objects.equals(call.getName(), "MijnProcedure")
             );
             Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(commandCall);
@@ -148,8 +144,8 @@ class MemberUtilTest extends OMTTestSuite {
 
     @Test
     void getDeclaringMember_ReturnsImportedMember() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTCommandCall commandCall = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock,
+        ReadAction.run(() -> {
+            OMTCommandCall commandCall = getElement(OMTCommandCall.class,
                     call -> Objects.equals(call.getName(), "myImportedMethod")
             );
             doReturn(Optional.of(psiElement)).when(importUtil).resolveImportMember(any(OMTMember.class));
@@ -162,8 +158,8 @@ class MemberUtilTest extends OMTTestSuite {
 
     @Test
     void getDeclaringMember_ReturnsOntology() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTOperatorCall operatorCall = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock,
+        ReadAction.run(() -> {
+            OMTOperatorCall operatorCall = getElement(OMTOperatorCall.class,
                     call -> Objects.equals(call.getName(), "MijnOntology")
             );
             Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(operatorCall);
@@ -173,16 +169,16 @@ class MemberUtilTest extends OMTTestSuite {
 
     @Test
     void getNamedMemberType() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            assertEquals(NamedMemberType.CommandCall, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock)));
-            assertEquals(NamedMemberType.OperatorCall, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock)));
-            assertEquals(NamedMemberType.ModelItem, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTModelItemLabel.class, rootBlock)));
-            assertEquals(NamedMemberType.ModelItem, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTPropertyLabel.class, rootBlock)));
-            assertEquals(NamedMemberType.DefineName, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTDefineName.class, rootBlock)));
-            assertEquals(NamedMemberType.ImportingMember, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock, member -> ((OMTMember) member).getName().equals("myImportedMethod"))));
-            assertEquals(NamedMemberType.ExportingMember, memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock, member -> ((OMTMember) member).getName().equals("myExportedMethod"))));
+        ReadAction.run(() -> {
+            assertEquals(NamedMemberType.CommandCall, memberUtil.getNamedMemberType(getElement(OMTCommandCall.class)));
+            assertEquals(NamedMemberType.OperatorCall, memberUtil.getNamedMemberType(getElement(OMTOperatorCall.class)));
+            assertEquals(NamedMemberType.ModelItem, memberUtil.getNamedMemberType(getElement(OMTModelItemLabel.class)));
+            assertEquals(NamedMemberType.ModelItem, memberUtil.getNamedMemberType(getElement(OMTPropertyLabel.class)));
+            assertEquals(NamedMemberType.DefineName, memberUtil.getNamedMemberType(getElement(OMTDefineName.class)));
+            assertEquals(NamedMemberType.ImportingMember, memberUtil.getNamedMemberType(getElement(OMTMember.class, member -> member.getName().equals("myImportedMethod"))));
+            assertEquals(NamedMemberType.ExportingMember, memberUtil.getNamedMemberType(getElement(OMTMember.class, member -> member.getName().equals("myExportedMethod"))));
 
-            assertNull(memberUtil.getNamedMemberType(exampleFiles.getPsiElementFromRootDocument(OMTImportBlock.class, rootBlock)));
+            assertNull(memberUtil.getNamedMemberType(getElement(OMTImportBlock.class)));
         });
 
     }
@@ -191,8 +187,8 @@ class MemberUtilTest extends OMTTestSuite {
     void memberToExportMember_Procedure() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
         method.setAccessible(true);
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTModelItemLabel modelItemLabel = exampleFiles.getPsiElementFromRootDocument(OMTModelItemLabel.class, rootBlock, label -> label.getName().equals("MijnProcedure"));
+        ReadAction.run(() -> {
+            OMTModelItemLabel modelItemLabel = getElement(OMTModelItemLabel.class, label -> label.getName().equals("MijnProcedure"));
             try {
                 OMTExportMember exportMember = (OMTExportMember) method.invoke(memberUtil, modelItemLabel);
                 assertTrue(exportMember.isCommand());
@@ -207,8 +203,8 @@ class MemberUtilTest extends OMTTestSuite {
     void memberToExportMember_Activity() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
         method.setAccessible(true);
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTModelItemLabel modelItemLabel = exampleFiles.getPsiElementFromRootDocument(OMTModelItemLabel.class, rootBlock, label -> label.getName().equals("MijnActiviteitMetInterpolatedTitel"));
+        ReadAction.run(() -> {
+            OMTModelItemLabel modelItemLabel = getElement(OMTModelItemLabel.class, label -> label.getName().equals("MijnActiviteitMetInterpolatedTitel"));
             try {
                 OMTExportMember exportMember = (OMTExportMember) method.invoke(memberUtil, modelItemLabel);
                 assertTrue(exportMember.isCommand());
@@ -223,8 +219,8 @@ class MemberUtilTest extends OMTTestSuite {
     void memberToExportMember_StandaloneQuery() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
         method.setAccessible(true);
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTModelItemLabel modelItemLabel = exampleFiles.getPsiElementFromRootDocument(OMTModelItemLabel.class, rootBlock, label -> label.getName().equals("MijnStandaloneQuery"));
+        ReadAction.run(() -> {
+            OMTModelItemLabel modelItemLabel = getElement(OMTModelItemLabel.class, label -> label.getName().equals("MijnStandaloneQuery"));
             try {
                 OMTExportMember exportMember = (OMTExportMember) method.invoke(memberUtil, modelItemLabel);
                 assertTrue(exportMember.isOperator());
@@ -239,8 +235,8 @@ class MemberUtilTest extends OMTTestSuite {
     void memberToExportMember_ExportedMemberReturnsNullOnNoReference() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
         method.setAccessible(true);
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTMember exportingMember = exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock, member -> member.getName().equals("myExportedMethod"));
+        ReadAction.run(() -> {
+            OMTMember exportingMember = getElement(OMTMember.class, member -> member.getName().equals("myExportedMethod"));
             try {
                 OMTMember spy = spy(exportingMember);
                 doReturn(null).when(spy).getReference();
@@ -255,8 +251,8 @@ class MemberUtilTest extends OMTTestSuite {
     void memberToExportMember_ExportedMemberReturnsNullWhenReferenceResolvesToSelf() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
         method.setAccessible(true);
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTMember exportingMember = exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock, member -> member.getName().equals("myExportedMethod"));
+        ReadAction.run(() -> {
+            OMTMember exportingMember = getElement(OMTMember.class, member -> member.getName().equals("myExportedMethod"));
             try {
                 OMTExportMember exportMember = (OMTExportMember) method.invoke(memberUtil, exportingMember);
                 assertNull(exportMember);
@@ -270,9 +266,9 @@ class MemberUtilTest extends OMTTestSuite {
     void memberToExportMember_ExportedMember() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
         method.setAccessible(true);
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTMember exportingMember = exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock, member -> member.getName().equals("myExportedMethod"));
-            OMTModelItemLabel modelItemLabel = exampleFiles.getPsiElementFromRootDocument(OMTModelItemLabel.class, rootBlock, label -> label.getName().equals("MijnActiviteitMetInterpolatedTitel"));
+        ReadAction.run(() -> {
+            OMTMember exportingMember = getElement(OMTMember.class, member -> member.getName().equals("myExportedMethod"));
+            OMTModelItemLabel modelItemLabel = getElement(OMTModelItemLabel.class, label -> label.getName().equals("MijnActiviteitMetInterpolatedTitel"));
             try {
                 OMTMember spy = spy(exportingMember);
                 PsiReference refSpy = spy(exportingMember.getReference());
@@ -290,9 +286,9 @@ class MemberUtilTest extends OMTTestSuite {
     void memberToExportMember_ReturnsNullOnUnknownType() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
         method.setAccessible(true);
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             // ModelItemBlock is not a valid type
-            OMTModelItemBlock modelItemBlock = exampleFiles.getPsiElementFromRootDocument(OMTModelItemBlock.class, rootBlock);
+            OMTModelItemBlock modelItemBlock = getElement(OMTModelItemBlock.class);
             try {
                 assertNull(method.invoke(memberUtil, modelItemBlock));
             } catch (IllegalAccessException | InvocationTargetException e) {
@@ -305,9 +301,9 @@ class MemberUtilTest extends OMTTestSuite {
     void memberToExportMember_ReturnsNullOnImportedMember() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
         method.setAccessible(true);
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             // ModelItemBlock is not a valid type
-            OMTMember member = exampleFiles.getPsiElementFromRootDocument(OMTMember.class, rootBlock, member1 -> member1.getName().equals("myImportedMethod"));
+            OMTMember member = getElement(OMTMember.class, member1 -> member1.getName().equals("myImportedMethod"));
             try {
                 assertNull(method.invoke(memberUtil, member));
             } catch (IllegalAccessException | InvocationTargetException e) {
@@ -320,9 +316,9 @@ class MemberUtilTest extends OMTTestSuite {
     void memberToExportMember_ReturnsNullOnCommandCall() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
         method.setAccessible(true);
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             // ModelItemBlock is not a valid type
-            OMTCommandCall call = exampleFiles.getPsiElementFromRootDocument(OMTCommandCall.class, rootBlock);
+            OMTCommandCall call = getElement(OMTCommandCall.class);
             try {
                 assertNull(method.invoke(memberUtil, call));
             } catch (IllegalAccessException | InvocationTargetException e) {
@@ -335,9 +331,9 @@ class MemberUtilTest extends OMTTestSuite {
     void memberToExportMember_ReturnsNullOnOperatorCall() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("memberToExportMember", PsiElement.class);
         method.setAccessible(true);
-        ApplicationManager.getApplication().runReadAction(() -> {
+        ReadAction.run(() -> {
             // ModelItemBlock is not a valid type
-            OMTOperatorCall call = exampleFiles.getPsiElementFromRootDocument(OMTOperatorCall.class, rootBlock);
+            OMTOperatorCall call = getElement(OMTOperatorCall.class);
             try {
                 assertNull(method.invoke(memberUtil, call));
             } catch (IllegalAccessException | InvocationTargetException e) {
@@ -348,8 +344,8 @@ class MemberUtilTest extends OMTTestSuite {
 
     @Test
     void parseDefinedToCallable_CommandStatement() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTDefineCommandStatement commandStatement = exampleFiles.getPsiElementFromRootDocument(OMTDefineCommandStatement.class, rootBlock);
+        ReadAction.run(() -> {
+            OMTDefineCommandStatement commandStatement = getElement(OMTDefineCommandStatement.class);
             OMTDefineName defineName = commandStatement.getDefineName();
 
             OMTExportMember exportMember = (OMTExportMember) memberUtil.parseDefinedToCallable(defineName);
@@ -360,8 +356,8 @@ class MemberUtilTest extends OMTTestSuite {
 
     @Test
     void parseDefinedToCallable_QueryStatement() {
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTDefineQueryStatement queryStatement = exampleFiles.getPsiElementFromRootDocument(OMTDefineQueryStatement.class, rootBlock);
+        ReadAction.run(() -> {
+            OMTDefineQueryStatement queryStatement = getElement(OMTDefineQueryStatement.class);
             OMTDefineName defineName = queryStatement.getDefineName();
 
             OMTExportMember exportMember = (OMTExportMember) memberUtil.parseDefinedToCallable(defineName);
@@ -374,8 +370,8 @@ class MemberUtilTest extends OMTTestSuite {
     void getContainingElement_ReturnsModelItemBlockForModelItemLabel() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("getContainingElement", PsiElement.class);
         method.setAccessible(true);
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTModelItemLabel modelItemLabel = exampleFiles.getPsiElementFromRootDocument(OMTModelItemLabel.class, rootBlock);
+        ReadAction.run(() -> {
+            OMTModelItemLabel modelItemLabel = getElement(OMTModelItemLabel.class);
             try {
                 OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) method.invoke(memberUtil, modelItemLabel);
                 assertNotNull(modelItemBlock);
@@ -390,8 +386,8 @@ class MemberUtilTest extends OMTTestSuite {
     void getContainingElement_ReturnsDefinedStatementForDefineName() throws NoSuchMethodException {
         Method method = MemberUtil.class.getDeclaredMethod("getContainingElement", PsiElement.class);
         method.setAccessible(true);
-        ApplicationManager.getApplication().runReadAction(() -> {
-            OMTDefineName omtDefineName = exampleFiles.getPsiElementFromRootDocument(OMTDefineName.class, rootBlock);
+        ReadAction.run(() -> {
+            OMTDefineName omtDefineName = getElement(OMTDefineName.class);
             try {
                 OMTDefinedStatement statement = (OMTDefinedStatement) method.invoke(memberUtil, omtDefineName);
                 assertNotNull(statement);

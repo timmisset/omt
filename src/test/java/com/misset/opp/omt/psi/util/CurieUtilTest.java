@@ -8,7 +8,6 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.misset.opp.omt.OMTTestSuite;
-import com.misset.opp.omt.psi.ExampleFiles;
 import com.misset.opp.omt.psi.OMTCurieElement;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
 import com.misset.opp.omt.psi.OMTPrefix;
@@ -43,23 +42,17 @@ class CurieUtilTest extends OMTTestSuite {
     @InjectMocks
     CurieUtil curieUtil;
 
-    private ExampleFiles exampleFiles;
-    PsiElement rootBlock;
-
     @BeforeEach
     @Override
     public void setUp() throws Exception {
         super.setName("CurieUtilTest");
         super.setUp();
 
-        exampleFiles = new ExampleFiles(this, myFixture);
-
         MockitoAnnotations.openMocks(this);
         setUtilMock(projectUtil);
 
         setOntologyModel();
 
-        rootBlock = exampleFiles.getActivityWithImportsPrefixesParamsVariablesGraphsPayload();
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());
         doReturn(annotationBuilder).when(annotationBuilder).range(any(PsiElement.class));
         doReturn(annotationBuilder).when(annotationBuilder).withFix(any(IntentionAction.class));

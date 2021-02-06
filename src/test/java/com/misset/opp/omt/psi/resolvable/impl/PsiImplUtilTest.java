@@ -1,11 +1,11 @@
 package com.misset.opp.omt.psi.resolvable.impl;
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.util.Computable;
-import com.intellij.psi.PsiFile;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTTestSuite;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTDefineQueryStatement;
+import com.misset.opp.omt.psi.OMTParameterWithType;
+import com.misset.opp.omt.psi.OMTQuery;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,8 +21,6 @@ import java.util.stream.Stream;
 
 class ResolvableTest extends OMTTestSuite {
 
-    private final ExampleFiles exampleFiles = new ExampleFiles(this, myFixture);
-
     @BeforeEach
     @Override
     public void setUp() throws Exception {
@@ -31,7 +29,6 @@ class ResolvableTest extends OMTTestSuite {
 
         setBuiltinOperators();
         setOntologyModel();
-
     }
 
     @AfterEach
@@ -65,24 +62,22 @@ class ResolvableTest extends OMTTestSuite {
     }
 
     private OMTQuery parseQuery(String query) {
-        String parsed = String.format("prefixes:\n" +
+        return parseQueryFromContent(String.format("prefixes:\n" +
                 "    ont:     <http://ontologie#>\n" +
                 "    rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
                 "\n" +
                 "queries: |\n" +
-                "    DEFINE QUERY test() => %s;\n", query);
-        final OMTFile omtFile = (OMTFile) myFixture.configureByText("test.omt", parsed);
-        return exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, omtFile);
+                "    DEFINE QUERY test() => %s;\n", query));
     }
 
     private OMTQuery parseQueryFromContent(String content) {
-        final OMTFile omtFile = (OMTFile) myFixture.configureByText("test.omt", content);
-        return exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, omtFile);
+        myFixture.configureByText("test.omt", content);
+        return getElement(OMTQuery.class);
     }
 
-    private <T> T parseQueryFromContent(String content, Predicate<T> condition) {
-        final OMTFile omtFile = (OMTFile) myFixture.configureByText("test.omt", content);
-        return exampleFiles.getPsiElementFromRootDocument(OMTQuery.class, omtFile, condition);
+    private OMTQuery parseQueryFromContent(String content, Predicate<OMTQuery> condition) {
+        myFixture.configureByText("test.omt", content);
+        return getElement(OMTQuery.class, condition);
     }
 
     private void validateResources(List<Resource> resources, String... expected) {
@@ -95,9 +90,7 @@ class ResolvableTest extends OMTTestSuite {
     }
 
     private List<Resource> resolve(OMTQuery query) {
-        return ApplicationManager.getApplication().runReadAction(
-                (Computable<List<Resource>>) query::resolveToResource
-        );
+        return ReadAction.compute(query::resolveToResource);
     }
 
     @ParameterizedTest
@@ -117,7 +110,7 @@ class ResolvableTest extends OMTTestSuite {
                 "queries: |\n" +
                 "    DEFINE QUERY test() => 'test' / ^ont:stringProperty [rdf:type == /ont:ClassA];\n";
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA"));
+        ReadAction.run(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA"));
     }
 
     @Test
@@ -129,7 +122,7 @@ class ResolvableTest extends OMTTestSuite {
                 "queries: |\n" +
                 "    DEFINE QUERY test() => 'test' / ^ont:stringProperty [rdf:type == /ont:ClassB];\n";
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
+        ReadAction.run(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
     }
 
     @Test
@@ -141,7 +134,7 @@ class ResolvableTest extends OMTTestSuite {
                 "queries: |\n" +
                 "    DEFINE QUERY test() => $unknown / ^ont:stringProperty [rdf:type == /ont:ClassB];\n";
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
+        ReadAction.run(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
     }
 
     @Test
@@ -153,7 +146,7 @@ class ResolvableTest extends OMTTestSuite {
                 "queries: |\n" +
                 "    DEFINE QUERY test() => /ont:ClassB / ^rdf:type;\n";
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA", "http://ontologie#ClassB"));
+        ReadAction.run(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA", "http://ontologie#ClassB"));
     }
 
     @Test
@@ -165,7 +158,7 @@ class ResolvableTest extends OMTTestSuite {
                 "queries: |\n" +
                 "    DEFINE QUERY test() => 'test' / ^ont:stringProperty [NOT rdf:type == /ont:ClassB];\n";
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA", "http://ontologie#ClassC"));
+        ReadAction.run(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA", "http://ontologie#ClassC"));
     }
 
     @Test
@@ -177,7 +170,7 @@ class ResolvableTest extends OMTTestSuite {
                 "queries: |\n" +
                 "    DEFINE QUERY test() => 'test' / ^ont:stringProperty ['a' == 'b' AND rdf:type == /ont:ClassB];\n";
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
+        ReadAction.run(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
     }
 
     @Test
@@ -189,7 +182,7 @@ class ResolvableTest extends OMTTestSuite {
                 "queries: |\n" +
                 "    DEFINE QUERY test() => 'test' / ^ont:stringProperty [/ont:ClassB == rdf:type];\n";
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
+        ReadAction.run(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
     }
 
     @Test
@@ -201,7 +194,7 @@ class ResolvableTest extends OMTTestSuite {
                 "queries: |\n" +
                 "    DEFINE QUERY test() => 'test' / ^ont:stringProperty ['a' == 'b' AND NOT rdf:type == /ont:ClassB];\n";
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA", "http://ontologie#ClassC"));
+        ReadAction.run(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA", "http://ontologie#ClassC"));
     }
 
     @Test
@@ -217,7 +210,7 @@ class ResolvableTest extends OMTTestSuite {
                 "           DEFINE QUERY test() => $mijnParam;\n";
 
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA"));
+        ReadAction.run(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA"));
 
     }
 
@@ -233,7 +226,7 @@ class ResolvableTest extends OMTTestSuite {
                 "    DEFINE QUERY myQuery($mijnParameter) => $mijnParameter;";
 
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA"));
+        ReadAction.run(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassA"));
     }
 
     @Test
@@ -249,7 +242,7 @@ class ResolvableTest extends OMTTestSuite {
                 "    DEFINE QUERY myQuery($mijnParameterA, $mijnParameterB) => $mijnParameterB;";
 
         OMTQuery query = parseQueryFromContent(content);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
+        ReadAction.run(() -> validateResources(query.resolveToResource(), "http://ontologie#ClassB"));
     }
 
     @Test
@@ -259,7 +252,7 @@ class ResolvableTest extends OMTTestSuite {
                 "    DEFINE QUERY myQuery2() => myQuery;";
 
         OMTQuery query = parseQueryFromContent(content, omtQuery -> PsiTreeUtil.getParentOfType(omtQuery, OMTDefineQueryStatement.class).getDefineName().getName().equals("myQuery2"));
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(query.resolveToResource(), "http://www.w3.org/2001/XMLSchema#decimal"));
+        ReadAction.run(() -> validateResources(query.resolveToResource(), "http://www.w3.org/2001/XMLSchema#decimal"));
     }
 
 
@@ -273,9 +266,9 @@ class ResolvableTest extends OMTTestSuite {
                 "       params:\n" +
                 "           -   $mijnParam (ont:ClassA)\n";
 
-        final PsiFile psiFile = myFixture.configureByText("test.omt", content);
-        OMTParameterWithType parameterWithType = exampleFiles.getPsiElementFromRootDocument(OMTParameterWithType.class, psiFile);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(parameterWithType.getType(), "http://ontologie#ClassA"));
+        myFixture.configureByText("test.omt", content);
+        OMTParameterWithType parameterWithType = getElement(OMTParameterWithType.class);
+        ReadAction.run(() -> validateResources(parameterWithType.getType(), "http://ontologie#ClassA"));
     }
 
     @Test
@@ -287,9 +280,9 @@ class ResolvableTest extends OMTTestSuite {
                 "   activity: !Activity\n" +
                 "       params:\n" +
                 "           -   $mijnParam (string)\n";
-        final PsiFile psiFile = myFixture.configureByText("test.omt", content);
-        OMTParameterWithType parameterWithType = exampleFiles.getPsiElementFromRootDocument(OMTParameterWithType.class, psiFile);
-        ApplicationManager.getApplication().runReadAction(() -> validateResources(parameterWithType.getType(), "http://www.w3.org/2001/XMLSchema#string"));
+        myFixture.configureByText("test.omt", content);
+        OMTParameterWithType parameterWithType = getElement(OMTParameterWithType.class);
+        ReadAction.run(() -> validateResources(parameterWithType.getType(), "http://www.w3.org/2001/XMLSchema#string"));
     }
 
 }
