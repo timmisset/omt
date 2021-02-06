@@ -72,7 +72,7 @@ public class ModelUtil {
     }
 
     public OMTBlock getEntryBlock(PsiElement element) {
-        return (OMTBlock) PsiTreeUtil.getParentOfType(element, OMTBlock.class);
+        return PsiTreeUtil.getParentOfType(element, OMTBlock.class);
     }
 
     public PsiElement getEntryBlockLabelElement(PsiElement element) {
@@ -130,6 +130,14 @@ public class ModelUtil {
                 .filter(jsonObject -> jsonObject.has("modelRoot") && jsonObject.get("modelRoot").getAsBoolean())
                 .map(jsonObject -> jsonObject.get("name").getAsString())
                 .collect(Collectors.toList());
+    }
+
+    public List<String> getRootEntries() {
+        return new ArrayList<>(getProjectUtil().getParsedModel().get("root")
+                .getAsJsonObject()
+                .get("attributes")
+                .getAsJsonObject()
+                .keySet());
     }
 
     public boolean isMapNode(JsonObject jsonInfo) {

@@ -7,6 +7,7 @@ import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.TokenType;
 import com.misset.opp.omt.psi.OMTBlock;
 import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTQueryPath;
 import org.jetbrains.annotations.NotNull;
 
@@ -53,7 +54,7 @@ public class PlaceholderProvider {
 
     public String getIdentifier() {
         if (contextElement == null) {
-            return context.getDummyIdentifier();
+            return PROVIDE_MODEL_ENTRY;
         }
         // check if the file has an error in the grammar parser before completion
         if (hasErrorState() && setFromErrorState()) {
@@ -74,8 +75,11 @@ public class PlaceholderProvider {
     private boolean provideModelEntry() {
         final PsiElement elementParent = contextElement.getParent();
         return startOfLine() && (
-                elementParent instanceof OMTBlockEntry ||
-                        elementParent instanceof OMTBlock               // includes all block types
+                // start of new line
+                (contextElement.getText().endsWith("\n") && elementParent instanceof OMTFile) ||
+                        // entry block
+                        elementParent instanceof OMTBlockEntry ||
+                        elementParent instanceof OMTBlock
         );
     }
 
@@ -141,6 +145,7 @@ public class PlaceholderProvider {
     }
 
     private boolean startOfLine() {
+        if (context.getCaret().getLogicalPosition().column == 0) return true;
         PsiElement el = contextElement.getPrevSibling();
         while (el != null && !el.getText().startsWith("\n")) {
             if (el.getNode().getElementType() != TokenType.WHITE_SPACE) {
@@ -159,7 +164,7 @@ public class PlaceholderProvider {
     private void setContextElement() {
         contextElement = elementAtCaret;
         int offset = context.getStartOffset();
-        while (contextElement == null) {
+        while (contextElement == null && offset > 0) {
             offset--;
             contextElement = context.getFile().findElementAt(offset);
         }

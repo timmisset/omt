@@ -33,6 +33,7 @@ public class OMTCompletionContributor extends CompletionContributor {
         ModelItemCompletion.register(this);
         ModelCompletion.register(this);
         ScalarValueCompletion.register(this);
+        RootCompletion.register(this);
         QueryBlockCompletion.register(this);
         CommandBlockCompletion.register(this);
         QueryFirstStepCompletion.register(this);

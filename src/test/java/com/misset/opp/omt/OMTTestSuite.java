@@ -171,7 +171,6 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
     protected void setBuiltinAndModel() {
         setBuiltin();
         setOntologyModel();
-        System.out.println("TEST FLOW: Finished setting BuiltIn & Model");
     }
 
     private void startUtilMock() {

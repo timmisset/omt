@@ -17,6 +17,8 @@
         <lang.syntaxHighlighterFactory language="OMT"
                                        implementationClass="com.misset.opp.omt.style.OMTSyntaxHighlighterFactory"/>
         <lang.braceMatcher language="OMT" implementationClass="com.misset.opp.omt.OMTBraceMatcher"/>
+        <editor.backspaceModeOverride language="OMT"
+                                      implementationClass="com.intellij.codeInsight.editorActions.SmartBackspaceDisabler"/>
         <enterHandlerDelegate implementation="com.misset.opp.omt.formatter.OMTEnterTypedHandler"/>
         <colorSettingsPage implementation="com.misset.opp.omt.style.OMTColorSettingsPage"/>
         <annotator language="OMT" implementationClass="com.misset.opp.omt.annotations.OMTAnnotator"/>
