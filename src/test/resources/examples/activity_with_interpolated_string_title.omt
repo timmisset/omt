@@ -1,6 +1,0 @@
-model:
-    MijnActiviteit: !Activity
-        title: Mijn titel = ${$mijnVariable}
-
-        variables:
-        -   $mijnVariable

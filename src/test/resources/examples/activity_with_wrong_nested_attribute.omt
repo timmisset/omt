@@ -1,8 +1,0 @@
-model:
-    MijnActiviteit: !Activity
-        title: Mijn Activiteit
-
-        payload:
-            payloadC:
-                queryX:  someQuery
-                list:   true

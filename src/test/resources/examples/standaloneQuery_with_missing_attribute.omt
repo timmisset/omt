@@ -1,4 +1,0 @@
-model:
-    myStandAloneQuery: !StandaloneQuery
-        base:   $myVariable
-

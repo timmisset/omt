@@ -444,7 +444,6 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
     protected void setExampleFileActivityWithVariablesActions() {
         process("examples/activity_with_variables_actions.omt");
     }
-
     protected void setExampleFileLoadOntology() {
         process("examples/load_ontology.omt");
     }

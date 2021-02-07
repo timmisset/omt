@@ -1,3 +1,0 @@
-model:
-    MijnActiviteit: !WrongModelItemType
-        title: Mijn Activiteit
