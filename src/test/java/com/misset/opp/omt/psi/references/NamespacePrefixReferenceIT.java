@@ -110,4 +110,5 @@ class NamespacePrefixReferenceIT extends ReferenceTest {
         assertHasUsages(content, 2);
         assertNoErrors();
     }
+
 }

@@ -13,10 +13,18 @@ public class OMTRefactoringSupportProvider extends RefactoringSupportProvider {
 
     @Override
     public boolean isMemberInplaceRenameAvailable(@NotNull PsiElement element, @Nullable PsiElement context) {
+        return canBeRenamed(element);
+    }
+
+    @Override
+    public boolean isAvailable(@NotNull PsiElement context) {
+        return canBeRenamed(context);
+    }
+
+    private boolean canBeRenamed(PsiElement element) {
         return element instanceof OMTVariable ||
                 element instanceof OMTNamespacePrefix ||
                 element instanceof OMTModelItemLabel ||
                 element instanceof OMTDefineName;
     }
-
 }

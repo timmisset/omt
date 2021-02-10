@@ -140,7 +140,9 @@ IElementType toSpecificBlockLabel() {
         case "moduleName:": return logAndReturn(OMTTypes.MODULE_NAME_START);
         case "export:": return logAndReturn(OMTTypes.EXPORT_START);
         case "module:": return logAndReturn(OMTTypes.MODULE_START);
-        default: return logAndReturn(OMTTypes.PROPERTY);
+        default:
+            yypushback(1);
+            return logAndReturn(OMTTypes.PROPERTY);
     }
 }
 IElementType returnElement(IElementType element) {
@@ -292,6 +294,7 @@ IElementType closeBracket() {
     // Especially the latter requires the indentation to be adjusted to the position of somethingElse to link
     // aSecondEntry: accordingly.
     {PROPERTY_KEY}                                            { return dent(OMTTypes.PROPERTY); }
+    ":"                                                       { return OMTTypes.COLON; }
 
     // The YAML flag in OMT is only used to typecast the modelitem
     "!"+{NAME}                                                 { return returnElement(OMTTypes.MODEL_ITEM_TYPE); }

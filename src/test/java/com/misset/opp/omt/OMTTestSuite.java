@@ -444,6 +444,7 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
     protected void setExampleFileActivityWithVariablesActions() {
         process("examples/activity_with_variables_actions.omt");
     }
+
     protected void setExampleFileLoadOntology() {
         process("examples/load_ontology.omt");
     }
@@ -465,7 +466,6 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
     }
 
     private void process(String resourcePath) {
-
         File file = new File(getClass().getClassLoader().getResource(resourcePath).getFile());
         try {
             String data = new String(Files.readAllBytes(file.toPath()));
@@ -473,6 +473,5 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 }

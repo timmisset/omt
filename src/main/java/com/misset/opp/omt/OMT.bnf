@@ -35,7 +35,7 @@ indentedBlock ::=                           indentToken blockEntry+ dedentToken 
 blockEntry ::=                              specificBlock | genericBlock {
                                                 implements="com.misset.opp.omt.psi.support.OMTBlockEntrySup"
                                                 }
-propertyLabel ::=                           PROPERTY {
+propertyLabel ::=                           PROPERTY COLON {
                                                 implements="com.misset.opp.omt.psi.support.OMTNamedElement"
                                                 mixin="com.misset.opp.omt.psi.impl.named.OMTPropertyLabelImpl"
 }
@@ -102,14 +102,14 @@ importSource ::=                            importLocation EMPTY_ARRAY? {
                                                                            mixin="com.misset.opp.omt.psi.impl.named.OMTImportSourceNamedElementImpl"
                                                                            implements="com.misset.opp.omt.psi.named.OMTImportNamedElement"
                                                                          }
-importLocation ::=                          (MODULE_START indentToken PROPERTY dedentToken) | (MODULE_START PROPERTY) | PROPERTY | IMPORT_PATH
+importLocation ::=                          (MODULE_START indentToken propertyLabel dedentToken) | (MODULE_START propertyLabel) | propertyLabel | IMPORT_PATH
 
 prefixBlock::=                              leading? PREFIX_BLOCK_START indentToken prefix+ dedentToken { extends=specificBlock }
 prefix::=                                   leading? namespacePrefix namespaceIri {
     mixin="com.misset.opp.omt.psi.impl.named.OMTPrefixImpl"
     implements="com.misset.opp.omt.psi.support.OMTNamedElement"
 }
-namespacePrefix::=                          PROPERTY | (NAMESPACE COLON)            {
+namespacePrefix::=                          (PROPERTY COLON) | (NAMESPACE COLON)            {
                                                                                          mixin="com.misset.opp.omt.psi.impl.named.OMTNamespacePrefixNamedElementImpl"
                                                                                          implements="com.misset.opp.omt.psi.named.OMTNamespacePrefixNamedElement"
                                                                                    }

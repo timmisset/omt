@@ -311,9 +311,9 @@ public class ModelUtil {
         final IElementType parentType = node.getTreeParent() != null ? node.getTreeParent().getElementType() : null;
         if (elementType == OMTTypes.PROPERTY_LABEL || parentType == OMTTypes.PROPERTY_LABEL) {
             PsiElement psiElement = node.getPsi();
-            final OMTPropertyLabel propertyLabel = node.getElementType() == OMTTypes.PROPERTY ?
-                    (OMTPropertyLabel) psiElement.getParent() :
-                    (OMTPropertyLabel) node.getPsi();
+            final OMTPropertyLabel propertyLabel = node.getElementType() == OMTTypes.PROPERTY_LABEL ?
+                    (OMTPropertyLabel) node.getPsi() :
+                    (OMTPropertyLabel) psiElement.getParent();
             final String propertyLabelName = propertyLabel.getName();
             final JsonObject parentJson = UtilManager.getModelUtil().getJsonAtParentLevel(psiElement);
             final JsonObject attributes = parentJson.getAsJsonObject(ATTRIBUTES);
