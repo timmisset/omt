@@ -6,6 +6,7 @@ import com.intellij.find.findUsages.FindUsagesOptions;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.misset.opp.omt.psi.*;
@@ -23,14 +24,18 @@ public class OMTFindUsageHandlerFactory extends FindUsagesHandlerFactory {
     public static ReferencesSearch.SearchParameters getSearchParameters(@NotNull PsiElement target, @Nullable FindUsagesOptions findUsagesOptions) {
         final PsiElement targetElement = getTargetElement(target);
         return new ReferencesSearch.SearchParameters(targetElement,
-                getSearchScope(targetElement),
+                localOnly(targetElement) ? getLocalSearchScope(targetElement) : getGlobalSearchScope(targetElement),
                 false,
                 findUsagesOptions == null
                         ? null
                         : findUsagesOptions.fastTrack);
     }
 
-    private static SearchScope getSearchScope(PsiElement target) {
+    private static SearchScope getLocalSearchScope(PsiElement target) {
+        return new LocalSearchScope(ReadAction.compute(target::getContainingFile));
+    }
+
+    private static SearchScope getGlobalSearchScope(PsiElement target) {
         return target instanceof OMTModelItemLabel ?
                 GlobalSearchScope.allScope(target.getProject()) :
                 GlobalSearchScope.FilesScope.getScopeRestrictedByFileTypes(
@@ -39,9 +44,14 @@ public class OMTFindUsageHandlerFactory extends FindUsagesHandlerFactory {
                 );
     }
 
+    private static boolean localOnly(PsiElement element) {
+        return element instanceof OMTNamespacePrefix ||
+                element instanceof OMTVariable;
+    }
+
     private static PsiElement getTargetElement(PsiElement element) {
         return ReadAction.compute(() ->
-                element instanceof OMTPropertyLabel && element.getParent() instanceof OMTModelItemLabel ?
+                element instanceof OMTPropertyLabel ?
                         element.getParent() :
                         element);
     }
@@ -51,6 +61,7 @@ public class OMTFindUsageHandlerFactory extends FindUsagesHandlerFactory {
         return ReadAction.compute(() ->
                 (psiElement instanceof OMTVariable) ||
                         (psiElement instanceof OMTPropertyLabel && psiElement.getParent() instanceof OMTModelItemLabel) ||
+                        (psiElement instanceof OMTPropertyLabel && psiElement.getParent() instanceof OMTNamespacePrefix) ||
                         (psiElement instanceof OMTDefineName) ||
                         (psiElement instanceof OMTNamespacePrefix));
     }

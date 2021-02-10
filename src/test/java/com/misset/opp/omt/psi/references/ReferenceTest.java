@@ -38,7 +38,6 @@ public class ReferenceTest extends OMTTestSuite {
     }
 
     protected void assertHasUsages(String filename, String content, int usages) {
-        final OMTFindUsageHandlerFactory omtFindUsageHandlerFactory = new OMTFindUsageHandlerFactory();
         getElementAtCaret(filename, content, element ->
                 withProgress(() -> assertEquals(usages,
                         ReferencesSearch

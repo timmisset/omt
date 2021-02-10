@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '2.6'
+version '2.6.1'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -45,11 +45,8 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-        <strong>2.6</strong><br />
-        Issue #19 Added moduleName, description and icon to string entries for the lexer<br />
-        Issue #18 Added support for multiline comments<br />
-        Added completion for root entries<br />
-        Added Backspace handler to reduce indentation and escape blocks
+        <strong>2.6.1</strong><br />
+        Bugfix for refactor-rename prefixes
       """
 }
 tasks{

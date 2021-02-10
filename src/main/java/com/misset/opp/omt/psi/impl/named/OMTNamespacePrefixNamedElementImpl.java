@@ -36,16 +36,13 @@ public abstract class OMTNamespacePrefixNamedElementImpl extends NameIdentifierO
     @Override
     @NotNull
     public String getName() {
-        String prefix = getPsi().getText();
-        prefix = prefix.endsWith(":") ? prefix.substring(0, prefix.length() - 1) : prefix;
-
-        return prefix;
+        return getNameIdentifier().getText();
     }
 
-    @Nullable
+    @NotNull
     @Override
     public PsiElement getNameIdentifier() {
-        return null;
+        return getPsi().getFirstChild();
     }
 
     @Override
