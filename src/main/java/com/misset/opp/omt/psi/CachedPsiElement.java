@@ -22,8 +22,8 @@ public abstract class CachedPsiElement extends ASTWrapperPsiElement {
     }
 
     @Override
-    public PsiFile getContainingFile() {
+    public OMTFile getContainingFile() {
         if (file == null) file = super.getContainingFile();
-        return file;
+        return (OMTFile) file;
     }
 }
