@@ -3,7 +3,6 @@ package com.misset.opp.omt.psi.impl;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.psi.CachedPsiElement;
-import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTParameterType;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.named.OMTCurie;
@@ -41,9 +40,9 @@ public abstract class OMTParameterTypeSupImpl extends CachedPsiElement implement
 
     @Override
     public Resource getAsResource() {
-        if (hasCurie()) {
+        if (hasCurie() && getContainingFile() != null) {
             return getRDFModelUtil().getResource(
-                    ((OMTFile) getContainingFile()).curieToIri(getText().trim())
+                    getContainingFile().curieToIri(getText().trim())
             );
         } else {
             final String type = getFirstChild().getText().trim();
