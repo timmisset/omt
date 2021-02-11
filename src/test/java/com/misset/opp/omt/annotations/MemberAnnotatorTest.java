@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.IncorrectSignatureArgument;
@@ -171,29 +170,6 @@ class MemberAnnotatorTest extends OMTAnnotationTest {
         ).when(callable).validateSignature(call);
         memberAnnotator.annotate(signature);
         verifyError("Incorrect flag 'illegalFlag' used, acceptable flags are: 'FlagA', 'FlagB'");
-    }
-
-    @Test
-    void annotateCallByAttributeThrowsNoErrorWhenIsStringField() {
-        attributes.addProperty("type", "string");
-        memberAnnotator.annotate(call);
-        verifyNoErrors();
-    }
-
-    @Test
-    void annotateCallByAttributeThrowsNoErrorWhenIsInterpolatedStringAndNotInTemplateField() {
-        attributes.addProperty("type", "interpolatedString");
-        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.findFirstParent(eq(call), any()), null);
-        memberAnnotator.annotate(call);
-        verifyNoErrors();
-    }
-
-    @Test
-    void annotateCallByAttributeThrowsNoErrorWhenIsShortcut() {
-        attributes.addProperty("shortcut", "");
-        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.findFirstParent(eq(call), any()), null);
-        memberAnnotator.annotate(call);
-        verifyNoErrors();
     }
 
     @Test

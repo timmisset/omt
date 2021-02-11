@@ -8,7 +8,6 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.*;
@@ -36,8 +35,6 @@ class ImportUtilTest extends OMTTestSuite {
 
     @Mock
     VirtualFile virtualFile;
-    @Mock
-    PsiFile psiFile;
 
     @Mock
     Project project;
@@ -72,8 +69,8 @@ class ImportUtilTest extends OMTTestSuite {
             omtImport = getElement(OMTImport.class);
             omtImport = spy(omtImport);
 
-            doReturn(psiFile).when(omtImport).getContainingFile();
-            doReturn(virtualFile).when(psiFile).getVirtualFile();
+            doReturn(omtFile).when(omtImport).getContainingFile();
+            doReturn(virtualFile).when(omtFile).getVirtualFile();
             doReturn("myUrl").when(virtualFile).getUrl();
             doReturn(project).when(omtImport).getProject();
         });
