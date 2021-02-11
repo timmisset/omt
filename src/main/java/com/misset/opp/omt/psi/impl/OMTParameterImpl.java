@@ -54,7 +54,7 @@ public class OMTParameterImpl implements OMTParameter {
         }
         variable = (OMTVariable) queryPath.getFirstChild().getFirstChild();
         name = variable.getName();
-        required = false;
+        required = true;
     }
 
     public OMTParameterImpl(JsonElement element, String name) {
