@@ -171,7 +171,7 @@ public class MemberUtil {
             return NamedMemberType.ModelItem;
         }
         if (element instanceof OMTMember) {
-            return PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTImportBlock) != null ? NamedMemberType.ImportingMember : NamedMemberType.ExportingMember;
+            return PsiTreeUtil.getParentOfType(element, OMTImportBlock.class) != null ? NamedMemberType.ImportingMember : NamedMemberType.ExportingMember;
         }
         return null;
     }

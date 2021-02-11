@@ -46,7 +46,9 @@ intellij {
 patchPluginXml {
     changeNotes """
         <strong>2.6.1</strong><br />
-        Bugfix for refactor-rename prefixes
+        Bugfix for refactor-rename prefixes<br />
+        Bugfix for possible nullpointer in getAsResource for ParameterWithType<br />
+        Bugfix for number of call arguments in ModelItems
       """
 }
 tasks{

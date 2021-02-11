@@ -79,7 +79,7 @@ public class OMTFile extends PsiFileBase {
     }
 
     public boolean isPartOfRootBlock(PsiElement element) {
-        OMTBlockEntry blockEntry = (OMTBlockEntry) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTBlockEntry);
+        OMTBlockEntry blockEntry = PsiTreeUtil.getParentOfType(element, OMTBlockEntry.class);
         OMTBlock rootBlock = PsiTreeUtil.getChildOfType(this, OMTBlock.class);
         if (rootBlock == null) {
             return false;

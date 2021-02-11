@@ -82,9 +82,7 @@ public class ModelUtil {
         if (element instanceof OMTBlockEntry) {
             return ((OMTBlockEntry) element).getLabel();
         }
-        return getEntryBlockLabelElement(PsiTreeUtil.findFirstParent(element,
-                parent -> parent instanceof OMTBlockEntry
-        ));
+        return getEntryBlockLabelElement(PsiTreeUtil.getParentOfType(element, OMTBlockEntry.class));
     }
 
     /**
@@ -329,7 +327,7 @@ public class ModelUtil {
     }
 
     public boolean isImportNode(ASTNode node) {
-        return PsiTreeUtil.findFirstParent(node.getPsi(), element -> element instanceof OMTImport) != null;
+        return PsiTreeUtil.getParentOfType(node.getPsi(), OMTImport.class) != null;
     }
 
     public boolean isScalarEntry(PsiElement element) {

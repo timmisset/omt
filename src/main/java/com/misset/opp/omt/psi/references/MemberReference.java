@@ -44,7 +44,7 @@ public abstract class MemberReference<T extends PsiElement> extends PsiReference
     }
 
     private boolean isDeferredImportReference(PsiElement element) {
-        return PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTImport) != null &&
+        return PsiTreeUtil.getParentOfType(element, OMTImport.class) != null &&
                 element != myElement &&
                 element.getContainingFile() == myElement.getContainingFile() &&
                 element.getReference() != null && myElement.getReference() != null &&

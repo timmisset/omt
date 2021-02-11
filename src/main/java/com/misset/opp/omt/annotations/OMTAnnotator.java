@@ -86,7 +86,7 @@ public class OMTAnnotator implements Annotator {
     private void annotateLeaf(PsiElement element, AnnotationHolder holder) {
         // annotate leaf elements for syntax checking
         if (element.getNode().getElementType() == OMTTypes.FORWARD_SLASH &&
-                PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTQueryPath) != null
+                PsiTreeUtil.getParentOfType(element, OMTQueryPath.class) != null
         ) {
             annotateUnexpectedCharacter(HighlightSeverity.ERROR, element, OMTTypes.FORWARD_SLASH, holder);
         } else if (element.getNode().getElementType() == OMTTypes.SEMICOLON) {

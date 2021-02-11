@@ -60,13 +60,13 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
     }
 
     private boolean addJavaDocsClosure() {
-        return PsiTreeUtil.findFirstParent(elementAtCaretOnEnter, element -> element instanceof OMTJdComment) == null;
+        return PsiTreeUtil.getParentOfType(elementAtCaretOnEnter, OMTJdComment.class) == null;
     }
 
     private boolean isInJavaDocs(PsiElement elementAt) {
         return TokenSet.create(OMTTypes.JAVADOCS_START, OMTTypes.JAVADOCS_CONTENT, OMTTypes.JD_COMMENT, OMTTypes.JD_CONTENT)
                 .contains(nodeTypeAtCaretOnEnter) ||
-                (elementAt != null && PsiTreeUtil.findFirstParent(elementAt, parent -> parent instanceof OMTJdComment) != null);
+                (elementAt != null && PsiTreeUtil.getParentOfType(elementAt, OMTJdComment.class) != null);
     }
 
     private boolean setBullet() {
@@ -80,11 +80,12 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
     }
 
     private boolean isSequenceItem() {
+        final OMTSequenceItem parentOfType = PsiTreeUtil.getParentOfType(elementAtCaretOnEnter, OMTSequenceItem.class);
         return
                 // the entry of a sequence item
-                PsiTreeUtil.findFirstParent(elementAtCaretOnEnter, element -> element instanceof OMTSequenceItem) != null &&
+                parentOfType != null &&
                         // but only as shortcut or single value
-                        PsiTreeUtil.findChildOfType(PsiTreeUtil.findFirstParent(elementAtCaretOnEnter, element -> element instanceof OMTSequenceItem), OMTBlock.class) == null;
+                        PsiTreeUtil.findChildOfType(parentOfType, OMTBlock.class) == null;
     }
 
     private String getAfterSequenceBulletSpacing(PsiFile file) {

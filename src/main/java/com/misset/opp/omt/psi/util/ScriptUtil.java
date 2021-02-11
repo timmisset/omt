@@ -31,7 +31,7 @@ public class ScriptUtil {
      */
     public <T> List<T> getAccessibleElements(PsiElement element, Class<T> type) {
         List<T> items = new ArrayList<>();
-        OMTScriptLine currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTScriptLine);
+        OMTScriptLine currentScriptLine = PsiTreeUtil.getParentOfType(element, OMTScriptLine.class);
         if (currentScriptLine == null && element instanceof OMTCommandBlock) {
             final List<OMTScriptLine> scriptLines = PsiTreeUtil.getChildrenOfTypeAsList(element, OMTScriptLine.class);
             if (scriptLines.isEmpty()) {
@@ -45,7 +45,7 @@ public class ScriptUtil {
         items.addAll(getChildrenOfTypeNotEnclosed(currentScriptLine, type));
         while (currentScriptLine != null) {
             getPrecedingScriptLines(currentScriptLine).forEach(scriptLine -> items.addAll(getChildrenOfTypeNotEnclosed(scriptLine, type)));
-            currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(currentScriptLine.getParent(), parent -> parent instanceof OMTScriptLine);
+            currentScriptLine = PsiTreeUtil.getParentOfType(currentScriptLine.getParent(), OMTScriptLine.class);
         }
         return items;
     }
@@ -55,7 +55,7 @@ public class ScriptUtil {
         if (!PsiElement.class.isAssignableFrom(type)) {
             return items;
         }
-        OMTScriptLine currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTScriptLine);
+        OMTScriptLine currentScriptLine = PsiTreeUtil.getParentOfType(element, OMTScriptLine.class);
         while (currentScriptLine != null) {
             getPrecedingScriptLines(currentScriptLine)
                     .forEach(scriptLine -> PsiTreeUtil.findChildrenOfType(scriptLine, type)
@@ -63,7 +63,7 @@ public class ScriptUtil {
                             .map(type::cast)
                             .filter(condition)
                             .forEach(items::add));
-            currentScriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(currentScriptLine.getParent(), parent -> parent instanceof OMTScriptLine);
+            currentScriptLine = PsiTreeUtil.getParentOfType(currentScriptLine.getParent(), OMTScriptLine.class);
         }
         return items;
     }
@@ -129,11 +129,10 @@ public class ScriptUtil {
         }
         return scriptLinesAtSameDepth.get(0).getStartOffsetInParent() <
                 scriptLinesAtSameDepth.get(1).getStartOffsetInParent();
-
     }
 
     public void annotateFinalStatement(PsiElement returnStatement, AnnotationHolder holder) {
-        OMTScriptLine scriptLine = (OMTScriptLine) PsiTreeUtil.findFirstParent(returnStatement, parent -> parent instanceof OMTScriptLine);
+        OMTScriptLine scriptLine = PsiTreeUtil.getParentOfType(returnStatement, OMTScriptLine.class);
         if (scriptLine != null) {
             OMTScriptLine nextLine = PsiTreeUtil.getNextSiblingOfType(scriptLine, OMTScriptLine.class);
             while (nextLine != null) {

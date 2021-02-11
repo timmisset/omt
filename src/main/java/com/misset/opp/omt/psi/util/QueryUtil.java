@@ -37,7 +37,7 @@ public class QueryUtil {
                 subQuery.getQuery() instanceof OMTQueryArray) {
             return true;
         }
-        if (PsiTreeUtil.findFirstParent(subQuery, parent -> parent instanceof OMTIfBlock) != null) {
+        if (PsiTreeUtil.getParentOfType(subQuery, OMTIfBlock.class) != null) {
             return true;
         }
         return subQuery.getParent() instanceof OMTQueryPath && subQuery.getParent().getParent() instanceof OMTNegatedStep;

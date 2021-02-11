@@ -34,9 +34,9 @@ public class ImportCompletion extends RDFCompletion {
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                 // The first step of the query will suggest starting points of the query
                 PsiElement element = parameters.getPosition();
-                OMTMemberList memberList = (OMTMemberList) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTMemberList);
+                OMTMemberList memberList = PsiTreeUtil.getParentOfType(element, OMTMemberList.class);
                 OMTImport omtImport = memberList != null ? (OMTImport) memberList.getParent() :
-                        (OMTImport) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTImport);
+                        PsiTreeUtil.getParentOfType(element, OMTImport.class);
 
                 final OMTFile file = getImportUtil().getFile(omtImport, parameters.getOriginalFile());
                 if (file == null) {

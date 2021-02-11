@@ -61,7 +61,7 @@ public class RemoveIntention {
     }
 
     private void deletePrefix(OMTNamespacePrefix namespacePrefix) {
-        OMTPrefixBlock prefixBlock = (OMTPrefixBlock) PsiTreeUtil.findFirstParent(namespacePrefix, parent -> parent instanceof OMTPrefixBlock);
+        OMTPrefixBlock prefixBlock = PsiTreeUtil.getParentOfType(namespacePrefix, OMTPrefixBlock.class);
         if (namespacePrefix.getParent() instanceof OMTPrefix) {
             namespacePrefix.getParent().delete();
         }
@@ -78,7 +78,7 @@ public class RemoveIntention {
     }
 
     private void deleteImportMember(OMTMemberListItem listItem) {
-        OMTImportBlock importBlock = (OMTImportBlock) PsiTreeUtil.findFirstParent(listItem, parent -> parent instanceof OMTImportBlock);
+        OMTImportBlock importBlock = PsiTreeUtil.getParentOfType(listItem, OMTImportBlock.class);
         listItem.delete();
         if (importBlock != null) {
             CodeStyleManager.getInstance(listItem.getProject()).reformat(importBlock);

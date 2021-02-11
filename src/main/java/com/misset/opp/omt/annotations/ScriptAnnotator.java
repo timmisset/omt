@@ -35,7 +35,7 @@ public class ScriptAnnotator extends AbstractAnnotator {
     }
 
     private boolean isPartOfCommandBlock(OMTScriptContent scriptContent) {
-        return PsiTreeUtil.findFirstParent(scriptContent, parent -> parent instanceof OMTCommandBlock) != null;
+        return PsiTreeUtil.getParentOfType(scriptContent, OMTCommandBlock.class) != null;
     }
 
     private void annotate(OMTIfBlock omtIfBlock) {

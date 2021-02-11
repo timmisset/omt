@@ -90,6 +90,6 @@ public class ModelCompletion extends OMTCompletion {
     }
 
     private OMTBlock getBlockParent(PsiElement element) {
-        return (OMTBlock) PsiTreeUtil.findFirstParent(element, parent -> parent instanceof OMTBlock);
+        return PsiTreeUtil.getParentOfType(element, OMTBlock.class);
     }
 }

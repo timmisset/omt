@@ -159,7 +159,7 @@ public class VariableUtil {
                         variable.getReference().isReferenceTo(variableToAnnotate)
         ).forEach(
                 variable -> {
-                    final OMTQuery query = (OMTQuery) PsiTreeUtil.findFirstParent(variable, parent -> parent instanceof OMTQuery);
+                    final OMTQuery query = PsiTreeUtil.getParentOfType(variable, OMTQuery.class);
                     if (query != null) {
                         if (query.getParent() instanceof OMTEquationStatement) {
                             final OMTEquationStatement equationStatement = (OMTEquationStatement) query.getParent();
@@ -167,7 +167,7 @@ public class VariableUtil {
                             types.addAll(new OMTQueryReverseStepImpl(opposite.getNode()).resolveToResource());
                         } else {
                             if (query instanceof OMTQueryPath) {
-                                final OMTQueryStep queryStep = (OMTQueryStep) PsiTreeUtil.findFirstParent(variable, parent -> parent instanceof OMTQueryStep);
+                                final OMTQueryStep queryStep = PsiTreeUtil.getParentOfType(variable, OMTQueryStep.class);
                                 addTypeSuggestionsFromQueryStep((OMTQueryPath) query, queryStep, types);
                             }
                         }
