@@ -1,8 +1,9 @@
 package com.misset.opp.omt.psi.impl;
 
+import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.CachedPsiElement;
+import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTParameterType;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.named.OMTCurie;
@@ -14,7 +15,7 @@ import java.util.List;
 
 import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
 
-public abstract class OMTParameterTypeSupImpl extends CachedPsiElement implements OMTCurie {
+public abstract class OMTParameterTypeSupImpl extends ASTWrapperPsiElement implements OMTCurie {
     public OMTParameterTypeSupImpl(@NotNull ASTNode node) {
         super(node);
     }
@@ -42,7 +43,7 @@ public abstract class OMTParameterTypeSupImpl extends CachedPsiElement implement
     public Resource getAsResource() {
         if (hasCurie() && getContainingFile() != null) {
             return getRDFModelUtil().getResource(
-                    getContainingFile().curieToIri(getText().trim())
+                    ((OMTFile) getContainingFile()).curieToIri(getText().trim())
             );
         } else {
             final String type = getFirstChild().getText().trim();

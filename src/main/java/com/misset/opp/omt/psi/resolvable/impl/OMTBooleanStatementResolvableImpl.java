@@ -1,8 +1,8 @@
 package com.misset.opp.omt.psi.resolvable.impl;
 
+import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.misset.opp.omt.psi.OMTBooleanStatement;
-import com.misset.opp.omt.psi.impl.OMTQueryImpl;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,7 +12,7 @@ import java.util.List;
 
 import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
 
-public abstract class OMTBooleanStatementResolvableImpl extends OMTQueryImpl implements OMTBooleanStatement {
+public abstract class OMTBooleanStatementResolvableImpl extends ASTWrapperPsiElement implements OMTBooleanStatement {
 
     private static final String BOOLEAN = "boolean";
 

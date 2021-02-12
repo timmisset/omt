@@ -1,7 +1,7 @@
 package com.misset.opp.omt.psi.resolvable.impl;
 
+import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
-import com.misset.opp.omt.psi.CachedPsiElement;
 import com.misset.opp.omt.psi.OMTScalarValue;
 import com.misset.opp.omt.psi.resolvable.OMTScalarValueResolvable;
 import org.apache.jena.rdf.model.Resource;
@@ -12,7 +12,7 @@ import java.util.List;
 
 import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
 
-public abstract class OMTScalarValueResovableImpl extends CachedPsiElement implements OMTScalarValueResolvable, OMTScalarValue {
+public abstract class OMTScalarValueResovableImpl extends ASTWrapperPsiElement implements OMTScalarValueResolvable, OMTScalarValue {
     public OMTScalarValueResovableImpl(@NotNull ASTNode node) {
         super(node);
     }
