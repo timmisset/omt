@@ -60,7 +60,7 @@ public class OMTConfigurable implements Configurable {
 
         // will try to reload the builtin members from the new file locations
         getProjectUtil().loadBuiltInMembers(ProjectManager.getInstance().getOpenProjects()[0]);
-        getProjectUtil().loadOntologyModel(ProjectManager.getInstance().getOpenProjects()[0], true);
+        getProjectUtil().loadOntologyModel(ProjectManager.getInstance().getOpenProjects()[0]);
     }
 
     @Override

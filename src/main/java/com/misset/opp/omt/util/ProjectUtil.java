@@ -20,20 +20,13 @@ import com.intellij.psi.impl.FakePsiElement;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
-import com.misset.opp.omt.psi.named.OMTCurie;
-import com.misset.opp.omt.psi.references.TTLReferenceElement;
 import com.misset.opp.omt.psi.support.BuiltInType;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.settings.OMTSettingsState;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
-import tech.lnkd.editor.intellij.turtle.TurtleFile;
-import tech.lnkd.editor.intellij.turtle.psi.TurtleObject;
-import tech.lnkd.editor.intellij.turtle.psi.TurtleSubject;
 
 import java.io.File;
 import java.util.*;
@@ -43,7 +36,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.psi.references.TTLReferenceElement.getSubjectClassIri;
 import static com.misset.opp.omt.util.UtilManager.getBuiltinUtil;
 import static util.Helper.getResources;
 
@@ -146,7 +138,7 @@ public class ProjectUtil {
                 BuiltInType.ParseJsonCommand, settings.builtInParseJsonPath, virtualFileManager, s -> settings.builtInParseJsonPath = s);
     }
 
-    public void loadOntologyModel(Project project, boolean resetOntologyPsiReferences) {
+    public void loadOntologyModel(Project project) {
         setStatusbarMessage(project, "Loading ontology");
         VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
         OMTSettingsState settings = OMTSettingsState.getInstance();
@@ -161,70 +153,7 @@ public class ProjectUtil {
         }
         model = new RDFModelUtil(rootFolderPath).readModel();
         updateModelUtil();
-        if (resetOntologyPsiReferences) {
-            ApplicationManager.getApplication().invokeLater(() -> resetOntologyPsiReferences(project));
-        }
         setStatusbarMessage(project, "Finished loading ontology");
-    }
-
-    /**
-     * Make references to the TTL ontology files in order to resolve them from OMTCurieElements
-     * Since the TTL files are structured by the LNKD.tech plugin this needs to be installed and will be used
-     */
-    private void resetOntologyPsiReferences(Project project) {
-        ttlSubjectReferences.clear();
-        ttlPredicateReferences.clear();
-        final Collection<VirtualFile> ttlFiles = FilenameIndex.getAllFilesByExt(project, "ttl");
-        ttlFiles.stream()
-                .filter(virtualFile -> !virtualFile.getPath().contains("target"))
-                .map(
-                        virtualFile -> {
-                            PsiFile file = PsiManager.getInstance(project).findFile(virtualFile);
-                            return file instanceof TurtleFile ? (TurtleFile) file : null;
-                        })
-                .filter(Objects::nonNull)
-                .forEach(turtleFile -> {
-                    PsiTreeUtil.findChildrenOfType(turtleFile, TurtleSubject.class).stream()
-                            .filter(turtleSubject ->
-                                    turtleSubject.getRef() != null &&
-                                            turtleSubject.getRef().iri() != null)
-                            .forEach(turtleSubject -> {
-                                String iri = turtleSubject.getRef().iri().toString();
-                                ArrayList<FakePsiElement> fakePsiElements = ttlSubjectReferences.getOrDefault(iri, new ArrayList<>());
-                                fakePsiElements.add(new TTLReferenceElement(turtleSubject));
-                                ttlSubjectReferences.put(iri, fakePsiElements);
-                            });
-
-                    PsiTreeUtil.findChildrenOfType(turtleFile, TurtleObject.class).stream()
-                            .filter(turtleObject ->
-                                    turtleObject.getRef() != null &&
-                                            Objects.requireNonNull(turtleObject.getRef().decompiledValue()).iri() != null)
-                            .forEach(turtleObject -> {
-                                final String iri = Objects.requireNonNull(turtleObject.getRef().decompiledValue()).iri();
-                                final String subjectClassIri = getSubjectClassIri(turtleObject, false);
-                                final HashMap<String, ArrayList<FakePsiElement>> predicateReferencesBySubject = ttlPredicateReferences.getOrDefault(iri, new HashMap<>());
-                                ArrayList<FakePsiElement> fakePsiElements = predicateReferencesBySubject.getOrDefault(subjectClassIri, new ArrayList<>());
-                                fakePsiElements.add(new TTLReferenceElement(turtleObject));
-                                predicateReferencesBySubject.put(subjectClassIri, fakePsiElements);
-                                ttlPredicateReferences.put(iri, predicateReferencesBySubject);
-                            });
-                });
-    }
-
-    public List<FakePsiElement> getTTLReference(OMTCurie curie, List<Resource> subjectFilter) {
-        if (getOntologyModel() == null) {
-            return new ArrayList<>();
-        } // not loaded
-        String iri = curie.getAsResource().getURI();
-        return ttlSubjectReferences.getOrDefault(iri,
-                ttlPredicateReferences.getOrDefault(iri, new HashMap<>())
-                        .keySet()
-                        .stream()
-                        .filter(subjectIri -> subjectFilter == null || subjectFilter.isEmpty() ||
-                                subjectFilter.contains(getOntologyModel().createResource(subjectIri)))
-                        .map(subjectIri -> ttlPredicateReferences.get(iri).get(subjectIri))
-                        .flatMap(Collection::stream)
-                        .collect(Collectors.toCollection(ArrayList::new)));
     }
 
     private void loadBuiltInMembersViaSettingsOrFromFilename(Project project,

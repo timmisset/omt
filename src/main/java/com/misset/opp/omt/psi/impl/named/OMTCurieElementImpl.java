@@ -8,7 +8,6 @@ import com.misset.opp.omt.psi.OMTCurieElement;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.named.OMTCurie;
-import com.misset.opp.omt.psi.references.CurieReference;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +23,7 @@ public abstract class OMTCurieElementImpl extends NameIdentifierOwnerImpl<OMTCur
     @Nullable
     @Override
     public PsiReference getReference() {
-        return new CurieReference(getPsi(), getNameIdentifier().getTextRangeInParent());
+        return null;
     }
 
     @NotNull
