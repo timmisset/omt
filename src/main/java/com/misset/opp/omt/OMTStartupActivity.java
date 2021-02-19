@@ -38,7 +38,7 @@ public class OMTStartupActivity implements StartupActivity {
                 getProjectUtil().loadBuiltInMembers(project);
                 setFileListeners(project);
 
-                getProjectUtil().loadOntologyModel(project, true);
+                getProjectUtil().loadOntologyModel(project);
                 getProjectUtil().loadReasons(project);
             }
             // parse the OMT Model, this is currently a static resource in the project
@@ -100,7 +100,7 @@ public class OMTStartupActivity implements StartupActivity {
                 String extension = virtualFile.getExtension();
                 if ("ttl".equals(extension)) {
                     if (isInProductionMode(project)) {
-                        getProjectUtil().loadOntologyModel(project, true);
+                        getProjectUtil().loadOntologyModel(project);
                     }
                 } else if ("omt".equals(extension)) {
                     final OMTFile file = (OMTFile) PsiManager.getInstance(project).findFile(virtualFile);
