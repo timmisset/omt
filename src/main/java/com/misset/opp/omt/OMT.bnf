@@ -1,7 +1,7 @@
 {
   parserClass="org.intellij.sdk.language.parser.OMTParser"
 
-  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+  extends="com.misset.opp.omt.psi.CachedPsiElement"
 
   psiClassPrefix="OMT"
   psiImplClassSuffix="Impl"
