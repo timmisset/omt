@@ -3,9 +3,14 @@ package com.misset.opp.omt.annotations;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTCommandBlock;
+import com.misset.opp.omt.psi.OMTIfBlock;
+import com.misset.opp.omt.psi.OMTReturnStatement;
+import com.misset.opp.omt.psi.OMTScriptContent;
+import com.misset.opp.omt.psi.OMTScriptLine;
+import com.misset.opp.omt.psi.OMTTypes;
 
-import static com.misset.opp.omt.util.UtilManager.getModelUtil;
+import static util.UtilManager.getModelUtil;
 
 public class ScriptAnnotator extends AbstractAnnotator {
 

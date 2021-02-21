@@ -5,7 +5,12 @@ import com.intellij.lang.ASTNode;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTCommandBlock;
+import com.misset.opp.omt.psi.OMTIfBlock;
+import com.misset.opp.omt.psi.OMTQuery;
+import com.misset.opp.omt.psi.OMTReturnStatement;
+import com.misset.opp.omt.psi.OMTScriptContent;
+import com.misset.opp.omt.psi.OMTScriptLine;
 import com.misset.opp.omt.psi.util.ModelUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,8 +23,13 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.misset.opp.omt.psi.OMTTypes.SEMICOLON;
-import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static util.UtilManager.getRDFModelUtil;
 
 class ScriptAnnotatorTest extends OMTAnnotationTest {
 

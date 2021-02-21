@@ -10,7 +10,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.misset.opp.omt.util.UtilManager.*;
+import static util.UtilManager.getCurieUtil;
+import static util.UtilManager.getProjectUtil;
+import static util.UtilManager.getRDFModelUtil;
 
 public abstract class RDFCompletion extends OMTCompletion {
     protected void setResolvedElementsForClasses(PsiElement element, boolean addPathStart) {

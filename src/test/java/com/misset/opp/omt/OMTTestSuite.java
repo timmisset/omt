@@ -12,15 +12,22 @@ import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import com.intellij.util.Query;
-import com.misset.opp.omt.psi.util.*;
+import com.misset.opp.omt.psi.util.CurieUtil;
+import com.misset.opp.omt.psi.util.ImportUtil;
+import com.misset.opp.omt.psi.util.MemberUtil;
+import com.misset.opp.omt.psi.util.ModelUtil;
+import com.misset.opp.omt.psi.util.QueryUtil;
+import com.misset.opp.omt.psi.util.ScriptUtil;
+import com.misset.opp.omt.psi.util.TokenUtil;
+import com.misset.opp.omt.psi.util.VariableUtil;
 import com.misset.opp.omt.util.BuiltInUtil;
 import com.misset.opp.omt.util.ProjectUtil;
 import com.misset.opp.omt.util.RDFModelUtil;
-import com.misset.opp.omt.util.UtilManager;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import util.UtilManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,8 +40,18 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.util.UtilManager.*;
 import static org.mockito.Mockito.mock;
+import static util.UtilManager.getBuiltinUtil;
+import static util.UtilManager.getCurieUtil;
+import static util.UtilManager.getImportUtil;
+import static util.UtilManager.getMemberUtil;
+import static util.UtilManager.getModelUtil;
+import static util.UtilManager.getProjectUtil;
+import static util.UtilManager.getQueryUtil;
+import static util.UtilManager.getRDFModelUtil;
+import static util.UtilManager.getScriptUtil;
+import static util.UtilManager.getTokenUtil;
+import static util.UtilManager.getVariableUtil;
 
 public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
 
@@ -147,7 +164,7 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
 
     protected void setOntologyModel() {
         myFixture.copyFileToProject(new File("src/test/resources/examples/model.ttl").getAbsolutePath(), "test/resources/examples/root.ttl");
-        ApplicationManager.getApplication().invokeAndWait(() -> getProjectUtil().loadOntologyModel(getProject()));
+        ApplicationManager.getApplication().invokeAndWait(() -> getProjectUtil().loadOntologyModel(getProject(), false));
     }
 
     protected void setBuiltinOperators() {

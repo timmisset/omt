@@ -5,7 +5,24 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTBlock;
+import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTDeclareVariable;
+import com.misset.opp.omt.psi.OMTDefineCommandStatement;
+import com.misset.opp.omt.psi.OMTDefineParam;
+import com.misset.opp.omt.psi.OMTDefineQueryStatement;
+import com.misset.opp.omt.psi.OMTEquationStatement;
+import com.misset.opp.omt.psi.OMTModelItemBlock;
+import com.misset.opp.omt.psi.OMTParameterAnnotation;
+import com.misset.opp.omt.psi.OMTParameterWithType;
+import com.misset.opp.omt.psi.OMTQuery;
+import com.misset.opp.omt.psi.OMTQueryPath;
+import com.misset.opp.omt.psi.OMTQueryReverseStep;
+import com.misset.opp.omt.psi.OMTQueryStep;
+import com.misset.opp.omt.psi.OMTSignatureArgument;
+import com.misset.opp.omt.psi.OMTVariable;
+import com.misset.opp.omt.psi.OMTVariableAssignment;
+import com.misset.opp.omt.psi.OMTVariableValue;
 import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTQueryReverseStepImpl;
 import com.misset.opp.omt.psi.named.OMTCall;
@@ -13,10 +30,21 @@ import com.misset.opp.omt.psi.support.BuiltInType;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.util.UtilManager.*;
+import static util.UtilManager.getBuiltinUtil;
+import static util.UtilManager.getModelUtil;
+import static util.UtilManager.getProjectUtil;
+import static util.UtilManager.getRDFModelUtil;
+import static util.UtilManager.getScriptUtil;
 
 public class VariableUtil {
 

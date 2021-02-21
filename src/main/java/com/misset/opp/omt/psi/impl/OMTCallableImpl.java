@@ -5,15 +5,30 @@ import com.misset.opp.omt.exceptions.CallCallableMismatchException;
 import com.misset.opp.omt.exceptions.IncorrectFlagException;
 import com.misset.opp.omt.exceptions.IncorrectSignatureArgument;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTDefineParam;
+import com.misset.opp.omt.psi.OMTFlagSignature;
+import com.misset.opp.omt.psi.OMTGenericBlock;
+import com.misset.opp.omt.psi.OMTModelItemBlock;
+import com.misset.opp.omt.psi.OMTQueryPath;
+import com.misset.opp.omt.psi.OMTSequenceItem;
+import com.misset.opp.omt.psi.OMTSignatureArgument;
 import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTParameter;
 import org.apache.jena.rdf.model.Resource;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
-import static com.misset.opp.omt.util.UtilManager.*;
+import static util.UtilManager.getModelUtil;
+import static util.UtilManager.getProjectUtil;
+import static util.UtilManager.getRDFModelUtil;
+import static util.UtilManager.getVariableUtil;
 
 public abstract class OMTCallableImpl implements OMTCallable {
 

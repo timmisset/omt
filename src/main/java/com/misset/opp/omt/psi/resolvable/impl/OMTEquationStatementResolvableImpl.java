@@ -2,7 +2,11 @@ package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTCurieElement;
+import com.misset.opp.omt.psi.OMTEquationStatement;
+import com.misset.opp.omt.psi.OMTNegatedStep;
+import com.misset.opp.omt.psi.OMTQuery;
+import com.misset.opp.omt.psi.OMTQueryPath;
 import com.misset.opp.omt.psi.impl.OMTQueryImpl;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
+import static util.UtilManager.getRDFModelUtil;
 
 public abstract class OMTEquationStatementResolvableImpl extends OMTQueryImpl implements OMTEquationStatement {
 

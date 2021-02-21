@@ -7,7 +7,7 @@ import com.misset.opp.omt.psi.OMTImportSource;
 import com.misset.opp.omt.psi.OMTMember;
 
 import static com.misset.opp.omt.intentions.imports.UnwrapIntention.getUnwrapIntention;
-import static com.misset.opp.omt.util.UtilManager.getMemberUtil;
+import static util.UtilManager.getMemberUtil;
 
 public class ImportAnnotator extends AbstractAnnotator {
     private static final RemoveIntention removeIntention = new RemoveIntention();

@@ -1,3 +1,6 @@
+// Based on RDF 1.1 Turtle
+// https://www.w3.org/TR/turtle/
+
 {
   parserClass="org.intellij.sdk.language.parser.TTLParser"
 
@@ -12,3 +15,42 @@
   elementTypeClass="com.misset.opp.ttl.psi.TTLElementType"
   tokenTypeClass="com.misset.opp.ttl.psi.TTLTokenType"
 }
+
+TTLFile                 ::= statement*
+statement               ::=	directive | triples DOT
+directive	            ::=	prefixID | base | sparqlPrefix | sparqlBase
+prefixID	            ::=	ATPREFIX PNAME_NS IRIREF DOT
+{
+                                implements="com.misset.opp.ttl.psi.named.TTLPrefixID"
+                                extends="com.misset.opp.ttl.psi.named.impl.TTLPrefixIDImpl"
+}
+base	                ::=	ATBASE IRIREF DOT                                   { extends=directive }
+sparqlBase	            ::=	BASE_LEADING IRIREF                                 { extends=directive }
+sparqlPrefix	        ::=	PREFIX_LEADING PNAME_NS IRIREF                      { extends=directive }
+triples	                ::=	subject predicateObjectList | blankNodePropertyList predicateObjectList?
+// predicateObject is not part of the TTL literature but makes it easier to navigate the Psi Tree
+predicateObject         ::= verb objectList
+predicateObjectList	    ::=	predicateObject (SEMICOLON (predicateObject)?)*
+objectList	            ::=	object (COMMA object)*
+verb	                ::=	predicate | A
+subject	                ::=	iri | blankNode | collection
+predicate	            ::=	iri
+object	                ::=	iri | blankNode | collection | blankNodePropertyList | literal
+literal	                ::=	rdfLiteral | numericLiteral | booleanLiteral
+blankNodePropertyList	::=	BRACKET_OPEN predicateObjectList BRACKET_CLOSE
+collection	            ::=	PARENTHESIS_OPEN object* PARENTHESIS_CLOSE
+numericLiteral	        ::=	INTEGER | DECIMAL | DOUBLE
+rdfLiteral	            ::=	string (LANGTAG | DATATYPE_LEADING iri)?
+booleanLiteral	        ::=	TRUE | FALSE
+string	                ::=	STRING_LITERAL_QUOTE | STRING_LITERAL_SINGLE_QUOTE | STRING_LITERAL_LONG_SINGLE_QUOTE | STRING_LITERAL_LONG_QUOTE
+iri	                    ::=	IRIREF | prefixedName
+{
+                                implements="com.misset.opp.ttl.psi.resolvable.TTLIri"
+                                extends="com.misset.opp.ttl.psi.resolvable.impl.TTLIriImpl"
+}
+prefixedName	        ::=	PNAME_LN | PNAME_NS
+{
+                                implements="com.misset.opp.ttl.psi.resolvable.TTLPrefixedName"
+                                extends="com.misset.opp.ttl.psi.resolvable.impl.TTLPrefixedNameImpl"
+}
+blankNode	            ::=	BLANK_NODE_LABEL | ANON

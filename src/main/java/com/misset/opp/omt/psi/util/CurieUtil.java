@@ -5,13 +5,17 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.codeStyle.CodeStyleManager;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTElementFactory;
+import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTNamespacePrefix;
+import com.misset.opp.omt.psi.OMTPrefix;
+import com.misset.opp.omt.psi.OMTPrefixBlock;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.misset.opp.omt.util.UtilManager.getModelUtil;
+import static util.UtilManager.getModelUtil;
 
 public class CurieUtil {
 

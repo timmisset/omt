@@ -12,14 +12,20 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.misset.opp.omt.completion.OMTCompletion;
 import com.misset.opp.omt.completion.OMTCompletionContributor;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTBlock;
+import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTParameterWithType;
+import com.misset.opp.omt.psi.OMTSequenceItem;
+import com.misset.opp.omt.psi.OMTTypes;
+import com.misset.opp.omt.psi.OMTVariableValue;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.util.UtilManager.getModelUtil;
+import static util.UtilManager.getModelUtil;
 
 public class ModelCompletion extends OMTCompletion {
     public static void register(OMTCompletionContributor completionContributor) {

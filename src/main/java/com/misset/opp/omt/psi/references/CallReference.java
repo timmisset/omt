@@ -6,7 +6,7 @@ import com.intellij.psi.ResolveResult;
 import com.misset.opp.omt.psi.named.OMTCall;
 import org.jetbrains.annotations.NotNull;
 
-import static com.misset.opp.omt.util.UtilManager.getMemberUtil;
+import static util.UtilManager.getMemberUtil;
 
 public class CallReference extends MemberReference<OMTCall> {
     public CallReference(@NotNull OMTCall member, TextRange textRange) {

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
-import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
+import static util.UtilManager.getProjectUtil;
 
 public class OMTConfigurable implements Configurable {
     private OMTSettingsComponent settingsComponent;
@@ -60,7 +60,7 @@ public class OMTConfigurable implements Configurable {
 
         // will try to reload the builtin members from the new file locations
         getProjectUtil().loadBuiltInMembers(ProjectManager.getInstance().getOpenProjects()[0]);
-        getProjectUtil().loadOntologyModel(ProjectManager.getInstance().getOpenProjects()[0]);
+        getProjectUtil().loadOntologyModel(ProjectManager.getInstance().getOpenProjects()[0], true);
     }
 
     @Override

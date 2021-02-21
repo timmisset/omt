@@ -1,7 +1,11 @@
 package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiElementResolveResult;
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.PsiReferenceBase;
+import com.intellij.psi.ResolveResult;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
 import com.misset.opp.omt.psi.OMTPrefix;
 import org.jetbrains.annotations.NotNull;
@@ -9,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
-import static com.misset.opp.omt.util.UtilManager.getCurieUtil;
+import static util.UtilManager.getCurieUtil;
 
 /**
  * The curie reference resolves to the declaration of the curie prefix in either the prefixes: node or

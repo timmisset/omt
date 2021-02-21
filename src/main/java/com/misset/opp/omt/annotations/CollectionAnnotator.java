@@ -9,11 +9,19 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTBlock;
+import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTImport;
+import com.misset.opp.omt.psi.OMTImportBlock;
+import com.misset.opp.omt.psi.OMTImportSource;
+import com.misset.opp.omt.psi.OMTMemberList;
+import com.misset.opp.omt.psi.OMTMemberListItem;
+import com.misset.opp.omt.psi.OMTSequence;
+import com.misset.opp.omt.psi.OMTSequenceItem;
 import com.misset.opp.omt.psi.util.ImportUtil;
 import org.jetbrains.annotations.NotNull;
 
-import static com.misset.opp.omt.util.UtilManager.getImportUtil;
+import static util.UtilManager.getImportUtil;
 
 public class CollectionAnnotator extends AbstractAnnotator {
     private static final String DUPLICATION = "Duplication";

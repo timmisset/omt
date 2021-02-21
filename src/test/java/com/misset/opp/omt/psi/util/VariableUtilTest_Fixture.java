@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
+import static util.UtilManager.getRDFModelUtil;
 
 class VariableUtilTest_Fixture extends OMTTestSuite {
 

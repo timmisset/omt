@@ -2,7 +2,17 @@ package com.misset.opp.omt.annotations;
 
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTAddToCollection;
+import com.misset.opp.omt.psi.OMTAssignmentStatement;
+import com.misset.opp.omt.psi.OMTBooleanStatement;
+import com.misset.opp.omt.psi.OMTCurieElement;
+import com.misset.opp.omt.psi.OMTDefineQueryStatement;
+import com.misset.opp.omt.psi.OMTEquationStatement;
+import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTQueryReverseStep;
+import com.misset.opp.omt.psi.OMTQueryStep;
+import com.misset.opp.omt.psi.OMTRemoveFromCollection;
+import com.misset.opp.omt.psi.OMTSubQuery;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,8 +22,8 @@ import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.intentions.query.MergeFiltersIntention.getMergeFilterIntention;
 import static com.misset.opp.omt.intentions.query.UnwrapIntention.getUnwrapIntention;
-import static com.misset.opp.omt.util.UtilManager.getQueryUtil;
-import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
+import static util.UtilManager.getQueryUtil;
+import static util.UtilManager.getRDFModelUtil;
 
 public class QueryAnnotator extends AbstractAnnotator {
 

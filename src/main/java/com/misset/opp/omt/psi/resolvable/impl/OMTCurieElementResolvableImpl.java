@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 
-import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
+import static util.UtilManager.getRDFModelUtil;
 
 public abstract class OMTCurieElementResolvableImpl extends OMTCurieElementImpl implements OMTCurieElement {
 

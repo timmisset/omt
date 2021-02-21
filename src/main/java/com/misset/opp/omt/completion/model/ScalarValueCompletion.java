@@ -16,8 +16,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.HashMap;
 
-import static com.misset.opp.omt.util.UtilManager.getModelUtil;
-import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
+import static util.UtilManager.getModelUtil;
+import static util.UtilManager.getProjectUtil;
 
 public class ScalarValueCompletion extends OMTCompletion {
     public static void register(OMTCompletionContributor completionContributor) {

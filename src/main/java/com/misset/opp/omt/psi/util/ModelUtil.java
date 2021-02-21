@@ -5,17 +5,25 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.*;
-import com.misset.opp.omt.util.UtilManager;
+import com.misset.opp.omt.psi.OMTBlock;
+import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTImport;
+import com.misset.opp.omt.psi.OMTIndentedBlock;
+import com.misset.opp.omt.psi.OMTModelBlock;
+import com.misset.opp.omt.psi.OMTModelItemBlock;
+import com.misset.opp.omt.psi.OMTPropertyLabel;
+import com.misset.opp.omt.psi.OMTTypes;
 import com.sun.istack.Nullable;
 import org.jetbrains.annotations.NotNull;
+import util.UtilManager;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
+import static util.UtilManager.getProjectUtil;
 
 public class ModelUtil {
     private static final String ATTRIBUTES = "attributes";

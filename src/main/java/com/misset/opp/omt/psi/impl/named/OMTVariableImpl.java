@@ -4,7 +4,12 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTElementFactory;
+import com.misset.opp.omt.psi.OMTGenericBlock;
+import com.misset.opp.omt.psi.OMTScalarValue;
+import com.misset.opp.omt.psi.OMTVariable;
+import com.misset.opp.omt.psi.OMTVariableAssignment;
+import com.misset.opp.omt.psi.OMTVariableValue;
 import com.misset.opp.omt.psi.named.OMTVariableNamedElement;
 import com.misset.opp.omt.psi.references.VariableReference;
 import org.apache.jena.rdf.model.Resource;
@@ -13,8 +18,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-import static com.misset.opp.omt.util.UtilManager.getModelUtil;
-import static com.misset.opp.omt.util.UtilManager.getVariableUtil;
+import static util.UtilManager.getModelUtil;
+import static util.UtilManager.getVariableUtil;
 
 public abstract class OMTVariableImpl extends NameIdentifierOwnerImpl<OMTVariable> implements OMTVariableNamedElement {
 

@@ -10,8 +10,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 
-import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
-import static com.misset.opp.omt.util.UtilManager.getTokenUtil;
+import static util.UtilManager.getProjectUtil;
+import static util.UtilManager.getTokenUtil;
 
 public abstract class OMTConstantValueResolvableImpl extends ASTWrapperPsiElement implements OMTConstantValue {
 

@@ -1,6 +1,16 @@
-package com.misset.opp.omt.util;
+package util;
 
-import com.misset.opp.omt.psi.util.*;
+import com.misset.opp.omt.psi.util.CurieUtil;
+import com.misset.opp.omt.psi.util.ImportUtil;
+import com.misset.opp.omt.psi.util.MemberUtil;
+import com.misset.opp.omt.psi.util.ModelUtil;
+import com.misset.opp.omt.psi.util.QueryUtil;
+import com.misset.opp.omt.psi.util.ScriptUtil;
+import com.misset.opp.omt.psi.util.TokenUtil;
+import com.misset.opp.omt.psi.util.VariableUtil;
+import com.misset.opp.omt.util.BuiltInUtil;
+import com.misset.opp.omt.util.ProjectUtil;
+import com.misset.opp.omt.util.RDFModelUtil;
 
 /**
  * Util manager to create and distribute singletons of the util classes

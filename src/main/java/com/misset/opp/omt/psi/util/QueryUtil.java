@@ -2,7 +2,18 @@ package com.misset.opp.omt.psi.util;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTBooleanStatement;
+import com.misset.opp.omt.psi.OMTEquationStatement;
+import com.misset.opp.omt.psi.OMTIfBlock;
+import com.misset.opp.omt.psi.OMTNegatedStep;
+import com.misset.opp.omt.psi.OMTQuery;
+import com.misset.opp.omt.psi.OMTQueryArray;
+import com.misset.opp.omt.psi.OMTQueryFilter;
+import com.misset.opp.omt.psi.OMTQueryPath;
+import com.misset.opp.omt.psi.OMTQueryStep;
+import com.misset.opp.omt.psi.OMTSignatureArgument;
+import com.misset.opp.omt.psi.OMTStepDecorator;
+import com.misset.opp.omt.psi.OMTSubQuery;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
+import static util.UtilManager.getRDFModelUtil;
 
 public class QueryUtil {
     private static List<Resource> resolvePathPart(PsiElement part) {

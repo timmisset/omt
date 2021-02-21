@@ -2,7 +2,21 @@ package com.misset.opp.omt.annotations;
 
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTAddToCollection;
+import com.misset.opp.omt.psi.OMTAssignmentStatement;
+import com.misset.opp.omt.psi.OMTBooleanStatement;
+import com.misset.opp.omt.psi.OMTCurieElement;
+import com.misset.opp.omt.psi.OMTDefineQueryStatement;
+import com.misset.opp.omt.psi.OMTEquationStatement;
+import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTQuery;
+import com.misset.opp.omt.psi.OMTQueryFilter;
+import com.misset.opp.omt.psi.OMTQueryReverseStep;
+import com.misset.opp.omt.psi.OMTQueryStep;
+import com.misset.opp.omt.psi.OMTRemoveFromCollection;
+import com.misset.opp.omt.psi.OMTResolvableValue;
+import com.misset.opp.omt.psi.OMTStepDecorator;
+import com.misset.opp.omt.psi.OMTSubQuery;
 import com.misset.opp.omt.psi.util.QueryUtil;
 import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.AfterEach;
@@ -17,8 +31,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static util.UtilManager.getRDFModelUtil;
 
 class QueryAnnotatorTest extends OMTAnnotationTest {
 

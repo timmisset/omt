@@ -15,10 +15,18 @@ import com.misset.opp.omt.psi.support.OMTExportMember;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.util.UtilManager.*;
+import static util.UtilManager.getImportUtil;
+import static util.UtilManager.getModelUtil;
+import static util.UtilManager.getProjectUtil;
 
 public class OMTFile extends PsiFileBase {
     public OMTFile(@NotNull FileViewProvider viewProvider) {

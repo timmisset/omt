@@ -23,8 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.util.UtilManager.getModelUtil;
-import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
+import static util.UtilManager.getModelUtil;
+import static util.UtilManager.getProjectUtil;
 
 public class RootCompletion extends OMTCompletion {
     public static void register(OMTCompletionContributor completionContributor) {

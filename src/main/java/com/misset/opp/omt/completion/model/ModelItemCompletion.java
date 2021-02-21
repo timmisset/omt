@@ -11,7 +11,7 @@ import com.misset.opp.omt.completion.OMTCompletionContributor;
 import com.misset.opp.omt.psi.OMTTypes;
 import org.jetbrains.annotations.NotNull;
 
-import static com.misset.opp.omt.util.UtilManager.getModelUtil;
+import static util.UtilManager.getModelUtil;
 
 /**
  * Adds completion types based on the JSON model

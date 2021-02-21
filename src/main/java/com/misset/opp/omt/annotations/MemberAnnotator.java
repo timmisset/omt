@@ -21,7 +21,9 @@ import com.misset.opp.omt.psi.support.OMTExportMember;
 
 import java.util.List;
 
-import static com.misset.opp.omt.util.UtilManager.*;
+import static util.UtilManager.getBuiltinUtil;
+import static util.UtilManager.getMemberUtil;
+import static util.UtilManager.getModelUtil;
 
 public class MemberAnnotator extends AbstractAnnotator {
 

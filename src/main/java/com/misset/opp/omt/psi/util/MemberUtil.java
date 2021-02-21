@@ -2,12 +2,27 @@ package com.misset.opp.omt.psi.util;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTCommandCall;
+import com.misset.opp.omt.psi.OMTDefineName;
+import com.misset.opp.omt.psi.OMTDefineQueryStatement;
+import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTImportBlock;
+import com.misset.opp.omt.psi.OMTMember;
+import com.misset.opp.omt.psi.OMTModelItemBlock;
+import com.misset.opp.omt.psi.OMTModelItemLabel;
+import com.misset.opp.omt.psi.OMTOperatorCall;
+import com.misset.opp.omt.psi.OMTPropertyLabel;
+import com.misset.opp.omt.psi.OMTScriptLine;
 import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTExportMemberImpl;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.named.OMTCall;
-import com.misset.opp.omt.psi.support.*;
+import com.misset.opp.omt.psi.support.BuiltInType;
+import com.misset.opp.omt.psi.support.ExportMemberType;
+import com.misset.opp.omt.psi.support.OMTCallable;
+import com.misset.opp.omt.psi.support.OMTDefinedStatement;
+import com.misset.opp.omt.psi.support.OMTExportMember;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,7 +30,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.misset.opp.omt.util.UtilManager.*;
+import static util.UtilManager.getBuiltinUtil;
+import static util.UtilManager.getImportUtil;
+import static util.UtilManager.getModelUtil;
 
 public class MemberUtil {
 

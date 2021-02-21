@@ -17,8 +17,8 @@ import java.util.List;
 
 import static com.misset.opp.omt.psi.OMTTypes.CARET;
 import static com.misset.opp.omt.psi.OMTTypes.NAMESPACE_MEMBER;
-import static com.misset.opp.omt.util.UtilManager.getQueryUtil;
-import static com.misset.opp.omt.util.UtilManager.getRDFModelUtil;
+import static util.UtilManager.getQueryUtil;
+import static util.UtilManager.getRDFModelUtil;
 
 public abstract class QueryCompletion extends RDFCompletion {
 

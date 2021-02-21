@@ -2,13 +2,19 @@ package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiElementResolveResult;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.PsiReferenceBase;
+import com.intellij.psi.ResolveResult;
 import com.misset.opp.omt.psi.OMTImport;
 import com.misset.opp.omt.psi.OMTImportSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.misset.opp.omt.util.UtilManager.getImportUtil;
+import static util.UtilManager.getImportUtil;
 
 public class ImportSourceReference extends PsiReferenceBase<OMTImportSource> implements PsiPolyVariantReference {
     public ImportSourceReference(@NotNull OMTImportSource importSource, TextRange textRange) {

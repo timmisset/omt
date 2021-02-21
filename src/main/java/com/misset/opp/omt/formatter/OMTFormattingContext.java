@@ -1,7 +1,12 @@
 package com.misset.opp.omt.formatter;
 
 import com.intellij.application.options.CodeStyle;
-import com.intellij.formatting.*;
+import com.intellij.formatting.Alignment;
+import com.intellij.formatting.Block;
+import com.intellij.formatting.FormattingContext;
+import com.intellij.formatting.Indent;
+import com.intellij.formatting.Spacing;
+import com.intellij.formatting.SpacingBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.impl.DocumentImpl;
@@ -26,8 +31,37 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import static com.misset.opp.omt.psi.OMTIgnored.END_OF_LINE_COMMENT;
-import static com.misset.opp.omt.psi.OMTTypes.*;
-import static com.misset.opp.omt.util.UtilManager.getModelUtil;
+import static com.misset.opp.omt.psi.OMTTypes.BLOCK;
+import static com.misset.opp.omt.psi.OMTTypes.CHOOSE_OPERATOR;
+import static com.misset.opp.omt.psi.OMTTypes.COMMAND_BLOCK;
+import static com.misset.opp.omt.psi.OMTTypes.CURIE_CONSTANT_ELEMENT;
+import static com.misset.opp.omt.psi.OMTTypes.CURIE_ELEMENT;
+import static com.misset.opp.omt.psi.OMTTypes.END_PATH;
+import static com.misset.opp.omt.psi.OMTTypes.FORWARD_SLASH;
+import static com.misset.opp.omt.psi.OMTTypes.IMPORT;
+import static com.misset.opp.omt.psi.OMTTypes.IMPORT_SOURCE;
+import static com.misset.opp.omt.psi.OMTTypes.INTERPOLATED_STRING;
+import static com.misset.opp.omt.psi.OMTTypes.INTERPOLATION_TEMPLATE;
+import static com.misset.opp.omt.psi.OMTTypes.JAVADOCS_END;
+import static com.misset.opp.omt.psi.OMTTypes.JAVADOCS_START;
+import static com.misset.opp.omt.psi.OMTTypes.MEMBER_LIST;
+import static com.misset.opp.omt.psi.OMTTypes.MEMBER_LIST_ITEM;
+import static com.misset.opp.omt.psi.OMTTypes.MODEL_ITEM_BLOCK;
+import static com.misset.opp.omt.psi.OMTTypes.NAMESPACE_IRI;
+import static com.misset.opp.omt.psi.OMTTypes.NAMESPACE_PREFIX;
+import static com.misset.opp.omt.psi.OMTTypes.PREFIX;
+import static com.misset.opp.omt.psi.OMTTypes.PREFIX_BLOCK;
+import static com.misset.opp.omt.psi.OMTTypes.QUERY_PATH;
+import static com.misset.opp.omt.psi.OMTTypes.ROOT_BLOCK;
+import static com.misset.opp.omt.psi.OMTTypes.SCRIPT;
+import static com.misset.opp.omt.psi.OMTTypes.SCRIPT_LINE;
+import static com.misset.opp.omt.psi.OMTTypes.SEQUENCE_BULLET;
+import static com.misset.opp.omt.psi.OMTTypes.SEQUENCE_ITEM;
+import static com.misset.opp.omt.psi.OMTTypes.SIGNATURE;
+import static com.misset.opp.omt.psi.OMTTypes.SIGNATURE_ARGUMENT;
+import static com.misset.opp.omt.psi.OMTTypes.STRING;
+import static com.misset.opp.omt.psi.OMTTypes.WHEN_PATH;
+import static util.UtilManager.getModelUtil;
 
 /**
  * The formatter has 2 main functions, indentation and alignment

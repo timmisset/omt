@@ -13,7 +13,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.misset.opp.omt.util.UtilManager.*;
+import static util.UtilManager.getMemberUtil;
+import static util.UtilManager.getQueryUtil;
+import static util.UtilManager.getRDFModelUtil;
 
 public abstract class OMTCallResolvableImpl extends OMTCallImpl implements OMTCallResolvable {
 

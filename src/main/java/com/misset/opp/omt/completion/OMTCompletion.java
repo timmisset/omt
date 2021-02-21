@@ -1,6 +1,10 @@
 package com.misset.opp.omt.completion;
 
-import com.intellij.codeInsight.completion.*;
+import com.intellij.codeInsight.completion.CompletionParameters;
+import com.intellij.codeInsight.completion.CompletionProvider;
+import com.intellij.codeInsight.completion.CompletionResultSet;
+import com.intellij.codeInsight.completion.InsertHandler;
+import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.patterns.ElementPattern;
@@ -21,7 +25,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static com.misset.opp.omt.util.UtilManager.*;
+import static util.UtilManager.getBuiltinUtil;
+import static util.UtilManager.getImportUtil;
+import static util.UtilManager.getMemberUtil;
+import static util.UtilManager.getProjectUtil;
+import static util.UtilManager.getVariableUtil;
 
 public abstract class OMTCompletion {
 

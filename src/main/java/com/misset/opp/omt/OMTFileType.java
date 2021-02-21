@@ -34,7 +34,7 @@ public class OMTFileType extends LanguageFileType {
     @Nullable
     @Override
     public Icon getIcon() {
-        return OMTIcons.FILE;
+        return util.Icons.OMTFile;
     }
 }
 

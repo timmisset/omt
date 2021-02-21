@@ -17,8 +17,10 @@ import org.mockito.invocation.InvocationOnMock;
 
 import java.util.HashMap;
 
-import static com.misset.opp.omt.util.UtilManager.*;
 import static org.mockito.Mockito.mock;
+import static util.UtilManager.getBuiltinUtil;
+import static util.UtilManager.getMemberUtil;
+import static util.UtilManager.getRDFModelUtil;
 
 class OMTCallableImplTest extends OMTTestSuite {
 
