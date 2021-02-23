@@ -29,8 +29,10 @@ public class OMTFindUsageHandlerFactory extends FindUsagesHandlerFactory {
         final PsiElement targetElement = getTargetElement(target);
         return new ReferencesSearch.SearchParameters(targetElement,
                 localOnly(targetElement) ? getLocalSearchScope(targetElement) : getGlobalSearchScope(targetElement),
-                true,
-                null);
+                false,
+                findUsagesOptions == null
+                        ? null
+                        : findUsagesOptions.fastTrack);
     }
 
     private static SearchScope getLocalSearchScope(PsiElement target) {
