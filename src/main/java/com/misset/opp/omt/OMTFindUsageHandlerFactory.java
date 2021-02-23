@@ -9,7 +9,11 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTDefineName;
+import com.misset.opp.omt.psi.OMTModelItemLabel;
+import com.misset.opp.omt.psi.OMTNamespacePrefix;
+import com.misset.opp.omt.psi.OMTPropertyLabel;
+import com.misset.opp.omt.psi.OMTVariable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,10 +29,8 @@ public class OMTFindUsageHandlerFactory extends FindUsagesHandlerFactory {
         final PsiElement targetElement = getTargetElement(target);
         return new ReferencesSearch.SearchParameters(targetElement,
                 localOnly(targetElement) ? getLocalSearchScope(targetElement) : getGlobalSearchScope(targetElement),
-                false,
-                findUsagesOptions == null
-                        ? null
-                        : findUsagesOptions.fastTrack);
+                true,
+                null);
     }
 
     private static SearchScope getLocalSearchScope(PsiElement target) {

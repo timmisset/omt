@@ -30,6 +30,7 @@ public class TTLFindUsageHandlerFactory extends FindUsagesHandlerFactory {
     @Nullable
     public FindUsagesHandler createFindUsagesHandler(@NotNull PsiElement element, boolean forHighlightUsages) {
         return new FindUsagesHandler(element) {
+
             @Override
             @NotNull
             protected ReferencesSearch.SearchParameters createSearchParameters(@NotNull PsiElement target, @NotNull SearchScope searchScope, @Nullable FindUsagesOptions findUsagesOptions) {

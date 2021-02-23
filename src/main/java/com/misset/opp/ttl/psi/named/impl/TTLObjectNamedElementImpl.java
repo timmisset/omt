@@ -53,4 +53,5 @@ public abstract class TTLObjectNamedElementImpl extends NameIdentifierOwnerImpl<
     public String getResourceAsString() {
         return getIri() != null ? getIri().getResourceAsString() : null;
     }
+
 }

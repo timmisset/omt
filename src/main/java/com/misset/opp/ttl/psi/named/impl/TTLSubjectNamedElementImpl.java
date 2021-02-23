@@ -3,6 +3,8 @@ package com.misset.opp.ttl.psi.named.impl;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import com.misset.opp.omt.psi.impl.named.NameIdentifierOwnerImpl;
 import com.misset.opp.ttl.psi.TTLElementFactory;
 import com.misset.opp.ttl.psi.TTLSubject;
@@ -46,5 +48,10 @@ public abstract class TTLSubjectNamedElementImpl extends NameIdentifierOwnerImpl
     @Override
     public String getResourceAsString() {
         return getIri() != null ? getIri().getResourceAsString() : null;
+    }
+
+    @Override
+    public @NotNull SearchScope getUseScope() {
+        return GlobalSearchScope.allScope(getProject());
     }
 }
