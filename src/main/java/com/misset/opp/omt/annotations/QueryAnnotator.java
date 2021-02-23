@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
 
 import static com.misset.opp.omt.intentions.query.MergeFiltersIntention.getMergeFilterIntention;
 import static com.misset.opp.omt.intentions.query.UnwrapIntention.getUnwrapIntention;
-import static util.UtilManager.getQueryUtil;
-import static util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getQueryUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
 
 public class QueryAnnotator extends AbstractAnnotator {
 

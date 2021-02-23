@@ -18,8 +18,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-import static util.UtilManager.getModelUtil;
-import static util.UtilManager.getVariableUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
+import static com.misset.opp.util.UtilManager.getVariableUtil;
 
 public abstract class OMTVariableImpl extends NameIdentifierOwnerImpl<OMTVariable> implements OMTVariableNamedElement {
 

@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.Optional;
 
-import static util.UtilManager.getModelUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
 
 public class CurieUtil {
 

@@ -25,11 +25,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static util.UtilManager.getBuiltinUtil;
-import static util.UtilManager.getImportUtil;
-import static util.UtilManager.getMemberUtil;
-import static util.UtilManager.getProjectUtil;
-import static util.UtilManager.getVariableUtil;
+import static com.misset.opp.util.UtilManager.getBuiltinUtil;
+import static com.misset.opp.util.UtilManager.getImportUtil;
+import static com.misset.opp.util.UtilManager.getMemberUtil;
+import static com.misset.opp.util.UtilManager.getProjectUtil;
+import static com.misset.opp.util.UtilManager.getVariableUtil;
 
 public abstract class OMTCompletion {
 

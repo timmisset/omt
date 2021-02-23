@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import static util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
 
 public class QueryUtil {
     private static List<Resource> resolvePathPart(PsiElement part) {

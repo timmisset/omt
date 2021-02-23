@@ -7,4 +7,8 @@ public interface TTLIri extends PsiElement {
     Resource getAsResource();
 
     String getResourceAsString();
+
+    String getLocalName();
+
+    String getPrefix();
 }

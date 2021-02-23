@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import static util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
 
 public abstract class OMTBooleanStatementResolvableImpl extends ASTWrapperPsiElement implements OMTBooleanStatement {
 

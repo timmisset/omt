@@ -1,7 +1,10 @@
 package com.misset.opp.omt.util;
 
+import com.intellij.openapi.project.Project;
+import com.misset.opp.omt.OMTTestSuite;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -9,20 +12,25 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static com.intellij.testFramework.UsefulTestCase.assertContainsElements;
-import static com.intellij.testFramework.UsefulTestCase.assertDoesntContain;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
-class RDFModelUtilTest {
+class RDFModelUtilTest extends OMTTestSuite {
 
     RDFModelUtil modelUtil;
     Model model;
 
     @BeforeEach
-    void setUp() {
+    protected void setUp() {
+        ProjectUtil projectUtil = mock(ProjectUtil.class);
+        setUtilMock(projectUtil);
         modelUtil = new RDFModelUtil("src/test/resources/examples");
-        model = modelUtil.readModel();
+
+        model = modelUtil.readModel(mock(Project.class));
+    }
+
+    @AfterEach
+    protected void tearDown() throws Exception {
+        super.tearDown();
     }
 
     @Test

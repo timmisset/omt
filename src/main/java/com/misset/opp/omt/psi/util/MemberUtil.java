@@ -30,9 +30,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static util.UtilManager.getBuiltinUtil;
-import static util.UtilManager.getImportUtil;
-import static util.UtilManager.getModelUtil;
+import static com.misset.opp.util.UtilManager.getBuiltinUtil;
+import static com.misset.opp.util.UtilManager.getImportUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
 
 public class MemberUtil {
 

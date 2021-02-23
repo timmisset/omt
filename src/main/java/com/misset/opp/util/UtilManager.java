@@ -1,9 +1,20 @@
-package com.misset.opp.omt.util;
+package com.misset.opp.util;
 
-import com.misset.opp.omt.psi.util.*;
+import com.misset.opp.omt.psi.util.CurieUtil;
+import com.misset.opp.omt.psi.util.ImportUtil;
+import com.misset.opp.omt.psi.util.MemberUtil;
+import com.misset.opp.omt.psi.util.ModelUtil;
+import com.misset.opp.omt.psi.util.QueryUtil;
+import com.misset.opp.omt.psi.util.ScriptUtil;
+import com.misset.opp.omt.psi.util.TokenUtil;
+import com.misset.opp.omt.psi.util.VariableUtil;
+import com.misset.opp.omt.util.BuiltInUtil;
+import com.misset.opp.omt.util.ProjectUtil;
+import com.misset.opp.omt.util.RDFModelUtil;
+import com.misset.opp.ttl.util.TTLUtil;
 
 /**
- * Util manager to create and distribute singletons of the util classes
+ * Util manager to create and distribute singletons of the com.misset.opp.util classes
  */
 public class UtilManager {
 
@@ -17,6 +28,7 @@ public class UtilManager {
     private static TokenUtil tokenUtil;
     private static VariableUtil variableUtil;
     private static CurieUtil curieUtil;
+    private static TTLUtil ttlUtil;
 
     private UtilManager() {
     }
@@ -28,12 +40,20 @@ public class UtilManager {
         return projectUtil;
     }
 
+    public static TTLUtil getTTLUtil() {
+        if (ttlUtil == null) {
+            ttlUtil = new TTLUtil();
+        }
+        return ttlUtil;
+    }
+
     public static QueryUtil getQueryUtil() {
         if (queryUtil == null) {
             queryUtil = new QueryUtil();
         }
         return queryUtil;
     }
+
     public static MemberUtil getMemberUtil() {
         if (memberUtil == null) {
             memberUtil = new MemberUtil();

@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-import static util.UtilManager.getVariableUtil;
+import static com.misset.opp.util.UtilManager.getVariableUtil;
 
 public abstract class OMTParameterWithTypeSupImpl extends ASTWrapperPsiElement implements OMTParameterWithTypeSup {
     public OMTParameterWithTypeSupImpl(@NotNull ASTNode node) {

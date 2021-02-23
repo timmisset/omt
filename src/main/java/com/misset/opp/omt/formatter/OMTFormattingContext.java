@@ -61,7 +61,7 @@ import static com.misset.opp.omt.psi.OMTTypes.SIGNATURE;
 import static com.misset.opp.omt.psi.OMTTypes.SIGNATURE_ARGUMENT;
 import static com.misset.opp.omt.psi.OMTTypes.STRING;
 import static com.misset.opp.omt.psi.OMTTypes.WHEN_PATH;
-import static util.UtilManager.getModelUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
 
 /**
  * The formatter has 2 main functions, indentation and alignment

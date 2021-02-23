@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static util.UtilManager.getModelUtil;
-import static util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
 
 public class ModelAnnotator extends AbstractAnnotator {
     private static final String ATTRIBUTES = "attributes";

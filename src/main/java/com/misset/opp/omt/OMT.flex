@@ -6,7 +6,7 @@ import com.intellij.psi.tree.IElementType;
 import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.OMTIgnored;
 import com.intellij.psi.TokenType;
-import java.util.Stack;
+import java.com.misset.opp.util.Stack;
 
 %%
 

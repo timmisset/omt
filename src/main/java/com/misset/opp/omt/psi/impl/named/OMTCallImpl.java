@@ -13,7 +13,7 @@ import com.misset.opp.omt.psi.support.OMTCallable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static util.UtilManager.getMemberUtil;
+import static com.misset.opp.util.UtilManager.getMemberUtil;
 
 public abstract class OMTCallImpl extends MemberNamedElementImpl<OMTCall> implements OMTCall {
 

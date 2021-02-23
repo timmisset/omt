@@ -6,7 +6,7 @@ import com.intellij.psi.ResolveResult;
 import com.misset.opp.omt.psi.OMTMember;
 import org.jetbrains.annotations.NotNull;
 
-import static util.UtilManager.getImportUtil;
+import static com.misset.opp.util.UtilManager.getImportUtil;
 
 public class ImportMemberReference extends MemberReference<OMTMember> {
     public ImportMemberReference(@NotNull OMTMember member, TextRange textRange) {

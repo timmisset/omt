@@ -1,7 +1,15 @@
 package com.misset.opp.omt.util;
 
+import com.intellij.openapi.project.Project;
 import org.apache.commons.io.FileUtils;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.ResIterator;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.rdf.model.impl.PropertyImpl;
 import org.apache.jena.shared.PropertyNotFoundException;
 
@@ -9,9 +17,20 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static com.misset.opp.util.UtilManager.getProjectUtil;
 
 public class RDFModelUtil {
 
@@ -73,17 +92,20 @@ public class RDFModelUtil {
         return model != null;
     }
 
-    public Model readModel() {
+    public Model readModel(Project project) {
         if (model != null) {
             return model;
         }
         model = ModelFactory.createDefaultModel();
         List<File> modelFiles = getModelFiles(rootFolder);
         for (File file : modelFiles) {
+            getProjectUtil().setStatusbarMessage(project, "Loading ontology: " + file.getPath());
             try {
                 model.read(new FileInputStream(file), null, "TTL");
             } catch (FileNotFoundException fileNotFoundException) {
                 System.out.println(fileNotFoundException.getMessage());
+            } catch (Exception ignored) {
+
             }
         }
         setIndexes();

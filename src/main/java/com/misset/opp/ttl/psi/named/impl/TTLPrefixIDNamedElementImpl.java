@@ -4,11 +4,11 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.ttl.psi.impl.TTLDirectiveImpl;
-import com.misset.opp.ttl.psi.named.TTLPrefixID;
+import com.misset.opp.ttl.psi.named.TTLPrefixIDNamedElement;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class TTLPrefixIDImpl extends TTLDirectiveImpl implements TTLPrefixID {
-    public TTLPrefixIDImpl(@NotNull ASTNode node) {
+public abstract class TTLPrefixIDNamedElementImpl extends TTLDirectiveImpl implements TTLPrefixIDNamedElement {
+    public TTLPrefixIDNamedElementImpl(@NotNull ASTNode node) {
         super(node);
     }
 

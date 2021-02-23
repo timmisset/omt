@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static util.UtilManager.getModelUtil;
-import static util.UtilManager.getProjectUtil;
-import static util.UtilManager.getRDFModelUtil;
-import static util.UtilManager.getVariableUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
+import static com.misset.opp.util.UtilManager.getProjectUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getVariableUtil;
 
 public abstract class OMTCallableImpl implements OMTCallable {
 

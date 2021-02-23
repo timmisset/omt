@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static util.UtilManager.getQueryUtil;
-import static util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getQueryUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
 
 public abstract class OMTQueryStepResolvableImpl extends ASTWrapperPsiElement implements OMTQueryStep {
 

@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
 
 public abstract class OMTEquationStatementResolvableImpl extends OMTQueryImpl implements OMTEquationStatement {
 

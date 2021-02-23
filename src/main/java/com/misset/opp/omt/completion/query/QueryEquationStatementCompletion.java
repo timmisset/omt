@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
 
 /**
  * The EquationStatement completion will do a type-check on the other side of the equation

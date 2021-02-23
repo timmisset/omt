@@ -24,9 +24,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static util.UtilManager.getImportUtil;
-import static util.UtilManager.getModelUtil;
-import static util.UtilManager.getProjectUtil;
+import static com.misset.opp.util.UtilManager.getImportUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
+import static com.misset.opp.util.UtilManager.getProjectUtil;
 
 public class OMTFile extends PsiFileBase {
     public OMTFile(@NotNull FileViewProvider viewProvider) {

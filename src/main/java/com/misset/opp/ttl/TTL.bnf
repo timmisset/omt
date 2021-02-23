@@ -21,8 +21,8 @@ statement               ::=	directive | triples DOT
 directive	            ::=	prefixID | base | sparqlPrefix | sparqlBase
 prefixID	            ::=	ATPREFIX PNAME_NS IRIREF DOT
 {
-                                implements="com.misset.opp.ttl.psi.named.TTLPrefixID"
-                                extends="com.misset.opp.ttl.psi.named.impl.TTLPrefixIDImpl"
+                                implements="com.misset.opp.ttl.psi.named.TTLPrefixIDNamedElement"
+                                extends="com.misset.opp.ttl.psi.named.impl.TTLPrefixIDNamedElementImpl"
 }
 base	                ::=	ATBASE IRIREF DOT                                   { extends=directive }
 sparqlBase	            ::=	BASE_LEADING IRIREF                                 { extends=directive }
@@ -34,8 +34,16 @@ predicateObjectList	    ::=	predicateObject (SEMICOLON (predicateObject)?)*
 objectList	            ::=	object (COMMA object)*
 verb	                ::=	predicate | A
 subject	                ::=	iri | blankNode | collection
+{
+                                implements="com.misset.opp.ttl.psi.named.TTLSubjectNamedElement"
+                                extends="com.misset.opp.ttl.psi.named.impl.TTLSubjectNamedElementImpl"
+}
 predicate	            ::=	iri
 object	                ::=	iri | blankNode | collection | blankNodePropertyList | literal
+{
+                                implements="com.misset.opp.ttl.psi.named.TTLObjectNamedElement"
+                                extends="com.misset.opp.ttl.psi.named.impl.TTLObjectNamedElementImpl"
+}
 literal	                ::=	rdfLiteral | numericLiteral | booleanLiteral
 blankNodePropertyList	::=	BRACKET_OPEN predicateObjectList BRACKET_CLOSE
 collection	            ::=	PARENTHESIS_OPEN object* PARENTHESIS_CLOSE

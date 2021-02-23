@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 
-import static util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
 
 public abstract class OMTScalarValueResovableImpl extends ASTWrapperPsiElement implements OMTScalarValueResolvable, OMTScalarValue {
     public OMTScalarValueResovableImpl(@NotNull ASTNode node) {

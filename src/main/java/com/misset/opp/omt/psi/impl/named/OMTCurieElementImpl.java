@@ -3,8 +3,8 @@ package com.misset.opp.omt.psi.impl.named;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
-import com.intellij.util.IncorrectOperationException;
 import com.misset.opp.omt.psi.OMTCurieElement;
+import com.misset.opp.omt.psi.OMTElementFactory;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.named.OMTCurie;
@@ -14,7 +14,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static util.UtilManager.getProjectUtil;
+import static com.misset.opp.util.UtilManager.getProjectUtil;
 
 public abstract class OMTCurieElementImpl extends NameIdentifierOwnerImpl<OMTCurieElement> implements OMTCurie {
     public OMTCurieElementImpl(@NotNull ASTNode node) {
@@ -49,8 +49,12 @@ public abstract class OMTCurieElementImpl extends NameIdentifierOwnerImpl<OMTCur
     }
 
     @Override
-    public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
-        return this;
+    public PsiElement setName(@NotNull String name) {
+        final PsiElement psiElement = OMTElementFactory.fromString(
+                String.format("queries: |\n" +
+                        "   DEFINE QUERY query => %s:%s;", getPrefixName(), name)
+                , OMTCurie.class, getProject());
+        return psiElement != null ? replace(psiElement) : this;
     }
 
     @Override

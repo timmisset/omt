@@ -1,10 +1,14 @@
-package util;
+package com.misset.opp.util;
 
 import com.google.common.io.CharStreams;
 import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.extensions.PluginId;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.List;

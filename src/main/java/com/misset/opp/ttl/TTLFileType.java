@@ -34,7 +34,7 @@ public class TTLFileType extends LanguageFileType {
     @Nullable
     @Override
     public Icon getIcon() {
-        return util.Icons.TTLFile;
+        return com.misset.opp.util.Icons.TTLFile;
     }
 }
 

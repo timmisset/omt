@@ -23,11 +23,12 @@ import com.misset.opp.omt.psi.util.VariableUtil;
 import com.misset.opp.omt.util.BuiltInUtil;
 import com.misset.opp.omt.util.ProjectUtil;
 import com.misset.opp.omt.util.RDFModelUtil;
+import com.misset.opp.ttl.util.TTLUtil;
+import com.misset.opp.util.UtilManager;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import util.UtilManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,18 +41,19 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.misset.opp.util.UtilManager.getBuiltinUtil;
+import static com.misset.opp.util.UtilManager.getCurieUtil;
+import static com.misset.opp.util.UtilManager.getImportUtil;
+import static com.misset.opp.util.UtilManager.getMemberUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
+import static com.misset.opp.util.UtilManager.getProjectUtil;
+import static com.misset.opp.util.UtilManager.getQueryUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getScriptUtil;
+import static com.misset.opp.util.UtilManager.getTTLUtil;
+import static com.misset.opp.util.UtilManager.getTokenUtil;
+import static com.misset.opp.util.UtilManager.getVariableUtil;
 import static org.mockito.Mockito.mock;
-import static util.UtilManager.getBuiltinUtil;
-import static util.UtilManager.getCurieUtil;
-import static util.UtilManager.getImportUtil;
-import static util.UtilManager.getMemberUtil;
-import static util.UtilManager.getModelUtil;
-import static util.UtilManager.getProjectUtil;
-import static util.UtilManager.getQueryUtil;
-import static util.UtilManager.getRDFModelUtil;
-import static util.UtilManager.getScriptUtil;
-import static util.UtilManager.getTokenUtil;
-import static util.UtilManager.getVariableUtil;
 
 public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
 
@@ -207,6 +209,7 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
             VariableUtil variableUtil = getVariableUtil();
             CurieUtil curieUtil = getCurieUtil();
             RDFModelUtil rdfModelUtil = getRDFModelUtil();
+            TTLUtil ttlUtil = getTTLUtil();
 
             utilManager = Mockito.mockStatic(UtilManager.class);
             utilManager.when(UtilManager::getProjectUtil).thenReturn(projectUtil);
@@ -220,6 +223,7 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
             utilManager.when(UtilManager::getVariableUtil).thenReturn(variableUtil);
             utilManager.when(UtilManager::getCurieUtil).thenReturn(curieUtil);
             utilManager.when(UtilManager::getRDFModelUtil).thenReturn(rdfModelUtil);
+            utilManager.when(UtilManager::getTTLUtil).thenReturn(ttlUtil);
         }
     }
 

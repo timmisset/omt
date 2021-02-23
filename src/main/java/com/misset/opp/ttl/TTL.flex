@@ -23,11 +23,11 @@ import com.misset.opp.ttl.psi.TTLIgnored;
 IRIREF	                                =	"<" ([^\x00-\x20\<\>\"\{\}\|\^\`\\] | {UCHAR})+ ">" /* #x00=NULL #01-#x1F=control codes #x20=space */
 PNAME_NS                                =	{PN_PREFIX}? ":"
 PNAME_LN                                =	{PNAME_NS} {PN_LOCAL}
-BLANK_NODE_LABEL                        =	"_:" ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
-LANGTAG                                 =	'@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)*
+BLANK_NODE_LABEL                        =	"_:" ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | ".")* {PN_CHARS})?
+LANGTAG                                 =	"@" [a-zA-Z]+ ('-' [a-zA-Z0-9]+)*
 INTEGER                                 =	[+-]? [0-9]+
-DECIMAL                                 =	[+-]? [0-9]* '.' [0-9]+
-DOUBLE                                  =	[+-]? ([0-9]+ '.' [0-9]* {EXPONENT} | '.' [0-9]+ {EXPONENT} | [0-9]+ {EXPONENT})
+DECIMAL                                 =	[+-]? [0-9]* "." [0-9]+
+DOUBLE                                  =	[+-]? ([0-9]+ "." [0-9]* {EXPONENT} | "." [0-9]+ {EXPONENT} | [0-9]+ {EXPONENT})
 EXPONENT                                =	[eE] [+-]? [0-9]+
 STRING_LITERAL_QUOTE                    =	"\"" ([^\x22\x5C\n\r] | {ECHAR} | {UCHAR})* "\"" /* #x22=" #x5C=\ #xA=new line (\n) #xD=carriage return (\r) */
 STRING_LITERAL_SINGLE_QUOTE             =	"\'" ([^\x27\x5C\n\r] | {ECHAR} | {UCHAR})* "\'" /* #x27=' #x5C=\ #xA=new line (\n) #xD=carriage return (\r) */
@@ -76,7 +76,6 @@ FALSE                                   =   "false"
     {PNAME_NS}                          { return TTLTypes.PNAME_NS; }
     {PNAME_LN}                          { return TTLTypes.PNAME_LN; }
     {BLANK_NODE_LABEL}                  { return TTLTypes.BLANK_NODE_LABEL; }
-    {LANGTAG}                           { return TTLTypes.LANGTAG; }
     {INTEGER}                           { return TTLTypes.INTEGER; }
     {DECIMAL}                           { return TTLTypes.DECIMAL; }
     {DOUBLE}                            { return TTLTypes.DOUBLE; }
@@ -103,6 +102,8 @@ FALSE                                   =   "false"
 
     {COMMENT}                           { return TTLIgnored.COMMENT; }
     {WHITE_SPACE}                       { return TokenType.WHITE_SPACE; }
+
+    {LANGTAG}                           { return TTLTypes.LANGTAG; }
 
     [^]                                 { return TokenType.BAD_CHARACTER; }
 }

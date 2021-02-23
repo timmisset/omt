@@ -6,7 +6,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.misset.opp.omt.util.UtilManager.getProjectUtil;
+import static com.misset.opp.util.UtilManager.getProjectUtil;
 
 public class CurieReferenceIT extends ReferenceTest {
 
@@ -29,14 +29,6 @@ public class CurieReferenceIT extends ReferenceTest {
     void hasReferenceToTTLModelClass() {
         String content = "queries: |\n" +
                 "   DEFINE QUERY query => /ont:<caret>ClassA;";
-        assertHasReference(withPrefixes(content));
-    }
-
-    @Test
-    void hasReferenceToTTLRDFType() {
-        // provided by the rdf ontology part of the LNKD.tech plugin
-        String content = "queries: |\n" +
-                "   DEFINE QUERY query => /ont:ClassA / rdf:<caret>type;";
         assertHasReference(withPrefixes(content));
     }
 

@@ -13,20 +13,21 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 
-import static util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
 
 public abstract class OMTParameterTypeSupImpl extends ASTWrapperPsiElement implements OMTCurie {
+
     public OMTParameterTypeSupImpl(@NotNull ASTNode node) {
         super(node);
     }
 
     private boolean hasCurie() {
-        return getNode().getPsi(OMTParameterType.class).getNamespacePrefix() != null;
+        return getNode().getPsi(OMTParameterType.class).getCurieElement() != null;
     }
 
     @Override
     public PsiElement getPrefix() {
-        return hasCurie() ? getNode().getPsi(OMTParameterType.class).getNamespacePrefix() : null;
+        return hasCurie() ? getNode().getPsi(OMTParameterType.class).getCurieElement().getPrefix() : null;
     }
 
     @Override

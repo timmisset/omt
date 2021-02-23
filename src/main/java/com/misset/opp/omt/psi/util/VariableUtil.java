@@ -40,11 +40,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static util.UtilManager.getBuiltinUtil;
-import static util.UtilManager.getModelUtil;
-import static util.UtilManager.getProjectUtil;
-import static util.UtilManager.getRDFModelUtil;
-import static util.UtilManager.getScriptUtil;
+import static com.misset.opp.util.UtilManager.getBuiltinUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
+import static com.misset.opp.util.UtilManager.getProjectUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getScriptUtil;
 
 public class VariableUtil {
 

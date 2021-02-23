@@ -1,4 +1,4 @@
-package util;
+package com.misset.opp.util;
 
 import com.intellij.openapi.util.IconLoader;
 

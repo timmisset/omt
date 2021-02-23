@@ -14,8 +14,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 
-import static util.UtilManager.getModelUtil;
-import static util.UtilManager.getVariableUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
+import static com.misset.opp.util.UtilManager.getVariableUtil;
 
 public class VariableAnnotator extends AbstractAnnotator {
 

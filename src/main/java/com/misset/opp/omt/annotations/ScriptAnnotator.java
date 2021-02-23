@@ -10,7 +10,7 @@ import com.misset.opp.omt.psi.OMTScriptContent;
 import com.misset.opp.omt.psi.OMTScriptLine;
 import com.misset.opp.omt.psi.OMTTypes;
 
-import static util.UtilManager.getModelUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
 
 public class ScriptAnnotator extends AbstractAnnotator {
 

@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
-import static util.UtilManager.getVariableUtil;
+import static com.misset.opp.util.UtilManager.getVariableUtil;
 
 /**
  * The referencing part of IntelliJ is kind of vague in the tutorial. For now it appears to work when the concept of usage -> declaration

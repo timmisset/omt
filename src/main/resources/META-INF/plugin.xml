@@ -52,6 +52,9 @@
                   fieldName="INSTANCE" language="Turtle" extensions="ttl"/>
         <lang.parserDefinition language="Turtle"
                                implementationClass="com.misset.opp.ttl.TTLParserDefinition"/>
+        <findUsagesHandlerFactory implementation="com.misset.opp.ttl.TTLFindUsageHandlerFactory"/>
+        <lang.refactoringSupport language="Turtle"
+                                 implementationClass="com.misset.opp.ttl.TTLRefactoringSupportProvider"/>
     </extensions>
 
     <actions>

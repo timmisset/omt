@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '3.0'
+version '3.1'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -46,17 +46,12 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-        <strong>3.0</strong><br />
-        Due to memory and indexing issues, LNKD.tech dependency has been removed as referenced plugin and
-        replaced with a first version of a TTL language parser.</br>
-        For now, only referring from OMT usage to TTL declaration is supported. In the coming version a</br>
-        FindUsage provider will be added for all TTL subjects and predicates to allow project-wide refactoring</br>
-        from TTL ontology to OMT.</br>
-        </br>
-        By removing the dependency to LNKD.tech, the Apacha Jena library has been re-instated in this plugin itself
-        increasing its size</br>
-        </br>
-        The Turtle lexer and parser are based on the literature from: https://www.w3.org/TR/turtle/
+        <strong>3.1</strong><br />
+        FindUsage and refactor-rename available for Turtle Subjects<br />
+        You can now find all usages from a Turtle class in the OMT queries, parameter types and type annotations<br />
+        Refactor-rename must be triggered from the Subject class in the ontology which will rename (LocalName) 
+        all usages of that class in other Turtle files and the OMT files. 
+        The prefix cannot be renamed since this would require changing the namespace<br />
       """
 }
 tasks{

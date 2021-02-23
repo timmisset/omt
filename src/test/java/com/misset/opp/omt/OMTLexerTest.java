@@ -91,7 +91,7 @@ class OMTLexerTest extends OMTTestSuite {
     @Test
     void testImportsContent() {
         String contentToTest = "import:\n" +
-                "    '@client/bedrijf/src/util/queries.omt':\n" +
+                "    '@client/bedrijf/src/com.misset.opp.util/queries.omt':\n" +
                 "        -   gesorteerdeBedrijven\n" +
                 "        -   weergaveNaamBedrijf\n" +
                 "        -   alleHoedanigheidSoorten\n" +

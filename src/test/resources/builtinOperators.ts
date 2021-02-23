@@ -1,9 +1,9 @@
 import { commands as com } from '../../command';
 import { Variable } from '../../context';
 import { ResourceList, ResultType } from '../../interfaces';
-import { operators as ops, ParameterizedQuery, Q, Query } from '../../query';
-import { constants, PrimitiveType, toResultType } from '../../util';
-import { CommandNode } from './CommandNode';
+import {operators as ops, ParameterizedQuery, Q, Query} from '../../query';
+import {constants, PrimitiveType, toResultType} from '../../com.misset.opp.util';
+import {CommandNode} from './CommandNode';
 import { command } from './commands';
 import { DocItem } from './DocItem';
 import { operator, OperatorDefinition } from './operators';

@@ -7,7 +7,7 @@ import com.misset.opp.omt.psi.support.OMTParameter;
 
 import java.util.List;
 
-import static util.UtilManager.getBuiltinUtil;
+import static com.misset.opp.util.UtilManager.getBuiltinUtil;
 
 public class OMTBuiltInMember extends OMTCallableImpl implements OMTCallable {
 

@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import static util.UtilManager.getTokenUtil;
+import static com.misset.opp.util.UtilManager.getTokenUtil;
 
 public abstract class OMTQueryPathResolvableImpl extends OMTQueryImpl implements OMTQueryPath {
 

@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Objects;
 
-import static util.UtilManager.getMemberUtil;
+import static com.misset.opp.util.UtilManager.getMemberUtil;
 
 public abstract class OMTResolvableValueResolvableImpl extends ASTWrapperPsiElement implements OMTResolvableValue {
 

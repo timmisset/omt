@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
-import static util.UtilManager.getProjectUtil;
+import static com.misset.opp.util.UtilManager.getProjectUtil;
 
 public class OMTConfigurable implements Configurable {
     private OMTSettingsComponent settingsComponent;

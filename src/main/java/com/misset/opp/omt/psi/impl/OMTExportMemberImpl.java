@@ -15,8 +15,8 @@ import org.apache.jena.rdf.model.Resource;
 import java.util.List;
 import java.util.Optional;
 
-import static util.UtilManager.getModelUtil;
-import static util.UtilManager.getRDFModelUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
+import static com.misset.opp.util.UtilManager.getRDFModelUtil;
 
 /**
  * An exported member can be a wide variety of items, a Query or StandAlone query, both are considered Operator

@@ -13,7 +13,7 @@ import org.apache.jena.rdf.model.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static util.UtilManager.getVariableUtil;
+import static com.misset.opp.util.UtilManager.getVariableUtil;
 
 public class ParameterAnnotator extends AbstractAnnotator {
 

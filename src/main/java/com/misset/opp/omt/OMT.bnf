@@ -177,7 +177,7 @@ parameterWithType ::=                       variable PARENTHESES_OPEN parameterT
                                                 mixin="com.misset.opp.omt.psi.impl.OMTParameterWithTypeSupImpl"
 }
 
-parameterType ::=                           IRI | (namespacePrefix NAMESPACE_MEMBER) | OPERATOR | NAMESPACE_MEMBER {
+parameterType ::=                           IRI | curieElement | OPERATOR | NAMESPACE_MEMBER {
                                             implements="com.misset.opp.omt.psi.named.OMTCurie"
                                             mixin="com.misset.opp.omt.psi.impl.OMTParameterTypeSupImpl"
 }
