@@ -33,11 +33,10 @@ public class MemberAnnotator extends AbstractAnnotator {
 
     public void annotate(PsiElement element) {
         if (element instanceof OMTCall) {
-            annotate((OMTCall) element);
+            annotateReference((OMTCall) element);
+            annotateSignature((OMTCall) element);
         } else if (element instanceof OMTSignatureArgument) {
             annotate((OMTSignatureArgument) element);
-        } else if (element instanceof OMTSignature) {
-            annotate((OMTSignature) element);
         }
     }
 
@@ -57,8 +56,7 @@ public class MemberAnnotator extends AbstractAnnotator {
         }
     }
 
-    private void annotate(OMTSignature signature) {
-        OMTCall call = (OMTCall) signature.getParent();
+    private void annotateSignature(OMTCall call) {
         JsonObject attributes = getModelUtil().getJson(call);
         // if the call is in a scalar that is considered a namedReference, it's not actually a call
         if (attributes.has("namedReference") && attributes.get("namedReference").getAsBoolean()) return;
@@ -72,7 +70,7 @@ public class MemberAnnotator extends AbstractAnnotator {
         }
     }
 
-    private void annotate(OMTCall call) {
+    private void annotateReference(OMTCall call) {
         PsiElement resolved = call.getReference() != null ? call.getReference().resolve() : null;
 
         if (resolved == null) {
@@ -93,8 +91,9 @@ public class MemberAnnotator extends AbstractAnnotator {
                         annotationBuilder.highlightType(ProblemHighlightType.LIKE_UNKNOWN_SYMBOL);
                     });
         } else {
-            annotateReference(resolved);
+            annotateReference(resolved, call);
         }
+
     }
 
     private boolean annotateAsLocalCommand(OMTCall call) {
@@ -112,20 +111,24 @@ public class MemberAnnotator extends AbstractAnnotator {
         OMTBuiltInMember builtInMember = getBuiltinUtil().getBuiltInMember(call.getName(), call.isCommandCall() ? BuiltInType.Command : BuiltInType.Operator);
         if (builtInMember != null) {
             setInformation(builtInMember.shortDescription(),
-                    annotationBuilder -> annotationBuilder.tooltip(builtInMember.htmlDescription()));
+                    annotationBuilder -> annotationBuilder
+                            .range(call.getNameIdentifier().getTextRange())
+                            .tooltip(builtInMember.htmlDescription()));
             return true;
         }
         return false;
     }
 
-    private void annotateReference(PsiElement resolved) {
+    private void annotateReference(PsiElement resolved, OMTCall call) {
         OMTExportMember asExportMember = getMemberUtil().memberToExportMember(resolved);
         if (asExportMember == null) {
             if (getModelUtil().isOntology(resolved)) return;
             setError("Could not resolve callable element to exported member, this might be an issue with the imported file");
         } else {
             setInformation(asExportMember.shortDescription(),
-                    annotationBuilder -> annotationBuilder.tooltip(asExportMember.htmlDescription()));
+                    annotationBuilder -> annotationBuilder
+                            .range(call.getNameIdentifier().getTextRange())
+                            .tooltip(asExportMember.htmlDescription()));
         }
     }
 

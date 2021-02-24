@@ -35,7 +35,7 @@ public abstract class OMTCallImpl extends MemberNamedElementImpl<OMTCall> implem
                 newName,
                 getFlagSignature() != null ? getFlagSignature().getText() : "",
                 getSignature() != null ? getSignature().getText() : "",
-                isCommandCall());
+                getCallable().isCommand());
         replace(replacement);
         return replacement;
     }
@@ -80,6 +80,6 @@ public abstract class OMTCallImpl extends MemberNamedElementImpl<OMTCall> implem
     @NotNull
     @Override
     public NamedMemberType getType() {
-        return isOperatorCall() ? NamedMemberType.OperatorCall : NamedMemberType.CommandCall;
+        return getCallable().isOperator() ? NamedMemberType.OperatorCall : NamedMemberType.CommandCall;
     }
 }

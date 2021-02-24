@@ -4,6 +4,7 @@ import com.intellij.find.findUsages.FindUsagesHandler;
 import com.intellij.find.findUsages.FindUsagesHandlerFactory;
 import com.intellij.find.findUsages.FindUsagesOptions;
 import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
@@ -40,10 +41,11 @@ public class OMTFindUsageHandlerFactory extends FindUsagesHandlerFactory {
     }
 
     private static SearchScope getGlobalSearchScope(PsiElement target) {
+        Project project = ReadAction.compute(target::getProject);
         return target instanceof OMTModelItemLabel ?
-                GlobalSearchScope.allScope(target.getProject()) :
+                GlobalSearchScope.allScope(project) :
                 GlobalSearchScope.FilesScope.getScopeRestrictedByFileTypes(
-                        GlobalSearchScope.allScope(target.getProject()),
+                        GlobalSearchScope.allScope(project),
                         OMTFileType.INSTANCE
                 );
     }

@@ -53,10 +53,9 @@ patchPluginXml {
         all usages of that Predicate in the OMT files. 
         The prefix cannot be renamed since this would require changing the namespace<br />
         <br />
+        Custom colors can now be added to some of the TTL attributes.<br />
         <br />
-        Custom colors can now be added to some of the TTL attributes. Since the TTL classes Subject, Predicate and Object
-        are determined in the grammer, not the Lexer the preview panel doesn't work (yet). When you hit apply you can see the
-        color changes directly in your TTL files
+        Some small fixes for error annotations for command calls
       """
 }
 tasks{

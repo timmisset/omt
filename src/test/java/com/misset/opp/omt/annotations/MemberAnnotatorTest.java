@@ -2,6 +2,7 @@ package com.misset.opp.omt.annotations;
 
 import com.google.gson.JsonObject;
 import com.intellij.codeInsight.intention.IntentionAction;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.misset.opp.omt.exceptions.CallCallableMismatchException;
@@ -34,7 +35,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 class MemberAnnotatorTest extends OMTAnnotationTest {
 
@@ -87,6 +96,8 @@ class MemberAnnotatorTest extends OMTAnnotationTest {
 
         doReturn(signature).when(signatureArgument).getParent();
         doReturn(call).when(signature).getParent();
+        doReturn(call).when(call).getNameIdentifier();
+        doReturn(TextRange.create(0, 1)).when(call).getTextRange();
         doReturn(callable).when(call).getCallable();
         doReturn(Arrays.asList(signatureArgument)).when(signature).getSignatureArgumentList();
 
@@ -130,45 +141,30 @@ class MemberAnnotatorTest extends OMTAnnotationTest {
     }
 
     @Test
-    void annotateSignatureThrowsNoErrorsWhenNamedReferenceIsTrue() {
-        attributes.addProperty("namedReference", true);
-        memberAnnotator.annotate(signature);
-
-        verifyNoErrors();
-    }
-
-    @Test
-    void annotateSignatureThrowsNoErrorWhenHasNoAttributesMemberNamedReference() {
-        attributes.remove("namedReference");
-        memberAnnotator.annotate(signature);
-        verifyNoErrors();
-    }
-
-    @Test
-    void annotateSignatureThrowsNumberOfInputParametersMismatchExceptionError() throws NumberOfInputParametersMismatchException, IncorrectFlagException, CallCallableMismatchException {
+    void annotateCallThrowsNumberOfInputParametersMismatchExceptionError() throws NumberOfInputParametersMismatchException, IncorrectFlagException, CallCallableMismatchException {
         doThrow(
                 new NumberOfInputParametersMismatchException("Member", 0, 1, 2)
         ).when(callable).validateSignature(call);
-        memberAnnotator.annotate(signature);
+        memberAnnotator.annotate(call);
         verifyError("Member expects between 0 and 1 parameters, found 2");
     }
 
     @Test
-    void annotateSignatureThrowsCallCallableMismatchExceptionExceptionError() throws NumberOfInputParametersMismatchException, IncorrectFlagException, CallCallableMismatchException {
+    void annotateCallThrowsCallCallableMismatchExceptionExceptionError() throws NumberOfInputParametersMismatchException, IncorrectFlagException, CallCallableMismatchException {
         doThrow(
                 new CallCallableMismatchException(callable, call)
         ).when(callable).validateSignature(call);
 
-        memberAnnotator.annotate(signature);
+        memberAnnotator.annotate(call);
         verifyError("Callable is a Command and cannot be called using Call");
     }
 
     @Test
-    void annotateSignatureThrowsIncorrectFlagExceptionExceptionError() throws NumberOfInputParametersMismatchException, IncorrectFlagException, CallCallableMismatchException {
+    void annotateCallThrowsIncorrectFlagExceptionExceptionError() throws NumberOfInputParametersMismatchException, IncorrectFlagException, CallCallableMismatchException {
         doThrow(
                 new IncorrectFlagException("illegalFlag", Arrays.asList("FlagA", "FlagB"))
         ).when(callable).validateSignature(call);
-        memberAnnotator.annotate(signature);
+        memberAnnotator.annotate(call);
         verifyError("Incorrect flag 'illegalFlag' used, acceptable flags are: 'FlagA', 'FlagB'");
     }
 
@@ -182,14 +178,12 @@ class MemberAnnotatorTest extends OMTAnnotationTest {
 
     @Test
     void annotateCallByAttributeThrowsErrorWhenNoAttributes() {
-        doReturn(null).when(modelUtil).getJson(eq(call));
         memberAnnotator.annotate(call);
         verifyError("Call could not be resolved");
     }
 
     @Test
     void addsImportIntentions() {
-        doReturn(null).when(modelUtil).getJson(eq(call));
         List<IntentionAction> intentionActionList = new ArrayList<>();
         intentionActionList.add(mock(IntentionAction.class));
         intentionActionList.add(mock(IntentionAction.class));
