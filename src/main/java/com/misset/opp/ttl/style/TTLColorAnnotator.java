@@ -6,8 +6,13 @@ import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.ttl.psi.TTLObject;
+import com.misset.opp.ttl.psi.TTLPredicate;
+import com.misset.opp.ttl.psi.TTLSubject;
 import org.jetbrains.annotations.NotNull;
 
+import static com.misset.opp.ttl.psi.TTLTypes.IRI;
 import static com.misset.opp.ttl.psi.TTLTypes.OBJECT;
 import static com.misset.opp.ttl.psi.TTLTypes.PREDICATE;
 import static com.misset.opp.ttl.psi.TTLTypes.SUBJECT;
@@ -20,14 +25,23 @@ public class TTLColorAnnotator implements Annotator {
 
     @Override
     public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
-        final IElementType elementType = element.getNode().getElementType();
-        if (elementType == SUBJECT) {
-            highlight(holder, TTLSyntaxHighlighter.SUBJECTS);
-        } else if (elementType == PREDICATE) {
-            highlight(holder, TTLSyntaxHighlighter.PREDICATES);
-        } else if (elementType == OBJECT) {
-            highlight(holder, TTLSyntaxHighlighter.OBJECTS);
+        IElementType elementType = element.getNode().getElementType();
+        if (elementType == IRI) {
+            PsiElement firstParent = PsiTreeUtil.findFirstParent(element,
+                    parent -> parent instanceof TTLSubject ||
+                            parent instanceof TTLObject ||
+                            parent instanceof TTLPredicate
+            );
+            elementType = firstParent.getNode().getElementType();
+            if (elementType == SUBJECT) {
+                highlight(holder, TTLSyntaxHighlighter.SUBJECTS);
+            } else if (elementType == PREDICATE) {
+                highlight(holder, TTLSyntaxHighlighter.PREDICATES);
+            } else if (elementType == OBJECT) {
+                highlight(holder, TTLSyntaxHighlighter.OBJECTS);
+            }
         }
+
     }
 
     protected void highlight(AnnotationHolder holder, TextAttributesKey key) {

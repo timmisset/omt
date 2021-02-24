@@ -32,6 +32,7 @@ public class TTLSyntaxHighlighter extends SyntaxHighlighterBase {
     private static final TextAttributesKey[] BAD_CHAR_KEYS = new TextAttributesKey[]{BAD_CHARACTER};
     private static final TextAttributesKey[] COMMENT_KEYS = new TextAttributesKey[]{COMMENT};
     private static final TextAttributesKey[] STRING_KEYS = new TextAttributesKey[]{STRING};
+    private static final TextAttributesKey[] PREDICATE_KEYS = new TextAttributesKey[]{PREDICATES};
     private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
     private static final TokenSet STRING_TOKENS = TokenSet.create(
             TTLTypes.STRING,
@@ -56,6 +57,8 @@ public class TTLSyntaxHighlighter extends SyntaxHighlighterBase {
             return BAD_CHAR_KEYS;
         } else if (STRING_TOKENS.contains(tokenType)) {
             return STRING_KEYS;
+        } else if (tokenType == TTLTypes.A) {
+            return PREDICATE_KEYS;
         }
         return EMPTY_KEYS;
     }

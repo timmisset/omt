@@ -1,18 +1,16 @@
 package com.misset.opp.ttl.style;
 
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighter;
 import com.intellij.openapi.options.colors.AttributesDescriptor;
 import com.intellij.openapi.options.colors.ColorDescriptor;
 import com.intellij.openapi.options.colors.ColorSettingsPage;
-import com.intellij.openapi.util.TextRange;
 import com.misset.opp.util.Icons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.awt.*;
+import java.util.HashMap;
 import java.util.Map;
 
 public class TTLColorSettingsPage implements ColorSettingsPage {
@@ -42,55 +40,30 @@ public class TTLColorSettingsPage implements ColorSettingsPage {
         return "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n" +
                 "@prefix dc: <http://purl.org/dc/elements/1.1/> .\n" +
                 "@prefix ex: <http://example.org/stuff/1.0/> .\n" +
+                "@prefix owl: <http://www.w3.org/2002/07/owl#> .\n" +
                 "\n" +
-                "<http://www.w3.org/TR/rdf-syntax-grammar>\n" +
-                "  dc:title \"RDF/XML Syntax Specification (Revised)\" ;\n" +
-                "  ex:editor [\n" +
-                "    ex:fullname \"Dave Beckett\";\n" +
-                "    ex:homePage <http://purl.org/net/dajobe/>\n" +
-                "  ] .";
-    }
-
-    @Override
-    public @Nullable PreviewCustomizer getPreviewEditorCustomizer() {
-        return new PreviewCustomizer() {
-            private TextRange getRangeForText(Editor editor, String text) {
-                int startIndex = editor.getDocument().getText().indexOf(text);
-                int endIndex = startIndex + text.length();
-                return TextRange.create(startIndex, endIndex);
-            }
-
-            @Override
-            public @Nullable TextRange addCustomizations(@NotNull Editor editor, @Nullable String selectedKeyName) {
-                if (selectedKeyName == null) {
-                    return null;
-                }
-                if (selectedKeyName.equals("SUBJECTS")) {
-                    return getRangeForText(editor, "<http://www.w3.org/TR/rdf-syntax-grammar>");
-                } else if (selectedKeyName.equals("PREDICATES")) {
-                    return getRangeForText(editor, "dc:title");
-                } else if (selectedKeyName.equals("OBJECTS")) {
-                    return getRangeForText(editor, "<http://purl.org/net/dajobe/>");
-                }
-                return null;
-            }
-
-            @Override
-            public void removeCustomizations(@NotNull Editor editor) {
-
-            }
-
-            @Override
-            public @Nullable String getCustomizationAt(@NotNull Editor editor, @NotNull Point location) {
-                return null;
-            }
-        };
+                "<SUBJECT><http://www.w3.org/TR/rdf-syntax-grammar></SUBJECT>\n" +
+                "  <PREDICATE>dc:title</PREDICATE> \"RDF/XML Syntax Specification (Revised)\" ;\n" +
+                "  <PREDICATE>ex:editor</PREDICATE> [\n" +
+                "    <PREDICATE>ex:fullname</PREDICATE> \"Dave Beckett\";\n" +
+                "    <PREDICATE>ex:homePage</PREDICATE> <OBJECT><http://purl.org/net/dajobe/></OBJECT>\n" +
+                "  ] .\n" +
+                "\n" +
+                "# Comments\n" +
+                "<SUBJECT>ex:Class</SUBJECT>\n" +
+                "   <PREDICATE>a</PREDICATE> <OBJECT>owl:Class</OBJECT> ;\n" +
+                "   <PREDICATE>owl:versionInfo</PREDICATE> \"Created manually\"; \n" +
+                "  .\n";
     }
 
     @Nullable
     @Override
     public Map<String, TextAttributesKey> getAdditionalHighlightingTagToDescriptorMap() {
-        return null;
+        HashMap<String, TextAttributesKey> mapping = new HashMap<>();
+        mapping.put("SUBJECT", TTLSyntaxHighlighter.SUBJECTS);
+        mapping.put("PREDICATE", TTLSyntaxHighlighter.PREDICATES);
+        mapping.put("OBJECT", TTLSyntaxHighlighter.OBJECTS);
+        return mapping;
     }
 
     @NotNull
