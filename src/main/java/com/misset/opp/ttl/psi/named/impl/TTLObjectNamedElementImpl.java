@@ -4,13 +4,18 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import com.misset.opp.omt.psi.impl.named.NameIdentifierOwnerImpl;
 import com.misset.opp.ttl.psi.TTLElementFactory;
+import com.misset.opp.ttl.psi.TTLIri;
 import com.misset.opp.ttl.psi.TTLObject;
 import com.misset.opp.ttl.psi.named.TTLObjectNamedElement;
 import com.misset.opp.ttl.psi.references.ObjectReference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static com.misset.opp.util.UtilManager.getTTLUtil;
 
 public abstract class TTLObjectNamedElementImpl extends NameIdentifierOwnerImpl<TTLObjectNamedElement> implements TTLObject {
 
@@ -43,10 +48,11 @@ public abstract class TTLObjectNamedElementImpl extends NameIdentifierOwnerImpl<
     @Override
     @Nullable
     public PsiReference getReference() {
-        if (getIri() == null) {
+        final TTLIri iri = getIri();
+        if (iri == null || !getTTLUtil().hasSubject(iri)) {
             return null;
         }
-        return new ObjectReference(getPsi(), getIri().getTextRangeInParent());
+        return new ObjectReference(getPsi(), iri.getTextRangeInParent());
     }
 
     @Override
@@ -54,4 +60,8 @@ public abstract class TTLObjectNamedElementImpl extends NameIdentifierOwnerImpl<
         return getIri() != null ? getIri().getResourceAsString() : null;
     }
 
+    @Override
+    public @NotNull SearchScope getUseScope() {
+        return GlobalSearchScope.allScope(getProject());
+    }
 }

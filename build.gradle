@@ -46,12 +46,17 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-        <strong>3.1</strong><br />
-        FindUsage and refactor-rename available for Turtle Subjects<br />
-        You can now find all usages from a Turtle class in the OMT queries, parameter types and type annotations<br />
-        Refactor-rename must be triggered from the Subject class in the ontology which will rename (LocalName) 
-        all usages of that class in other Turtle files and the OMT files. 
+        <strong>3.2</strong><br />
+        FindUsage and refactor-rename available for Turtle Objects<br />
+        You can now find all usages from a SHACL path used in the OMT queries<br />
+        Refactor-rename must be triggered from the Predicate in the ontology which will rename (LocalName) 
+        all usages of that Predicate in the OMT files. 
         The prefix cannot be renamed since this would require changing the namespace<br />
+        <br />
+        <br />
+        Custom colors can now be added to some of the TTL attributes. Since the TTL classes Subject, Predicate and Object
+        are determined in the grammer, not the Lexer the preview panel doesn't work (yet). When you hit apply you can see the
+        color changes directly in your TTL files
       """
 }
 tasks{

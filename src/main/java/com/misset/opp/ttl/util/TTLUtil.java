@@ -84,6 +84,10 @@ public class TTLUtil {
         return getTTLReference(iri.getResourceAsString(), subjectFilter);
     }
 
+    public boolean hasSubject(TTLIri iri) {
+        return iri != null && ttlSubjectReferences.containsKey(iri.getResourceAsString());
+    }
+
     private void validateModelLoaded(PsiElement element) {
         if (getProjectUtil().getOntologyModel() == null) {
             getProjectUtil().loadOntologyModel(element.getProject(), true);

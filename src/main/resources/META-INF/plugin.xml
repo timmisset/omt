@@ -55,6 +55,10 @@
         <findUsagesHandlerFactory implementation="com.misset.opp.ttl.TTLFindUsageHandlerFactory"/>
         <lang.refactoringSupport language="Turtle"
                                  implementationClass="com.misset.opp.ttl.TTLRefactoringSupportProvider"/>
+        <colorSettingsPage implementation="com.misset.opp.ttl.style.TTLColorSettingsPage"/>
+        <lang.syntaxHighlighterFactory language="Turtle"
+                                       implementationClass="com.misset.opp.ttl.style.TTLSyntaxHighlighterFactory"/>
+        <annotator language="Turtle" implementationClass="com.misset.opp.ttl.style.TTLColorAnnotator"/>
     </extensions>
 
     <actions>
