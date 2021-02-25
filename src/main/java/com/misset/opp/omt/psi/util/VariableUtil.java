@@ -131,6 +131,10 @@ public class VariableUtil {
         return variables.stream().distinct().collect(Collectors.toList());
     }
 
+    public boolean isLocalVariable(OMTVariable variable) {
+        return getLocalVariables(variable).containsKey(variable.getName());
+    }
+
     /**
      * Returns a list of variables that are locally available for the element
      */
@@ -296,6 +300,9 @@ public class VariableUtil {
                 return new ArrayList<>();
             }
             if (variable.isIgnoredVariable()) {
+                return new ArrayList<>();
+            }
+            if (isLocalVariable(variable)) {
                 return new ArrayList<>();
             }
             OMTVariable declaredByVariable = getDeclaredByVariable(variable).orElse(null);
