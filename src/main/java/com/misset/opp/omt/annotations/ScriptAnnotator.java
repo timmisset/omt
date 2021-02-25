@@ -30,12 +30,13 @@ public class ScriptAnnotator extends AbstractAnnotator {
 
     private void annotate(OMTScriptContent scriptContent) {
         final PsiElement psiElement = PsiTreeUtil.nextVisibleLeaf(scriptContent);
-        if ((isPartOfCommandBlock(scriptContent) || getModelUtil().isScalarEntry(scriptContent)) &&
-                (psiElement == null || psiElement.getNode().getElementType() != OMTTypes.SEMICOLON)) {
-            setError("; expected");
-        } else if (getModelUtil().isQueryEntry(scriptContent)
+        final boolean queryEntry = getModelUtil().isQueryEntry(scriptContent);
+        if (queryEntry
                 && psiElement != null && psiElement.getNode().getElementType() == OMTTypes.SEMICOLON) {
             setError("Query entry should not end with semicolon");
+        } else if (!queryEntry && (isPartOfCommandBlock(scriptContent) || getModelUtil().isScalarEntry(scriptContent)) &&
+                (psiElement == null || psiElement.getNode().getElementType() != OMTTypes.SEMICOLON)) {
+            setError("; expected");
         }
     }
 

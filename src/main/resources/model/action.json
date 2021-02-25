@@ -29,7 +29,8 @@
         "node": "scalar"
       },
       "disabled": {
-        "node": "scalar"
+        "type": "boolean",
+        "node": "query"
       },
       "busy": {
         "node": "boolean"
