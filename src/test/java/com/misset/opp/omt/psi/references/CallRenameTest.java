@@ -26,7 +26,7 @@ public class CallRenameTest extends RenameTest {
     void renamesCallAndQueryName() {
         String content = "queries:|\n" +
                 "   DEFINE QUERY query => '';\n" +
-                "   DEFINE QUERY anotherQuery => <caret>query;";
+                "   DEFINE QUERY anotherQuery => q<caret>uery;";
 
         renameElement(content, "newQuery");
 
@@ -36,6 +36,7 @@ public class CallRenameTest extends RenameTest {
     }
 
     @Test
+        // known flaky test, no cause found yet
     void renamesCallAndImportedQueryName() {
         final PsiFile importedFile = addFile("imported.omt", "" +
                 "queries: |\n" +
@@ -45,7 +46,7 @@ public class CallRenameTest extends RenameTest {
                 "   ./imported.omt:\n" +
                 "   - query\n" +
                 "queries:|\n" +
-                "   DEFINE QUERY anotherQuery => <caret>query;";
+                "   DEFINE QUERY anotherQuery => q<caret>uery;";
 
         renameElement(content, "newQuery");
 
@@ -57,6 +58,24 @@ public class CallRenameTest extends RenameTest {
                 "   DEFINE QUERY anotherQuery => newQuery;", myFixture.getEditor().getDocument().getText());
         assertEquals("queries: |\n" +
                 "   DEFINE QUERY newQuery => '';", myFixture.getDocument(importedFile).getText());
+    }
+
+    @Test
+    void renamesCallAndModelItem() {
+        String content = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "\n" +
+                "    AndereActiviteit: !Activity\n" +
+                "        onStart: |\n" +
+                "            @Acti<caret>viteit();";
+
+        renameElement(content, "NieuweNaam");
+        assertEquals("model:\n" +
+                "    NieuweNaam: !Activity\n" +
+                "\n" +
+                "    AndereActiviteit: !Activity\n" +
+                "        onStart: |\n" +
+                "            @NieuweNaam();", myFixture.getEditor().getDocument().getText());
     }
 
 }

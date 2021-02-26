@@ -5,10 +5,19 @@ import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.TokenSet;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTDefineName;
+import com.misset.opp.omt.psi.OMTDefineQueryStatement;
+import com.misset.opp.omt.psi.OMTModelItemLabel;
+import com.misset.opp.omt.psi.OMTNamespacePrefix;
+import com.misset.opp.omt.psi.OMTPropertyLabel;
+import com.misset.opp.omt.psi.OMTTypes;
+import com.misset.opp.omt.psi.OMTVariable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * This method is also used by the refactor-rename dialog to determine the displayname and type
+ */
 public class OMTFindUsageProvider implements FindUsagesProvider {
     @Nullable
     @Override
@@ -53,9 +62,10 @@ public class OMTFindUsageProvider implements FindUsagesProvider {
                     "Query" : "Command";
         } else if (element instanceof OMTNamespacePrefix) {
             return "Prefix";
-        } else {
-            return "";
+        } else if (isModelItemPropertyLabel(element)) {
+            return getType(element.getParent());
         }
+        return "";
     }
 
     @NotNull
@@ -69,7 +79,14 @@ public class OMTFindUsageProvider implements FindUsagesProvider {
     public String getNodeText(@NotNull PsiElement element, boolean useFullName) {
         if (element instanceof OMTModelItemLabel) {
             return ((OMTModelItemLabel) element).getPropertyLabel().getName();
+        } else if (isModelItemPropertyLabel(element)) {
+            return getNodeText(element.getParent(), useFullName);
         }
         return element.getText();
+    }
+
+    private boolean isModelItemPropertyLabel(PsiElement element) {
+        return element instanceof OMTPropertyLabel &&
+                element.getParent() instanceof OMTModelItemLabel;
     }
 }

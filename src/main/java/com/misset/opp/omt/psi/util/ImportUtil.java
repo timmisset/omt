@@ -9,7 +9,13 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTElementFactory;
+import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTImport;
+import com.misset.opp.omt.psi.OMTImportBlock;
+import com.misset.opp.omt.psi.OMTMember;
+import com.misset.opp.omt.psi.OMTMemberList;
+import com.misset.opp.omt.psi.OMTMemberListItem;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 
 import java.io.File;
@@ -106,7 +112,7 @@ public class ImportUtil {
             return Optional.of(member);
         }
         VirtualFile importedFile = getImportedFile(omtImport);
-        if (importedFile != null) {
+        if (importedFile != null && !omtImport.getProject().isDisposed()) {
             PsiFile psiFile = getPsiManager(omtImport.getProject()).findFile(importedFile);
             if (psiFile instanceof OMTFile) {
                 OMTFile omtFile = (OMTFile) psiFile;

@@ -9,22 +9,27 @@ import com.misset.opp.omt.psi.OMTVariable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * The element is the element that is actually refactored:
+ * If a rename is triggered from a call, the element will be either the OMTDefineName or the OMTModelItemLabel etc.
+ * <p>
+ * The context is the leaf element that used to iniate the refactoring
+ * In the example above, that would be the call
+ */
 public class OMTRefactoringSupportProvider extends RefactoringSupportProvider {
 
     @Override
     public boolean isMemberInplaceRenameAvailable(@NotNull PsiElement element, @Nullable PsiElement context) {
-        return canBeRenamed(element);
+        return element instanceof OMTVariable ||
+                element instanceof OMTNamespacePrefix;
     }
 
     @Override
-    public boolean isAvailable(@NotNull PsiElement context) {
-        return canBeRenamed(context);
-    }
-
-    private boolean canBeRenamed(PsiElement element) {
+    public boolean isAvailable(@NotNull PsiElement element) {
         return element instanceof OMTVariable ||
                 element instanceof OMTNamespacePrefix ||
                 element instanceof OMTModelItemLabel ||
                 element instanceof OMTDefineName;
     }
+
 }

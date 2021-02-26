@@ -3,13 +3,10 @@ package com.misset.opp.omt.psi.impl.named;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReference;
 import com.misset.opp.omt.psi.OMTDefineName;
 import com.misset.opp.omt.psi.OMTElementFactory;
 import com.misset.opp.omt.psi.named.NamedMemberType;
-import com.misset.opp.omt.psi.references.DefinedReference;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public abstract class OMTDefineNameImpl extends MemberNamedElementImpl<OMTDefineName> implements OMTDefineName {
 
@@ -36,12 +33,6 @@ public abstract class OMTDefineNameImpl extends MemberNamedElementImpl<OMTDefine
   @NotNull
   public PsiElement getNameIdentifier() {
       return this;
-  }
-
-  @Nullable
-  @Override
-  public PsiReference getReference() {
-    return new DefinedReference(getPsi(), getTextRangeInParent());
   }
 
   @NotNull

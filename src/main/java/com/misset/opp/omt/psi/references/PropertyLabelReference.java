@@ -1,7 +1,11 @@
 package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiElementResolveResult;
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.PsiReferenceBase;
+import com.intellij.psi.ResolveResult;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPropertyLabel;
 import org.jetbrains.annotations.NotNull;
@@ -33,5 +37,10 @@ public class PropertyLabelReference extends PsiReferenceBase<OMTPropertyLabel> i
     public PsiElement resolve() {
         ResolveResult[] resolveResults = multiResolve(false);
         return resolveResults.length == 1 ? resolveResults[0].getElement() : null;
+    }
+
+    @Override
+    public boolean isReferenceTo(@NotNull PsiElement element) {
+        return super.isReferenceTo(element);
     }
 }
