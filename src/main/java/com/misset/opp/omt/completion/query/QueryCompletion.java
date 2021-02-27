@@ -51,6 +51,7 @@ public abstract class QueryCompletion extends RDFCompletion {
         }
         if (getQueryUtil().isPreviousStepAType(queryStep)) {
             setCurieSuggestion(element, RDFModelUtil.RDF_TYPE.asResource(), true, PREDICATE_REVERSE_PRIORITY);
+            setCurieSuggestion(element, RDFModelUtil.RDFS_SUBCLASS.asResource(), true, PREDICATE_REVERSE_PRIORITY);
         } else {
             List<Resource> previousStep = getQueryUtil().getPreviousStepResources(queryStep);
             getRDFModelUtil().listPredicatesForSubjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(queryStep, resource, false,
@@ -58,6 +59,7 @@ public abstract class QueryCompletion extends RDFCompletion {
             getRDFModelUtil().listPredicatesForObjectClass(previousStep).forEach((resource, relation) -> setCurieSuggestion(queryStep, resource, true,
                     PREDICATE_REVERSE_PRIORITY));
             setCurieSuggestion(element, RDFModelUtil.RDF_TYPE.asResource(), false, PREDICATE_FORWARD_PRIORITY);
+            setCurieSuggestion(element, RDFModelUtil.RDFS_SUBCLASS.asResource(), false, PREDICATE_FORWARD_PRIORITY);
         }
     }
 
