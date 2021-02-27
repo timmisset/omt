@@ -16,4 +16,8 @@ public interface OMTCurie extends OMTResolvableResource, OMTNamedElement {
 
     Resource getAsResource();
 
+    String getIri();
+
+    boolean isIri();
+
 }

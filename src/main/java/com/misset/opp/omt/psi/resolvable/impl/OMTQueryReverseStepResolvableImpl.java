@@ -28,19 +28,25 @@ public abstract class OMTQueryReverseStepResolvableImpl extends OMTQueryStepImpl
             return resources;
         }
         final RDFModelUtil rdfModelUtil = getRDFModelUtil();
-        if (rdfModelUtil.isTypePredicate(curieElement.getAsResource())) {
-            // For ^rdf:type, only resolve for the provided resources.
-            // make sure it is called on a type, not an instance:
+        final Resource asResource = curieElement.getAsResource();
+        if (rdfModelUtil.isTypePredicate(asResource)) {
             if (!getQueryUtil().isPreviousStepAType(this)) {
-                return new ArrayList<>();
+                return new ArrayList<>(); // can only call ^rdf:type on Type or Class
+            }
+        } else if (rdfModelUtil.isSubclassOfPredicate(asResource)) {
+            if (!getQueryUtil().isPreviousStepAType(this)) {
+                return new ArrayList<>(); // can only call ^rdfs:subClass on Type or Class
+            } else {
+                resources.addAll(getRDFModelUtil().allSubClasses(resources));
+                return resources;
             }
         } else {
             // If not ^rdf:type, also add the superClasses for all resources
             resources = rdfModelUtil.allSuperClasses(resources);
         }
         List<Resource> resolvedResources = resources.isEmpty() ?
-                rdfModelUtil.getPredicateSubjects(curieElement.getAsResource()) : // only by predicate
-                rdfModelUtil.listSubjectsWithPredicateObjectClass(curieElement.getAsResource(), resources);// by predicate and object
+                rdfModelUtil.getPredicateSubjects(asResource) : // only by predicate
+                rdfModelUtil.listSubjectsWithPredicateObjectClass(asResource, resources);// by predicate and object
         return filter ? filter(resolvedResources) : resolvedResources;
     }
 

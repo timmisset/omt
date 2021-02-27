@@ -7,6 +7,7 @@ import com.misset.opp.omt.psi.OMTCurieElement;
 import com.misset.opp.omt.psi.OMTElementFactory;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTPrefix;
+import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.named.OMTCurie;
 import com.misset.opp.omt.psi.references.CurieReference;
 import org.apache.jena.rdf.model.Model;
@@ -65,14 +66,25 @@ public abstract class OMTCurieElementImpl extends NameIdentifierOwnerImpl<OMTCur
     @Override
     @Nullable
     public Resource getAsResource() {
-        String resolvedIri = String.format("%s%s",
-                ((OMTFile) getContainingFile()).getPrefixIri(getPrefixName()),
-                getPrefix().getNextSibling().getText()
-        );
         Model ontologyModel = getProjectUtil().getOntologyModel();
         if (ontologyModel == null) {
             return null;
         }
-        return ontologyModel.getResource(resolvedIri);
+        return ontologyModel.getResource(getIri());
+    }
+
+    @Override
+    public String getIri() {
+        return isIri() ?
+                getText().replace("<", "").replace(">", "") :
+                String.format("%s%s",
+                        ((OMTFile) getContainingFile()).getPrefixIri(getPrefixName()),
+                        getPrefix().getNextSibling().getText()
+                );
+    }
+
+    @Override
+    public boolean isIri() {
+        return getFirstChild().getNode().getElementType() == OMTTypes.IRI;
     }
 }

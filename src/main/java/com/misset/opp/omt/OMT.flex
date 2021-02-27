@@ -6,7 +6,7 @@ import com.intellij.psi.tree.IElementType;
 import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.OMTIgnored;
 import com.intellij.psi.TokenType;
-import java.com.misset.opp.util.Stack;
+import java.util.Stack;
 
 %%
 
@@ -32,7 +32,7 @@ INTEGER=                        \-?([1-9][0-9]+|[0-9])
 DECIMAL=                        {INTEGER}\.[0-9]+
 BOOLEAN=                        "true"|"false"|"TRUE"|"FALSE"
 NULL=                           "null"
-GLOBAL_VARIABLE=                \$username|\$medewerkerGraph|\$offline|\$mockvalue[0-9]+
+GLOBAL_VARIABLE=                \$username|\$medewerkerGraph|\$offline|\$mockvalue[0-9]+|\$heeftPreviewRol
 
 LATIN_EXT_A=                    [\u0100-\u017F] // Zie: http://en.wikipedia.org/wiki/Latin_script_in_Unicode
 SYMBOL=                         ({ALPHA}|{DIGIT}|{LATIN_EXT_A}|[_@\-])+

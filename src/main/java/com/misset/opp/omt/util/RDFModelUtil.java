@@ -198,6 +198,9 @@ public class RDFModelUtil {
      * Returns the parent classes of this resource (if any)
      */
     public List<Resource> getClassLineage(Resource resource) {
+        if (resource == null) {
+            return Collections.emptyList();
+        }
         List<Resource> lineage = new ArrayList<>();
         lineage.add(resource);
         resource.listProperties(RDFS_SUBCLASS).toList()
@@ -441,6 +444,10 @@ public class RDFModelUtil {
 
     public boolean isTypePredicate(Resource resource) {
         return resource != null && resource.equals(RDF_TYPE);
+    }
+
+    public boolean isSubclassOfPredicate(Resource resource) {
+        return resource != null && resource.equals(RDFS_SUBCLASS);
     }
 
     @Nullable

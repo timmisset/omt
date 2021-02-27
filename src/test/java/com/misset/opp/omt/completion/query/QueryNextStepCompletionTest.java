@@ -58,9 +58,7 @@ class QueryNextStepCompletionTest extends OMTCompletionTestSuite {
     void nextQueryStepPartialReverse() {
         String content = "queries: |\n" +
                 "   DEFINE QUERY myQuery => /ont:ClassA / ^<caret>";
-        String completed = "queries: |\n" +
-                "   DEFINE QUERY myQuery => /ont:ClassA / ^rdf:type";
-        assertCompletionAutocompleted(withPrefixes(content), withPrefixes(completed));
+        assertCompletionContains(withPrefixes(content), "^rdf:type", "^rdfs:subClassOf");
     }
 
     @Test
@@ -78,18 +76,14 @@ class QueryNextStepCompletionTest extends OMTCompletionTestSuite {
     void nextQueryStepInsidePathPartial() {
         String content = "queries: |\n" +
                 "   DEFINE QUERY myQuery => /ont:ClassA / ^<caret> / ont:classProperty;";
-        String completed = "queries: |\n" +
-                "   DEFINE QUERY myQuery => /ont:ClassA / ^rdf:type / ont:classProperty;";
-        assertCompletionAutocompleted(withPrefixes(content), withPrefixes(completed));
+        assertCompletionContains(withPrefixes(content), "^rdf:type", "^rdfs:subClassOf");
     }
 
     @Test
     void nextQueryStepInsidePathPartial2() {
         String content = "queries: |\n" +
                 "   DEFINE QUERY myQuery => /ont:ClassA / ^rdf:<caret> / ont:classProperty;";
-        String completed = "queries: |\n" +
-                "   DEFINE QUERY myQuery => /ont:ClassA / ^rdf:type / ont:classProperty;";
-        assertCompletionAutocompleted(withPrefixes(content), withPrefixes(completed));
+        assertCompletionContains(withPrefixes(content), "^rdf:type", "^rdfs:subClassOf");
     }
 
     @Test
