@@ -117,7 +117,7 @@ namespaceIri ::=                            IRI                                 
                                                     mixin="com.misset.opp.omt.psi.impl.named.OMTNamespaceIriImpl"
                                                     implements="com.misset.opp.omt.psi.support.OMTNamedElement"
                                                 }
-curieElement ::=                            namespacePrefix NAMESPACE_MEMBER       {
+curieElement ::=                            (namespacePrefix NAMESPACE_MEMBER) | IRI      {
                                                 implements="com.misset.opp.omt.psi.named.OMTCurie"
                                                 mixin="com.misset.opp.omt.psi.resolvable.impl.OMTCurieElementResolvableImpl"
                                                 }
