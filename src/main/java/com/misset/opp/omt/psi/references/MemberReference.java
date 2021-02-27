@@ -1,9 +1,14 @@
 package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiElementResolveResult;
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.PsiReferenceBase;
+import com.intellij.psi.ResolveResult;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTImport;
+import com.misset.opp.omt.psi.OMTModelItemLabel;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,7 +45,11 @@ public abstract class MemberReference<T extends PsiElement> extends PsiReference
 
     @Override
     public boolean isReferenceTo(@NotNull PsiElement element) {
-        return isDeferredImportReference(element) || super.isReferenceTo(element);
+        final PsiElement declaringMember = resolve();
+        return declaringMember != null &&
+                (declaringMember.equals(element)
+                        || element.equals(isReferenceToTarget(declaringMember))
+                        || isDeferredImportReference(element));
     }
 
     private boolean isDeferredImportReference(PsiElement element) {
@@ -56,5 +65,30 @@ public abstract class MemberReference<T extends PsiElement> extends PsiReference
     public PsiElement resolve() {
         ResolveResult[] resolveResults = multiResolve(false);
         return resolveResults.length == 1 ? resolveResults[0].getElement() : null;
+    }
+
+    /**
+     * The declaring member is the element which is registered as the actual reference for the element.
+     * However, the isReferenceTo is used for renaming also in which case the nameIdentifier is used.
+     * <p>
+     * For example:
+     * When a rename is started from a call to a query, the reference resolved (declaring member) will return
+     * the OMTDefinedStatement but the nameIdentifier is the OMTDefineName which is the element provided
+     * for the isReferenceTo comparison
+     * <p>
+     * TODO:
+     * Check if this a design flaw in the named elements for this plugin or this is simply how it should work
+     *
+     * @param declaringMember
+     * @return
+     */
+    protected PsiElement isReferenceToTarget(PsiElement declaringMember) {
+        if (declaringMember instanceof OMTModelItemLabel) {
+            return ((OMTModelItemLabel) declaringMember).getPropertyLabel();
+        }
+        if (declaringMember instanceof OMTDefinedStatement) {
+            return ((OMTDefinedStatement) declaringMember).getDefineName();
+        }
+        return null;
     }
 }

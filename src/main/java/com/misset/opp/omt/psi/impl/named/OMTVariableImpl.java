@@ -4,6 +4,8 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import com.misset.opp.omt.psi.OMTElementFactory;
 import com.misset.opp.omt.psi.OMTGenericBlock;
 import com.misset.opp.omt.psi.OMTScalarValue;
@@ -49,8 +51,12 @@ public abstract class OMTVariableImpl extends NameIdentifierOwnerImpl<OMTVariabl
         return this;
     }
 
+    private int isDeclaredValue = -1;
     public boolean isDeclaredVariable() {
-        return getVariableUtil().isDeclaredVariable(getPsi());
+        if (isDeclaredValue == -1) {
+            isDeclaredValue = getVariableUtil().isDeclaredVariable(getPsi()) ? 1 : 0;
+        }
+        return isDeclaredValue == 1;
     }
 
     public boolean isGlobalVariable() {
@@ -114,18 +120,15 @@ public abstract class OMTVariableImpl extends NameIdentifierOwnerImpl<OMTVariabl
     @Nullable
     @Override
     public PsiReference getReference() {
-        return toReference((OMTVariable) getNode().getPsi());
+        return isDeclaredVariable() ?
+                null :
+                new VariableReference(getPsi(), TextRange.allOf(getText()));
     }
 
-    @NotNull
     @Override
-    public PsiReference[] getReferences() {
-        return new PsiReference[]{toReference((OMTVariable) getNode().getPsi())};
+    @NotNull
+    // A variable and its usage can only exist in the same file
+    public SearchScope getUseScope() {
+        return GlobalSearchScope.fileScope(getContainingFile());
     }
-
-    private PsiReference toReference(OMTVariable variable) {
-        TextRange property = new TextRange(0, variable.getText().length());
-        return new VariableReference(variable, property);
-    }
-
 }
