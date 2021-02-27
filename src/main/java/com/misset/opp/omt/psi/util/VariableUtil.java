@@ -53,6 +53,7 @@ public class VariableUtil {
     private static final String BASE = "base";
     private static final String BINDINGS = "bindings";
     private static final String NAME = "name";
+    private static final String ACTIONS = "actions";
 
     private static final String GLOBAL_VARIABLE_USERNAME = "$username";
     private static final String GLOBAL_VARIABLE_MEDEWERKER_GRAPH = "$medewerkerGraph";
@@ -176,7 +177,7 @@ public class VariableUtil {
             return true;
         }
         // OMT defined parameters
-        final List<String> validDefinedEntries = Arrays.asList(VARIABLES, PARAMS, BINDINGS, BASE);
+        final List<String> validDefinedEntries = Arrays.asList(VARIABLES, PARAMS, BINDINGS, BASE, ACTIONS);
         final List<String> validEntryBlockLabels = Arrays.asList(VARIABLES, PARAMS, BINDINGS, BASE, NAME);
         String modelItemEntryLabel = getModelUtil().getModelItemEntryLabel(variable);
         String entryBlockLabel = getModelUtil().getEntryBlockLabel(variable);
