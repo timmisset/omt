@@ -54,9 +54,10 @@ public class AbstractCodeInspection extends LocalInspectionTool {
      *
      * @return
      */
-    protected boolean isMochaFile(ProblemsHolder holder) {
+    protected boolean isTestFile(ProblemsHolder holder) {
         final VirtualFile virtualFile = holder.getFile().getVirtualFile();
-        return virtualFile.getPath().endsWith("/mocha/" + virtualFile.getName());
+        return virtualFile.getPath().endsWith("/mocha/" + virtualFile.getName()) ||
+                virtualFile.getName().endsWith(".spec.omt");
     }
 
     protected void validateReference(PsiElement element, String errorMessage) {

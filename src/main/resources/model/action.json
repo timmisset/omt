@@ -23,6 +23,7 @@
         "node": "scalar"
       },
       "params": {
+        "type": "ParamDef",
         "node": "sequence"
       },
       "precondition": {

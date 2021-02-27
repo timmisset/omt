@@ -47,7 +47,7 @@ public class OMTCodeInspectionUnused extends AbstractCodeInspection {
     @Override
     public @NotNull PsiElementVisitor buildVisitor(@NotNull ProblemsHolder holder, boolean isOnTheFly) {
         setHolder(holder);
-        if (isMochaFile(holder)) {
+        if (isTestFile(holder)) {
             return PsiElementVisitor.EMPTY_VISITOR;
         }
 
