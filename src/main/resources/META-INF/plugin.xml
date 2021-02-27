@@ -45,6 +45,11 @@
                                  displayName="OMT / ODT Settings"
                                  instance="com.misset.opp.omt.settings.OMTConfigurable">
         </applicationConfigurable>
+        <!--        Code Inspection -->
+        <localInspection language="OMT"
+                         displayName="OMT unused declarations" groupPath="OMT"
+                         groupName="Redundancy" enabledByDefault="true"
+                         implementationClass="com.misset.opp.omt.inspection.OMTCodeInspectionUnused"/>
         <applicationService serviceImplementation="com.misset.opp.omt.settings.OMTSettingsState"/>
 
         <!--        TTL         -->
