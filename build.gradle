@@ -46,10 +46,12 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-        <strong>3.2.2</strong><br />
+        <strong>3.3</strong><br />
         Improved reference scoping for better performance<br />
         Added \$heeftPreviewRol as global variable<br />
         Fixed some issues with resolving variables from destructed declarations<br />
+        Support for ^rdfs:subClassOf in query resolving<br />
+        Support for full iri usage in query steps
       """
 }
 tasks{
