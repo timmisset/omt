@@ -181,7 +181,8 @@ public class VariableUtil {
         String modelItemEntryLabel = getModelUtil().getModelItemEntryLabel(variable);
         String entryBlockLabel = getModelUtil().getEntryBlockLabel(variable);
         return validDefinedEntries.contains(modelItemEntryLabel) &&
-                validEntryBlockLabels.contains(entryBlockLabel);
+                (modelItemEntryLabel.equals(BINDINGS) ||
+                        validEntryBlockLabels.contains(entryBlockLabel));
     }
 
     public List<Resource> getTypeSuggestions(OMTDefineParam defineParam, OMTVariable variableToAnnotate) {
