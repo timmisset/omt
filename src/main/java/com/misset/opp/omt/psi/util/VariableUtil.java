@@ -177,9 +177,11 @@ public class VariableUtil {
         }
         // OMT defined parameters
         final List<String> validDefinedEntries = Arrays.asList(VARIABLES, PARAMS, BINDINGS, BASE);
+        final List<String> validEntryBlockLabels = Arrays.asList(VARIABLES, PARAMS, BINDINGS, BASE, NAME);
         String modelItemEntryLabel = getModelUtil().getModelItemEntryLabel(variable);
         String entryBlockLabel = getModelUtil().getEntryBlockLabel(variable);
-        return validDefinedEntries.contains(modelItemEntryLabel) || validDefinedEntries.contains(entryBlockLabel);
+        return validDefinedEntries.contains(modelItemEntryLabel) &&
+                validEntryBlockLabels.contains(entryBlockLabel);
 
     }
 
