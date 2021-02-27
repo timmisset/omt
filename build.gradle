@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '3.2.1'
+version '3.2.2'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -46,9 +46,8 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-        <strong>3.2.1</strong><br />
-        Fixed the refactor-rename of model-items from their references<br />
-        Fixed display names for the refactor-rename dialog<br/>
+        <strong>3.2.2</strong><br />
+        Improved reference scoping for better performance<br />
       """
 }
 tasks{
