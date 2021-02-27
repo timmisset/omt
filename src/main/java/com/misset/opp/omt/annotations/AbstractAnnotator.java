@@ -7,8 +7,6 @@ import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.searches.ReferencesSearch;
-import com.misset.opp.omt.psi.OMTFile;
-import com.misset.opp.omt.psi.OMTModelItemLabel;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.List;
@@ -83,11 +81,7 @@ public abstract class AbstractAnnotator {
     }
 
     protected void annotateUsage(PsiElement element, Consumer<AnnotationBuilder> builder) {
-        if (!ReferencesSearch.search(element)
-                .anyMatch(psiReference ->
-                        (psiReference.getElement().getContainingFile() instanceof OMTFile ||
-                                element instanceof OMTModelItemLabel) &&
-                                element != psiReference.getElement())) {
+        if (ReferencesSearch.search(element).findAll().isEmpty()) {
             String message = String.format("%s is never used", element.getText());
             final AnnotationBuilder annotationBuilder =
                     holder.newAnnotation(HighlightSeverity.WARNING, message)

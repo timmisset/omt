@@ -163,7 +163,7 @@ public class VariableUtil {
     }
 
     public boolean isDeclaredVariable(OMTVariable variable) {
-        if (PsiTreeUtil.findFirstParent(variable, parent -> parent instanceof OMTVariableValue) != null) {
+        if (PsiTreeUtil.getParentOfType(variable, OMTVariableValue.class) != null) {
             return false;
         }
 

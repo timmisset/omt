@@ -45,4 +45,9 @@ public class NamespacePrefixReference extends PsiReferenceBase<OMTNamespacePrefi
     public PsiElement handleElementRename(@NotNull String newElementName) {
         return myElement.setName(newElementName);
     }
+
+    @Override
+    public boolean isReferenceTo(@NotNull PsiElement element) {
+        return super.isReferenceTo(element);
+    }
 }

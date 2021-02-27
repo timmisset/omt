@@ -9,6 +9,7 @@ import com.misset.opp.omt.psi.OMTDefineName;
 import com.misset.opp.omt.psi.OMTDefineQueryStatement;
 import com.misset.opp.omt.psi.OMTModelItemLabel;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
+import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.OMTPropertyLabel;
 import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.OMTVariable;
@@ -38,10 +39,20 @@ public class OMTFindUsageProvider implements FindUsagesProvider {
 
     @Override
     public boolean canFindUsagesFor(@NotNull PsiElement psiElement) {
-        return (psiElement instanceof OMTVariable) ||
-                (psiElement instanceof OMTModelItemLabel) ||
-                (psiElement instanceof OMTDefineName) ||
-                (psiElement instanceof OMTNamespacePrefix);
+        return variableWithUsage(psiElement) ||
+                psiElement instanceof OMTModelItemLabel ||
+                psiElement instanceof OMTDefineName ||
+                namespacePrefixWithUsage(psiElement);
+    }
+
+    private boolean variableWithUsage(PsiElement element) {
+        return element instanceof OMTVariable &&
+                ((OMTVariable) element).isDeclaredVariable();
+    }
+
+    private boolean namespacePrefixWithUsage(PsiElement element) {
+        return element instanceof OMTNamespacePrefix &&
+                element.getParent() instanceof OMTPrefix;
     }
 
     @Nullable
