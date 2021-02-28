@@ -92,7 +92,7 @@ public class VariableUtil {
         List<OMTVariable> declaredVariables = getDeclaredVariables(variable);
         return declaredVariables.stream()
                 .filter(declaredVariable -> declaredVariable.getName().equals(variable.getName()))
-                .findFirst();
+                .min((o1, o2) -> getScriptUtil().isBefore(o1, o2) ? 1 : 0);
     }
 
     private Optional<OMTDefineParam> getDefinedParameters(PsiElement element) {

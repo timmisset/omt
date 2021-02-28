@@ -55,6 +55,7 @@ patchPluginXml {
         Fixed type attribute for destructed notations<br />
         Added True/False (on top of false, FALSE, true, TRUE) as valid YAML boolean values<br />
         Fixed bug when a binding type (sync, input, output) was considered the class type<br />
+        Fixed variable referencing when redefined in a script<br />
       """
 }
 tasks{

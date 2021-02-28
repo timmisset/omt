@@ -169,11 +169,11 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         ApplicationManager.getApplication().invokeAndWait(() -> getProjectUtil().loadOntologyModel(getProject(), false));
     }
 
-    protected void setBuiltinOperators() {
+    private void setBuiltinOperators() {
         myFixture.copyFileToProject(new File("src/test/resources/builtinOperators.ts").getAbsolutePath(), "builtinOperators.ts");
     }
 
-    protected void setBuiltinCommands() {
+    private void setBuiltinCommands() {
         myFixture.copyFileToProject(new File("src/test/resources/builtinCommands.ts").getAbsolutePath(), "builtinCommands.ts");
     }
 
