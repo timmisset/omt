@@ -49,9 +49,11 @@ patchPluginXml {
         <strong>3.3</strong><br />
         Improved reference scoping for better performance<br />
         Added \$heeftPreviewRol as global variable<br />
-        Fixed some issues with resolving variables from destructed declarations<br />
+        Fixed some issues with resolving variables from destructed notations<br />
         Support for ^rdfs:subClassOf in query resolving<br />
-        Support for full iri usage in query steps
+        Support for full iri usage in query steps<br />
+        Fixed type attribute for destructed notations<br />
+        Added True/False (on top of false, FALSE, true, TRUE) as valid YAML boolean values<br />
       """
 }
 tasks{

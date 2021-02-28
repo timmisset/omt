@@ -12,7 +12,7 @@
     "attributes": {
       "type": {
         "type": "string",
-        "node": "scalar",
+        "node": "type",
         "required": true
       },
       "params": {
