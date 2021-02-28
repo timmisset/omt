@@ -20,7 +20,7 @@
       "required": false
     },
     "value": {
-      "type": "string",
+      "node": "scalar",
       "required": false
     },
     "onChange": {

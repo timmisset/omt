@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '3.2.2'
+version '3.3'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -49,11 +49,12 @@ patchPluginXml {
         <strong>3.3</strong><br />
         Improved reference scoping for better performance<br />
         Added \$heeftPreviewRol as global variable<br />
-        Fixed some issues with resolving variables from destructed notations<br />
+        Fixed resolving variables from destructed notation in actions<br />
         Support for ^rdfs:subClassOf in query resolving<br />
         Support for full iri usage in query steps<br />
         Fixed type attribute for destructed notations<br />
         Added True/False (on top of false, FALSE, true, TRUE) as valid YAML boolean values<br />
+        Fixed bug when a binding type (sync, input, output) was considered the class type<br />
       """
 }
 tasks{

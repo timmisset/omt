@@ -295,7 +295,7 @@ public class VariableUtil {
                 return getType((OMTDefineParam) variable.getParent(), variable);
             } else if (variable.getParent() instanceof OMTVariableAssignment) {
                 return getType((OMTVariableAssignment) variable.getParent());
-            } else if (Arrays.asList(VARIABLES, PARAMS, BINDINGS).contains(getModelUtil().getEntryBlockLabel(variable))) {
+            } else if (Arrays.asList(VARIABLES, PARAMS).contains(getModelUtil().getEntryBlockLabel(variable))) {
                 return getType(variable, getModelUtil().getEntryBlockLabel(variable));
             }
         } else {
@@ -323,8 +323,12 @@ public class VariableUtil {
     }
 
     public List<Resource> getType(OMTParameterWithType parameterWithType) {
-        if (parameterWithType.getParameterType() == null) {
-            return new ArrayList<>();
+        // make sure the parameter with type is actually considered a type
+        final JsonObject json = getModelUtil().getJson(parameterWithType);
+        if (parameterWithType.getParameterType() == null ||
+                json.has("name") &&
+                        !json.get("name").getAsString().equals("Param")) {
+            return Collections.emptyList();
         }
         return Collections.singletonList(parameterWithType.getParameterType().getAsResource());
     }
