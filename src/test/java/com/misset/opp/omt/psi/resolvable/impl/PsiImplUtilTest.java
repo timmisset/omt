@@ -26,9 +26,7 @@ class ResolvableTest extends OMTTestSuite {
     public void setUp() throws Exception {
         super.setName("ResolvableTest");
         super.setUp();
-
-        setBuiltinOperators();
-        setOntologyModel();
+        setBuiltinAndModel();
     }
 
     @AfterEach
