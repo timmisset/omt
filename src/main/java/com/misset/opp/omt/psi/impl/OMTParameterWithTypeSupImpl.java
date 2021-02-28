@@ -18,6 +18,7 @@ public abstract class OMTParameterWithTypeSupImpl extends ASTWrapperPsiElement i
 
     @Override
     public List<Resource> getType() {
+
         return getVariableUtil().getType(getNode().getPsi(OMTParameterWithType.class));
     }
 }

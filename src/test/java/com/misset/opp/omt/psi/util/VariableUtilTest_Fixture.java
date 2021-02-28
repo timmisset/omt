@@ -56,6 +56,14 @@ class VariableUtilTest_Fixture extends OMTTestSuite {
     }
 
     @Test
+    void dontGetTypeFromBinding() {
+        assertEmpty(getVariableType("model:\n" +
+                "   component: !Component\n" +
+                "       bindings:\n" +
+                "           parameter: $param1 (sync)"));
+    }
+
+    @Test
     void getTypeVariableAssignment() {
         assertContainsElements(getVariableType("model:\n" +
                 "   activiteit: !Activity\n" +
