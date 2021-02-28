@@ -76,6 +76,7 @@ public class MemberAnnotator extends AbstractAnnotator {
         if (resolved == null) {
             if (annotateAsBuiltInMember(call)) return;
             if (annotateAsLocalCommand(call)) return;
+            if (annotateAsType(call)) return;
 
             // do not error on module files
             // TODO: create specific handler for Module files
@@ -93,7 +94,13 @@ public class MemberAnnotator extends AbstractAnnotator {
         } else {
             annotateReference(resolved, call);
         }
+    }
 
+    private boolean annotateAsType(OMTCall call) {
+        final JsonObject json = getModelUtil().getJson(call);
+
+        return json != null && json.get("node") != null &&
+                json.get("node").getAsString().equals("type");
     }
 
     private boolean annotateAsLocalCommand(OMTCall call) {

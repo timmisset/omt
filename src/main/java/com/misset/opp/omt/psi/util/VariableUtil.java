@@ -26,6 +26,7 @@ import com.misset.opp.omt.psi.OMTVariableValue;
 import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTQueryReverseStepImpl;
 import com.misset.opp.omt.psi.named.OMTCall;
+import com.misset.opp.omt.psi.named.OMTVariableNamedElement;
 import com.misset.opp.omt.psi.support.BuiltInType;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
@@ -121,12 +122,11 @@ public class VariableUtil {
         final List<PsiElement> blocks = PsiTreeUtil.collectParents(element, OMTBlock.class, false, parent -> parent == omtModelItemBlock);
         blocks.add(omtModelItemBlock);
 
-        final List<String> entryLabels = Arrays.asList(PARAMS, VARIABLES, BASE, BINDINGS);
+        // return all the accessible declared variables by moving up the tree
+        // determining if a variable is declared or usage is determined by position in the model
         blocks.forEach(block -> variables.addAll(
                 PsiTreeUtil.findChildrenOfType(block, OMTVariable.class).stream()
-                        .filter(variable -> variable.isDeclaredVariable() &&
-                                (entryLabels.contains(getModelUtil().getEntryBlockLabel(variable)) ||
-                                        entryLabels.contains(getModelUtil().getModelItemEntryLabel(variable))))
+                        .filter(OMTVariableNamedElement::isDeclaredVariable)
                         .collect(Collectors.toList())
         ));
         return variables.stream().distinct().collect(Collectors.toList());
