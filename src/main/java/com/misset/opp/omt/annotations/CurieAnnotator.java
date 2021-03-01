@@ -26,7 +26,8 @@ public class CurieAnnotator extends AbstractAnnotator {
 
     private void annotate(OMTNamespacePrefix namespacePrefix) {
         if (namespacePrefix.getParent() instanceof OMTPrefix) {
-            annotateUsage(namespacePrefix);
+            //            annotateUsage(namespacePrefix);
+            // do nothing, moved to code inspection
         } else {
             validateReference(namespacePrefix, "Unknown prefix",
                     annotationBuilder -> getProjectUtil().getKnownPrefixes(namespacePrefix.getName())
