@@ -11,6 +11,7 @@
     "attributes": {
       "value": {
         "node": "scalar",
+        "type": "query",
         "required": false
       },
       "query": {

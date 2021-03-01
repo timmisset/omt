@@ -79,4 +79,28 @@ class ScriptSyntaxTest extends OMTAnnotationTest {
         final List<HighlightInfo> highlighting = myFixture.doHighlighting(HighlightSeverity.WARNING);
         assertTrue(highlighting.stream().anyMatch(highlightInfo -> highlightInfo.getDescription().equals("Unexpected character")));
     }
+
+    @Test
+    void testScriptQueryTypeShouldNotEndWithSemicolon() {
+        String content = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        payload:\n" +
+                "            payloadItem:\n" +
+                "                value: |\n" +
+                "                    'test';";
+        myFixture.configureByText(getFileName(), withPrefixes(content));
+        assertHasError("Query entry should not end with semicolon");
+    }
+
+    @Test
+    void testScriptQueryTypeShouldNotEndWithSemicolonPasses() {
+        String content = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        payload:\n" +
+                "            payloadItem:\n" +
+                "                value: |\n" +
+                "                    'test'";
+        myFixture.configureByText(getFileName(), withPrefixes(content));
+        assertNoErrors();
+    }
 }

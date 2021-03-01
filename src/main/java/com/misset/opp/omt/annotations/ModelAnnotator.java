@@ -58,7 +58,7 @@ public class ModelAnnotator extends AbstractAnnotator {
     private void annotateScalarValue(OMTScalarValue scalarValue) {
         final List<Resource> resources = scalarValue.resolveToResource();
         final JsonObject jsonAttributes = getModelUtil().getJsonAtElementLevel(scalarValue);
-        if (!resources.isEmpty() && jsonAttributes.has("type")) {
+        if (!resources.isEmpty() && jsonAttributes.has("type") && !jsonAttributes.get("type").getAsString().equals("query")) {
             List<Resource> acceptableTypes = getRDFModelUtil().getPrimitiveTypeAsResourceList(jsonAttributes.get("type").getAsString());
             final boolean validInput = getRDFModelUtil().validateType(acceptableTypes, resources);
             if (!validInput) {
