@@ -85,6 +85,8 @@ public abstract class OMTCurieElementImpl extends NameIdentifierOwnerImpl<OMTCur
 
     @Override
     public boolean isIri() {
-        return getFirstChild().getNode().getElementType() == OMTTypes.IRI;
+        return
+                getFirstChild() != null &&
+                        getFirstChild().getNode().getElementType() == OMTTypes.IRI;
     }
 }
