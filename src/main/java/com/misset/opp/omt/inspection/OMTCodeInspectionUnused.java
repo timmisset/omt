@@ -51,10 +51,10 @@ public class OMTCodeInspectionUnused extends AbstractCodeInspection {
             private void inspectPrefix(OMTNamespacePrefix namespacePrefix) {
                 if (isUsed(namespacePrefix)) return;
                 registerNeverUsed(namespacePrefix,
-                        getRemoveQuickFix(PsiTreeUtil.getParentOfType(namespacePrefix, OMTPrefix.class)));
+                        getRemoveQuickFix((OMTPrefix) namespacePrefix.getParent()));
             }
             private void inspectVariable(OMTVariable variable) {
-                if (!variable.isDeclaredVariable() || isUsed(variable) || variable.isIgnoredVariable()) return;
+                if (!variable.isDeclaredVariable() || variable.isIgnoredVariable() || isUsed(variable)) return;
                 if (variable.getParent() instanceof OMTVariableAssignment) {
                     if (PsiTreeUtil.getNextSiblingOfType(variable, OMTVariable.class) != null) {
                         // VAR $unused, $used = ... => should be renamed to VAR $_, $used = ...
