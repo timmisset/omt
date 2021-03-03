@@ -1,22 +1,25 @@
-package com.misset.opp.omt.completion.model;
+package com.misset.opp.omt.completion;
 
-import com.misset.opp.omt.completion.OMTCompletionTestSuite;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
+import java.util.Arrays;
 import java.util.List;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ModelCompletionTest extends OMTCompletionTestSuite {
+    private static final List<String> ALL_MODEL_ITEM_TYPES = Arrays.asList("!Activity", "!Component", "!Procedure", "!StandaloneQuery", "!Ontology");
 
-    @BeforeEach
+    @BeforeAll
     @Override
     protected void setUp() throws Exception {
         super.setName("ModelCompletionTest");
         super.setUp();
     }
 
-    @AfterEach
+    @AfterAll
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
@@ -121,6 +124,118 @@ class ModelCompletionTest extends OMTCompletionTestSuite {
         assertContainsElements(completionLookupElements, "value:", "onChange:");
         assertDoesntContain(completionLookupElements, "name:");
         assertCompletionNOTContainsBuiltinOperators(completionLookupElements);
+    }
+
+    @Test
+    void commandBlockStart() {
+        String content = "commands: |\n" +
+                "   <caret>";
+        assertCompletionContains(content, "DEFINE COMMAND yourCommandName => { RETURN true; }");
+    }
+
+    @Test
+    void commandBlockAfterCommand() {
+        String content = "commands: |\n" +
+                "   DEFINE COMMAND yourCommandName => { RETURN true; }\n" +
+                "   <caret>";
+        assertCompletionContains(content, "DEFINE COMMAND yourCommandName => { RETURN true; }");
+    }
+
+    @Test
+    void modelItemTypesWithoutFlag() {
+        String content = "model:\n" +
+                "   mijnActiviteit: <caret>";
+        assertCompletionSameContents(content, ALL_MODEL_ITEM_TYPES);
+    }
+
+    @Test
+    void modelItemTypesWithExistingFlag() {
+        String content = "model:\n" +
+                "   mijnActiviteit: !<caret>";
+        assertCompletionSameContents(content, ALL_MODEL_ITEM_TYPES);
+    }
+
+    @Test
+    void modelItemTypesWithPartialAutoCompletes() {
+        String content = "model:\n" +
+                "   mijnActiviteit: !Act<caret>";
+        assertCompletionAutocompleted(content, "model:\n" +
+                "   mijnActiviteit: !Activity");
+    }
+
+    @Test
+    void modelItemTypesWithExistingTypeCaretAtFlag() {
+        String content = "model:\n" +
+                "   mijnActiviteit: !<caret>Activity";
+        assertCompletionSameContents(content, ALL_MODEL_ITEM_TYPES);
+    }
+
+    @Test
+    void testNewDocument() {
+        setReasons();
+        String content = "<caret>";
+        final List<String> completionLookupElements = getCompletionLookupElements(content);
+        assertContainsElements(completionLookupElements, "queries:", "commands:", "moduleName:", "model:");
+    }
+
+    @Test
+    void testFilterExisting() {
+        setReasons();
+        String content = "queries: |\n" +
+                "   DEFINE QUERY query => '';\n" +
+                "\n" +
+                "<caret>";
+        final List<String> completionLookupElements = getCompletionLookupElements(content);
+        assertContainsElements(completionLookupElements, "commands:", "moduleName:", "model:");
+    }
+
+    @Test
+    void testModule() {
+        setReasons();
+        String content = "moduleName: Mijn module\n" +
+                "\n" +
+                "<caret>";
+        final List<String> completionLookupElements = getCompletionLookupElements(content);
+        assertContainsElements(completionLookupElements, "commands:", "prefixes:");
+        assertDoesntContain(completionLookupElements, "model:");
+    }
+
+    @Test
+    void testModel() {
+        setReasons();
+        String content = "<caret>\n" +
+                "\n" +
+                "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       title: Mijn titel";
+        final List<String> completionLookupElements = getCompletionLookupElements(content);
+        assertContainsElements(completionLookupElements, "commands:", "prefixes:");
+        assertDoesntContain(completionLookupElements, "module:");
+    }
+
+    @Test
+    void queryBlockStart() {
+        String content = "queries: |\n" +
+                "   <caret>";
+        assertCompletionContains(content, "DEFINE QUERY yourQueryName => 'Hello world';");
+    }
+
+    @Test
+    void queryBlockAfterQuery() {
+        String content = "queries: |\n" +
+                "   DEFINE QUERY yourQueryName => 'test';\n" +
+                "   <caret>";
+        assertCompletionContains(content, "DEFINE QUERY yourQueryName => 'Hello world';");
+    }
+
+    @Test
+    void modelReasonProperty() {
+        setReasons();
+        String content = "model:\n" +
+                "   mijnActiviteit: !Activity\n" +
+                "       reason: <caret>";
+        final List<String> completionLookupElements = getCompletionLookupElements(content);
+        assertContainsElements(completionLookupElements, "Naam", "Naam2");
     }
 }
 

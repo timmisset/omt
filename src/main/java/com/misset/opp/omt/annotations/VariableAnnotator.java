@@ -4,7 +4,6 @@ import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.intentions.variables.RenameVariableIntention;
 import com.misset.opp.omt.psi.OMTParameterWithType;
 import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.psi.OMTVariableAssignment;
@@ -36,14 +35,6 @@ public class VariableAnnotator extends AbstractAnnotator {
     }
 
     private void annotateDeclaredVariable(@NotNull final OMTVariable variable) {
-        // check that atleast 1 variable is using the declaration:
-        annotateUsage(variable, annotationBuilder ->
-        {
-            if (variable.getParent() instanceof OMTVariableAssignment &&
-                    PsiTreeUtil.getNextSiblingOfType(variable, OMTVariable.class) != null) {
-                annotationBuilder.withFix(new RenameVariableIntention().getRenameVariableIntention(variable, "$_"));
-            }
-        });
         if (variable.isReadOnly() && variable.getDefaultValue() == null) {
             setError("Readonly variable should have a value");
         }

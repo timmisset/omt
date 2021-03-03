@@ -13,7 +13,43 @@ import com.misset.opp.omt.psi.OMTQueryPath;
 import com.misset.opp.omt.psi.OMTTypes;
 import org.jetbrains.annotations.NotNull;
 
-import static com.misset.opp.omt.psi.OMTTypes.*;
+import static com.misset.opp.omt.psi.OMTTypes.ADD_TO_COLLECTION;
+import static com.misset.opp.omt.psi.OMTTypes.ASSIGNMENT_STATEMENT;
+import static com.misset.opp.omt.psi.OMTTypes.BLOCK;
+import static com.misset.opp.omt.psi.OMTTypes.BLOCK_ENTRY;
+import static com.misset.opp.omt.psi.OMTTypes.BOOLEAN_STATEMENT;
+import static com.misset.opp.omt.psi.OMTTypes.COMMAND_CALL;
+import static com.misset.opp.omt.psi.OMTTypes.CURIE_ELEMENT;
+import static com.misset.opp.omt.psi.OMTTypes.DEFINE_COMMAND_STATEMENT;
+import static com.misset.opp.omt.psi.OMTTypes.DEFINE_NAME;
+import static com.misset.opp.omt.psi.OMTTypes.DEFINE_PARAM;
+import static com.misset.opp.omt.psi.OMTTypes.DEFINE_QUERY_STATEMENT;
+import static com.misset.opp.omt.psi.OMTTypes.EQUATION_STATEMENT;
+import static com.misset.opp.omt.psi.OMTTypes.GENERIC_BLOCK;
+import static com.misset.opp.omt.psi.OMTTypes.IF_BLOCK;
+import static com.misset.opp.omt.psi.OMTTypes.IMPORT_SOURCE;
+import static com.misset.opp.omt.psi.OMTTypes.INDENTED_BLOCK;
+import static com.misset.opp.omt.psi.OMTTypes.MEMBER;
+import static com.misset.opp.omt.psi.OMTTypes.MEMBER_LIST_ITEM;
+import static com.misset.opp.omt.psi.OMTTypes.MODEL_ITEM_LABEL;
+import static com.misset.opp.omt.psi.OMTTypes.MODEL_ITEM_TYPE;
+import static com.misset.opp.omt.psi.OMTTypes.NAMESPACE_PREFIX;
+import static com.misset.opp.omt.psi.OMTTypes.OPERATOR_CALL;
+import static com.misset.opp.omt.psi.OMTTypes.PARAMETER_TYPE;
+import static com.misset.opp.omt.psi.OMTTypes.PARAMETER_WITH_TYPE;
+import static com.misset.opp.omt.psi.OMTTypes.QUERY_REVERSE_STEP;
+import static com.misset.opp.omt.psi.OMTTypes.QUERY_STEP;
+import static com.misset.opp.omt.psi.OMTTypes.REMOVE_FROM_COLLECTION;
+import static com.misset.opp.omt.psi.OMTTypes.ROOT_BLOCK;
+import static com.misset.opp.omt.psi.OMTTypes.SCALAR_VALUE;
+import static com.misset.opp.omt.psi.OMTTypes.SCRIPT_CONTENT;
+import static com.misset.opp.omt.psi.OMTTypes.SCRIPT_LINE;
+import static com.misset.opp.omt.psi.OMTTypes.SEQUENCE_ITEM;
+import static com.misset.opp.omt.psi.OMTTypes.SIGNATURE;
+import static com.misset.opp.omt.psi.OMTTypes.SIGNATURE_ARGUMENT;
+import static com.misset.opp.omt.psi.OMTTypes.SPECIFIC_BLOCK;
+import static com.misset.opp.omt.psi.OMTTypes.VARIABLE;
+import static com.misset.opp.omt.psi.OMTTypes.VARIABLE_ASSIGNMENT;
 
 public class OMTAnnotator implements Annotator {
 
@@ -25,7 +61,7 @@ public class OMTAnnotator implements Annotator {
             IMPORT_SOURCE, MEMBER
     );
     private static final TokenSet COLLECTION_ANNOTATIONS = TokenSet.create(
-            MEMBER_LIST_ITEM, SEQUENCE_ITEM, BLOCK_ENTRY, GENERIC_BLOCK, SPECIFIC_BLOCK, IMPORT_SOURCE
+            MEMBER_LIST_ITEM, SEQUENCE_ITEM, BLOCK_ENTRY, GENERIC_BLOCK, SPECIFIC_BLOCK, IMPORT_SOURCE, DEFINE_COMMAND_STATEMENT, DEFINE_QUERY_STATEMENT
     );
     private static final TokenSet VARIABLE_ANNOTATIONS = TokenSet.create(
             VARIABLE, VARIABLE_ASSIGNMENT

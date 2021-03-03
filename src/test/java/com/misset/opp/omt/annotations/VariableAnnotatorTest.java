@@ -1,19 +1,16 @@
 package com.misset.opp.omt.annotations;
 
-import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTParameterWithType;
 import com.misset.opp.omt.psi.OMTVariable;
-import com.misset.opp.omt.psi.OMTVariableAssignment;
 import com.misset.opp.omt.psi.util.ModelUtil;
 import com.misset.opp.omt.psi.util.VariableUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -21,7 +18,11 @@ import org.mockito.MockitoAnnotations;
 import java.util.HashMap;
 
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 class VariableAnnotatorTest extends OMTAnnotationTest {
 
@@ -82,47 +83,6 @@ class VariableAnnotatorTest extends OMTAnnotationTest {
         verify(getHolder()).newAnnotation(eq(HighlightSeverity.INFORMATION), eq("$variable is used to indicate the variable ignored"));
         verify(getBuilder(), times(1)).create();
         verifyNoErrors();
-    }
-
-    @Test
-    void annotateVariable_DeclaredVariableSuggestsRenameTo$_WhenNotUsed() {
-        doReturn(true).when(variable).isDeclaredVariable();
-        setSearchReferenceMock(variable, query -> doReturn(false).when(query).anyMatch(any()));
-        doReturn(mock(OMTVariableAssignment.class)).when(variable).getParent();
-
-        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.getNextSiblingOfType(eq(variable), eq(OMTVariable.class)), mock(OMTVariable.class));
-        variableAnnotator.annotate(variable);
-        ArgumentCaptor<IntentionAction> intentionActionArgumentCaptor = ArgumentCaptor.forClass(IntentionAction.class);
-        verify(getBuilder(), times(1)).withFix(intentionActionArgumentCaptor.capture());
-        assertEquals("Rename to $_", intentionActionArgumentCaptor.getValue().getText());
-        verify(getBuilder(), times(1)).create();
-    }
-
-    @Test
-    void annotateVariable_DeclaredVariableDoesNOTSuggestRenameTo$_WhenNoNextSibling() {
-        doReturn(true).when(variable).isDeclaredVariable();
-        setSearchReferenceMock(variable, query -> doReturn(false).when(query).anyMatch(any()));
-        doReturn(mock(OMTVariableAssignment.class)).when(variable).getParent();
-
-        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.getNextSiblingOfType(eq(variable), eq(OMTVariable.class)), null);
-
-        variableAnnotator.annotate(variable);
-        ArgumentCaptor<IntentionAction> intentionActionArgumentCaptor = ArgumentCaptor.forClass(IntentionAction.class);
-        verify(getBuilder(), times(0)).withFix(intentionActionArgumentCaptor.capture());
-        verify(getBuilder(), times(1)).create();
-    }
-
-    @Test
-    void annotateVariable_DeclaredVariableDoesNOTSuggestRenameTo$_WhenNotInAssignment() {
-        doReturn(true).when(variable).isDeclaredVariable();
-        setSearchReferenceMock(variable, query -> doReturn(false).when(query).anyMatch(any()));
-        doReturn(null).when(variable).getParent();
-
-        variableAnnotator.annotate(variable);
-
-        ArgumentCaptor<IntentionAction> intentionActionArgumentCaptor = ArgumentCaptor.forClass(IntentionAction.class);
-        verify(getBuilder(), times(0)).withFix(intentionActionArgumentCaptor.capture());
-        verify(getBuilder(), times(1)).create();
     }
 
     @Test

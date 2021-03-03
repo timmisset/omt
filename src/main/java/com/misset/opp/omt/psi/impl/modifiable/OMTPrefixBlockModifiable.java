@@ -12,6 +12,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+/**
+ * There is some code duplication in this class due to it inheriting from different type branches
+ * It's much easier to reproduce the LabelledElement methods and inherit the ModifiableContainer properties
+ * ModifiableContainer should not inherit from LabelledElement
+ */
 public abstract class OMTPrefixBlockModifiable extends OMTModifiableContainerImpl implements OMTModifiableContainer, OMTPrefixBlock {
     public OMTPrefixBlockModifiable(@NotNull ASTNode node) {
         super(node, OMTPrefix.class, null, true);
@@ -28,6 +33,14 @@ public abstract class OMTPrefixBlockModifiable extends OMTModifiableContainerImp
         return firstChild instanceof OMTLeading ?
                 PsiTreeUtil.nextVisibleLeaf(firstChild) :
                 firstChild;
+    }
+
+    @Override
+    public String getName() {
+        String propertyLabelText = getLabel().getText();
+        return propertyLabelText.endsWith(":") ?
+                propertyLabelText.substring(0, propertyLabelText.length() - 1) :
+                propertyLabelText;
     }
 
     @Override

@@ -1,22 +1,26 @@
 package com.misset.opp.omt.psi.references;
 
+import com.misset.opp.omt.inspection.OMTCodeInspectionUnused;
 import com.misset.opp.omt.psi.OMTNamespacePrefix;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class NamespacePrefixReferenceIT extends ReferenceTest {
 
     @Override
-    @BeforeEach
+    @BeforeAll
     protected void setUp() throws Exception {
         super.setName("NamespacePrefixReferenceIT");
         super.setUp(OMTNamespacePrefix.class);
         setOntologyModel();
+        myFixture.enableInspections(OMTCodeInspectionUnused.class);
     }
 
     @Override
-    @AfterEach
+    @AfterAll
     protected void tearDown() throws Exception {
         super.tearDown();
     }

@@ -18,6 +18,8 @@ import com.misset.opp.omt.psi.OMTMemberList;
 import com.misset.opp.omt.psi.OMTMemberListItem;
 import com.misset.opp.omt.psi.OMTSequence;
 import com.misset.opp.omt.psi.OMTSequenceItem;
+import com.misset.opp.omt.psi.support.OMTDefinedBlock;
+import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.util.ImportUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,6 +41,21 @@ public class CollectionAnnotator extends AbstractAnnotator {
             annotate((OMTBlockEntry) element);
         } else if (element instanceof OMTImportSource) {
             annotate((OMTImportSource) element);
+        } else if (element instanceof OMTDefinedStatement) {
+            annotate((OMTDefinedStatement) element);
+        }
+    }
+
+    private void annotate(OMTDefinedStatement definedStatement) {
+        final OMTDefinedBlock definedBlock = (OMTDefinedBlock) definedStatement.getParent();
+        String name = definedStatement.getDefineName().getName();
+        final boolean duplication = definedBlock.getStatements().stream()
+                .anyMatch(
+                        element -> element != definedStatement &&
+                                name.equals(element.getDefineName().getName())
+                );
+        if (duplication) {
+            setError(DUPLICATION);
         }
     }
 

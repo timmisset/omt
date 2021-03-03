@@ -11,7 +11,6 @@ import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.util.ProjectUtil;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
-import org.jaxen.util.SingletonList;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +20,6 @@ import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static com.misset.opp.util.UtilManager.getProjectUtil;
@@ -94,24 +92,6 @@ class CurieAnnotatorTest extends OMTAnnotationTest {
         curieAnnotator.annotate(curieElement);
 
         verifyInfo(xsdString(model).toString());
-    }
-
-    @Test
-    void annotatePrefixThrowsNoWarningWhenUsed() {
-        doReturn(mock(OMTPrefix.class)).when(namespacePrefix).getParent();
-        final SingletonList singletonList = new SingletonList(mock(PsiReference.class));
-        setSearchReferenceMock(namespacePrefix, query -> doReturn(singletonList).when(query).findAll());
-        curieAnnotator.annotate(namespacePrefix);
-        verifyNoWarnings();
-    }
-
-    @Test
-    void annotatePrefixThrowsWarningWhenNotUsed() {
-        doReturn("prefix:").when(namespacePrefix).getText();
-        doReturn(mock(OMTPrefix.class)).when(namespacePrefix).getParent();
-        setSearchReferenceMock(namespacePrefix, query -> doReturn(Collections.emptyList()).when(query).findAll());
-        curieAnnotator.annotate(namespacePrefix);
-        verifyWarning("prefix: is never used");
     }
 
     @Test

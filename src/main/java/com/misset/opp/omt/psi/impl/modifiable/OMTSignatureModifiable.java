@@ -14,7 +14,8 @@ import static com.misset.opp.omt.psi.OMTTypes.OPERATOR_CALL;
 
 public abstract class OMTSignatureModifiable extends OMTModifiableContainerImpl implements OMTModifiableContainer, OMTSignature {
     public OMTSignatureModifiable(@NotNull ASTNode node) {
-        super(node, OMTSignatureArgument.class, OMTTypes.COMMA, node.getTreeParent().getElementType() == OPERATOR_CALL);
+        super(node, OMTSignatureArgument.class, OMTTypes.COMMA,
+                node.getTreeParent() == null || node.getTreeParent().getElementType() == OPERATOR_CALL);
     }
 
     @Override
