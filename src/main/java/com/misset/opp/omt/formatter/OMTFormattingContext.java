@@ -33,9 +33,11 @@ import java.util.Optional;
 import static com.misset.opp.omt.psi.OMTIgnored.END_OF_LINE_COMMENT;
 import static com.misset.opp.omt.psi.OMTTypes.BLOCK;
 import static com.misset.opp.omt.psi.OMTTypes.CHOOSE_OPERATOR;
+import static com.misset.opp.omt.psi.OMTTypes.COMMA;
 import static com.misset.opp.omt.psi.OMTTypes.COMMAND_BLOCK;
 import static com.misset.opp.omt.psi.OMTTypes.CURIE_CONSTANT_ELEMENT;
 import static com.misset.opp.omt.psi.OMTTypes.CURIE_ELEMENT;
+import static com.misset.opp.omt.psi.OMTTypes.DEFINE_NAME;
 import static com.misset.opp.omt.psi.OMTTypes.END_PATH;
 import static com.misset.opp.omt.psi.OMTTypes.FORWARD_SLASH;
 import static com.misset.opp.omt.psi.OMTTypes.IMPORT;
@@ -44,17 +46,21 @@ import static com.misset.opp.omt.psi.OMTTypes.INTERPOLATED_STRING;
 import static com.misset.opp.omt.psi.OMTTypes.INTERPOLATION_TEMPLATE;
 import static com.misset.opp.omt.psi.OMTTypes.JAVADOCS_END;
 import static com.misset.opp.omt.psi.OMTTypes.JAVADOCS_START;
+import static com.misset.opp.omt.psi.OMTTypes.LAMBDA;
 import static com.misset.opp.omt.psi.OMTTypes.MEMBER_LIST;
 import static com.misset.opp.omt.psi.OMTTypes.MEMBER_LIST_ITEM;
 import static com.misset.opp.omt.psi.OMTTypes.MODEL_ITEM_BLOCK;
 import static com.misset.opp.omt.psi.OMTTypes.NAMESPACE_IRI;
 import static com.misset.opp.omt.psi.OMTTypes.NAMESPACE_PREFIX;
+import static com.misset.opp.omt.psi.OMTTypes.PARENTHESES_CLOSE;
+import static com.misset.opp.omt.psi.OMTTypes.PARENTHESES_OPEN;
 import static com.misset.opp.omt.psi.OMTTypes.PREFIX;
 import static com.misset.opp.omt.psi.OMTTypes.PREFIX_BLOCK;
 import static com.misset.opp.omt.psi.OMTTypes.QUERY_PATH;
 import static com.misset.opp.omt.psi.OMTTypes.ROOT_BLOCK;
 import static com.misset.opp.omt.psi.OMTTypes.SCRIPT;
 import static com.misset.opp.omt.psi.OMTTypes.SCRIPT_LINE;
+import static com.misset.opp.omt.psi.OMTTypes.SEQUENCE;
 import static com.misset.opp.omt.psi.OMTTypes.SEQUENCE_BULLET;
 import static com.misset.opp.omt.psi.OMTTypes.SEQUENCE_ITEM;
 import static com.misset.opp.omt.psi.OMTTypes.SIGNATURE;
@@ -134,6 +140,17 @@ public class OMTFormattingContext {
                 .around(IMPORT_SOURCE).blankLines(0)
                 .aroundInside(MEMBER_LIST_ITEM, MEMBER_LIST).blankLines(0)
                 .aroundInside(PREFIX, PREFIX_BLOCK).blankLines(0)
+                // sequence items
+                .around(SEQUENCE_ITEM).blankLines(0)
+                .after(SEQUENCE).blankLines(1)
+                .before(SEQUENCE).blankLines(0)
+                // spacing in a call or defined structure
+                .between(COMMA, SIGNATURE_ARGUMENT).spaces(1)
+                .between(SIGNATURE_ARGUMENT, COMMA).spaces(0)
+                .between(PARENTHESES_OPEN, SIGNATURE_ARGUMENT).spaces(0)
+                .between(SIGNATURE_ARGUMENT, PARENTHESES_CLOSE).spaces(0)
+                .between(SIGNATURE, LAMBDA).spaces(1)
+                .between(DEFINE_NAME, LAMBDA).spaces(1)
                 ;
     }
 

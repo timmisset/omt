@@ -13,7 +13,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -27,7 +26,7 @@ class RemovePrefixTest extends OMTTestSuite {
     @Mock
     OMTPrefix prefix;
 
-    List<OMTPrefix> prefixList = new ArrayList();
+    ArrayList prefixList = new ArrayList();
 
     @BeforeEach
     protected void setUp() {

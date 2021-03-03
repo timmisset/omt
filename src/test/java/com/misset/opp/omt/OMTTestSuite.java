@@ -1,9 +1,11 @@
 package com.misset.opp.omt;
 
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -27,6 +29,7 @@ import com.misset.opp.ttl.util.TTLUtil;
 import com.misset.opp.util.UtilManager;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
+import org.jetbrains.annotations.NotNull;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
@@ -495,5 +498,33 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    protected @NotNull List<IntentionAction> getAllQuickFixes(String content) {
+        String fileName = getFileName();
+        myFixture.configureByText(fileName, content);
+        return myFixture.getAllQuickFixes(fileName);
+    }
+
+    protected IntentionAction getQuickFixIntention(String content, String description) {
+        return getAllQuickFixes(content)
+                .stream()
+                .filter(intentionAction -> intentionAction.getText().equals(description))
+                .findFirst()
+                .orElse(null);
+    }
+
+    protected void invokeQuickFixIntention(String content, String description) {
+        final IntentionAction quickFixIntention = getQuickFixIntention(content, description);
+        if (quickFixIntention == null) {
+            fail("Could not find quickfix with description " + description);
+        }
+        invokeQuickFixIntention(quickFixIntention);
+    }
+
+    protected void invokeQuickFixIntention(IntentionAction intentionAction) {
+        WriteCommandAction.runWriteCommandAction(
+                getProject(), () -> intentionAction.invoke(getProject(), getEditor(), getFile())
+        );
     }
 }

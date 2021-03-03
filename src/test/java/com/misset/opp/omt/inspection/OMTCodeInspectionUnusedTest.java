@@ -158,7 +158,6 @@ public class OMTCodeInspectionUnusedTest extends OMTInspectionTest {
         );
         final LocalQuickFix localQuickFix = localQuickFixesArgumentCaptor.getValue();
         assertEquals("Remove", localQuickFix.getFamilyName());
-
     }
 
     private PsiElement getUnusedVariable() {

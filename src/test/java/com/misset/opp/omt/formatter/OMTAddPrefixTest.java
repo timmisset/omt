@@ -1,31 +1,20 @@
 package com.misset.opp.omt.formatter;
 
-import com.misset.opp.omt.psi.util.ImportUtil;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
-import static com.misset.opp.util.UtilManager.getImportUtil;
-
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OMTAddPrefixTest extends OMTFormattingTest {
-
-    private static final String REST_OF_FILE_CONTENT = "commands: |\n" +
-            "   DEFINE COMMAND command => {\n" +
-            "       @Command()\n" +
-            "   }";
-    private static final String PREFIX = "ont";
-    private static final String IRI = "http://ontologie";
-    private static final ImportUtil importUtil = getImportUtil();
-    private String existingImportBlock = "";
-
-    @BeforeEach
+    @BeforeAll
     @Override
     public void setUp() throws Exception {
         super.setName("OMTAddPrefixTest");
         super.setUp();
     }
 
-    @AfterEach
+    @AfterAll
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
