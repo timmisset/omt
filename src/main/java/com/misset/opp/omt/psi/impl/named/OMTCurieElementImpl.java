@@ -78,9 +78,21 @@ public abstract class OMTCurieElementImpl extends NameIdentifierOwnerImpl<OMTCur
         return isIri() ?
                 getText().replace("<", "").replace(">", "") :
                 String.format("%s%s",
-                        ((OMTFile) getContainingFile()).getPrefixIri(getPrefixName()),
-                        getPrefix().getNextSibling().getText()
+                        getPrefixIri(),
+                        getLocalName()
                 );
+    }
+
+    private String getPrefixIri() {
+        final String prefixIri = ((OMTFile) getContainingFile()).getPrefixIri(getPrefixName());
+        return prefixIri != null ? prefixIri : "";
+    }
+
+    private String getLocalName() {
+        return getPrefix() != null &&
+                getPrefix().getNextSibling() != null ?
+                getPrefix().getNextSibling().getText() :
+                "";
     }
 
     @Override
