@@ -2,20 +2,22 @@ package com.misset.opp.omt.psi.references;
 
 import com.intellij.psi.PsiFile;
 import com.misset.opp.omt.psi.named.OMTCall;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CallRenameTest extends RenameTest {
 
     @Override
-    @AfterEach
+    @AfterAll
     protected void tearDown() throws Exception {
         super.tearDown();
     }
 
     @Override
-    @BeforeEach
+    @BeforeAll
     protected void setUp() throws Exception {
         super.setName("CallRenameTest");
         super.setUp(OMTCall.class);

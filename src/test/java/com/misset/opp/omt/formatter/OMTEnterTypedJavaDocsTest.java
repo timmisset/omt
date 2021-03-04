@@ -1,13 +1,15 @@
 package com.misset.opp.omt.formatter;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.mockito.MockitoAnnotations;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OMTEnterTypedJavaDocsTest extends OMTFormattingTest {
 
-    @BeforeEach
+    @BeforeAll
     @Override
     public void setUp() throws Exception {
         super.setName("OMTEnterTypedJavaDocsTest");
@@ -16,7 +18,7 @@ class OMTEnterTypedJavaDocsTest extends OMTFormattingTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @AfterEach
+    @AfterAll
     @Override
     public void tearDown() throws Exception {
         super.tearDown();

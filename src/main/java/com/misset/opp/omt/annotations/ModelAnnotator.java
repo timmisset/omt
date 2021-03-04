@@ -7,7 +7,6 @@ import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.intentions.generic.RemoveIntention;
 import com.misset.opp.omt.psi.OMTBlock;
 import com.misset.opp.omt.psi.OMTBlockEntry;
-import com.misset.opp.omt.psi.OMTDefineName;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTGenericBlock;
 import com.misset.opp.omt.psi.OMTModelItemLabel;
@@ -40,8 +39,6 @@ public class ModelAnnotator extends AbstractAnnotator {
             annotateMissingEntries((OMTBlock) element);
         } else if (element instanceof OMTModelItemLabel) {
             annotateUsage(element); // usage check of activities, procedures, etc
-        } else if (element instanceof OMTDefineName) {
-            annotateUsage(element); // usage of defined queries and commands
         } else if (element instanceof OMTScalarValue) {
             annotateScalarValue((OMTScalarValue) element);
         }

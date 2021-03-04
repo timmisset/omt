@@ -37,7 +37,9 @@ import static com.misset.opp.omt.psi.OMTTypes.COMMA;
 import static com.misset.opp.omt.psi.OMTTypes.COMMAND_BLOCK;
 import static com.misset.opp.omt.psi.OMTTypes.CURIE_CONSTANT_ELEMENT;
 import static com.misset.opp.omt.psi.OMTTypes.CURIE_ELEMENT;
+import static com.misset.opp.omt.psi.OMTTypes.DEFINE_COMMAND_STATEMENT;
 import static com.misset.opp.omt.psi.OMTTypes.DEFINE_NAME;
+import static com.misset.opp.omt.psi.OMTTypes.DEFINE_QUERY_STATEMENT;
 import static com.misset.opp.omt.psi.OMTTypes.END_PATH;
 import static com.misset.opp.omt.psi.OMTTypes.FORWARD_SLASH;
 import static com.misset.opp.omt.psi.OMTTypes.IMPORT;
@@ -140,6 +142,8 @@ public class OMTFormattingContext {
                 .around(IMPORT_SOURCE).blankLines(0)
                 .aroundInside(MEMBER_LIST_ITEM, MEMBER_LIST).blankLines(0)
                 .aroundInside(PREFIX, PREFIX_BLOCK).blankLines(0)
+                .around(DEFINE_COMMAND_STATEMENT).blankLines(0)
+                .around(DEFINE_QUERY_STATEMENT).blankLines(0)
                 // sequence items
                 .around(SEQUENCE_ITEM).blankLines(0)
                 .after(SEQUENCE).blankLines(1)

@@ -1,20 +1,22 @@
 package com.misset.opp.omt.psi.references;
 
 import com.misset.opp.omt.psi.named.OMTCall;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CallReferenceIT extends ReferenceTest {
 
     @Override
-    @AfterEach
+    @AfterAll
     protected void tearDown() throws Exception {
         super.tearDown();
     }
 
     @Override
-    @BeforeEach
+    @BeforeAll
     protected void setUp() throws Exception {
         super.setName("CallReferenceIT");
         super.setUp(OMTCall.class);
@@ -107,13 +109,14 @@ class CallReferenceIT extends ReferenceTest {
         String importedQuery = "" +
                 "queries: |\n" +
                 "   DEFINE QUERY importedQuery => '';\n";
-        addFile("imported.omt", importedQuery);
-        String content = "" +
+        String fileName = getFileName();
+        addFile(fileName, importedQuery);
+        String content = String.format("" +
                 "import:\n" +
-                "   ./imported.omt:\n" +
+                "   ./%s:\n" +
                 "   - importedQuery\n" +
                 "queries: |\n" +
-                "   DEFINE QUERY myQuery => <caret>importedQuery;\n";
+                "   DEFINE QUERY myQuery => <caret>importedQuery;\n", fileName);
         assertHasReference(content);
         assertNoErrors();
     }
@@ -124,18 +127,21 @@ class CallReferenceIT extends ReferenceTest {
         String importedQuery = "" +
                 "queries: |\n" +
                 "   DEFINE QUERY importedQuery => '';\n";
-        addFile("imported.omt", importedQuery);
-        String deferred = "" +
+        String importedFile = getFileName();
+        addFile(importedFile, importedQuery);
+        String deferred = String.format("" +
                 "import:\n" +
-                "   ./imported.omt:\n" +
-                "   - importedQuery";
-        addFile("deferred.omt", deferred);
-        String content = "" +
+                "   ./%s:\n" +
+                "   - importedQuery", importedFile);
+
+        String deferredFile = getFileName();
+        addFile(deferredFile, deferred);
+        String content = String.format("" +
                 "import:\n" +
-                "   ./deferred.omt:\n" +
+                "   ./%s:\n" +
                 "   - importedQuery\n" +
                 "queries: |\n" +
-                "   DEFINE QUERY myQuery => <caret>importedQuery;\n";
+                "   DEFINE QUERY myQuery => <caret>importedQuery;\n", deferredFile);
         assertHasReference(content);
         assertNoErrors();
     }
@@ -167,16 +173,17 @@ class CallReferenceIT extends ReferenceTest {
 
     @Test
     void testRootQueryHasNoReferenceWhenImportedMemberDoesNotExist() {
+        final String fileName = getFileName();
         String importedQuery = "" +
                 "queries: |\n" +
                 "   DEFINE QUERY importedQuery => '';\n";
-        addFile("imported.omt", importedQuery);
-        String content = "" +
+        addFile(fileName, importedQuery);
+        String content = String.format("" +
                 "import:\n" +
-                "   ./imported.omt:\n" +
+                "   ./%s:\n" +
                 "   - wronglyNamedMemberImport\n" +
                 "queries: |\n" +
-                "   DEFINE QUERY myQuery => <caret>wronglyNamedMemberImport;\n";
+                "   DEFINE QUERY myQuery => <caret>wronglyNamedMemberImport;\n", fileName);
         assertHasNoReference(content);
         assertHasError("wronglyNamedMemberImport could not be resolved");
     }
@@ -211,17 +218,18 @@ class CallReferenceIT extends ReferenceTest {
 
     @Test
     void testCanReferToImportedModelItem() {
-        addFile("imported.omt", "" +
+        final String fileName = getFileName();
+        addFile(fileName, "" +
                 "model:\n" +
                 "   Procedure: !Procedure");
-        String content = "" +
+        String content = String.format("" +
                 "import:\n" +
-                "   ./imported.omt:" +
+                "   ./%s:" +
                 "   -   Procedure\n" +
                 "model:\n" +
                 "   Activiteit: !Activity\n" +
                 "       onStart:|\n" +
-                "           <caret>@Procedure();\n";
+                "           <caret>@Procedure();\n", fileName);
         assertHasReference(content);
         assertNoErrors();
     }

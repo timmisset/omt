@@ -1,14 +1,16 @@
 package com.misset.opp.omt.psi.references;
 
 import com.misset.opp.omt.psi.OMTPropertyLabel;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PropertyLabelReferenceIT extends ReferenceTest {
 
     @Override
-    @BeforeEach
+    @BeforeAll
     protected void setUp() throws Exception {
         super.setName("PropertyLabelReferenceIT");
         super.setUp(OMTPropertyLabel.class);
@@ -16,7 +18,7 @@ public class PropertyLabelReferenceIT extends ReferenceTest {
     }
 
     @Override
-    @AfterEach
+    @AfterAll
     protected void tearDown() throws Exception {
         super.tearDown();
     }

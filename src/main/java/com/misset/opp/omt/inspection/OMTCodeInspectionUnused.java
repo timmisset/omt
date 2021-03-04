@@ -7,6 +7,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.psi.OMTDefineName;
 import com.misset.opp.omt.psi.OMTDefineParam;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTJdComment;
@@ -53,6 +54,8 @@ public class OMTCodeInspectionUnused extends AbstractCodeInspection {
                     inspectPrefix((OMTNamespacePrefix) element);
                 } else if (element instanceof OMTVariable) {
                     inspectVariable((OMTVariable) element);
+                } else if (element instanceof OMTDefineName) {
+                    inspectDefineName((OMTDefineName) element);
                 }
             }
 
@@ -81,6 +84,11 @@ public class OMTCodeInspectionUnused extends AbstractCodeInspection {
                         registerNeverUsed(variable);
                     }
                 }
+            }
+
+            private void inspectDefineName(OMTDefineName defineName) {
+                if (isUsed(defineName)) return;
+                registerNeverUsed(defineName, getRemoveQuickFix(defineName));
             }
 
             private void registerNeverUsed(PsiElement element, LocalQuickFix... fixes) {

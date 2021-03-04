@@ -2,20 +2,22 @@ package com.misset.opp.omt.formatter;
 
 import com.intellij.application.options.CodeStyle;
 import com.misset.opp.omt.settings.OMTCodeStyleSettings;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OMTBlankLineTest extends OMTFormattingTest {
 
-    @BeforeEach
+    @BeforeAll
     @Override
     public void setUp() throws Exception {
         super.setName("OMTBlankLineTest");
         super.setUp();
     }
 
-    @AfterEach
+    @AfterAll
     @Override
     public void tearDown() throws Exception {
         super.tearDown();

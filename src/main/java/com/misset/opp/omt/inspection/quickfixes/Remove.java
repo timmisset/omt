@@ -4,12 +4,14 @@ import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.util.IntentionFamilyName;
 import com.intellij.codeInspection.util.IntentionName;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTDeclareVariable;
+import com.misset.opp.omt.psi.OMTDefineName;
 import com.misset.opp.omt.psi.OMTModelItemBlock;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.OMTPrefixBlock;
@@ -17,6 +19,7 @@ import com.misset.opp.omt.psi.OMTScriptLine;
 import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.psi.OMTVariableAssignment;
 import com.misset.opp.omt.psi.named.OMTCall;
+import com.misset.opp.omt.psi.support.OMTDefinedBlock;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.support.OMTModifiableContainer;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +44,8 @@ public class Remove {
             }
 
             private boolean isLastPrefix() {
-                return ((OMTPrefixBlock) prefix.getParent()).getPrefixList().size() == 1;
+                return
+                        ReadAction.compute(() -> ((OMTPrefixBlock) prefix.getParent()).getPrefixList().size() == 1);
             }
 
             @Override
@@ -78,10 +82,18 @@ public class Remove {
                 } else if ("params".equals(container)) {
                     return "Remove parameter and refactor call signatures to this " + getModelUtil().getModelItemType(variable);
                 } else if ("defined".equals(container)) {
-                    return "Remove parameter";
+                    return "Remove parameter and refactor call signatures to this " + getDefinedType();
                 } else {
                     return "Unsupported type for quickfix";
                 }
+            }
+
+            private String getDefinedType() {
+                final OMTDefinedStatement parentOfType = ReadAction.compute(() -> PsiTreeUtil.getParentOfType(variable, OMTDefinedStatement.class));
+                if (parentOfType == null) {
+                    return "Unknown";
+                }
+                return parentOfType.isQuery() ? "Query" : "Command";
             }
 
             private void cleanUpReferencesToModelItem(OMTModelItemBlock modelItemBlock) {
@@ -159,6 +171,33 @@ public class Remove {
                     } else {
                         declareVariable.delete();
                     }
+                }
+            }
+        };
+    }
+
+    public static LocalQuickFix getRemoveQuickFix(OMTDefineName defineName) {
+        final OMTDefinedStatement definedStatement = (OMTDefinedStatement) defineName.getParent();
+        if (definedStatement == null) {
+            return null;
+        }
+        return new LocalQuickFix() {
+            @Override
+            public @IntentionFamilyName @NotNull String getFamilyName() {
+                return FAMILY_NAME;
+            }
+
+            @Override
+            public @IntentionName @NotNull String getName() {
+                return "Remove " + (definedStatement.isQuery() ? "Query" : "Command");
+            }
+
+            @Override
+            public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+                OMTDefinedBlock block = (OMTDefinedBlock) definedStatement.getParent();
+                definedStatement.delete();
+                if (block.getStatements().isEmpty()) {
+                    block.delete();
                 }
             }
         };

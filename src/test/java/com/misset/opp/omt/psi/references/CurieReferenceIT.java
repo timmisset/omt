@@ -2,16 +2,18 @@ package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.application.ReadAction;
 import com.misset.opp.omt.psi.OMTCurieElement;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import static com.misset.opp.util.UtilManager.getProjectUtil;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CurieReferenceIT extends ReferenceTest {
 
     @Override
-    @BeforeEach
+    @BeforeAll
     protected void setUp() throws Exception {
         super.setName("CurieReferenceIT");
         super.setUp(OMTCurieElement.class);
@@ -20,7 +22,7 @@ public class CurieReferenceIT extends ReferenceTest {
     }
 
     @Override
-    @AfterEach
+    @AfterAll
     protected void tearDown() throws Exception {
         super.tearDown();
     }
