@@ -29,13 +29,11 @@ import java.util.Objects;
 import static com.misset.opp.util.UtilManager.getModelUtil;
 
 public class Remove {
-    private static final String FAMILY_NAME = "Remove";
-
     public static LocalQuickFix getRemoveQuickFix(OMTPrefix prefix) {
         return new LocalQuickFix() {
             @Override
             public @IntentionFamilyName @NotNull String getFamilyName() {
-                return FAMILY_NAME;
+                return "Remove prefix";
             }
 
             @Override
@@ -72,7 +70,7 @@ public class Remove {
         return new LocalQuickFix() {
             @Override
             public @IntentionFamilyName @NotNull String getFamilyName() {
-                return FAMILY_NAME;
+                return "Remove variable";
             }
 
             @Override
@@ -146,7 +144,7 @@ public class Remove {
         return new LocalQuickFix() {
             @Override
             public @IntentionFamilyName @NotNull String getFamilyName() {
-                return FAMILY_NAME;
+                return "Remove assignment";
             }
 
             @Override
@@ -200,7 +198,7 @@ public class Remove {
         return new LocalQuickFix() {
             @Override
             public @IntentionFamilyName @NotNull String getFamilyName() {
-                return FAMILY_NAME;
+                return "Remove defined statement";
             }
 
             @Override

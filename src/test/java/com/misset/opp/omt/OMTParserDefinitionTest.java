@@ -1,22 +1,31 @@
 package com.misset.opp.omt;
 
 import com.intellij.openapi.application.ReadAction;
-import com.misset.opp.omt.psi.*;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import com.intellij.psi.PsiComment;
+import com.misset.opp.omt.psi.OMTBooleanStatement;
+import com.misset.opp.omt.psi.OMTEquationStatement;
+import com.misset.opp.omt.psi.OMTQuery;
+import com.misset.opp.omt.psi.OMTQueryArray;
+import com.misset.opp.omt.psi.OMTQueryFilter;
+import com.misset.opp.omt.psi.OMTQueryPath;
+import com.misset.opp.omt.psi.OMTQueryStep;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OMTParserDefinitionTest extends OMTTestSuite {
 
     @Override
-    @BeforeEach
+    @BeforeAll
     protected void setUp() throws Exception {
         super.setName("OMTParserDefinitionTest");
         super.setUp();
     }
 
     @Override
-    @AfterEach
+    @AfterAll
     protected void tearDown() throws Exception {
         super.tearDown();
     }
@@ -115,9 +124,27 @@ class OMTParserDefinitionTest extends OMTTestSuite {
         assertEquals(3, ((OMTQueryArray) query).getQueryList().size());
     }
 
+    @Test
+    void testCommentBlockParserMultilineWithLineStarter() {
+        String content = "/*\n" +
+                " * Test\n" +
+                " */";
+        myFixture.configureByText(getFileName(), content);
+        assertTrue(ReadAction.compute(() -> myFixture.getFile().getFirstChild() instanceof PsiComment));
+    }
+
+    @Test
+    void testCommentBlockParserMultilineWithoutLineStarter() {
+        String content = "/*\n" +
+                " Test\n" +
+                " */";
+        myFixture.configureByText(getFileName(), content);
+        assertTrue(ReadAction.compute(() -> myFixture.getFile().getFirstChild() instanceof PsiComment));
+    }
+
     private void setQuery(String query) {
         String parsed = String.format("queries: |\n" +
                 "    DEFINE QUERY testQuery() => %s;\n", query);
-        myFixture.configureByText("test.omt", parsed);
+        myFixture.configureByText(getFileName(), parsed);
     }
 }

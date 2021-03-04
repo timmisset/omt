@@ -91,8 +91,14 @@ public class VariableUtil {
 
         List<OMTVariable> declaredVariables = getDeclaredVariables(variable);
         return declaredVariables.stream()
-                .filter(declaredVariable -> declaredVariable.getName().equals(variable.getName()))
+                .filter(declaredVariable -> canBeDefinedVariable(variable, declaredVariable))
                 .min((o1, o2) -> getScriptUtil().isBefore(o1, o2) ? 1 : 0);
+    }
+
+    private boolean canBeDefinedVariable(OMTVariable variable, OMTVariable declaredVariable) {
+        return declaredVariable.getName().equals(variable.getName()) &&
+                (VARIABLES.equals(getModelUtil().getModelItemEntryLabel(getDeclaredVariables(variable).get(0))) ||
+                        getScriptUtil().isBefore(declaredVariable, variable));
     }
 
     private Optional<OMTDefineParam> getDefinedParameters(PsiElement element) {

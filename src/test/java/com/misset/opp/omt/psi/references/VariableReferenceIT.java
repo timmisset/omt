@@ -84,11 +84,63 @@ class VariableReferenceIT extends ReferenceTest {
                 "       onStart: |\n" +
                 "           VAR $test = 'test';\n" +
                 "           VAR $test = 'test';\n" +
-                "           VAR $test = 'test';\n" +
                 "           VAR $<caret>test = 'test';\n" +
                 "           @LOG($test);\n" +
+                "           VAR $test = 'test';\n" +
                 "";
         assertHasUsages(content, 1);
         assertNoErrors();
     }
+
+    @Test
+    void modelUsageHasUsageWhenRedefinedInDifferentBlockTest() {
+        String content = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        onStart: |\n" +
+                "            IF 1 == 2 {\n" +
+                "                VAR $<caret>x = 1;\n" +
+                "                @LOG($x);\n" +
+                "            }\n" +
+                "            ELSE {\n" +
+                "                VAR $x = 2;\n" +
+                "                @LOG($x);\n" +
+                "            }";
+        assertHasUsages(content, 1);
+        assertNoErrors();
+    }
+
+    @Test
+    void modelUsageHasUsageWhenRedefinedInDifferentBlockTestSecondBlock() {
+        String content = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        onStart: |\n" +
+                "            IF 1 == 2 {\n" +
+                "                VAR $x = 1;\n" +
+                "                @LOG($x);\n" +
+                "            }\n" +
+                "            ELSE {\n" +
+                "                VAR $<caret>x = 2;\n" +
+                "                @LOG($x);\n" +
+                "            }";
+        assertHasUsages(content, 1);
+        assertNoErrors();
+    }
+
+    @Test
+    void modelUsageHasNoUsageWhenNoUsageInSameBlock() {
+        String content = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        onStart: |\n" +
+                "            IF 1 == 2 {\n" +
+                "                VAR $<caret>x = 1;\n" +
+                "            }\n" +
+                "            ELSE {\n" +
+                "                VAR $x = 2;\n" +
+                "                @LOG($x);\n" +
+                "            }";
+        assertHasUsages(content, 0);
+        assertNoErrors();
+    }
 }
+
+
