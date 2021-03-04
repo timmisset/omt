@@ -11,20 +11,32 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Optional;
 
+import static com.misset.opp.util.UtilManager.getModelUtil;
+
 public abstract class OMTModifiableContainerImpl extends ASTWrapperPsiElement implements OMTModifiableContainer {
     private final IElementType delimiterType;
     private final Class<? extends PsiElement> elementType;
     private final boolean removeSelfIfEmpty;
+    private final boolean removeEntryIfEmpty;
 
+    /**
+     * @param node
+     * @param elementType
+     * @param delimiterType
+     * @param removeSelfIfEmpty
+     * @param removeEntryIfEmpty - remove the parent block entry, for example remove the variables: entry when the sequence is empty
+     */
     protected OMTModifiableContainerImpl(
             @NotNull ASTNode node,
             Class<? extends PsiElement> elementType,
             IElementType delimiterType,
-            boolean removeSelfIfEmpty) {
+            boolean removeSelfIfEmpty,
+            boolean removeEntryIfEmpty) {
         super(node);
         this.delimiterType = delimiterType;
         this.elementType = elementType;
         this.removeSelfIfEmpty = removeSelfIfEmpty;
+        this.removeEntryIfEmpty = removeEntryIfEmpty;
     }
 
     protected void removeVisibleLeafBeforeOrAfterIfOfType(PsiElement element) {
@@ -53,7 +65,11 @@ public abstract class OMTModifiableContainerImpl extends ASTWrapperPsiElement im
         psiElement.delete();
 
         if (removeSelfIfEmpty && numberOfChildren() == 0) {
-            this.delete();
+            if (removeEntryIfEmpty) {
+                getModelUtil().getEntryBlock(this).delete();
+            } else {
+                this.delete();
+            }
         }
     }
 

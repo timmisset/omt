@@ -19,7 +19,8 @@ import java.util.List;
  */
 public abstract class OMTPrefixBlockModifiable extends OMTModifiableContainerImpl implements OMTModifiableContainer, OMTPrefixBlock {
     public OMTPrefixBlockModifiable(@NotNull ASTNode node) {
-        super(node, OMTPrefix.class, null, true);
+        // removeEntryIfEmpty == false because the container itself is already the entry
+        super(node, OMTPrefix.class, null, true, false);
     }
 
     @Override

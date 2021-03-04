@@ -11,7 +11,8 @@ import java.util.List;
 
 public abstract class OMTSequenceModifiable extends OMTModifiableContainerImpl implements OMTModifiableContainer, OMTSequence {
     public OMTSequenceModifiable(@NotNull ASTNode node) {
-        super(node, OMTSequenceItem.class, null, true);
+        // remove the variables: block also
+        super(node, OMTSequenceItem.class, null, true, true);
     }
 
     @Override

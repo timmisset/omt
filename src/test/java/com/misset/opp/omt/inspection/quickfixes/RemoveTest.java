@@ -223,4 +223,46 @@ class RemoveTest extends OMTFormattingTest {
                 "    }"
         );
     }
+
+    @Test
+    void testRemoveVariableAssignmentFromModelRemovesVariableAndBlock() {
+        String content = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        variables:\n" +
+                "        -  $test = 'test'\n";
+        invokeQuickFixIntention(content, "Remove variable assignment");
+        assertFormattingApplied(getFile().getText(), "model:\n" +
+                "    Activiteit: !Activity"
+        );
+    }
+
+    @Test
+    void testRemoveVariableAssignmentFromModelRemovesVariable() {
+        String content = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        variables:\n" +
+                "        -  $test = 'test'\n" +
+                "        -  $test2\n";
+        invokeQuickFixIntention(content, "Remove variable assignment");
+        assertFormattingApplied(getFile().getText(), "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        variables:\n" +
+                "        -   $test2"
+        );
+    }
+
+    @Test
+    void testRemoveVariableFromModelRemovesVariable() {
+        String content = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        variables:\n" +
+                "        -  $test\n" +
+                "        -  $test2\n";
+        invokeQuickFixIntention(getAllQuickFixes(content).get(0));
+        assertFormattingApplied(getFile().getText(), "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        variables:\n" +
+                "        -   $test2"
+        );
+    }
 }

@@ -12,7 +12,7 @@ import java.util.List;
 
 public abstract class OMTDefinedParamModifiable extends OMTModifiableContainerImpl implements OMTModifiableContainer, OMTDefineParam {
     public OMTDefinedParamModifiable(@NotNull ASTNode node) {
-        super(node, OMTVariable.class, OMTTypes.COMMA, true);
+        super(node, OMTVariable.class, OMTTypes.COMMA, true, false);
     }
 
     @Override

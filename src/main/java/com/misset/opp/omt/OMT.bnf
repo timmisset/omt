@@ -42,11 +42,11 @@ propertyLabel ::=                           PROPERTY COLON {
 
 // a scalar single statement (multiline optional) following a property label
 scalar ::=                                  comment? scalarValue
-scalarValue ::=                             parameterWithType | variableAssignment | indentedBlock | stringEntry | query | script {
+scalarValue ::=                             parameterWithType | variableAssignment | indentedBlock | stringEntry | query | script | commandBlock {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTScalarValueResolvable"
                                                 mixin="com.misset.opp.omt.psi.resolvable.impl.OMTScalarValueResovableImpl"
 }
-
+objectValue ::=
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indented, it must dedent
 sequence ::=                                sequenceItem+ | (indentToken sequenceItem+ dedentToken)

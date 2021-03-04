@@ -142,7 +142,7 @@ public class Remove {
      * @return
      */
     public static LocalQuickFix getRemoveQuickFix(OMTVariableAssignment variableAssignment) {
-        OMTDeclareVariable declareVariable = (OMTDeclareVariable) variableAssignment.getParent();
+
         return new LocalQuickFix() {
             @Override
             public @IntentionFamilyName @NotNull String getFamilyName() {
@@ -154,24 +154,40 @@ public class Remove {
                 return keepAssignment() ? "Remove variable (keep command)" : "Remove variable assignment";
             }
 
+            private boolean isScriptVariable() {
+                return
+                        ReadAction.compute(() -> variableAssignment.getParent() instanceof OMTDeclareVariable);
+            }
+
             private boolean keepAssignment() {
-                return variableAssignment.getVariableValue().getCommandCall() != null;
+                return isScriptVariable() &&
+                        variableAssignment.getVariableValue().getCommandCall() != null;
             }
 
             @Override
             public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-                if (keepAssignment()) {
-                    declareVariable.replace(
-                            Objects.requireNonNull(variableAssignment.getVariableValue().getCommandCall())
-                    );
-                } else {
-                    final OMTScriptLine scriptLine = PsiTreeUtil.getParentOfType(declareVariable, OMTScriptLine.class);
-                    if (scriptLine != null) {
-                        scriptLine.delete();
+                if (isScriptVariable()) {
+                    OMTDeclareVariable declareVariable = (OMTDeclareVariable) variableAssignment.getParent();
+                    if (keepAssignment()) {
+                        declareVariable.replace(
+                                Objects.requireNonNull(variableAssignment.getVariableValue().getCommandCall())
+                        );
                     } else {
-                        declareVariable.delete();
+                        final OMTScriptLine scriptLine = PsiTreeUtil.getParentOfType(declareVariable, OMTScriptLine.class);
+                        if (scriptLine != null) {
+                            scriptLine.delete();
+                        } else {
+                            declareVariable.delete();
+                        }
+                    }
+                } else {
+                    // unused variable assignment from model remove via modifiablecontainer:
+                    final OMTModifiableContainer modifiableContainer = PsiTreeUtil.getParentOfType(variableAssignment, OMTModifiableContainer.class);
+                    if (modifiableContainer != null) {
+                        modifiableContainer.removeChild(variableAssignment);
                     }
                 }
+
             }
         };
     }
