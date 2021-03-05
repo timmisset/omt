@@ -2,8 +2,10 @@ package com.misset.opp.omt;
 
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.PsiComment;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTBooleanStatement;
 import com.misset.opp.omt.psi.OMTEquationStatement;
+import com.misset.opp.omt.psi.OMTIgnored;
 import com.misset.opp.omt.psi.OMTQuery;
 import com.misset.opp.omt.psi.OMTQueryArray;
 import com.misset.opp.omt.psi.OMTQueryFilter;
@@ -13,6 +15,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+
+import java.util.Collection;
+import java.util.Objects;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OMTParserDefinitionTest extends OMTTestSuite {
@@ -130,7 +135,7 @@ class OMTParserDefinitionTest extends OMTTestSuite {
                 " * Test\n" +
                 " */";
         myFixture.configureByText(getFileName(), content);
-        assertTrue(ReadAction.compute(() -> myFixture.getFile().getFirstChild() instanceof PsiComment));
+        assertTrue(ReadAction.compute(() -> Objects.requireNonNull(PsiTreeUtil.findChildOfType(getFile(), PsiComment.class)).getTokenType() == OMTIgnored.MULTILINE_COMMENT));
     }
 
     @Test
@@ -139,7 +144,57 @@ class OMTParserDefinitionTest extends OMTTestSuite {
                 " Test\n" +
                 " */";
         myFixture.configureByText(getFileName(), content);
-        assertTrue(ReadAction.compute(() -> myFixture.getFile().getFirstChild() instanceof PsiComment));
+        assertTrue(ReadAction.compute(() -> Objects.requireNonNull(PsiTreeUtil.findChildOfType(getFile(), PsiComment.class)).getTokenType() == OMTIgnored.MULTILINE_COMMENT));
+    }
+
+    @Test
+    void testCommentBlockParserMultiline() {
+        String commentBlock = "" +
+                "    /*\n" +
+                "     * Inside the comment someone decides to use an asterix (*)\n" +
+                "     * which should not bother the parsing\n" +
+                "     * neither should using a forward slash like so: /.\n" +
+                "     \n" +
+                "      And lines without an asterix should still be parsed correctly.\n" +
+                "     */";
+        String content = "queries: |\n" +
+                "    DEFINE QUERY myQuery => . ;\n" +
+                "\n" +
+                commentBlock +
+                "     DEFINE QUERY mySecondQuery => . ;";
+        myFixture.configureByText(getFileName(), content);
+        ReadAction.run(() -> {
+            final PsiComment comment = PsiTreeUtil.findChildOfType(getFile(), PsiComment.class);
+            assertNotNull(comment);
+            assertEquals(OMTIgnored.MULTILINE_COMMENT, comment.getTokenType());
+            assertEquals(commentBlock, comment.getText()); // the text should be parsed as a single comment block
+        });
+    }
+
+    @Test
+    void testCommentBlockParserMultilineMultipleBlocks() {
+        String content = "queries: |\n" +
+                "    DEFINE QUERY myQuery => . ;\n" +
+                "\n" +
+                "    /*\n" +
+                "     * Inside the comment someone decides to use an asterix (*)\n" +
+                "     * which should not bother the parsing\n" +
+                "     * neither should using a forward slash like so: /.\n" +
+                "     */\n" +
+                "     DEFINE QUERY mySecondQuery => . ;" +
+                "     /*\n" +
+                "      And lines without an asterix should still be parsed correctly.\n" +
+                "     */\n" +
+                "     DEFINE QUERY myThirdQuery => . ;";
+        myFixture.configureByText(getFileName(), content);
+        ReadAction.run(() -> {
+            final Collection<PsiComment> comments = PsiTreeUtil.findChildrenOfType(getFile(), PsiComment.class);
+            assertNotEmpty(comments);
+            assertEquals(2, comments.size());
+            comments.forEach(
+                    comment -> assertEquals(OMTIgnored.MULTILINE_COMMENT, comment.getTokenType())
+            );
+        });
     }
 
     private void setQuery(String query) {
