@@ -37,6 +37,8 @@ import static com.misset.opp.omt.psi.OMTTypes.COMMA;
 import static com.misset.opp.omt.psi.OMTTypes.COMMAND_BLOCK;
 import static com.misset.opp.omt.psi.OMTTypes.CURIE_CONSTANT_ELEMENT;
 import static com.misset.opp.omt.psi.OMTTypes.CURIE_ELEMENT;
+import static com.misset.opp.omt.psi.OMTTypes.CURLY_CLOSED;
+import static com.misset.opp.omt.psi.OMTTypes.CURLY_OPEN;
 import static com.misset.opp.omt.psi.OMTTypes.DEFINE_COMMAND_STATEMENT;
 import static com.misset.opp.omt.psi.OMTTypes.DEFINE_NAME;
 import static com.misset.opp.omt.psi.OMTTypes.DEFINE_QUERY_STATEMENT;
@@ -155,6 +157,10 @@ public class OMTFormattingContext {
                 .between(SIGNATURE_ARGUMENT, PARENTHESES_CLOSE).spaces(0)
                 .between(SIGNATURE, LAMBDA).spaces(1)
                 .between(DEFINE_NAME, LAMBDA).spaces(1)
+
+                // within scripts
+                .between(CURLY_OPEN, SCRIPT_LINE).blankLines(0)
+                .between(SCRIPT_LINE, CURLY_CLOSED).blankLines(0)
                 ;
     }
 
@@ -164,11 +170,16 @@ public class OMTFormattingContext {
         if (spacing != null) {
             return spacing;
         }
+        // custom spacing
+        // whenever the default spacing builder is not sufficient
         if (isNodeType(parent, PREFIX) && isNodeType(child1, NAMESPACE_PREFIX) && isNodeType(child2, NAMESPACE_IRI)) {
             // spacing between the prefix and iri depends on the size of the largest prefix:
             final int maxLength = getMaxPrefixLength(((OMTFormattingBlock) parent).getNode());
             final int spaces = maxLength + getIndentSize() - child1.getTextRange().getLength();
             return Spacing.createSpacing(spaces, spaces, 0, false, 0);
+        } else if (isNodeType(child1, SCRIPT_LINE) && isNodeType(child2, SCRIPT_LINE)) {
+            // do not set the minimum number of blank lines but only the amount to keep:
+            return Spacing.createSpacing(0, 0, 0, true, 1);
         }
         return null;
     }

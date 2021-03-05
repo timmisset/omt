@@ -309,6 +309,29 @@ class VariableReferenceIT extends ReferenceTest {
                 "    DEFINE QUERY someQuery2($<caret>param) => '';\n";
         assertHasUsages(inModel(content), 0);
     }
+
+    @Test
+    void variablesDeclaredInsideDefinedStatementShouldHaveUsageWhenShadowingModelVariables() {
+        String content = "" +
+                "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       variables:\n" +
+                "       - $test\n" +
+                "       queries: |\n" +
+                "           DEFINE QUERY someQuery($<caret>test) => $test;\n";
+        assertHasUsages(content, 1);
+    }
+
+    @Test
+    void variablesDeclaredInModelShouldNotHaveUsageWhenShadowedByParameterInDefinedStatement() {
+        String content = "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       variables:\n" +
+                "       - $<caret>test\n" +
+                "       queries: |\n" +
+                "           DEFINE QUERY someQuery($test) => $test;\n";
+        assertHasUsages(content, 0);
+    }
 }
 
 

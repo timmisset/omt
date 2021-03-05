@@ -62,12 +62,6 @@ public class VariableUtil {
     private static final String GLOBAL_VARIABLE_MEDEWERKER_GRAPH = "$medewerkerGraph";
     private static final String GLOBAL_VARIABLE_OFFLINE = "$offline";
 
-    public Optional<OMTVariable> getFirstAppearance(OMTVariable variable, PsiElement container) {
-        return PsiTreeUtil.findChildrenOfType(container, OMTVariable.class).stream()
-                .filter(scriptVariable -> scriptVariable.textMatches(variable))
-                .findFirst();
-    }
-
     /**
      * Returns the declared variables available at the position of this specific element
      */
@@ -94,15 +88,14 @@ public class VariableUtil {
         List<OMTVariable> declaredVariables = getDeclaredVariables(variable);
         return declaredVariables.stream()
                 .filter(declaredVariable -> canBeDefinedVariable(variable, declaredVariable))
-                .min(this::getModelDepthPosition);
+                .min((o1, o2) -> getModelDepthPosition(o1, o2, variable));
     }
 
-    private int getModelDepthPosition(OMTVariable variable1, OMTVariable variable2) {
-        // compare the positions of the possible declared variables
-        // to process shadowing correctly, make sure the model depth is considered and the
-        // deepest declared variable wins
-        final PsiElement commonParent = PsiTreeUtil.findCommonParent(variable1, variable2); // for example, the model item
-        return PsiTreeUtil.getDepth(variable1, commonParent) > PsiTreeUtil.getDepth(variable2, commonParent) ? 0 : 1;
+    private int getModelDepthPosition(OMTVariable declaredVariable1, OMTVariable declaredVariable2, OMTVariable targetVariable) {
+        final PsiElement commonParentVariable1 = PsiTreeUtil.findCommonParent(declaredVariable1, targetVariable); // for example, the model item
+        final PsiElement commonParentVariable2 = PsiTreeUtil.findCommonParent(declaredVariable2, targetVariable); // for example, the model item
+        return PsiTreeUtil.getDepth(targetVariable, commonParentVariable1) <
+                PsiTreeUtil.getDepth(targetVariable, commonParentVariable2) ? 0 : 1;
     }
 
     private boolean canBeDefinedVariable(OMTVariable variable, OMTVariable declaredVariable) {

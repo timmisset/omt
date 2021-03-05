@@ -22,7 +22,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 
 class VariableUtilTest extends OMTTestSuite {
@@ -68,19 +70,6 @@ class VariableUtilTest extends OMTTestSuite {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-    }
-
-    @Test
-    void getFirstAppearance() {
-        ReadAction.run(() -> {
-            List<OMTVariable> variableList = getElements(onStartBlock, OMTVariable.class,
-                    omtVariable -> omtVariable.getName().equals("$variableA"));
-            assertEquals(2, variableList.size());
-            OMTVariable firstInstance = variableList.get(0);
-            OMTVariable secondInstance = variableList.get(1);
-            assertEquals(firstInstance, variableUtil.getFirstAppearance(firstInstance, onStartBlock).get());
-            assertEquals(firstInstance, variableUtil.getFirstAppearance(secondInstance, onStartBlock).get());
-        });
     }
 
     @Test
