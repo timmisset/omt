@@ -249,6 +249,66 @@ class VariableReferenceIT extends ReferenceTest {
                 "    }";
         assertHasNoReference(content);
     }
+
+    @Test
+    void variablesDeclaredInsideDefinedStatementHasNoUsage() {
+        String content = "queries: |\n" +
+                "    DEFINE QUERY someQuery($<caret>param) => '';";
+        assertHasUsages(content, 0);
+    }
+
+    @Test
+    void variablesDeclaredInsideDefinedStatementHasUsage() {
+        String content = "queries: |\n" +
+                "    DEFINE QUERY someQuery($<caret>param) => $param;";
+        assertHasUsages(content, 1);
+    }
+
+    @Test
+    void variablesDeclaredInsideDefinedStatementHasUsageWhenAnotherQueryHasSameParam() {
+        String content = "queries: |\n" +
+                "    DEFINE QUERY someQuery($<caret>param) => $param;\n" +
+                "    DEFINE QUERY someQuery2($param) => '';\n";
+        assertHasUsages(content, 1);
+    }
+
+    @Test
+    void variablesDeclaredInsideDefinedStatementHasNoUsageWhenAnotherQueryHasSameParam() {
+        String content = "queries: |\n" +
+                "    DEFINE QUERY someQuery($param) => $param;\n" +
+                "    DEFINE QUERY someQuery2($<caret>param) => '';\n";
+        assertHasUsages(content, 0);
+    }
+
+    @Test
+    void variablesDeclaredInsideDefinedStatementInsideModelHasNoUsage() {
+        String content = "queries: |\n" +
+                "    DEFINE QUERY someQuery($<caret>param) => '';";
+        assertHasUsages(inModel(content), 0);
+    }
+
+    @Test
+    void variablesDeclaredInsideDefinedStatementInsideModelHasUsage() {
+        String content = "queries: |\n" +
+                "    DEFINE QUERY someQuery($<caret>param) => $param;";
+        assertHasUsages(inModel(content), 1);
+    }
+
+    @Test
+    void variablesDeclaredInsideDefinedStatementInsideModelHasUsageWhenAnotherQueryHasSameParam() {
+        String content = "queries: |\n" +
+                "    DEFINE QUERY someQuery($<caret>param) => $param;\n" +
+                "    DEFINE QUERY someQuery2($param) => '';\n";
+        assertHasUsages(inModel(content), 1);
+    }
+
+    @Test
+    void variablesDeclaredInsideDefinedStatementInsideModelHasNoUsageWhenAnotherQueryHasSameParam() {
+        String content = "queries: |\n" +
+                "    DEFINE QUERY someQuery($param) => $param;\n" +
+                "    DEFINE QUERY someQuery2($<caret>param) => '';\n";
+        assertHasUsages(inModel(content), 0);
+    }
 }
 
 

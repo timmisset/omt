@@ -334,6 +334,12 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
                 "%s", content);
     }
 
+    protected String inModel(String content) {
+        return String.format("model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        %s", content.replace("\n", "\n    "));
+    }
+
     /**
      * Places the input statement into a template with common prefixes and inside a queries block
      *

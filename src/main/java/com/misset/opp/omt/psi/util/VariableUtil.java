@@ -153,6 +153,7 @@ public class VariableUtil {
         blocks.forEach(block -> variables.addAll(
                 PsiTreeUtil.findChildrenOfType(block, OMTVariable.class).stream()
                         .filter(OMTVariableNamedElement::isDeclaredVariable)
+                        .filter(variable -> !(variable.getParent() instanceof OMTDefineParam))
                         .collect(Collectors.toList())
         ));
         return variables.stream().distinct().collect(Collectors.toList());
