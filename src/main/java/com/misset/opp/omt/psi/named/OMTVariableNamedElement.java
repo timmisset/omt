@@ -24,6 +24,12 @@ public interface OMTVariableNamedElement extends PsiNameIdentifierOwner {
 
     boolean isGlobalVariable();
 
+    /**
+     * Determines if the declare statement for the variable is part of the OMT Model, variables, params, bindings etc
+     * or is part of an ODT script (false): VAR $myVariable = ...
+     */
+    boolean isDeclaredByOMTModel();
+
     List<Resource> getType();
 
     OMTVariableValue getValue();

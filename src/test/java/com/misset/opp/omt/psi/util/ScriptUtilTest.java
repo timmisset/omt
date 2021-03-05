@@ -20,8 +20,12 @@ import org.mockito.MockitoAnnotations;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 class ScriptUtilTest extends OMTTestSuite {
 
@@ -87,75 +91,6 @@ class ScriptUtilTest extends OMTTestSuite {
             assertNotNull(variableD);
             List<OMTVariable> accessibleElements = scriptUtil.getAccessibleElements(variableC, OMTVariable.class);
             assertFalse(accessibleElements.contains(variableD));
-        });
-    }
-
-    @Test
-    void isBeforeReturnsTrue() {
-        ReadAction.run(() -> {
-            OMTVariable variableADeclared =
-                    getElement(OMTVariable.class, omtVariable ->
-                            omtVariable.getName().equals("$variableA") &&
-                                    omtVariable.isDeclaredVariable()
-                    );
-            OMTVariable variableAUsed = getElement(OMTVariable.class, omtVariable ->
-                    omtVariable.getName().equals("$variableA") &&
-                            !omtVariable.isDeclaredVariable()
-            );
-            assertNotNull(variableADeclared);
-            assertNotNull(variableAUsed);
-            assertTrue(scriptUtil.isBefore(variableADeclared, variableAUsed));
-        });
-    }
-
-    @Test
-    void isBeforeReturnsTrueForDifferentLevels() {
-        ReadAction.run(() -> {
-            OMTVariable variableA =
-                    getElement(OMTVariable.class, omtVariable ->
-                            omtVariable.getName().equals("$variableA")
-                    );
-            OMTVariable variableC = getElement(OMTVariable.class, omtVariable ->
-                    omtVariable.getName().equals("$variableC")
-            );
-            assertNotNull(variableA);
-            assertNotNull(variableC);
-            assertTrue(scriptUtil.isBefore(variableA, variableC));
-        });
-    }
-
-
-    @Test
-    void isBeforeReturnsFalseForDifferentLevels() {
-        ReadAction.run(() -> {
-            OMTVariable variableA =
-                    getElement(OMTVariable.class, omtVariable ->
-                            omtVariable.getName().equals("$variableA")
-                    );
-            OMTVariable variableC = getElement(OMTVariable.class, omtVariable ->
-                    omtVariable.getName().equals("$variableC")
-            );
-            assertNotNull(variableA);
-            assertNotNull(variableC);
-            assertFalse(scriptUtil.isBefore(variableC, variableA));
-        });
-    }
-
-    @Test
-    void isBeforeReturnsFalse() {
-        ReadAction.run(() -> {
-            OMTVariable variableBDeclared =
-                    getElement(OMTVariable.class, omtVariable ->
-                            omtVariable.getName().equals("$variableB") &&
-                                    omtVariable.isDeclaredVariable()
-                    );
-            OMTVariable variableBUsed = getElement(OMTVariable.class, omtVariable ->
-                    omtVariable.getName().equals("$variableB") &&
-                            !omtVariable.isDeclaredVariable()
-            );
-            assertNotNull(variableBDeclared);
-            assertNotNull(variableBUsed);
-            assertFalse(scriptUtil.isBefore(variableBDeclared, variableBUsed));
         });
     }
 

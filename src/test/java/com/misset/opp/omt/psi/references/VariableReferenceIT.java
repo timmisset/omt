@@ -65,7 +65,7 @@ class VariableReferenceIT extends ReferenceTest {
     }
 
     @Test
-    void modelUsageHasNoUsageWhenRedefinedInScriptTest() {
+    void scriptUsageHasNoUsageWhenRedefinedInScriptTest() {
         String content = "model:\n" +
                 "   Activiteit: !Activity\n" +
                 "       onStart: |\n" +
@@ -78,7 +78,7 @@ class VariableReferenceIT extends ReferenceTest {
     }
 
     @Test
-    void modelUsageHasUsageWhenRedefinedInScriptTest() {
+    void scriptUsageHasUsageWhenRedefinedInScriptTest() {
         String content = "model:\n" +
                 "   Activiteit: !Activity\n" +
                 "       onStart: |\n" +
@@ -93,7 +93,67 @@ class VariableReferenceIT extends ReferenceTest {
     }
 
     @Test
-    void modelUsageHasUsageWhenRedefinedInDifferentBlockTest() {
+    void modelUsageHasNoUsageWhenOvershadowByScript() {
+        String content = "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       variables:\n" +
+                "       -   $<caret>param\n" +
+                "       onStart: |\n" +
+                "           VAR $param = 'test';\n" +
+                "           @LOG($param);\n" +
+                "";
+        assertHasUsages(content, 0);
+    }
+
+    @Test
+    void modelUsageHasNoUsageWhenOvershadowByModel() {
+        String content = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        variables:\n" +
+                "        - $<caret>param\n" +
+                "\n" +
+                "        actions:\n" +
+                "            myAction:\n" +
+                "                params:\n" +
+                "                - $param\n" +
+                "\n" +
+                "                onSelect: |\n" +
+                "                    @LOG($param);";
+        assertHasUsages(content, 0);
+    }
+
+    @Test
+    void modelUsageHasUsageWhenOvershadowingModel() {
+        String content = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        variables:\n" +
+                "        - $param\n" +
+                "\n" +
+                "        actions:\n" +
+                "            myAction:\n" +
+                "                params:\n" +
+                "                - $<caret>param\n" +
+                "\n" +
+                "                onSelect: |\n" +
+                "                    @LOG($param);";
+        assertHasUsages(content, 1);
+    }
+
+    @Test
+    void scriptUsageHasUsageWhenOvershadowingModel() {
+        String content = "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       variables:\n" +
+                "       -   $param\n" +
+                "       onStart: |\n" +
+                "           VAR $<caret>param = 'test';\n" +
+                "           @LOG($param);\n" +
+                "";
+        assertHasUsages(content, 1);
+    }
+
+    @Test
+    void scriptUsageHasUsageWhenRedefinedInDifferentBlockTest() {
         String content = "model:\n" +
                 "    Activiteit: !Activity\n" +
                 "        onStart: |\n" +
@@ -110,7 +170,7 @@ class VariableReferenceIT extends ReferenceTest {
     }
 
     @Test
-    void modelUsageHasUsageWhenRedefinedInDifferentBlockTestSecondBlock() {
+    void scriptUsageHasUsageWhenRedefinedInDifferentBlockTestSecondBlock() {
         String content = "model:\n" +
                 "    Activiteit: !Activity\n" +
                 "        onStart: |\n" +
@@ -127,7 +187,7 @@ class VariableReferenceIT extends ReferenceTest {
     }
 
     @Test
-    void modelUsageHasNoUsageWhenNoUsageInSameBlock() {
+    void scriptUsageHasNoUsageWhenNoUsageInSameBlock() {
         String content = "model:\n" +
                 "    Activiteit: !Activity\n" +
                 "        onStart: |\n" +
@@ -140,6 +200,54 @@ class VariableReferenceIT extends ReferenceTest {
                 "            }";
         assertHasUsages(content, 0);
         assertNoErrors();
+    }
+
+    @Test
+    void variablesDeclaredInsideScriptBlockHasUsage() {
+        String content = "commands: |\n" +
+                "    DEFINE COMMAND doSomething($param1, $param2) => {\n" +
+                "        IF ($param1 / ont:someProperty / EXISTS) {\n" +
+                "            VAR $<caret>firstDeclaredVariable = $param1 / ont:someProperty;\n" +
+                "            VAR $secondDeclaredVariable = $firstDeclaredVariable / ont:anotherProperty / CAST(IRI);\n" +
+                "        }" +
+                "    }";
+        assertHasUsages(content, 1);
+    }
+
+    @Test
+    void variablesDeclaredInsideScriptBlockHasNoUsage() {
+        String content = "commands: |\n" +
+                "    DEFINE COMMAND doSomething($param1, $param2) => {\n" +
+                "        IF ($param1 / ont:someProperty / EXISTS) {\n" +
+                "            VAR $firstDeclaredVariable = $param1 / ont:someProperty;\n" +
+                "            VAR $<caret>secondDeclaredVariable = $firstDeclaredVariable / ont:anotherProperty / CAST(IRI);\n" +
+                "        }" +
+                "    }";
+        assertHasUsages(content, 0);
+    }
+
+    @Test
+    void variablesDeclaredInsideScriptBlockIsDeclared() {
+        String content = "commands: |\n" +
+                "    DEFINE COMMAND doSomething($param1, $param2) => {\n" +
+                "        IF ($param1 / ont:someProperty / EXISTS) {\n" +
+                "            VAR $firstDeclaredVariable = $param1 / ont:someProperty;\n" +
+                "            VAR $secondDeclaredVariable = $<caret>firstDeclaredVariable / ont:anotherProperty / CAST(IRI);\n" +
+                "        }" +
+                "    }";
+        assertHasReference(content);
+    }
+
+    @Test
+    void variablesDeclaredInsideScriptBlockIsNotDeclared() {
+        String content = "commands: |\n" +
+                "    DEFINE COMMAND doSomething($param1, $param2) => {\n" +
+                "        IF ($param1 / ont:someProperty / EXISTS) {\n" +
+                "            VAR $firstDeclaredVariable = $param1 / ont:someProperty;\n" +
+                "            VAR $secondDeclaredVariable = $<caret>firstDeclaredVariableWithTypo / ont:anotherProperty / CAST(IRI);\n" +
+                "        }" +
+                "    }";
+        assertHasNoReference(content);
     }
 }
 

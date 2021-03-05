@@ -6,6 +6,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.psi.OMTDeclareVariable;
 import com.misset.opp.omt.psi.OMTElementFactory;
 import com.misset.opp.omt.psi.OMTGenericBlock;
 import com.misset.opp.omt.psi.OMTScalarValue;
@@ -61,6 +63,12 @@ public abstract class OMTVariableImpl extends NameIdentifierOwnerImpl<OMTVariabl
 
     public boolean isGlobalVariable() {
         return getPsi().getGlobalVariable() != null;
+    }
+
+    @Override
+    public boolean isDeclaredByOMTModel() {
+        return isDeclaredVariable() &&
+                PsiTreeUtil.getParentOfType(this, OMTDeclareVariable.class) == null;
     }
 
     @Override

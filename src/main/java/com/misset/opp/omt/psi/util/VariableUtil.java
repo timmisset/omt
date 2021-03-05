@@ -7,6 +7,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTBlock;
 import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTCommandBlock;
 import com.misset.opp.omt.psi.OMTDeclareVariable;
 import com.misset.opp.omt.psi.OMTDefineCommandStatement;
 import com.misset.opp.omt.psi.OMTDefineParam;
@@ -19,6 +20,7 @@ import com.misset.opp.omt.psi.OMTQuery;
 import com.misset.opp.omt.psi.OMTQueryPath;
 import com.misset.opp.omt.psi.OMTQueryReverseStep;
 import com.misset.opp.omt.psi.OMTQueryStep;
+import com.misset.opp.omt.psi.OMTScript;
 import com.misset.opp.omt.psi.OMTSignatureArgument;
 import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.psi.OMTVariableAssignment;
@@ -92,13 +94,31 @@ public class VariableUtil {
         List<OMTVariable> declaredVariables = getDeclaredVariables(variable);
         return declaredVariables.stream()
                 .filter(declaredVariable -> canBeDefinedVariable(variable, declaredVariable))
-                .min((o1, o2) -> getScriptUtil().isBefore(o1, o2) ? 1 : 0);
+                .min(this::getModelDepthPosition);
+    }
+
+    private int getModelDepthPosition(OMTVariable variable1, OMTVariable variable2) {
+        // compare the positions of the possible declared variables
+        // to process shadowing correctly, make sure the model depth is considered and the
+        // deepest declared variable wins
+        final PsiElement commonParent = PsiTreeUtil.findCommonParent(variable1, variable2); // for example, the model item
+        return PsiTreeUtil.getDepth(variable1, commonParent) > PsiTreeUtil.getDepth(variable2, commonParent) ? 0 : 1;
     }
 
     private boolean canBeDefinedVariable(OMTVariable variable, OMTVariable declaredVariable) {
         return declaredVariable.getName().equals(variable.getName()) &&
-                (VARIABLES.equals(getModelUtil().getModelItemEntryLabel(getDeclaredVariables(variable).get(0))) ||
-                        getScriptUtil().isBefore(declaredVariable, variable));
+                (declaredVariable.isDeclaredByOMTModel() || isDeclaredStatementAccessible(variable, declaredVariable));
+    }
+
+    private boolean isDeclaredStatementAccessible(OMTVariable variable, OMTVariable declaredVariable) {
+        final PsiElement commonParent = PsiTreeUtil.findCommonParent(variable, declaredVariable);
+        final PsiElement declaredBlock = PsiTreeUtil.findFirstParent(declaredVariable, parent -> parent instanceof OMTCommandBlock ||
+                parent instanceof OMTScript);
+        // a variable declare statement and usage common parent must be the block where the variable is declared
+        // to make it accessible for the usage
+        // moreover, the position of the declare statement must precede the usage
+        return commonParent == declaredBlock &&
+                declaredVariable.getTextOffset() < variable.getTextOffset();
     }
 
     private Optional<OMTDefineParam> getDefinedParameters(PsiElement element) {

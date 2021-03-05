@@ -142,24 +142,6 @@ public class OMTCodeInspectionUnusedTest extends OMTInspectionTest {
 
     }
 
-    @Test
-    void testOMTVariableRegistersRemoveIntentionWhenNoAdjacentVariable() {
-        final PsiElement unusedVariable = getUnusedVariable();
-        final OMTVariableAssignment variableAssignment = mock(OMTVariableAssignment.class);
-        doReturn(variableAssignment).when(unusedVariable).getParent();
-
-        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.getNextSiblingOfType(eq(unusedVariable), eq(OMTVariable.class)), null);
-        ArgumentCaptor<LocalQuickFix> localQuickFixesArgumentCaptor = ArgumentCaptor.forClass(LocalQuickFix.class);
-
-        visit(unusedVariable);
-
-        verify(problemsHolder).registerProblem(
-                eq(unusedVariable), anyString(), any(ProblemHighlightType.class), localQuickFixesArgumentCaptor.capture()
-        );
-        final LocalQuickFix localQuickFix = localQuickFixesArgumentCaptor.getValue();
-        assertEquals("Remove", localQuickFix.getFamilyName());
-    }
-
     private PsiElement getUnusedVariable() {
         final OMTVariable variable = mock(OMTVariable.class);
         doReturn(true).when(variable).isDeclaredVariable();
