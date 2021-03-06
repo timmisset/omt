@@ -159,8 +159,8 @@ public class OMTFormattingContext {
                 .between(DEFINE_NAME, LAMBDA).spaces(1)
 
                 // within scripts
-                .between(CURLY_OPEN, SCRIPT_LINE).blankLines(0)
-                .between(SCRIPT_LINE, CURLY_CLOSED).blankLines(0)
+                .between(CURLY_OPEN, SCRIPT).blankLines(0)
+                .between(SCRIPT, CURLY_CLOSED).blankLines(0)
                 ;
     }
 
@@ -202,13 +202,6 @@ public class OMTFormattingContext {
             return false;
         }
         return ((OMTFormattingBlock) block).getNode().getElementType() == elementType;
-    }
-
-    private boolean isNodeType(Block block, TokenSet tokenSet) {
-        if (block == null) {
-            return false;
-        }
-        return tokenSet.contains(((OMTFormattingBlock) block).getNode().getElementType());
     }
 
     public Indent computeIndent(@NotNull ASTNode node) {

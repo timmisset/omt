@@ -34,6 +34,7 @@ public class PlaceholderProvider {
     private static final String EXPECTED_BLOCK = "block";
     private static final String EXPECTED_MODEL_ITEM_BLOCK = "model item block";
     private static final String EXPECTED_QUERY = "query";
+    private static final String EXPECTED_PARAMETER_TYPE = "parameter type";
     private static final String EXPECTED_QUERY_STEP = "query step";
 
     private static final String PROVIDE_MODEL_ITEM_TYPE = "!MODEL_ITEM_TYPE"; // must be prefixed with an !
@@ -135,6 +136,10 @@ public class PlaceholderProvider {
                 expectedTypesFromError.contains(EXPECTED_MODEL_ITEM_BLOCK)) {
             setPlaceholder(PROVIDE_MODEL_ENTRY);
             return true;
+        }
+        if (expectedTypesFromError.contains(EXPECTED_PARAMETER_TYPE)) {
+            // incomplete inside parametertype, a simple placeholder will be sufficient
+            return false;
         }
         if (expectedTypesFromError.contains(EXPECTED_QUERY) ||
                 expectedTypesFromError.contains(EXPECTED_QUERY_STEP)) {

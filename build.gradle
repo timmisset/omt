@@ -52,6 +52,12 @@ patchPluginXml {
         - input parameters      incl. removal + refactor call quick-fix<br />
         - defined statements    incl. removal<br />
         A project with code-inspection can now be performed on listed items above<br />
+        <br>
+        Further disconnected YAML from OMT parsing for improved stability<br />
+        <br />
+        bugfixes for:<br />
+        Variable references that were shadowed within nested model attributes<br />
+        Multiline comments that contained * or / inside the block itself<br />
       """
 }
 tasks{

@@ -6,6 +6,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTCommandBlock;
 import com.misset.opp.omt.psi.OMTIfBlock;
 import com.misset.opp.omt.psi.OMTReturnStatement;
+import com.misset.opp.omt.psi.OMTScript;
 import com.misset.opp.omt.psi.OMTScriptContent;
 import com.misset.opp.omt.psi.OMTScriptLine;
 import com.misset.opp.omt.psi.OMTTypes;
@@ -34,14 +35,20 @@ public class ScriptAnnotator extends AbstractAnnotator {
         if (queryEntry
                 && psiElement != null && psiElement.getNode().getElementType() == OMTTypes.SEMICOLON) {
             setError("Query entry should not end with semicolon");
-        } else if (!queryEntry && (isPartOfCommandBlock(scriptContent) || getModelUtil().isScalarEntry(scriptContent)) &&
+        } else if (!queryEntry && isPartOfMultilineScript(scriptContent) &&
                 (psiElement == null || psiElement.getNode().getElementType() != OMTTypes.SEMICOLON)) {
             setError("; expected");
         }
     }
 
-    private boolean isPartOfCommandBlock(OMTScriptContent scriptContent) {
-        return PsiTreeUtil.getParentOfType(scriptContent, OMTCommandBlock.class) != null;
+    /*
+        A multiline script is anything that contains more than 1 scriptline or is nested in a command block { } to
+        indicate that any code lines in such a script should be delimited by a ;
+     */
+    private boolean isPartOfMultilineScript(PsiElement psiElement) {
+        final OMTScript omtScript = PsiTreeUtil.getParentOfType(psiElement, OMTScript.class);
+        return (omtScript != null && omtScript.getScriptLineList().size() > 1) ||           // either multiple scriptlines
+                PsiTreeUtil.getParentOfType(psiElement, OMTCommandBlock.class) != null;     // or anything inside a command block
     }
 
     private void annotate(OMTIfBlock omtIfBlock) {

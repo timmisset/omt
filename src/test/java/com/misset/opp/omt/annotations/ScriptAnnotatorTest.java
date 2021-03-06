@@ -83,7 +83,7 @@ class ScriptAnnotatorTest extends OMTAnnotationTest {
     @Test
     void annotateSemicolonForScriptContentThrowsErrorWhenNoNextPsiElement() {
         setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.nextVisibleLeaf(eq(scriptContent)), null);
-
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.getParentOfType(eq(scriptContent), eq(OMTCommandBlock.class)), mock(OMTCommandBlock.class));
         scriptAnnotator.annotate(scriptContent);
         verify(getHolder()).newAnnotation(eq(HighlightSeverity.ERROR), eq("; expected"));
     }
@@ -91,7 +91,7 @@ class ScriptAnnotatorTest extends OMTAnnotationTest {
     @Test
     void annotateSemicolonForScriptContentThrowsErrorWhenNotEndingWithSemicolon() {
         setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.nextVisibleLeaf(eq(scriptContent)), element);
-
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.getParentOfType(eq(scriptContent), eq(OMTCommandBlock.class)), mock(OMTCommandBlock.class));
         doReturn(null).when(astNode).getElementType();
 
         scriptAnnotator.annotate(scriptContent);

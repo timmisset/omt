@@ -219,4 +219,37 @@ class OMTFormattingReformattingTest extends OMTFormattingTest {
         assertFormattingApplied(unformatted, formatted);
     }
 
+    @Test
+    void testCommandBlocks() {
+        String unformatted = "commands: |\n" +
+                "    DEFINE COMMAND yourCommandName => { RETURN 'Hello world'; }\n" +
+                "    DEFINE COMMAND yourCommandName2 => { @yourCommandName(); }\n";
+        String formatted = "commands: |\n" +
+                "    DEFINE COMMAND yourCommandName => {\n" +
+                "        RETURN 'Hello world';\n" +
+                "    }\n" +
+                "    DEFINE COMMAND yourCommandName2 => {\n" +
+                "        @yourCommandName();\n" +
+                "    }\n";
+        assertFormattingApplied(unformatted, formatted);
+    }
+
+    @Test
+    void testComments() {
+        String unformatted = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        #comment for model property\n" +
+                "        onDone: |\n" +
+                "            # comment line 1\n" +
+                "            # comment line 2\n" +
+                "            @LOG('do something');\n";
+        String formatted = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        #comment for model property\n" +
+                "        onDone: |\n" +
+                "            # comment line 1\n" +
+                "            # comment line 2\n" +
+                "            @LOG('do something');\n";
+        assertFormattingApplied(unformatted, formatted);
+    }
 }

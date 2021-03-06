@@ -41,8 +41,8 @@ propertyLabel ::=                           PROPERTY COLON {
 }
 
 // a scalar single statement (multiline optional) following a property label
-scalar ::=                                  comment? scalarValue
-scalarValue ::=                             parameterWithType | variableAssignment | indentedBlock | stringEntry | query | script | commandBlock {
+scalar ::=                                  YAML_MULTILINE_DECORATOR? comment? (scalarValue | indentToken scalarValue dedentToken)
+scalarValue ::=                             parameterWithType | indentedBlock | script | commandBlock {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTScalarValueResolvable"
                                                 mixin="com.misset.opp.omt.psi.resolvable.impl.OMTScalarValueResovableImpl"
 }
@@ -85,12 +85,12 @@ member ::=                                  OPERATOR {
                                                      }
 
 // scalars
-queriesBlock::=                             leading? QUERY_BLOCK_START (PIPE? defineQueryStatement*)? {
+queriesBlock::=                             leading? QUERY_BLOCK_START (YAML_MULTILINE_DECORATOR? defineQueryStatement*)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 mixin="com.misset.opp.omt.psi.impl.OMTQueriesBlockSupImpl"
                                                                 extends=specificBlock
                                                                 }
-commandsBlock::=                            leading? COMMAND_BLOCK_START (PIPE? defineCommandStatement*)? {
+commandsBlock::=                            leading? COMMAND_BLOCK_START (YAML_MULTILINE_DECORATOR? defineCommandStatement*)? {
                                                                 implements="com.misset.opp.omt.psi.support.OMTDefinedBlock"
                                                                 mixin="com.misset.opp.omt.psi.impl.OMTCommandsBlockSupImpl"
                                                                 extends=specificBlock
@@ -118,7 +118,7 @@ prefix::=                                   leading? namespacePrefix namespaceIr
                                                     mixin="com.misset.opp.omt.psi.impl.named.OMTPrefixImpl"
                                                     implements="com.misset.opp.omt.psi.support.OMTNamedElement"
 }
-namespacePrefix::=                          (PROPERTY COLON) | (NAMESPACE COLON)            {
+namespacePrefix::=                          PROPERTY COLON                    {
                                                                                          mixin="com.misset.opp.omt.psi.impl.named.OMTNamespacePrefixNamedElementImpl"
                                                                                          implements="com.misset.opp.omt.psi.named.OMTNamespacePrefixNamedElement"
                                                                                    }
@@ -160,7 +160,7 @@ leading ::=                                 comment+
 // ////////////////////////////////////////////////////
 // ODT
 // ////////////////////////////////////////////////////
-constant_value ::=                          STRING | INTEGER | DECIMAL | NULL | BOOLEAN | TYPED_VALUE {
+constant_value ::=                          STRING+ | INTEGER | DECIMAL | NULL | BOOLEAN | TYPED_VALUE {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
                                                 extends="com.misset.opp.omt.psi.resolvable.impl.OMTConstantValueResolvableImpl"
 }
@@ -195,15 +195,16 @@ parameterType ::=                           IRI | curieElement | OPERATOR | NAME
 // an ODT (script) block is always started by a Yaml scalar node
 // it can start on the same line and be restricted to that line (not required) or it can be started by the
 // literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and and 
-script ::=                                  PIPE (scriptLine+ | query)?
-commandBlock ::=                            CURLY_OPEN (script | scriptLine+)? CURLY_CLOSED {
-                                                implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
-                                                extends="com.misset.opp.omt.psi.resolvable.impl.OMTCommandBlockResolvableImpl" }
+script ::=                                  scriptLine+
 // a scriptline is contained by the addition of the semicolon at the end
 scriptLine ::=                              leading? ((scriptContent SEMICOLON*) | commandBlock | logicalBlock)
 // the contents of a script, contained by a scriptLine or Scalar
 scriptContent ::=                           declareVariable | variableAssignment | definePrefix | commandCall | assignmentStatement |
-                                            addToCollection | removeFromCollection | returnStatement | query
+                                            addToCollection | removeFromCollection | returnStatement | query | stringEntry
+
+commandBlock ::=                            CURLY_OPEN script? CURLY_CLOSED {
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
+                                                extends="com.misset.opp.omt.psi.resolvable.impl.OMTCommandBlockResolvableImpl" }
 
 // DEFINED MEMBERS
 // ODT Members are Operator and Commands, both can be created by a DEFINE statement

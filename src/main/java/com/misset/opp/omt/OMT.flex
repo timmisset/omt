@@ -141,7 +141,7 @@ IElementType toSpecificBlockLabel() {
         case "export:": return logAndReturn(OMTTypes.EXPORT_START);
         case "module:": return logAndReturn(OMTTypes.MODULE_START);
         default:
-            yypushback(1);
+            if(yytext().toString().endsWith(":")) { yypushback(1); }
             return logAndReturn(OMTTypes.PROPERTY);
     }
 }
@@ -299,6 +299,13 @@ IElementType closeBracket() {
     // The YAML flag in OMT is only used to typecast the modelitem
     "!"+{NAME}                                                 { return returnElement(OMTTypes.MODEL_ITEM_TYPE); }
 
+    // https://yaml-multiline.info/
+    // these decorators are used in YAML to determine how linebreaks are processed and preserved
+    "|" | ">" | "|+" | "|-" | ">+" | ">-"                    {
+          setState(YAML_SCALAR);
+          return returnElement(OMTTypes.YAML_MULTILINE_DECORATOR);
+      }
+
     // A sequence bullet to identify a sequence item
     // the parser will collect them into a sequence
     "-"                                                       { return dent(OMTTypes.SEQUENCE_BULLET); }
@@ -333,10 +340,8 @@ IElementType closeBracket() {
     {CURIE}                                                   {
                                                                   setState(CURIE);
                                                                   yypushback(yylength() - yytext().toString().indexOf(":"));
-                                                                  return returnElement(OMTTypes.NAMESPACE);
+                                                                  return returnElement(OMTTypes.PROPERTY);
                                                                 }
-    // A pipe is used to indicate the start of a script block or a query array (someValue | someOtherValue)
-    "|"                                                             { return returnElement(OMTTypes.PIPE); }
 
     "DEFINE"                                                        { return returnElement(OMTTypes.DEFINE_START); }
     "QUERY"                                                         { return returnElement(OMTTypes.DEFINE_QUERY); }
@@ -377,6 +382,8 @@ IElementType closeBracket() {
     {TYPED_VALUE}                                                   { return returnElement(OMTTypes.TYPED_VALUE); }
     "<"{NAME}">"                                                    { return returnElement(OMTTypes.OWLPROPERTY); }
     {NAME}                                                          { return returnElement(OMTTypes.OPERATOR); }
+    // A pipe is used in ODT as delimiter when constructing a collection of values
+    "|"                                                            { return returnElement(OMTTypes.PIPE); }
     // all single characters that are resolved to special characters:
     // todo: some should be made more specifically available based on their lexer state
     ":"                                                             { return returnElement(OMTTypes.COLON); }
@@ -454,7 +461,7 @@ IElementType closeBracket() {
     "$"{NAME}                                                       { return returnElement(OMTTypes.VARIABLE_NAME); }
     {NAME}":"                                                       {
           yypushback(1);
-          return returnElement(OMTTypes.NAMESPACE); }
+          return returnElement(OMTTypes.PROPERTY); }
     ":"                                                             { return returnElement(OMTTypes.COLON); }
     {NAME} | {SYMBOL}                                               { return returnElement(OMTTypes.NAMESPACE_MEMBER); }
     "("                                                             { return returnElement(OMTTypes.PARENTHESES_OPEN); }

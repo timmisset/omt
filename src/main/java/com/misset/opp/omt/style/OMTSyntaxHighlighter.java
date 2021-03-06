@@ -79,7 +79,7 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     private static final TokenSet STRING_TOKENS = TokenSet.create(OMTTypes.STRING);
     private static final TokenSet CONSTANT_VALUE_TOKENS = TokenSet.create(OMTTypes.BOOLEAN, OMTTypes.NULL);
     private static final TokenSet NUMBER_TOKENS = TokenSet.create(OMTTypes.INTEGER, OMTTypes.DECIMAL);
-    private static final TokenSet CURIE_IRI_TOKENS = TokenSet.create(OMTTypes.NAMESPACE, OMTTypes.NAMESPACE_MEMBER, OMTTypes.IRI, OMTTypes.OWLPROPERTY);
+    private static final TokenSet CURIE_IRI_TOKENS = TokenSet.create(OMTTypes.NAMESPACE_MEMBER, OMTTypes.IRI, OMTTypes.OWLPROPERTY);
 
     @NotNull
     @Override

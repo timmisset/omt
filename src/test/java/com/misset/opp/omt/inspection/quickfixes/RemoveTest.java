@@ -69,9 +69,15 @@ class RemoveTest extends OMTFormattingTest {
                 "    DEFINE COMMAND yourCommandName3 => { @yourCommandName('test'); }";
         invokeQuickFixIntention(content, "Remove parameter and refactor call signatures to this Command");
         assertFormattingApplied(getFile().getText(), "commands: |\n" +
-                "    DEFINE COMMAND yourCommandName => { RETURN 'Hello world'; }\n" +
-                "    DEFINE COMMAND yourCommandName2 => { @yourCommandName(); }\n" +
-                "    DEFINE COMMAND yourCommandName3 => { @yourCommandName(); }");
+                "    DEFINE COMMAND yourCommandName => {\n" +
+                "        RETURN 'Hello world';\n" +
+                "    }\n" +
+                "    DEFINE COMMAND yourCommandName2 => {\n" +
+                "        @yourCommandName();\n" +
+                "    }\n" +
+                "    DEFINE COMMAND yourCommandName3 => {\n" +
+                "        @yourCommandName();\n" +
+                "    }");
     }
 
     @Test

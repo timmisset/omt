@@ -157,6 +157,21 @@ class OMTLexerTest extends OMTTestSuite {
     }
 
     @Test
+    void testScalarEntry() {
+        // test to make sure the pipe is parsed as YAML_MULTILINE_DECORATOR, not as a PIPE
+        String contentToTest = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        actions:\n" +
+                "            actie:\n" +
+                "                onSelect: |\n" +
+                "                    @LOG('doe iets');\n" +
+                "";
+        final List<String> elements = getElements(contentToTest);
+        assertDoesntContain(elements, "BAD_CHARACTER", "OMTTokenType.PIPE");
+        assertContainsElements(elements, "OMTTokenType.YAML_MULTILINE_DECORATOR");
+    }
+
+    @Test
     void testModuleName() {
         String contentToTest = "moduleName: Mijn module\n";
         assertDoesntContain(getElements(contentToTest), "BAD_CHARACTER");

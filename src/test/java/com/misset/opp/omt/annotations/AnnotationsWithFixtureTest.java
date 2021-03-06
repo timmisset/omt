@@ -170,7 +170,7 @@ public class AnnotationsWithFixtureTest extends OMTAnnotationTest {
                 "        payload:\n" +
                 "            payloadItem:\n" +
                 "                value: |\n" +
-                "                    'test';";
+                "                    true;";
         myFixture.configureByText(getFileName(), withPrefixes(content));
         assertHasError("Query entry should not end with semicolon");
     }
