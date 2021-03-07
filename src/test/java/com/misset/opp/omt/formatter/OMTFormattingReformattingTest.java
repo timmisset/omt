@@ -173,20 +173,20 @@ class OMTFormattingReformattingTest extends OMTFormattingTest {
     void testIndentationQueryPaths() {
         String unformatted = "queries: |\n" +
                 "    DEFINE QUERY query($param) =>\n" +
-                "        'test'\n" +
-                "            /   CHOOSE\n" +
+                "        'test' /\n" +
+                "               CHOOSE\n" +
                 "                WHEN 'a == a' => 'a' /\n" +
                 "                    FIRST\n" +
                 "                OTHERWISE => null\n" +
                 "                END ;";
         String formatted = "queries: |\n" +
                 "    DEFINE QUERY query($param) =>\n" +
-                "        'test'\n" +
-                "        / CHOOSE\n" +
-                "              WHEN 'a == a' => 'a' /\n" +
-                "                  FIRST\n" +
-                "              OTHERWISE => null\n" +
-                "          END ;";
+                "        'test' /\n" +
+                "            CHOOSE\n" +
+                "                WHEN 'a == a' => 'a' /\n" +
+                "                    FIRST\n" +
+                "                OTHERWISE => null\n" +
+                "            END ;";
         assertFormattingApplied(unformatted, formatted);
     }
 
@@ -235,14 +235,7 @@ class OMTFormattingReformattingTest extends OMTFormattingTest {
     }
 
     @Test
-    void testComments() {
-        String unformatted = "model:\n" +
-                "    Activiteit: !Activity\n" +
-                "        #comment for model property\n" +
-                "        onDone: |\n" +
-                "            # comment line 1\n" +
-                "            # comment line 2\n" +
-                "            @LOG('do something');\n";
+    void testModelAndScalarCommentIndentationShouldStayIntact() {
         String formatted = "model:\n" +
                 "    Activiteit: !Activity\n" +
                 "        #comment for model property\n" +
@@ -250,6 +243,18 @@ class OMTFormattingReformattingTest extends OMTFormattingTest {
                 "            # comment line 1\n" +
                 "            # comment line 2\n" +
                 "            @LOG('do something');\n";
-        assertFormattingApplied(unformatted, formatted);
+        assertFormattingShouldStayIntact(formatted);
+    }
+
+    @Test
+    void testModelAndScalarWithoutDecoratorCommentIndentationShouldStayIntact() {
+        String formatted = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        #comment for model property\n" +
+                "        onDone:\n" +
+                "            # comment line 1\n" +
+                "            # comment line 2\n" +
+                "            @LOG('do something');\n";
+        assertFormattingShouldStayIntact(formatted);
     }
 }

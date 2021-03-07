@@ -19,6 +19,10 @@ public abstract class OMTFormattingTest extends OMTTestSuite {
         languageSettings.accept(CodeStyle.getLanguageSettings(file));
     }
 
+    protected void assertFormattingShouldStayIntact(String formatted) {
+        assertFormattingApplied(formatted, formatted);
+    }
+
     protected void assertFormattingApplied(String unformatted, String formatted) {
         assertFormattingApplied(unformatted, formatted,
                 psiFile -> setLanguageSettings(psiFile,

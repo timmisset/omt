@@ -479,14 +479,14 @@ IElementType closeBracket() {
     // END_OF_LINE_COMMENTs are ignored by the parser and can be added to any location in the document
     ^{WHITE_SPACE}*{END_OF_LINE_COMMENT}                      {
           if(yystate() == YAML_SCALAR) {
-                return shouldExitScalar() ? exitScalar() : returnElement(OMTIgnored.END_OF_LINE_COMMENT);
+                return shouldExitScalar() ? exitScalar() : returnLeadingWhitespaceFirst(OMTIgnored.END_OF_LINE_COMMENT);
           }
           return dent(OMTIgnored.END_OF_LINE_COMMENT);
                                                                      }
     {END_OF_LINE_COMMENT}                                     { return returnElement(OMTIgnored.END_OF_LINE_COMMENT); }
     ^{WHITE_SPACE}*{MULTILINECOMMENT}                      {
           if(yystate() == YAML_SCALAR) {
-                return shouldExitScalar() ? exitScalar() : returnElement(OMTIgnored.MULTILINE_COMMENT);
+                return shouldExitScalar() ? exitScalar() : returnLeadingWhitespaceFirst(OMTIgnored.MULTILINE_COMMENT);
           }
           return dent(OMTIgnored.MULTILINE_COMMENT);
                                                                      }

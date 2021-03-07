@@ -260,7 +260,9 @@ returnStatement ::=                         RETURN_OPERATOR resolvableValue?
 chooseBlock ::=                             CHOOSE_OPERATOR 
                                                 whenPath+
                                                 otherwisePath?
-                                                endPath
+                                                endPath {
+                                                extends=queryStep
+                                                }
 whenPath ::=                                leading? WHEN_OPERATOR booleanStatement LAMBDA query
 otherwisePath ::=                           leading? OTHERWISE_OPERATOR LAMBDA query
 endPath ::=                                 END_OPERATOR 

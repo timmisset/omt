@@ -45,9 +45,11 @@ public class OMTEnterTypedHandler extends EnterHandlerDelegateAdapter {
         PsiElement elementAt = getElementAtCaret(file, caretOffset);
 
         if (isInJavaDocs(elementAt)) {
-            insert(editor, " * ", caretOffset);
             if (addJavaDocsClosure()) {
+                insert(editor, " * ", caretOffset);
                 insert(editor, "\n */", caretOffset + 3, false);
+            } else {
+                insert(editor, "* ", caretOffset);
             }
             return Result.Stop;
         }

@@ -167,7 +167,7 @@ class OMTParserDefinitionTest extends OMTTestSuite {
             final PsiComment comment = PsiTreeUtil.findChildOfType(getFile(), PsiComment.class);
             assertNotNull(comment);
             assertEquals(OMTIgnored.MULTILINE_COMMENT, comment.getTokenType());
-            assertEquals(commentBlock, comment.getText()); // the text should be parsed as a single comment block
+            assertEquals(commentBlock.trim(), comment.getText()); // the text should be parsed as a single comment block
         });
     }
 
