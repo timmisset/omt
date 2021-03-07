@@ -177,6 +177,14 @@ class OMTLexerTest extends OMTTestSuite {
         assertDoesntContain(getElements(contentToTest), "BAD_CHARACTER");
     }
 
+    @Test
+    void testInterpolatedTitle() {
+        String contentToTest = "model:\n" +
+                "    MijnActiviteit: !Activity\n" +
+                "        title: \"${ /ont:Class }\"";
+        assertDoesntContain(getElements(contentToTest), "BAD_CHARACTER");
+    }
+
     private List<String> getElements(String content, int start, int end) {
         OMTLexerAdapter lexer = new OMTLexerAdapter(printLexerLog);
         lexer.start(content, start, end, 0);

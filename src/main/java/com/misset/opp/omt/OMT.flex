@@ -232,11 +232,17 @@ int indentAtToken() {
 boolean shouldExitScalar() {
     return currentIndentation() >= indentAtToken();
 }
+boolean firstCharacterIs(String firstCharacter) {
+    return yytext() != null && yytext().toString().startsWith(firstCharacter);
+}
 IElementType startScalar() {
     IElementType elementType = returnLeadingWhitespaceFirst(OMTIgnored.START_TOKEN);
     if(elementType == OMTIgnored.START_TOKEN) {
+        int nextScalar = firstCharacterIs("\"") || firstCharacterIs("'") || firstCharacterIs("`") ?
+            YAML_SCALAR :
+            getScalarState();
         yypushback(currentNonWhiteSpaceSize(), "Starting Scalar");
-        setState(getScalarState());
+        setState(nextScalar);
     }
     return elementType;
 }

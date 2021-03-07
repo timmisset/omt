@@ -6,7 +6,12 @@ import com.misset.opp.omt.psi.OMTConstantValue;
 
 import java.util.Arrays;
 
-import static com.misset.opp.omt.psi.OMTTypes.*;
+import static com.misset.opp.omt.psi.OMTTypes.BOOLEAN;
+import static com.misset.opp.omt.psi.OMTTypes.DECIMAL;
+import static com.misset.opp.omt.psi.OMTTypes.INTEGER;
+import static com.misset.opp.omt.psi.OMTTypes.NOT_OPERATOR;
+import static com.misset.opp.omt.psi.OMTTypes.NULL;
+import static com.misset.opp.omt.psi.OMTTypes.STRING;
 
 public class TokenUtil {
 
@@ -18,7 +23,7 @@ public class TokenUtil {
 
     public Object parseToTypedLiteral(OMTConstantValue constantValue) {
         if (isToken(constantValue.getFirstChild(), STRING)) {
-            return constantValue.getText().substring(1, constantValue.getTextLength() - 1);
+            return constantValue.getText().length() > 1 ? constantValue.getText().substring(1, constantValue.getTextLength() - 1) : "";
         }
         if (isToken(constantValue.getFirstChild(), INTEGER)) {
             return Integer.parseInt(constantValue.getText());

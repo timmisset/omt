@@ -1,5 +1,6 @@
 package com.misset.opp.omt.annotations;
 
+import com.google.gson.JsonObject;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -10,6 +11,8 @@ import com.misset.opp.omt.psi.OMTScript;
 import com.misset.opp.omt.psi.OMTScriptContent;
 import com.misset.opp.omt.psi.OMTScriptLine;
 import com.misset.opp.omt.psi.OMTTypes;
+
+import java.util.Arrays;
 
 import static com.misset.opp.util.UtilManager.getModelUtil;
 
@@ -46,6 +49,12 @@ public class ScriptAnnotator extends AbstractAnnotator {
         indicate that any code lines in such a script should be delimited by a ;
      */
     private boolean isPartOfMultilineScript(PsiElement psiElement) {
+        final JsonObject jsonAtElement = getModelUtil().getJson(psiElement);
+        if (jsonAtElement != null && jsonAtElement.get("type") != null) {
+            if (Arrays.asList("string", "interpolatedString").contains(jsonAtElement.get("type").getAsString())) {
+                return false;
+            }
+        }
         final OMTScript omtScript = PsiTreeUtil.getParentOfType(psiElement, OMTScript.class);
         return (omtScript != null && omtScript.getScriptLineList().size() > 1) ||           // either multiple scriptlines
                 PsiTreeUtil.getParentOfType(psiElement, OMTCommandBlock.class) != null;     // or anything inside a command block
