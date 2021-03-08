@@ -14,6 +14,8 @@ import com.intellij.psi.PsiFile;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTImportBlock;
 import com.misset.opp.omt.psi.OMTMemberListItem;
+import com.misset.opp.omt.psi.OMTModelItemBlock;
+import com.misset.opp.omt.psi.OMTModelItemLabel;
 import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.support.OMTExportMember;
@@ -22,12 +24,15 @@ import com.misset.opp.omt.settings.OMTSettingsState;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import static com.misset.opp.util.UtilManager.getBuiltinUtil;
 import static com.misset.opp.util.UtilManager.getImportUtil;
 import static com.misset.opp.util.UtilManager.getMemberUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
 import static com.misset.opp.util.UtilManager.getProjectUtil;
 import static com.misset.opp.util.UtilManager.getVariableUtil;
 
@@ -200,55 +205,66 @@ public abstract class OMTCompletion {
                 .forEach(suggestion -> addPriorityElement(suggestion, BUILTIN_MEMBER_PRIORITY));
     }
 
-    protected void setResolvedElementsForExportedCommands() {
-        getProjectUtil().getExportedMembers(true).forEach(
-                this::setResolvedElementsForImportMembers
-        );
+    protected void setResolvedElementsForExportedCommands(PsiFile originalFile, PsiElement element) {
+        getProjectUtil().getExportedMembers(true)
+                .forEach(omtExportMember -> setResolvedElementsForImportableMembers(omtExportMember, originalFile, element));
     }
 
-    protected void setResolvedElementsForExportedOperators() {
-        getProjectUtil().getExportedMembers(false).forEach(
-                this::setResolvedElementsForImportMembers
-        );
+    protected void setResolvedElementsForExportedOperators(PsiFile originalFile, PsiElement element) {
+        getProjectUtil().getExportedMembers(false)
+                .forEach(omtExportMember -> setResolvedElementsForImportableMembers(omtExportMember, originalFile, element));
     }
 
     /**
      * Include all BuiltInCommands, ExportedCommands and DefinedCommands
      */
-    protected void setResolvedElementsForCommands(PsiElement element) {
+    protected void setResolvedElementsForCommands(PsiElement element, PsiFile originalFile) {
         setResolvedElementsForBuiltinCommands();
-        setResolvedElementsForExportedCommands();
+        setResolvedElementsForExportedCommands(originalFile, element);
         setResolvedElementsForDefinedCommands(element);
     }
 
-    protected void setResolvedElementsForOperators(PsiElement element) {
+    protected void setResolvedElementsForOperators(PsiElement element, PsiFile originalFile) {
         setResolvedElementsForBuiltinOperators();
-        setResolvedElementsForExportedOperators();
+        setResolvedElementsForExportedOperators(originalFile, element);
         setResolvedElementsForDefinedQueries(element);
     }
 
-    private void setResolvedElementsForImportMembers(OMTExportMember exportMember) {
+    private void setResolvedElementsForImportableMembers(OMTExportMember exportMember, PsiFile originalFile, PsiElement element) {
         final PsiElement resolvingElement = exportMember.getResolvingElement();
         final PsiFile containingFile = resolvingElement != null ? resolvingElement.getContainingFile() : null;
         if (!includeImport(containingFile)) return;
 
         assert containingFile != null;
-        final String folder = containingFile.getContainingDirectory() != null ?
-                containingFile.getContainingDirectory().getName() :
-                "<root>";
-        String path = String.format("%s/%s", folder, containingFile.getName());
+
         String title = exportMember.getAsSuggestion();
-        addPriorityElement(title, IMPORTABLE_MEMBER_PRIORITY, title,
-                (context, item) -> {
-                    OMTFile omtFile = (OMTFile) context.getFile();
-                    if (!omtFile.hasImportFor(exportMember)) {
-                        List<String> importPaths = getImportUtil().getImportPaths(exportMember, omtFile);
-                        if (!importPaths.isEmpty()) {
-                            String importPath = importPaths.get(0);
-                            getImportUtil().addImportMemberToBlock(context.getFile(), importPath, exportMember.getName());
+        final String callableType = exportMember.getCallableType();
+        if (originalFile == containingFile) {
+            final Optional<OMTModelItemBlock> modelItemBlock = getModelUtil().getModelItemBlock(element);
+            if (modelItemBlock.isPresent() &&
+                    exportMember.getResolvingElement() instanceof OMTModelItemLabel &&
+                    modelItemBlock.get().getModelItemLabel().getName().equals(
+                            ((OMTModelItemLabel) exportMember.getResolvingElement()).getName()
+                    )) return; // do not show auto-complete that will result in self-referencing
+            addPriorityElement(title, LOCAL_COMMAND_PRIORITY, Collections.emptyList(), "", callableType);
+        } else {
+            final String folder = containingFile.getContainingDirectory() != null ?
+                    containingFile.getContainingDirectory().getName() :
+                    "<root>";
+            String path = String.format("%s/%s", folder, containingFile.getName());
+            addPriorityElement(title, IMPORTABLE_MEMBER_PRIORITY, title,
+                    (context, item) -> {
+                        OMTFile omtFile = (OMTFile) context.getFile();
+                        if (!omtFile.hasImportFor(exportMember)) {
+                            List<String> importPaths = getImportUtil().getImportPaths(exportMember, omtFile);
+                            if (!importPaths.isEmpty()) {
+                                String importPath = importPaths.get(0);
+                                getImportUtil().addImportMemberToBlock(context.getFile(), importPath, exportMember.getName());
+                            }
                         }
-                    }
-                }, path, exportMember.getCallableType());
+                    }, path, callableType);
+        }
+
     }
 
     private boolean includeImport(PsiFile containingFile) {

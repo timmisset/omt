@@ -34,7 +34,7 @@ public class ScriptContentCompletion extends RDFCompletion {
             protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
                 PsiElement element = parameters.getPosition();
                 // all commands
-                setResolvedElementsForCommands(element);
+                setResolvedElementsForCommands(element, parameters.getOriginalFile());
                 // all accessible variables
                 setResolvedElementsForVariables(element);
 

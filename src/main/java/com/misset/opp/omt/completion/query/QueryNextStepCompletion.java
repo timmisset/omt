@@ -48,7 +48,7 @@ public class QueryNextStepCompletion extends QueryCompletion {
                 result = getResult(element, result);
 
                 // all accessible queries
-                setResolvedElementsForOperators(element);
+                setResolvedElementsForOperators(element, parameters.getOriginalFile());
 
                 // all traverse options at this position
                 setResolvedElementsForQueryTraverse(element);

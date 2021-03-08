@@ -40,7 +40,7 @@ public class QueryFilterStepCompletion extends QueryCompletion {
                 // all known variables at this point
                 setResolvedElementsForVariables(element);
                 // all operators
-                setResolvedElementsForOperators(element);
+                setResolvedElementsForOperators(element, parameters.getOriginalFile());
                 // all traverse options at this position
                 setResolvedElementsForQueryTraverse(element);
 
