@@ -36,7 +36,8 @@ public class OMTCodeInspectionUnused extends AbstractCodeInspection {
 
     @Override
     public @Nullable @Nls String getStaticDescription() {
-        return "UnusedDeclarations";
+        return "Unused declarations of prefixes, variables and defined statements (queries and commands).\n" +
+                "These should be removed when no longer used.\n";
     }
 
     @Override

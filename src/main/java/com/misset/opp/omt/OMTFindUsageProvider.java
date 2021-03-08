@@ -40,9 +40,14 @@ public class OMTFindUsageProvider implements FindUsagesProvider {
     @Override
     public boolean canFindUsagesFor(@NotNull PsiElement psiElement) {
         return variableWithUsage(psiElement) ||
-                psiElement instanceof OMTModelItemLabel ||
+                modelItemLabel(psiElement) ||
                 psiElement instanceof OMTDefineName ||
                 namespacePrefixWithUsage(psiElement);
+    }
+
+    private boolean modelItemLabel(PsiElement element) {
+        return element instanceof OMTModelItemLabel ||
+                (element != null && element.getParent() instanceof OMTModelItemLabel);
     }
 
     private boolean variableWithUsage(PsiElement element) {

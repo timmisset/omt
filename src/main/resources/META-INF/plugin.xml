@@ -46,7 +46,7 @@
         </applicationConfigurable>
         <!--        Code Inspection -->
         <localInspection
-                shortName="UnusedDeclarations"
+                shortName="UnusedDeclarations" hasStaticDescription="true"
                 language="OMT" displayName="OMT unused declarations" groupPath="OMT"
                 groupName="Redundancy" enabledByDefault="true"
                 implementationClass="com.misset.opp.omt.inspection.OMTCodeInspectionUnused"/>
