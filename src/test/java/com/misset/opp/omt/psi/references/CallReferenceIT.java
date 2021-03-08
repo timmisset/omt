@@ -20,7 +20,7 @@ class CallReferenceIT extends ReferenceTest {
     protected void setUp() throws Exception {
         super.setName("CallReferenceIT");
         super.setUp(OMTCall.class);
-        setOntologyModel();
+        setBuiltinAndModel();
     }
 
     @Test
@@ -100,6 +100,18 @@ class CallReferenceIT extends ReferenceTest {
                 "   Activiteit: !Activity\n" +
                 "       queries: |\n" +
                 "           DEFINE QUERY myModelQuery => <caret>myQuery;\n";
+        assertHasReference(content);
+        assertNoErrors();
+    }
+
+    @Test
+    void testQueryDefinedInScript() {
+        String content = "" +
+                "model:\n" +
+                "   Activiteit: !Activity\n" +
+                "       onStart: |\n" +
+                "           DEFINE QUERY query => 'myQuery';\n" +
+                "           @LOG(<caret>query);";
         assertHasReference(content);
         assertNoErrors();
     }
@@ -233,4 +245,5 @@ class CallReferenceIT extends ReferenceTest {
         assertHasReference(content);
         assertNoErrors();
     }
+
 }

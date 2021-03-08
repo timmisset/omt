@@ -13,6 +13,7 @@ import com.misset.opp.omt.psi.OMTModelItemBlock;
 import com.misset.opp.omt.psi.OMTModelItemLabel;
 import com.misset.opp.omt.psi.OMTOperatorCall;
 import com.misset.opp.omt.psi.OMTPropertyLabel;
+import com.misset.opp.omt.psi.OMTScript;
 import com.misset.opp.omt.psi.OMTScriptLine;
 import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
 import com.misset.opp.omt.psi.impl.OMTExportMemberImpl;
@@ -24,7 +25,9 @@ import com.misset.opp.omt.psi.support.OMTCallable;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,7 +48,9 @@ public class MemberUtil {
      */
     public Optional<PsiElement> getDeclaringMember(OMTCall call) {
         String callName = getCallName(call);
-        OMTDefinedStatement definedStatement = getAccessibleDefinedStatements(call)
+        final List<OMTDefinedStatement> statements = new ArrayList<>(getSameScriptDefinedStatement(call));
+        statements.addAll(getAccessibleDefinedStatements(call));
+        OMTDefinedStatement definedStatement = statements
                 .stream()
                 .filter(statement -> statement.getDefineName().getName().equals(callName))
                 .filter(statement -> (statement.isCommand() && call.isCommandCall()) || (statement.isQuery() && call.isOperatorCall()))
@@ -119,8 +124,17 @@ public class MemberUtil {
                 element instanceof OMTBlockEntry;
     }
 
+    public List<OMTDefinedStatement> getSameScriptDefinedStatement(PsiElement element) {
+        final OMTScript script = PsiTreeUtil.getParentOfType(element, OMTScript.class);
+        return script != null ? getAccessibleDefinedStatements(element, script) : Collections.emptyList();
+    }
+
     public List<OMTDefinedStatement> getAccessibleDefinedStatements(PsiElement element) {
-        final Collection<OMTDefinedStatement> allDefinedStatements = PsiTreeUtil.findChildrenOfType(element.getContainingFile(), OMTDefinedStatement.class);
+        return getAccessibleDefinedStatements(element, element.getContainingFile());
+    }
+
+    private List<OMTDefinedStatement> getAccessibleDefinedStatements(PsiElement element, PsiElement container) {
+        final Collection<OMTDefinedStatement> allDefinedStatements = PsiTreeUtil.findChildrenOfType(container, OMTDefinedStatement.class);
         // the container for this element that determines the accessibility level
         final PsiElement comparableContainer = getComparableContainer(element);
 
@@ -132,7 +146,10 @@ public class MemberUtil {
     private boolean isAccessible(OMTDefinedStatement definedStatement, PsiElement comparableContainer) {
         assert isComparableContainer(comparableContainer);
 
-        if (definedStatement.getParent() == comparableContainer.getParent()) {
+        if (definedStatement.getParent().getParent() == comparableContainer.getParent()) {
+            // defined in the same script as the call
+            return definedStatement.getParent().getStartOffsetInParent() < comparableContainer.getStartOffsetInParent();
+        } else if (definedStatement.getParent() == comparableContainer.getParent()) {
             // comparable container and defined statement are part of the same block
             // DEFINE QUERY A => ...
             // DEFINE QUERY B => ...

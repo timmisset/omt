@@ -47,6 +47,7 @@ public class CollectionAnnotator extends AbstractAnnotator {
     }
 
     private void annotate(OMTDefinedStatement definedStatement) {
+        if (!(definedStatement.getParent() instanceof OMTDefinedBlock)) return;
         final OMTDefinedBlock definedBlock = (OMTDefinedBlock) definedStatement.getParent();
         String name = definedStatement.getDefineName().getName();
         final boolean duplication = definedBlock.getStatements().stream()

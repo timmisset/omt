@@ -26,6 +26,10 @@ public class ReferenceTest extends OMTTestSuite {
         assertReference(content, false);
     }
 
+    protected void setElementAtCaretClass(Class<? extends PsiElement> elementAtCaretClass) {
+        this.elementAtCaretClass = elementAtCaretClass;
+    }
+
     private void assertReference(String content, boolean expectToHaveReference) {
         getElementAtCaret(content, element ->
                 assertEquals(expectToHaveReference, element.getReference() != null && element.getReference().resolve() != null), elementAtCaretClass, true);

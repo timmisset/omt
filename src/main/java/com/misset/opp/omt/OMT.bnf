@@ -197,7 +197,7 @@ parameterType ::=                           IRI | curieElement | OPERATOR | NAME
 // literal indentifier, the "|" in Yaml. In which case it should be followed by an empty line and and 
 script ::=                                  scriptLine+
 // a scriptline is contained by the addition of the semicolon at the end
-scriptLine ::=                              leading? ((scriptContent SEMICOLON*) | commandBlock | logicalBlock)
+scriptLine ::=                              leading? ((scriptContent SEMICOLON*) | commandBlock | logicalBlock | defineQueryStatement | defineCommandStatement)
 // the contents of a script, contained by a scriptLine or Scalar
 scriptContent ::=                           declareVariable | variableAssignment | definePrefix | commandCall | assignmentStatement |
                                             addToCollection | removeFromCollection | returnStatement | query | stringEntry

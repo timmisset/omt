@@ -169,7 +169,9 @@ public abstract class OMTCompletion {
                                                Predicate<OMTDefinedStatement> condition,
                                                Predicate<OMTCallable> typeCheck) {
         final MemberUtil memberUtil = getMemberUtil();
-        memberUtil.getAccessibleDefinedStatements(element)
+        final List<OMTDefinedStatement> accessibleDefinedStatements = new ArrayList<>(memberUtil.getAccessibleDefinedStatements(element));
+        accessibleDefinedStatements.addAll(memberUtil.getSameScriptDefinedStatement(element));
+        accessibleDefinedStatements
                 .stream()
                 .filter(condition)
                 .map(definedStatement -> memberUtil.parseDefinedToCallable(definedStatement.getDefineName()))
