@@ -54,7 +54,7 @@ sequence ::=                                sequenceItem+ | (indentToken sequenc
                                                 implements="com.misset.opp.omt.psi.support.OMTModifiableContainer"
                                                 extends="com.misset.opp.omt.psi.impl.modifiable.OMTSequenceModifiable"
 }
-sequenceItem ::=                            leading? SEQUENCE_BULLET (scalarValue | block)? {
+sequenceItem ::=                            leading? SEQUENCE_BULLET TAG? (scalarValue | block)? {
                                                 mixin="com.misset.opp.omt.psi.impl.named.OMTSequenceItemImpl"
                                                 implements="com.misset.opp.omt.psi.support.OMTNamedElement"
 }
@@ -75,7 +75,7 @@ specificBlock ::=                          importBlock | exportBlock | prefixBlo
 // sequences
 exportBlock ::=                             leading? EXPORT_START memberList? { extends=specificBlock }
 memberList ::=                              memberListItem+ | (indentToken memberListItem+ dedentToken?)
-memberListItem ::=                          (leading? SEQUENCE_BULLET member?) {
+memberListItem ::=                          (leading? SEQUENCE_BULLET TAG? member?) {
                                                     mixin="com.misset.opp.omt.psi.impl.named.OMTMemberListItemImpl"
                                                     implements="com.misset.opp.omt.psi.support.OMTNamedElement"
 }
@@ -145,7 +145,7 @@ modelItemLabel::=                           propertyLabel modelItemTypeElement  
                                                                                  mixin="com.misset.opp.omt.psi.impl.named.OMTModelItemLabelImpl"
                                                                                  implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                                                  }
-modelItemTypeElement ::=                    MODEL_ITEM_TYPE
+modelItemTypeElement ::=                    TAG
 
 // COMMENTS
 // Can occur on empty lines (JavaDocs and End Of Line Comments) or at the end of lines (End of Line Comments)
@@ -249,7 +249,7 @@ signature ::=                               PARENTHESES_OPEN (signatureArgument 
 signatureArgument ::=                       resolvableValue | commandBlock {
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
                                                 extends="com.misset.opp.omt.psi.resolvable.impl.OMTSignatureArgumentResolvableImpl" }
-flagSignature ::=                           FLAG
+flagSignature ::=                           TAG
 resolvableValue ::=                         query | commandCall {
                                               implements="com.misset.opp.omt.psi.resolvable.OMTResolvableResource"
                                               extends="com.misset.opp.omt.psi.resolvable.impl.OMTResolvableValueResolvableImpl" }
@@ -340,7 +340,11 @@ queryReverseStep ::=                        CARET curieElement? stepDecorator? q
 // ASTERIX          == 0 or more
 stepDecorator ::=                           ASTERIX | PLUS | QUESTION_MARK
 // a query filter is contained by brackets [] and should resolve to boolean
-queryFilter ::=                             BRACKET_OPEN query BRACKET_CLOSED | EMPTY_ARRAY
+queryFilter ::=                             BRACKET_OPEN query (COMMA query)? BRACKET_CLOSED | EMPTY_ARRAY
+                                            {
+                                                implements="com.misset.opp.omt.psi.resolvable.OMTQueryFilterResolvable"
+                                                mixin="com.misset.opp.omt.psi.resolvable.impl.OMTQueryFilterResolvableImpl"
+                                            }
 
 // the subQuery encapsulated a query by PARENTHESES, it can be resolved as-is, for example in an equation
 // or be cast to a traverse-like behavior using the ASTERIX and PLUS appendixes

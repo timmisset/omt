@@ -30,7 +30,7 @@ public class OMTVariableImplTest extends OMTTestSuite {
                 "           readonly: true\n" +
                 "       onStart: |\n" +
                 "           @LOG($<caret>test);";
-        getElementAtCaret(content, element -> assertTrue(((OMTVariable) element).isReadOnly()), OMTVariable.class, true);
+        getElementAtCaret(content, element -> assertTrue(element.isReadOnly()), OMTVariable.class, true);
     }
 
     @Test
@@ -41,7 +41,7 @@ public class OMTVariableImplTest extends OMTTestSuite {
                 "       -   $test\n" +
                 "       onStart: |\n" +
                 "           @LOG($<caret>test);";
-        getElementAtCaret(content, element -> assertFalse(((OMTVariable) element).isReadOnly()), OMTVariable.class, true);
+        getElementAtCaret(content, element -> assertFalse(element.isReadOnly()), OMTVariable.class, true);
     }
 
     @Test
@@ -53,6 +53,6 @@ public class OMTVariableImplTest extends OMTTestSuite {
                 "           readonly: false\n" +
                 "       onStart: |\n" +
                 "           @LOG($<caret>test);";
-        getElementAtCaret(content, element -> assertFalse(((OMTVariable) element).isReadOnly()), OMTVariable.class, true);
+        getElementAtCaret(content, element -> assertFalse(element.isReadOnly()), OMTVariable.class, true);
     }
 }

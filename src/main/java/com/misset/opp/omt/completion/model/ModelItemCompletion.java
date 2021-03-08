@@ -20,7 +20,9 @@ import static com.misset.opp.util.UtilManager.getModelUtil;
  */
 public class ModelItemCompletion extends OMTCompletion {
     public static void register(OMTCompletionContributor completionContributor) {
-        completionContributor.extend(CompletionType.BASIC, PlatformPatterns.psiElement(OMTTypes.MODEL_ITEM_TYPE),
+        completionContributor.extend(CompletionType.BASIC, PlatformPatterns.psiElement().withAncestor(1,
+                PlatformPatterns.psiElement(OMTTypes.MODEL_ITEM_TYPE_ELEMENT)
+                ),
                 new ModelItemCompletion().getCompletionProvider());
     }
 

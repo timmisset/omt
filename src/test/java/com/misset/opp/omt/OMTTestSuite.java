@@ -413,13 +413,13 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
                 )).collect(Collectors.joining("\n"));
     }
 
-    protected void getElementAtCaret(String content, Consumer<PsiElement> elementConsumer, Class<? extends PsiElement> elementAtCaretClass, boolean consumeInReader) {
+    protected <T extends PsiElement> void getElementAtCaret(String content, Consumer<T> elementConsumer, Class<T> elementAtCaretClass, boolean consumeInReader) {
         getElementAtCaret(getFileName(), content, elementConsumer, elementAtCaretClass, consumeInReader);
     }
 
-    protected void getElementAtCaret(String filename, String content, Consumer<PsiElement> elementConsumer, Class<? extends PsiElement> elementAtCaretClass, boolean consumeInReader) {
+    protected <T extends PsiElement> void getElementAtCaret(String filename, String content, Consumer<T> elementConsumer, Class<T> elementAtCaretClass, boolean consumeInReader) {
         myFixture.configureByText(filename, content);
-        final PsiElement elementAtCaret = ReadAction.compute(() -> {
+        final T elementAtCaret = ReadAction.compute(() -> {
             PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
             if (element instanceof PsiWhiteSpace) {
                 fail("Whitespace element, move the caret to the start of the PsiElement");
@@ -427,10 +427,11 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
             element = PsiTreeUtil.getParentOfType(element, elementAtCaretClass, false); // not strict will return itself if match
             assertNotNull("No element found at caret of " + elementAtCaretClass.getName(), element);
 
+            final T elementOfClassType = elementAtCaretClass.cast(element);
             if (consumeInReader) {
-                elementConsumer.accept(element);
+                elementConsumer.accept(elementOfClassType);
             }
-            return element;
+            return elementOfClassType;
         });
         if (!consumeInReader) {
             elementConsumer.accept(elementAtCaret);

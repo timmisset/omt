@@ -22,8 +22,8 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
             createTextAttributesKey("COMMENT_BLOCK", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
     public static final TextAttributesKey BAD_CHARACTER =
             createTextAttributesKey("SIMPLE_BAD_CHARACTER", HighlighterColors.BAD_CHARACTER);
-    public static final TextAttributesKey ITEM_TYPE =
-            createTextAttributesKey("ITEM_TYPE", DefaultLanguageHighlighterColors.CLASS_NAME);
+    public static final TextAttributesKey TAGS =
+            createTextAttributesKey("TAGS", DefaultLanguageHighlighterColors.CLASS_NAME);
     public static final TextAttributesKey CURIE_IRI =
             createTextAttributesKey("CURIE_IRI", DefaultLanguageHighlighterColors.CLASS_NAME);
     public static final TextAttributesKey VARIABLE =
@@ -48,7 +48,7 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     private static final TextAttributesKey[] NUMBER_KEYS = new TextAttributesKey[]{NUMBER};
     private static final TextAttributesKey[] CONSTANT_VALUE_KEYS = new TextAttributesKey[]{CONSTANT};
     private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
-    private static final TextAttributesKey[] TYPE_KEYS = new TextAttributesKey[]{ITEM_TYPE};
+    private static final TextAttributesKey[] TAG_KEYS = new TextAttributesKey[]{TAGS};
     private static final TextAttributesKey[] VARIABLE_TYPE_KEYS = new TextAttributesKey[]{VARIABLE};
     private static final TextAttributesKey[] GLOBAL_VARIABLE_KEYS = new TextAttributesKey[]{GLOBAL_VARIABLE};
     private static final TextAttributesKey[] OPERATOR_OR_COMMAND_KEYS = new TextAttributesKey[]{OPERATOR_OR_COMMAND};
@@ -63,7 +63,7 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     private static final TokenSet COMMENTLINE_TOKENS = TokenSet.create(OMTIgnored.END_OF_LINE_COMMENT, OMTIgnored.MULTILINE_COMMENT);
     private static final TokenSet COMMENTBLOCK_TOKENS = TokenSet.create(OMTTypes.JAVADOCS_START, OMTTypes.JAVADOCS_CONTENT, OMTTypes.JAVADOCS_END);
     private static final TokenSet BAD_CHAR_TOKENS = TokenSet.create(TokenType.BAD_CHARACTER);
-    private static final TokenSet TYPE_TOKENS = TokenSet.create(OMTTypes.MODEL_ITEM_TYPE);
+    private static final TokenSet TAG_TOKENS = TokenSet.create(OMTTypes.TAG);
     private static final TokenSet VARIABLE_TOKENS = TokenSet.create(OMTTypes.VARIABLE_NAME, OMTTypes.IGNORE_VARIABLE_NAME);
     private static final TokenSet GLOBAL_VARIABLE_TOKENS = TokenSet.create(OMTTypes.GLOBAL_VARIABLE_NAME);
     private static final TokenSet OPERATOR_OR_COMMAND_TOKENS = TokenSet.create(OMTTypes.OPERATOR,
@@ -93,8 +93,8 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
         if (BAD_CHAR_TOKENS.contains(tokenType)) {
             return BAD_CHAR_KEYS;
         }
-        if (TYPE_TOKENS.contains(tokenType)) {
-            return TYPE_KEYS;
+        if (TAG_TOKENS.contains(tokenType)) {
+            return TAG_KEYS;
         }
         if (VARIABLE_TOKENS.contains(tokenType)) {
             return VARIABLE_TYPE_KEYS;

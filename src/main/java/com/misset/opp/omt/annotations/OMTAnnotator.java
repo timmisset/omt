@@ -32,7 +32,7 @@ import static com.misset.opp.omt.psi.OMTTypes.INDENTED_BLOCK;
 import static com.misset.opp.omt.psi.OMTTypes.MEMBER;
 import static com.misset.opp.omt.psi.OMTTypes.MEMBER_LIST_ITEM;
 import static com.misset.opp.omt.psi.OMTTypes.MODEL_ITEM_LABEL;
-import static com.misset.opp.omt.psi.OMTTypes.MODEL_ITEM_TYPE;
+import static com.misset.opp.omt.psi.OMTTypes.MODEL_ITEM_TYPE_ELEMENT;
 import static com.misset.opp.omt.psi.OMTTypes.NAMESPACE_PREFIX;
 import static com.misset.opp.omt.psi.OMTTypes.OPERATOR_CALL;
 import static com.misset.opp.omt.psi.OMTTypes.PARAMETER_TYPE;
@@ -70,7 +70,7 @@ public class OMTAnnotator implements Annotator {
             IF_BLOCK, SCRIPT_CONTENT, SCRIPT_LINE
     );
     private static final TokenSet MODEL_ANNOTATIONS = TokenSet.create(
-            MODEL_ITEM_TYPE, BLOCK, GENERIC_BLOCK, BLOCK_ENTRY,
+            MODEL_ITEM_TYPE_ELEMENT, BLOCK, GENERIC_BLOCK, BLOCK_ENTRY,
             INDENTED_BLOCK, ROOT_BLOCK, MODEL_ITEM_LABEL, DEFINE_NAME,
             SCALAR_VALUE, SCALAR_VALUE
     );

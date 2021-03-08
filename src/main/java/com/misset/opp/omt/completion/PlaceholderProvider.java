@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  */
 public class PlaceholderProvider {
 
-    private static final String EXPECTED_MODEL_ITEM_TYPE = "MODEL_ITEM_TYPE";
+    private static final String EXPECTED_MODEL_ITEM_TYPE = "TAG";
     private static final String EXPECTED_BLOCK = "block";
     private static final String EXPECTED_MODEL_ITEM_BLOCK = "model item block";
     private static final String EXPECTED_QUERY = "query";
@@ -70,7 +70,7 @@ public class PlaceholderProvider {
         if (provideQueryStepWithSeperator()) {
             return PROVIDE_QUERY_STEP_WITH_SEPARATOR;
         }
-        return context.getDummyIdentifier();
+        return context.getDummyIdentifier().trim();
     }
 
     private boolean provideModelEntry() {

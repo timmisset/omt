@@ -185,6 +185,16 @@ class OMTLexerTest extends OMTTestSuite {
         assertDoesntContain(getElements(contentToTest), "BAD_CHARACTER");
     }
 
+    @Test
+    void tagBeforeSequenceItem() {
+        String contentToTest = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        variables:\n" +
+                "        - !Ref $mijnVariabel";
+        final List<String> elements = getElements(contentToTest);
+        assertDoesntContain(elements, "BAD_CHARACTER");
+    }
+
     private List<String> getElements(String content, int start, int end) {
         OMTLexerAdapter lexer = new OMTLexerAdapter(printLexerLog);
         lexer.start(content, start, end, 0);

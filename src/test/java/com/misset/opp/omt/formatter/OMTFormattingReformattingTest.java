@@ -257,4 +257,22 @@ class OMTFormattingReformattingTest extends OMTFormattingTest {
                 "            @LOG('do something');\n";
         assertFormattingShouldStayIntact(formatted);
     }
+
+    @Test
+    void testSequenceItemIndentationShouldStayIntact() {
+        String formatted = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        variables:\n" +
+                "        -   $mijnVariabel";
+        assertFormattingShouldStayIntact(formatted);
+    }
+
+    @Test
+    void testSequenceItemWithTagIndentationShouldStayIntact() {
+        String formatted = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "        variables:\n" +
+                "        -   !Ref $mijnVariabel";
+        assertFormattingShouldStayIntact(formatted);
+    }
 }

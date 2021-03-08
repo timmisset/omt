@@ -13,16 +13,16 @@ import java.util.Map;
 
 public class OMTColorSettingsPage implements ColorSettingsPage {
     private static final AttributesDescriptor[] DESCRIPTORS = new AttributesDescriptor[]{
-            new AttributesDescriptor("Global Variable Type", OMTSyntaxHighlighter.GLOBAL_VARIABLE),
-            new AttributesDescriptor("Item Type", OMTSyntaxHighlighter.ITEM_TYPE),
+            new AttributesDescriptor("Global variable type", OMTSyntaxHighlighter.GLOBAL_VARIABLE),
+            new AttributesDescriptor("YAML tags", OMTSyntaxHighlighter.TAGS),
             new AttributesDescriptor("String", OMTSyntaxHighlighter.STRING),
             new AttributesDescriptor("Number", OMTSyntaxHighlighter.NUMBER),
-            new AttributesDescriptor("Boolean, Null", OMTSyntaxHighlighter.CONSTANT),
+            new AttributesDescriptor("Boolean, null", OMTSyntaxHighlighter.CONSTANT),
             new AttributesDescriptor("Variable", OMTSyntaxHighlighter.VARIABLE),
-            new AttributesDescriptor("Readonly Variable", OMTSyntaxHighlighter.READ_ONLY_VARIABLE),
-            new AttributesDescriptor("Comment Block", OMTSyntaxHighlighter.COMMENTBLOCK),
-            new AttributesDescriptor("Comment Line", OMTSyntaxHighlighter.COMMENTLINE),
-            new AttributesDescriptor("Operator & Command Names", OMTSyntaxHighlighter.OPERATOR_OR_COMMAND),
+            new AttributesDescriptor("Readonly variable", OMTSyntaxHighlighter.READ_ONLY_VARIABLE),
+            new AttributesDescriptor("Comment block", OMTSyntaxHighlighter.COMMENTBLOCK),
+            new AttributesDescriptor("Comment line", OMTSyntaxHighlighter.COMMENTLINE),
+            new AttributesDescriptor("Operator & command names", OMTSyntaxHighlighter.OPERATOR_OR_COMMAND),
             new AttributesDescriptor("Curies & IRIs", OMTSyntaxHighlighter.CURIE_IRI)
     };
 

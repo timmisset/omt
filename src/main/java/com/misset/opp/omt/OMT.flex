@@ -302,8 +302,7 @@ IElementType closeBracket() {
     {PROPERTY_KEY}                                            { return dent(OMTTypes.PROPERTY); }
     ":"                                                       { return OMTTypes.COLON; }
 
-    // The YAML flag in OMT is only used to typecast the modelitem
-    "!"+{NAME}                                                 { return returnElement(OMTTypes.MODEL_ITEM_TYPE); }
+    "!"+{NAME}                                                 { return returnElement(OMTTypes.TAG); }
 
     // https://yaml-multiline.info/
     // these decorators are used in YAML to determine how linebreaks are processed and preserved
@@ -358,7 +357,7 @@ IElementType closeBracket() {
     {VARIABLENAME}                                                  { return returnElement(OMTTypes.VARIABLE_NAME); }
     "$_"                                                            { return returnElement(OMTTypes.IGNORE_VARIABLE_NAME); }
     "@"{NAME}                                                       { return returnElement(OMTTypes.COMMAND); }
-    "!"{NAME}                                                       { return returnElement(OMTTypes.FLAG); }
+    "!"+{NAME}                                                      { return returnElement(OMTTypes.TAG); }
 
     // the lambda is used for assigning the actual query/command block to it's constructor
     // and to assign a path to case condition

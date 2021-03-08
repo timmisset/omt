@@ -13,6 +13,7 @@ import com.misset.opp.omt.psi.OMTQueryReverseStep;
 import com.misset.opp.omt.psi.OMTQueryStep;
 import com.misset.opp.omt.psi.OMTRemoveFromCollection;
 import com.misset.opp.omt.psi.OMTSubQuery;
+import com.misset.opp.omt.psi.resolvable.OMTQueryFilterResolvable;
 import org.apache.jena.rdf.model.Resource;
 import org.jetbrains.annotations.NotNull;
 
@@ -65,7 +66,8 @@ public class QueryAnnotator extends AbstractAnnotator {
             annotateQueryCurieElement();
         }
         // throw warning for multiple filters on a single step
-        if (step.getQueryFilterList().size() > 1) {
+        if (step.getQueryFilterList().size() > 1 &&
+                step.getQueryFilterList().stream().noneMatch(OMTQueryFilterResolvable::isSubSelection)) {
             annotateMultipleFilters();
         }
         // annotate the subquery
