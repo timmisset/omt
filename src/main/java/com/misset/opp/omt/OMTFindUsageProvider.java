@@ -4,6 +4,7 @@ import com.intellij.lang.cacheBuilder.DefaultWordsScanner;
 import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.tree.TokenSet;
 import com.misset.opp.omt.psi.OMTDefineName;
 import com.misset.opp.omt.psi.OMTDefineQueryStatement;
@@ -13,8 +14,11 @@ import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.OMTPropertyLabel;
 import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.OMTVariable;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 /**
  * This method is also used by the refactor-rename dialog to determine the displayname and type
@@ -39,31 +43,32 @@ public class OMTFindUsageProvider implements FindUsagesProvider {
 
     @Override
     public boolean canFindUsagesFor(@NotNull PsiElement psiElement) {
-        return variableWithUsage(psiElement) ||
-                modelItemLabel(psiElement) ||
+        return isVariableWithUsage(psiElement) ||
+                isModelItemPropertyLabel(psiElement) ||
                 psiElement instanceof OMTDefineName ||
-                namespacePrefixWithUsage(psiElement);
+                isNamespacePrefixWithUsage(psiElement);
     }
 
-    private boolean modelItemLabel(PsiElement element) {
-        return element instanceof OMTModelItemLabel ||
-                (element != null && element.getParent() instanceof OMTModelItemLabel);
+    @Override
+    public @Nullable
+    @NonNls
+    String getHelpId(@NotNull PsiElement psiElement) {
+        return "Finding an OMT Element";
     }
 
-    private boolean variableWithUsage(PsiElement element) {
+    private boolean isVariableWithUsage(PsiElement element) {
         return element instanceof OMTVariable &&
                 ((OMTVariable) element).isDeclaredVariable();
     }
 
-    private boolean namespacePrefixWithUsage(PsiElement element) {
+    private boolean isNamespacePrefixWithUsage(PsiElement element) {
         return element instanceof OMTNamespacePrefix &&
                 element.getParent() instanceof OMTPrefix;
     }
 
-    @Nullable
-    @Override
-    public String getHelpId(@NotNull PsiElement psiElement) {
-        return null;
+    private boolean isModelItemPropertyLabel(PsiElement element) {
+        return element instanceof OMTPropertyLabel &&
+                element.getParent() instanceof OMTModelItemLabel;
     }
 
     @NotNull
@@ -71,15 +76,13 @@ public class OMTFindUsageProvider implements FindUsagesProvider {
     public String getType(@NotNull PsiElement element) {
         if (element instanceof OMTVariable) {
             return "Variable";
-        } else if (element instanceof OMTModelItemLabel) {
-            return ((OMTModelItemLabel) element).getModelItemTypeElement().getText().substring(1);
         } else if (element instanceof OMTDefineName) {
             return element.getParent() instanceof OMTDefineQueryStatement ?
                     "Query" : "Command";
         } else if (element instanceof OMTNamespacePrefix) {
             return "Prefix";
         } else if (isModelItemPropertyLabel(element)) {
-            return getType(element.getParent());
+            return ((OMTModelItemLabel) element.getParent()).getModelItemTypeElement().getText().substring(1);
         }
         return "";
     }
@@ -93,16 +96,12 @@ public class OMTFindUsageProvider implements FindUsagesProvider {
     @NotNull
     @Override
     public String getNodeText(@NotNull PsiElement element, boolean useFullName) {
-        if (element instanceof OMTModelItemLabel) {
-            return ((OMTModelItemLabel) element).getPropertyLabel().getName();
-        } else if (isModelItemPropertyLabel(element)) {
-            return getNodeText(element.getParent(), useFullName);
+        if (isModelItemPropertyLabel(element)) {
+            return ((OMTModelItemLabel) element.getParent()).getName();
         }
-        return element.getText();
+        return element instanceof PsiNameIdentifierOwner ?
+                Objects.requireNonNull(((PsiNameIdentifierOwner) element).getName()) :
+                element.getText();
     }
 
-    private boolean isModelItemPropertyLabel(PsiElement element) {
-        return element instanceof OMTPropertyLabel &&
-                element.getParent() instanceof OMTModelItemLabel;
-    }
 }
