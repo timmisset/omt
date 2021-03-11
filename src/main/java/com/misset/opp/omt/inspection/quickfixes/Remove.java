@@ -13,6 +13,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTDeclareVariable;
 import com.misset.opp.omt.psi.OMTDefineName;
 import com.misset.opp.omt.psi.OMTModelItemBlock;
+import com.misset.opp.omt.psi.OMTModelItemLabel;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.OMTPrefixBlock;
 import com.misset.opp.omt.psi.OMTScriptLine;
@@ -29,7 +30,25 @@ import java.util.Objects;
 import static com.misset.opp.util.UtilManager.getModelUtil;
 
 public class Remove {
-    public static LocalQuickFix getRemoveQuickFix(OMTPrefix prefix) {
+    public static LocalQuickFix getRemoveQuickFix(@NotNull OMTModelItemLabel modelItemLabel) {
+        return new LocalQuickFix() {
+
+            @Override
+            public @IntentionFamilyName @NotNull String getFamilyName() {
+                return String.format("Remove this %s", ReadAction.compute(modelItemLabel::getModelItemType));
+            }
+
+            @Override
+            public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+                final OMTModelItemBlock container = PsiTreeUtil.getParentOfType(modelItemLabel, OMTModelItemBlock.class);
+                if (container != null) {
+                    container.delete();
+                }
+            }
+        };
+    }
+
+    public static LocalQuickFix getRemoveQuickFix(@NotNull OMTPrefix prefix) {
         return new LocalQuickFix() {
             @Override
             public @IntentionFamilyName @NotNull String getFamilyName() {
@@ -43,7 +62,13 @@ public class Remove {
 
             private boolean isLastPrefix() {
                 return
-                        ReadAction.compute(() -> ((OMTPrefixBlock) prefix.getParent()).getPrefixList().size() == 1);
+                        ReadAction.compute(() -> {
+                            if (!(prefix.getParent() instanceof OMTPrefixBlock)) {
+                                return false;
+                            } else {
+                                return ((OMTPrefixBlock) prefix.getParent()).getPrefixList().size() == 1;
+                            }
+                        });
             }
 
             @Override
@@ -57,7 +82,7 @@ public class Remove {
         };
     }
 
-    public static LocalQuickFix getRemoveQuickFix(OMTVariable variable, String container) {
+    public static LocalQuickFix getRemoveQuickFix(@NotNull OMTVariable variable, String container) {
         // a declared variable at this point will be declared in the OMT scope itself
         // removing them via a QuickFix will depend on the ability to remove them from any call to the container
         // for example, all unused parameters
@@ -78,7 +103,7 @@ public class Remove {
                 if ("variables".equals(container)) {
                     return "Remove variable";
                 } else if ("params".equals(container)) {
-                    return "Remove parameter and refactor call signatures to this " + getModelUtil().getModelItemType(variable);
+                    return "Remove parameter and refactor call signatures to this " + ReadAction.compute(() -> getModelUtil().getModelItemType(variable));
                 } else if ("defined".equals(container)) {
                     return "Remove parameter and refactor call signatures to this " + getDefinedType();
                 } else {
@@ -139,7 +164,7 @@ public class Remove {
      * @param variableAssignment
      * @return
      */
-    public static LocalQuickFix getRemoveQuickFix(OMTVariableAssignment variableAssignment) {
+    public static LocalQuickFix getRemoveQuickFix(@NotNull OMTVariableAssignment variableAssignment) {
 
         return new LocalQuickFix() {
             @Override
@@ -190,7 +215,7 @@ public class Remove {
         };
     }
 
-    public static LocalQuickFix getRemoveQuickFix(OMTDefineName defineName) {
+    public static LocalQuickFix getRemoveQuickFix(@NotNull OMTDefineName defineName) {
         final OMTDefinedStatement definedStatement = (OMTDefinedStatement) defineName.getParent();
         if (definedStatement == null) {
             return null;

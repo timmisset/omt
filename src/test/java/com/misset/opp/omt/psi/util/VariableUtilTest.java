@@ -57,7 +57,7 @@ class VariableUtilTest extends OMTTestSuite {
             onStartBlock = getElement(
                     OMTGenericBlock.class,
                     genericBlock ->
-                            genericBlock.getPropertyLabel().getName().equals("onStart")
+                            genericBlock.getName().equals("onStart")
             );
         });
         doReturn(annotationBuilder).when(annotationHolder).newAnnotation(any(), anyString());

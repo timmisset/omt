@@ -18,11 +18,11 @@ import static com.misset.opp.util.UtilManager.getVariableUtil;
 
 public class VariableAnnotator extends AbstractAnnotator {
 
+    private static final String PARAMS = "params";
+
     public VariableAnnotator(AnnotationHolder annotationHolder) {
         super(annotationHolder);
     }
-
-    private static final String PARAMS = "params";
 
     private void annotateGlobalVariable(@NotNull final OMTVariable variable) {
         // the magic variables always exist

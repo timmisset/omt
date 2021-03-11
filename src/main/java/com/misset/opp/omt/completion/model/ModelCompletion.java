@@ -50,7 +50,7 @@ public class ModelCompletion extends OMTCompletion {
         // completion for destructure attributes such as name, value, onChange etc for VariableType
         final PsiElementPattern.Capture<PsiElement> sequencePattern =
                 PlatformPatterns.psiElement().andOr(
-                        PlatformPatterns.psiElement(OMTTypes.OPERATOR),             // capture placeholder as operator
+                        PlatformPatterns.psiElement(OMTTypes.NAME),             // capture placeholder as operator
                         PlatformPatterns.psiElement(OMTTypes.PROPERTY)              // or the PROVIDE_MODEL_ENTRY (MODEL: ENTRY)
                 )
                         .inside(PlatformPatterns.psiElement(OMTSequenceItem.class))

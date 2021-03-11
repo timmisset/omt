@@ -9,7 +9,6 @@ import com.misset.opp.omt.psi.OMTBlock;
 import com.misset.opp.omt.psi.OMTBlockEntry;
 import com.misset.opp.omt.psi.OMTFile;
 import com.misset.opp.omt.psi.OMTGenericBlock;
-import com.misset.opp.omt.psi.OMTModelItemLabel;
 import com.misset.opp.omt.psi.OMTModelItemTypeElement;
 import com.misset.opp.omt.psi.OMTScalarValue;
 import org.apache.jena.rdf.model.Resource;
@@ -37,8 +36,6 @@ public class ModelAnnotator extends AbstractAnnotator {
             annotateBlockEntry((OMTGenericBlock) element);
         } else if (element instanceof OMTBlock) {
             annotateMissingEntries((OMTBlock) element);
-        } else if (element instanceof OMTModelItemLabel) {
-            annotateUsage(element); // usage check of activities, procedures, etc
         } else if (element instanceof OMTScalarValue) {
             annotateScalarValue((OMTScalarValue) element);
         }

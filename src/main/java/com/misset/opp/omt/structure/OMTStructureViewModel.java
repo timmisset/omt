@@ -20,7 +20,6 @@ public class OMTStructureViewModel extends StructureViewModelBase implements
         return new Sorter[]{Sorter.ALPHA_SORTER};
     }
 
-
     @Override
     public boolean isAlwaysShowsPlus(StructureViewTreeElement element) {
         return false;

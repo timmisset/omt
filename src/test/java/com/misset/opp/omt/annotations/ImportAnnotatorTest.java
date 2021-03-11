@@ -1,6 +1,5 @@
 package com.misset.opp.omt.annotations;
 
-import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -14,9 +13,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 class ImportAnnotatorTest extends OMTAnnotationTest {
 
@@ -88,14 +89,6 @@ class ImportAnnotatorTest extends OMTAnnotationTest {
 
         importAnnotator.annotate(member);
         verifyNoErrors();
-    }
-
-    @Test
-    void annotateMemberThrowsWarningWhenNotUsed() {
-        mockIsReferenced(member, false);
-        importAnnotator.annotate(member);
-        verify(getHolder()).newAnnotation(eq(HighlightSeverity.WARNING), eq(MEMBER_NAME + " is never used"));
-        verify(getBuilder()).withFix(any(IntentionAction.class));
     }
 
     @Test

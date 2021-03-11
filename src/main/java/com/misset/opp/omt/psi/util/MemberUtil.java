@@ -47,7 +47,7 @@ public class MemberUtil {
      * The declaration of the operator must precede it's call to it, not only upstream but also within the same declaration block
      */
     public Optional<PsiElement> getDeclaringMember(OMTCall call) {
-        String callName = getCallName(call);
+        String callName = call.getName();
         final List<OMTDefinedStatement> statements = new ArrayList<>(getSameScriptDefinedStatement(call));
         statements.addAll(getAccessibleDefinedStatements(call));
         OMTDefinedStatement definedStatement = statements
@@ -76,7 +76,7 @@ public class MemberUtil {
         }
 
         // not found as a member of a defined block, check for imports:
-        return getDeclaringMemberFromImport(call, getCallName(call));
+        return getDeclaringMemberFromImport(call, callName);
     }
 
     /**
@@ -96,11 +96,6 @@ public class MemberUtil {
         } else {
             return Optional.empty();
         }
-    }
-
-    public String getCallName(OMTCall call) {
-        String name = call.getFirstChild().getText();
-        return call.isCommandCall() && name.startsWith("@") ? name.substring(1) : name;
     }
 
     private PsiElement getComparableContainer(PsiElement element) {

@@ -13,7 +13,7 @@ import com.misset.opp.omt.completion.OMTCompletionContributor;
 import org.jetbrains.annotations.NotNull;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
-import static com.misset.opp.omt.psi.OMTTypes.OPERATOR;
+import static com.misset.opp.omt.psi.OMTTypes.NAME;
 
 public class QueryNextStepCompletion extends QueryCompletion {
 
@@ -26,7 +26,7 @@ public class QueryNextStepCompletion extends QueryCompletion {
         final PatternCondition<PsiElement> carretOnlyCondition = new PatternCondition<>("Operator placeholder in reverse step") {
             @Override
             public boolean accepts(@NotNull PsiElement element, ProcessingContext context) {
-                return element.getNode().getElementType() == OPERATOR &&
+                return element.getNode().getElementType() == NAME &&
                         element.getParent() instanceof PsiErrorElement &&
                         ((PsiErrorElement) element.getParent()).getErrorDescription().contains("<curie element>");
             }

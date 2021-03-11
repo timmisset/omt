@@ -1,12 +1,10 @@
 package com.misset.opp.omt.annotations;
 
-import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.search.searches.ReferencesSearch;
 import org.apache.jena.rdf.model.Resource;
 
 import java.util.List;
@@ -73,22 +71,6 @@ public abstract class AbstractAnnotator {
         final AnnotationBuilder annotationBuilder = holder.newAnnotation(HighlightSeverity.WARNING, message);
         builder.accept(annotationBuilder);
         annotationBuilder.create();
-    }
-
-    protected void annotateUsage(PsiElement element) {
-        annotateUsage(element, builder -> {
-        });
-    }
-
-    protected void annotateUsage(PsiElement element, Consumer<AnnotationBuilder> builder) {
-        if (ReferencesSearch.search(element).findAll().isEmpty()) {
-            String message = String.format("%s is never used", element.getText());
-            final AnnotationBuilder annotationBuilder =
-                    holder.newAnnotation(HighlightSeverity.WARNING, message)
-                            .highlightType(ProblemHighlightType.LIKE_UNUSED_SYMBOL);
-            builder.accept(annotationBuilder);
-            annotationBuilder.create();
-        }
     }
 
     protected void annotateBoolean(List<Resource> valueType, String source) {

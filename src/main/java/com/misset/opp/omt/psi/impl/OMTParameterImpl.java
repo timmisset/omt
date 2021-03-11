@@ -2,7 +2,11 @@ package com.misset.opp.omt.psi.impl;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTParameterType;
+import com.misset.opp.omt.psi.OMTParameterWithType;
+import com.misset.opp.omt.psi.OMTQueryPath;
+import com.misset.opp.omt.psi.OMTVariable;
+import com.misset.opp.omt.psi.OMTVariableAssignment;
 import com.misset.opp.omt.psi.support.OMTParameter;
 import org.jetbrains.annotations.Nullable;
 
@@ -116,6 +120,11 @@ public class OMTParameterImpl implements OMTParameter {
     }
 
     @Override
+    public void setType(@Nullable OMTParameterType parameterType) {
+        this.type = parameterType;
+    }
+
+    @Override
     public String getName() {
         return name;
     }
@@ -138,10 +147,5 @@ public class OMTParameterImpl implements OMTParameter {
                 getParameterTypeDesc() != null ? String.format(" (%s) ", getParameterTypeDesc()) : "",
                 isRequired() ? " (required) " : "",
                 defaultValue != null ? defaultValue.toString() : "");
-    }
-
-    @Override
-    public void setType(@Nullable OMTParameterType parameterType) {
-        this.type = parameterType;
     }
 }

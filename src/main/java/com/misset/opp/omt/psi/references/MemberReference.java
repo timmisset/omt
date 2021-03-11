@@ -1,17 +1,22 @@
 package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementResolveResult;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiPolyVariantReference;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.ResolveResult;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTImport;
+import com.misset.opp.omt.psi.OMTMember;
 import com.misset.opp.omt.psi.OMTModelItemLabel;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static com.misset.opp.util.UtilManager.getImportUtil;
 
 /**
  * A member reference takes care of all references from operator/command calls to their declarations
@@ -43,28 +48,57 @@ public abstract class MemberReference<T extends PsiElement> extends PsiReference
         return ResolveResult.EMPTY_ARRAY;
     }
 
-    @Override
-    public boolean isReferenceTo(@NotNull PsiElement element) {
-        final PsiElement declaringMember = resolve();
-        return declaringMember != null &&
-                (declaringMember.equals(element)
-                        || element.equals(isReferenceToTarget(declaringMember))
-                        || isDeferredImportReference(element));
-    }
-
-    private boolean isDeferredImportReference(PsiElement element) {
-        return PsiTreeUtil.getParentOfType(element, OMTImport.class) != null &&
-                element != myElement &&
-                element.getContainingFile() == myElement.getContainingFile() &&
-                element.getReference() != null && myElement.getReference() != null &&
-                element.getReference().resolve() == myElement.getReference().resolve();
-    }
-
     @Nullable
     @Override
     public PsiElement resolve() {
         ResolveResult[] resolveResults = multiResolve(false);
         return resolveResults.length == 1 ? resolveResults[0].getElement() : null;
+    }
+
+    @Override
+    public boolean isReferenceTo(@NotNull PsiElement element) {
+        if (myElement == element) return false;
+        final PsiElement declaringMember = resolve();
+        if (declaringMember == null) return false;
+
+        if (element instanceof OMTMember) {
+            // checks if this is reference to an import member statement, an import can be a reference to
+            // an import statement in another file:
+            // queries.omt => contains queryA
+            // queries2.omt => contains queryB
+            // queries3.omt => imports queryA and queryB from queries.omt AND queries2.omt but
+            // doesn't use them in the file itself
+            // usage.omt => imports queryA and queryB from queries3.omt
+
+            // to make sure the import statements in queries3.omt get the proper highlighting, we need to
+            // validate that they are (re)imported in usage.omt
+            // when the method gets to this point we assert being in file usage.omt and receiving a
+            // isReferenceTo to an import from queries3.omt that share the same name
+            final PsiElement targetElementOfElement = element.getReference() != null ? element.getReference().resolve() : null;
+
+            final VirtualFile importedFile = getImportedFile();
+            final PsiFile containingFile = element.getContainingFile();
+
+            return targetElementOfElement != null &&
+                    importedFile != null &&
+                    importedFile.exists() &&
+                    containingFile != null &&
+                    containingFile.getVirtualFile() != null &&
+                    targetElementOfElement == declaringMember && // resolve to the same final element
+                    importedFile.equals(containingFile.getVirtualFile()); // and the current member is importing from the target file
+        } else {
+            return
+                    (declaringMember.equals(element) ||
+                            element.equals(isReferenceToTarget(declaringMember)));
+        }
+    }
+
+    private VirtualFile getImportedFile() {
+        // retrieves the file that is used to import the member from:
+        final OMTImport omtImport = PsiTreeUtil.getParentOfType(myElement, OMTImport.class);
+        return omtImport != null ?
+                getImportUtil().getImportedFile(omtImport) :
+                null;
     }
 
     /**

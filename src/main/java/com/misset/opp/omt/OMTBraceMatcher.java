@@ -7,7 +7,12 @@ import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.misset.opp.omt.psi.OMTTypes.*;
+import static com.misset.opp.omt.psi.OMTTypes.BRACKET_CLOSED;
+import static com.misset.opp.omt.psi.OMTTypes.BRACKET_OPEN;
+import static com.misset.opp.omt.psi.OMTTypes.CURLY_CLOSED;
+import static com.misset.opp.omt.psi.OMTTypes.CURLY_OPEN;
+import static com.misset.opp.omt.psi.OMTTypes.PARENTHESES_CLOSE;
+import static com.misset.opp.omt.psi.OMTTypes.PARENTHESES_OPEN;
 
 public class OMTBraceMatcher implements PairedBraceMatcher {
 
@@ -16,7 +21,6 @@ public class OMTBraceMatcher implements PairedBraceMatcher {
             new BracePair(BRACKET_OPEN, BRACKET_CLOSED, true),
             new BracePair(PARENTHESES_OPEN, PARENTHESES_CLOSE, true),
     };
-
 
     @NotNull
     @Override

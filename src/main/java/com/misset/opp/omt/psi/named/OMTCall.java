@@ -1,5 +1,6 @@
 package com.misset.opp.omt.psi.named;
 
+import com.misset.opp.omt.psi.OMTCallName;
 import com.misset.opp.omt.psi.OMTFlagSignature;
 import com.misset.opp.omt.psi.OMTSignature;
 import com.misset.opp.omt.psi.resolvable.OMTResolvableResource;
@@ -24,4 +25,6 @@ public interface OMTCall extends OMTMemberNamedElement, OMTResolvableResource {
     OMTFlagSignature getFlagSignature();
 
     OMTCallable getCallable();
+
+    OMTCallName getCallName();
 }

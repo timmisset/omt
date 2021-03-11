@@ -42,6 +42,8 @@ public interface OMTCallable {
 
     String getName();
 
+    void setName(String name);
+
     PsiElement getElement();
 
     void validateSignatureArgument(int index, OMTSignatureArgument argument) throws IncorrectSignatureArgument;
@@ -61,8 +63,6 @@ public interface OMTCallable {
     String shortDescription();
 
     String getAsSuggestion();
-
-    void setName(String name);
 
     List<Resource> getReturnType();
 

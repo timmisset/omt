@@ -7,7 +7,12 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.PsiElement;
 import com.misset.opp.omt.OMTTestSuite;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTCommandCall;
+import com.misset.opp.omt.psi.OMTImportBlock;
+import com.misset.opp.omt.psi.OMTModelItemBlock;
+import com.misset.opp.omt.psi.OMTOperatorCall;
+import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.util.ProjectUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +26,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doReturn;
 
 class ModelUtilTest extends OMTTestSuite {
 
@@ -117,7 +124,7 @@ class ModelUtilTest extends OMTTestSuite {
         ReadAction.run(() -> {
             Optional<OMTBlockEntry> variables = modelUtil.getModelItemBlockEntry(variable, "variables");
             assertTrue(variables.isPresent());
-            assertEquals("variables", Objects.requireNonNull(((OMTGenericBlock) variables.get()).getPropertyLabel()).getName());
+            assertEquals("variables", Objects.requireNonNull((variables.get()).getName()));
         });
     }
 

@@ -37,10 +37,9 @@ public abstract class OMTCallableImpl implements OMTCallable {
     private final List<String> localVariables = new ArrayList<>();
     private final List<String> flags = new ArrayList<>();
     private final String returnType;
-    private String name;
     private final String type;
     private final boolean isCommand;
-
+    private String name;
     private String description;
 
     public OMTCallableImpl(String type, boolean isCommand) {

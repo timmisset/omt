@@ -46,7 +46,7 @@ scalarValue ::=                             parameterWithType | indentedBlock | 
                                                 implements="com.misset.opp.omt.psi.resolvable.OMTScalarValueResolvable"
                                                 mixin="com.misset.opp.omt.psi.resolvable.impl.OMTScalarValueResovableImpl"
 }
-objectValue ::=
+
 // a sequence must start with a newline followed by items, lead by their bullet (-)
 // indentation is allowed but not required. If indented, it must dedent
 sequence ::=                                sequenceItem+ | (indentToken sequenceItem+ dedentToken)
@@ -79,7 +79,7 @@ memberListItem ::=                          (leading? SEQUENCE_BULLET TAG? membe
                                                     mixin="com.misset.opp.omt.psi.impl.named.OMTMemberListItemImpl"
                                                     implements="com.misset.opp.omt.psi.support.OMTNamedElement"
 }
-member ::=                                  OPERATOR {
+member ::=                                  NAME {
                                                        mixin="com.misset.opp.omt.psi.impl.named.OMTMemberImpl"
                                                        implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                      }
@@ -143,7 +143,7 @@ modelItemBlock::=                           leading? modelItemLabel indentedBloc
                                                 }
 modelItemLabel::=                           propertyLabel modelItemTypeElement  {
                                                                                  mixin="com.misset.opp.omt.psi.impl.named.OMTModelItemLabelImpl"
-                                                                                 implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
+                                                                                 implements="com.misset.opp.omt.psi.named.OMTModelItemLabelNamedElement"
                                                                                  }
 modelItemTypeElement ::=                    TAG
 
@@ -186,7 +186,7 @@ parameterWithType ::=                       variable PARENTHESES_OPEN parameterT
                                                 mixin="com.misset.opp.omt.psi.impl.OMTParameterWithTypeSupImpl"
 }
 
-parameterType ::=                           IRI | curieElement | OPERATOR | NAMESPACE_MEMBER {
+parameterType ::=                           IRI | curieElement | NAME | NAMESPACE_MEMBER {
                                             implements="com.misset.opp.omt.psi.named.OMTCurie"
                                             mixin="com.misset.opp.omt.psi.impl.OMTParameterTypeSupImpl"
 }
@@ -211,7 +211,7 @@ commandBlock ::=                            CURLY_OPEN script? CURLY_CLOSED {
 // there is also a collection of BuiltIn operators and commands which are included
 // and finally, all runnable OMT modelitems are available as Commands (Activity, Procedure) or Operator (StandAloneQuery)
 // only the Defined members are part of set of the grammar parser
-defineName ::=                              NAME | OPERATOR    {
+defineName ::=                              NAME         {
                                                            mixin="com.misset.opp.omt.psi.impl.named.OMTDefineNameImpl"
                                                            implements="com.misset.opp.omt.psi.named.OMTMemberNamedElement"
                                                          }
@@ -229,14 +229,15 @@ defineParam ::=                             PARENTHESES_OPEN (variable (COMMA va
                                                             implements="com.misset.opp.omt.psi.support.OMTModifiableContainer"
                                                             extends="com.misset.opp.omt.psi.impl.modifiable.OMTDefinedParamModifiable"
 }
-
+callName ::=                                NAME
 // MEMBER CALLS
 // A call to either an Operator or a Command. In case of the latter, it's always prefixed with @
-operatorCall ::=                            OPERATOR flagSignature? signature? {
+operatorCall ::=                            callName flagSignature? signature? {
                                                              implements="com.misset.opp.omt.psi.named.OMTCall"
                                                              extends="com.misset.opp.omt.psi.resolvable.impl.OMTCallResolvableImpl"
                                                            }
-commandCall ::=                             COMMAND flagSignature? signature?
+
+commandCall ::=                             AT callName flagSignature? signature?
                                                             {
                                                              implements="com.misset.opp.omt.psi.named.OMTCall"
                                                              extends="com.misset.opp.omt.psi.resolvable.impl.OMTCallResolvableImpl"

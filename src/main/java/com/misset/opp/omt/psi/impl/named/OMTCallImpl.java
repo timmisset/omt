@@ -24,8 +24,7 @@ public abstract class OMTCallImpl extends MemberNamedElementImpl<OMTCall> implem
     @NotNull
     @Override
     public String getName() {
-        String name = getFirstChild().getText();
-        return name.startsWith("@") ? name.substring(1) : name;
+        return getCallName().getText();
     }
 
     @Override
@@ -43,7 +42,7 @@ public abstract class OMTCallImpl extends MemberNamedElementImpl<OMTCall> implem
     @Override
     @NotNull
     public PsiElement getNameIdentifier() {
-        return getFirstChild();
+        return getCallName();
     }
 
     @Override
@@ -82,4 +81,5 @@ public abstract class OMTCallImpl extends MemberNamedElementImpl<OMTCall> implem
     public NamedMemberType getType() {
         return getCallable().isOperator() ? NamedMemberType.OperatorCall : NamedMemberType.CommandCall;
     }
+
 }

@@ -37,8 +37,8 @@ public class CallRenameTest extends RenameTest {
                 "   DEFINE QUERY anotherQuery => newQuery;", myFixture.getEditor().getDocument().getText());
     }
 
-    @Test
-        // known flaky test, no cause found yet
+    //    @Test
+    // known flaky test, no cause found yet
     void renamesCallAndImportedQueryName() {
         final PsiFile importedFile = addFile("imported.omt", "" +
                 "queries: |\n" +

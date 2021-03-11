@@ -26,8 +26,6 @@ public class ImportAnnotator extends AbstractAnnotator {
 
     private void annotate(OMTMember member) {
         validateReference(member, String.format("%s is not an exported member", member.getName()));
-        annotateUsage(member,
-                annotationBuilder -> annotationBuilder.withFix(removeIntention.getRemoveIntention(member.getParent())));
     }
 
     private void annotate(OMTImportSource importSource) {

@@ -8,10 +8,18 @@ import com.intellij.openapi.application.ReadAction;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.misset.opp.omt.OMTTestSuite;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTCommandCall;
+import com.misset.opp.omt.psi.OMTDefineCommandStatement;
+import com.misset.opp.omt.psi.OMTDefineName;
+import com.misset.opp.omt.psi.OMTDefineQueryStatement;
+import com.misset.opp.omt.psi.OMTImportBlock;
+import com.misset.opp.omt.psi.OMTMember;
+import com.misset.opp.omt.psi.OMTModelItemBlock;
+import com.misset.opp.omt.psi.OMTModelItemLabel;
+import com.misset.opp.omt.psi.OMTOperatorCall;
+import com.misset.opp.omt.psi.OMTPropertyLabel;
 import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
 import com.misset.opp.omt.psi.named.NamedMemberType;
-import com.misset.opp.omt.psi.named.OMTCall;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import com.misset.opp.omt.psi.support.OMTExportMember;
 import com.misset.opp.omt.util.BuiltInUtil;
@@ -30,7 +38,8 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 class MemberUtilTest extends OMTTestSuite {
 
@@ -138,7 +147,7 @@ class MemberUtilTest extends OMTTestSuite {
             );
             Optional<PsiElement> declaringMember = memberUtil.getDeclaringMember(commandCall);
             assertTrue(declaringMember.isPresent());
-            assertEquals("MijnProcedure", ((OMTModelItemLabel) declaringMember.get()).getPropertyLabel().getName());
+            assertEquals("MijnProcedure", ((OMTModelItemLabel) declaringMember.get()).getName());
         });
     }
 
@@ -396,24 +405,6 @@ class MemberUtilTest extends OMTTestSuite {
                 e.printStackTrace();
             }
         });
-    }
-
-    @Test
-    void getCallName() {
-        PsiElement firstChild = mock(PsiElement.class);
-
-        OMTCall call = mock(OMTCall.class);
-        doReturn(firstChild).when(call).getFirstChild();
-        doReturn(true).when(call).isCommandCall();
-
-        // with prefix:
-        doReturn("@Call").when(firstChild).getText();
-        assertEquals("Call", memberUtil.getCallName(call));
-
-        // without prefix
-        doReturn("Call").when(firstChild).getText();
-        assertEquals("Call", memberUtil.getCallName(call));
-
     }
 
 }

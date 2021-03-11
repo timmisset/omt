@@ -18,9 +18,9 @@ public interface OMTParameter {
 
     OMTParameterType getType();
 
+    void setType(OMTParameterType parameterType);
+
     String getName();
 
     String describe();
-
-    void setType(OMTParameterType parameterType);
 }

@@ -6,7 +6,15 @@ import com.intellij.ide.util.treeView.smartTree.SortableTreeElement;
 import com.intellij.ide.util.treeView.smartTree.TreeElement;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.psi.NavigatablePsiElement;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTBlock;
+import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTGenericBlock;
+import com.misset.opp.omt.psi.OMTModelBlock;
+import com.misset.opp.omt.psi.OMTModelItemBlock;
+import com.misset.opp.omt.psi.OMTSequence;
+import com.misset.opp.omt.psi.OMTSequenceItem;
+import com.misset.opp.omt.psi.OMTSpecificBlock;
 import com.misset.opp.omt.psi.impl.OMTBlockEntryImpl;
 import com.misset.opp.omt.psi.impl.OMTModelItemBlockImpl;
 import com.misset.opp.omt.psi.impl.OMTSequenceItemImpl;
@@ -117,7 +125,6 @@ public class OMTStructureViewElement implements StructureViewTreeElement, Sortab
         }
         return treeElements;
     }
-
 
     @NotNull
     @Override

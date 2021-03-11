@@ -4,7 +4,10 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTElementFactory;
+import com.misset.opp.omt.psi.OMTImportLocation;
+import com.misset.opp.omt.psi.OMTImportSource;
 import com.misset.opp.omt.psi.OMTModelItemLabel;
 import com.misset.opp.omt.psi.OMTPropertyLabel;
 import com.misset.opp.omt.psi.references.PropertyLabelReference;
@@ -23,6 +26,9 @@ public abstract class OMTPropertyLabelImpl extends NameIdentifierOwnerImpl<OMTPr
     public PsiReference getReference() {
         if (getParent() instanceof OMTModelItemLabel) {
             return null;
+        } else if (getParent() instanceof OMTImportLocation) {
+            final OMTImportSource importSource = PsiTreeUtil.getParentOfType(getPsi(), OMTImportSource.class);
+            return importSource != null ? importSource.getReference() : null;
         }
         return new PropertyLabelReference(getPsi(), TextRange.create(0, getPsi().getText().length() - 1));
     }
@@ -49,6 +55,5 @@ public abstract class OMTPropertyLabelImpl extends NameIdentifierOwnerImpl<OMTPr
                 "   %s: !ModelItemType", name);
         return replace(OMTElementFactory.fromString(content, OMTPropertyLabel.class, getProject()));
     }
-
 
 }

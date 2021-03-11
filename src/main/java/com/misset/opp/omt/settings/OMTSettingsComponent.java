@@ -51,7 +51,6 @@ public class OMTSettingsComponent {
                 file -> Comparing.equal(file.getName(), name, SystemInfo.isFileSystemCaseSensitive));
     }
 
-
     public JPanel getPanel() {
         return myMainPanel;
     }

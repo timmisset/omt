@@ -356,7 +356,7 @@ IElementType closeBracket() {
     ";"                                                             { return returnElement(OMTTypes.SEMICOLON); }
     {VARIABLENAME}                                                  { return returnElement(OMTTypes.VARIABLE_NAME); }
     "$_"                                                            { return returnElement(OMTTypes.IGNORE_VARIABLE_NAME); }
-    "@"{NAME}                                                       { return returnElement(OMTTypes.COMMAND); }
+
     "!"+{NAME}                                                      { return returnElement(OMTTypes.TAG); }
 
     // the lambda is used for assigning the actual query/command block to it's constructor
@@ -367,7 +367,7 @@ IElementType closeBracket() {
     // ODT operators
     // certain operators are used for assertions and should be recognized. They can be used within querysteps (grammar part)
     // when making filters or other boolean assertions
-    "AND(" | "OR(" | "NOT("                                         { yypushback(1, "CONDITIONAL_OPERATOR"); return returnElement(OMTTypes.OPERATOR); }
+    "AND(" | "OR(" | "NOT("                                         { yypushback(1, "CONDITIONAL_OPERATOR"); return returnElement(OMTTypes.NAME); }
     "AND" | "OR"                                                    { return returnElement(OMTTypes.BOOLEAN_OPERATOR); }
     "NOT"                                                           { return returnElement(OMTTypes.NOT_OPERATOR); }
     ">=" | "<=" | "==" | ">" | "<"                                  { return returnElement(OMTTypes.CONDITIONAL_OPERATOR); }
@@ -386,11 +386,12 @@ IElementType closeBracket() {
     {DECIMAL}                                                       { return returnElement(OMTTypes.DECIMAL); }
     {TYPED_VALUE}                                                   { return returnElement(OMTTypes.TYPED_VALUE); }
     "<"{NAME}">"                                                    { return returnElement(OMTTypes.OWLPROPERTY); }
-    {NAME}                                                          { return returnElement(OMTTypes.OPERATOR); }
+    {NAME}                                                          { return returnElement(OMTTypes.NAME); }
     // A pipe is used in ODT as delimiter when constructing a collection of values
     "|"                                                            { return returnElement(OMTTypes.PIPE); }
     // all single characters that are resolved to special characters:
     // todo: some should be made more specifically available based on their lexer state
+    "@"                                                             { return returnElement(OMTTypes.AT); }
     ":"                                                             { return returnElement(OMTTypes.COLON); }
     "="                                                             { return returnElement(OMTTypes.EQUALS); }
     ","                                                             { return returnElement(OMTTypes.COMMA); }

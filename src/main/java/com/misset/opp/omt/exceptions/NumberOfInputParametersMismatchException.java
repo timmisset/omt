@@ -19,10 +19,18 @@ public class NumberOfInputParametersMismatchException extends Exception {
     public String getMessage() {
         return String.format("%s expects %s %s, found %s", name, getExpectedParams(), singleAmount() && minExpected == 1 ? "parameter" : "parameters", found);
     }
-    private boolean singleAmount() { return minExpected == maxExpected; }
+
+    private boolean singleAmount() {
+        return minExpected == maxExpected;
+    }
+
     private String getExpectedParams() {
-        if(singleAmount()) { return minExpected + ""; }
-        if(maxExpected == -1) { return String.format("%s or more", minExpected); }
+        if (singleAmount()) {
+            return minExpected + "";
+        }
+        if (maxExpected == -1) {
+            return String.format("%s or more", minExpected);
+        }
         return String.format("between %s and %s", minExpected, maxExpected);
     }
 }

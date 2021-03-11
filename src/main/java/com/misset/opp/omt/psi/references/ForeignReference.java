@@ -1,12 +1,16 @@
 package com.misset.opp.omt.psi.references;
 
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiElementResolveResult;
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.PsiReferenceBase;
+import com.intellij.psi.ResolveResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ForeignReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
-    private PsiElement targetElement;
+    private final PsiElement targetElement;
 
     /**
      * Create a reference from a foreign language into the OMT language

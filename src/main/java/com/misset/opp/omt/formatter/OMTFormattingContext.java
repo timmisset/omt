@@ -200,7 +200,6 @@ public class OMTFormattingContext {
         return ((OMTFormattingBlock) block).getNode().getElementType() == elementType;
     }
 
-
     public Indent computeIndent(@NotNull ASTNode node) {
         /*
          * Indentation is computed by analyzing the element at the start of a new line,

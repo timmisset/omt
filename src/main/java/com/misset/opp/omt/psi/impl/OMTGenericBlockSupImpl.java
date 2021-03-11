@@ -21,4 +21,5 @@ public abstract class OMTGenericBlockSupImpl extends OMTLabelledElementImpl impl
     public OMTBlock getBlock() {
         return getNode().getPsi(OMTGenericBlock.class).getIndentedBlock();
     }
+
 }

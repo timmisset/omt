@@ -53,21 +53,14 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     private static final TextAttributesKey[] GLOBAL_VARIABLE_KEYS = new TextAttributesKey[]{GLOBAL_VARIABLE};
     private static final TextAttributesKey[] OPERATOR_OR_COMMAND_KEYS = new TextAttributesKey[]{OPERATOR_OR_COMMAND};
     private static final TextAttributesKey[] CURIE_IRI_KEYS = new TextAttributesKey[]{CURIE_IRI};
-
-    @NotNull
-    @Override
-    public Lexer getHighlightingLexer() {
-        return new OMTLexerAdapter("Highlight Lexer");
-    }
-
     private static final TokenSet COMMENTLINE_TOKENS = TokenSet.create(OMTIgnored.END_OF_LINE_COMMENT, OMTIgnored.MULTILINE_COMMENT);
     private static final TokenSet COMMENTBLOCK_TOKENS = TokenSet.create(OMTTypes.JAVADOCS_START, OMTTypes.JAVADOCS_CONTENT, OMTTypes.JAVADOCS_END);
     private static final TokenSet BAD_CHAR_TOKENS = TokenSet.create(TokenType.BAD_CHARACTER);
     private static final TokenSet TAG_TOKENS = TokenSet.create(OMTTypes.TAG);
     private static final TokenSet VARIABLE_TOKENS = TokenSet.create(OMTTypes.VARIABLE_NAME, OMTTypes.IGNORE_VARIABLE_NAME);
     private static final TokenSet GLOBAL_VARIABLE_TOKENS = TokenSet.create(OMTTypes.GLOBAL_VARIABLE_NAME);
-    private static final TokenSet OPERATOR_OR_COMMAND_TOKENS = TokenSet.create(OMTTypes.OPERATOR,
-            OMTTypes.COMMAND,
+    private static final TokenSet OPERATOR_OR_COMMAND_TOKENS = TokenSet.create(
+            OMTTypes.NAME,
             OMTTypes.CONDITIONAL_OPERATOR,
             OMTTypes.IF_OPERATOR,
             OMTTypes.ELSE_OPERATOR,
@@ -80,6 +73,12 @@ public class OMTSyntaxHighlighter extends SyntaxHighlighterBase {
     private static final TokenSet CONSTANT_VALUE_TOKENS = TokenSet.create(OMTTypes.BOOLEAN, OMTTypes.NULL);
     private static final TokenSet NUMBER_TOKENS = TokenSet.create(OMTTypes.INTEGER, OMTTypes.DECIMAL);
     private static final TokenSet CURIE_IRI_TOKENS = TokenSet.create(OMTTypes.NAMESPACE_MEMBER, OMTTypes.IRI, OMTTypes.OWLPROPERTY);
+
+    @NotNull
+    @Override
+    public Lexer getHighlightingLexer() {
+        return new OMTLexerAdapter("Highlight Lexer");
+    }
 
     @NotNull
     @Override

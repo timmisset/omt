@@ -521,6 +521,13 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
                 .orElse(null);
     }
 
+    protected List<IntentionAction> getQuickFixIntentions(String content, String description) {
+        return getAllQuickFixes(content)
+                .stream()
+                .filter(intentionAction -> intentionAction.getText().equals(description))
+                .collect(Collectors.toList());
+    }
+
     protected void invokeQuickFixIntention(String content, String description) {
         final IntentionAction quickFixIntention = getQuickFixIntention(content, description);
         if (quickFixIntention == null) {

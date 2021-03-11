@@ -27,6 +27,8 @@ import static com.misset.opp.util.UtilManager.getVariableUtil;
 
 public abstract class OMTVariableImpl extends NameIdentifierOwnerImpl<OMTVariable> implements OMTVariableNamedElement {
 
+    private int isDeclaredValue = -1;
+
     public OMTVariableImpl(@NotNull ASTNode node) {
         super(node, OMTVariable.class);
     }
@@ -53,7 +55,6 @@ public abstract class OMTVariableImpl extends NameIdentifierOwnerImpl<OMTVariabl
         return this;
     }
 
-    private int isDeclaredValue = -1;
     public boolean isDeclaredVariable() {
         if (isDeclaredValue == -1) {
             isDeclaredValue = getVariableUtil().isDeclaredVariable(getPsi()) ? 1 : 0;

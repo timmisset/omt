@@ -46,22 +46,22 @@ import static com.misset.opp.util.UtilManager.getBuiltinUtil;
 import static com.misset.opp.util.UtilManager.getTTLUtil;
 
 public class ProjectUtil {
-    private final HashMap<String, ArrayList<OMTPrefix>> knownPrefixes = new HashMap<>();
-    private final HashMap<String, ArrayList<OMTExportMember>> exportingMembers = new HashMap<>();
-    private static final String REASONS = "reasons";
-    private final JsonObject parsedModel = new JsonObject();
-
     public static final String BUILTIN_COMMANDS = "builtinCommands.ts";
     public static final String BUILTIN_OPERATORS = "builtinOperators.ts";
     public static final String BUILTIN_HTTP_COMMANDS = "http-commands.ts";
     public static final String BUILTIN_JSON_PARSE_COMMAND = "json-parse-command.ts";
+    private static final String REASONS = "reasons";
     private static final String REASON = "reason";
     private static final String DESCRIPTION = "description";
+    private final HashMap<String, ArrayList<OMTPrefix>> knownPrefixes = new HashMap<>();
+    private final HashMap<String, ArrayList<OMTExportMember>> exportingMembers = new HashMap<>();
+    private final JsonObject parsedModel = new JsonObject();
     private final HashMap<String, HashMap<String, String>> entriesOptions = new HashMap<>();
 
     private Model model;
     private WindowManager windowManager;
     private FileDocumentManager fileDocumentManager;
+    private RDFModelUtil rdfModelUtil;
 
     public ProjectUtil() {
         if (ApplicationManager.getApplication() != null) {
@@ -69,8 +69,6 @@ public class ProjectUtil {
             fileDocumentManager = FileDocumentManager.getInstance();
         }
     }
-
-    private RDFModelUtil rdfModelUtil;
 
     public void setStatusbarMessage(Project project, String message) {
         final StatusBar statusBar = getStatusBar(project);

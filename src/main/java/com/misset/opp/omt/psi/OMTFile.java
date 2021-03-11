@@ -29,10 +29,6 @@ import static com.misset.opp.util.UtilManager.getModelUtil;
 import static com.misset.opp.util.UtilManager.getProjectUtil;
 
 public class OMTFile extends PsiFileBase {
-    public OMTFile(@NotNull FileViewProvider viewProvider) {
-        super(viewProvider, OMTLanguage.INSTANCE);
-    }
-
     public static final String IMPORT = "import";
     public static final String QUERIES = "queries";
     public static final String COMMANDS = "commands";
@@ -40,8 +36,12 @@ public class OMTFile extends PsiFileBase {
     public static final String PREFIXES = "prefixes";
     public static final String EXPORT = "export";
     public static final String MODULE = "module";
-
     private String currentContent = "";
+    private HashMap<String, OMTExportMember> exportMembers = new HashMap<>();
+
+    public OMTFile(@NotNull FileViewProvider viewProvider) {
+        super(viewProvider, OMTLanguage.INSTANCE);
+    }
 
     @Override
     public void subtreeChanged() {
@@ -95,7 +95,6 @@ public class OMTFile extends PsiFileBase {
         return rootBlock.getBlockEntryList().contains(blockEntry);
     }
 
-
     public <T> Optional<T> getSpecificBlock(String name, Class<T> specificBlockClass) {
         Optional<OMTBlockEntry> blockEntry = getRootBlock(name);
         if (blockEntry.isPresent() && specificBlockClass.isAssignableFrom(blockEntry.get().getClass())) {
@@ -103,8 +102,6 @@ public class OMTFile extends PsiFileBase {
         }
         return Optional.empty();
     }
-
-    private HashMap<String, OMTExportMember> exportMembers = new HashMap<>();
 
     public List<OMTMember> getImportedMembers() {
         List<OMTMember> importedList = new ArrayList<>();

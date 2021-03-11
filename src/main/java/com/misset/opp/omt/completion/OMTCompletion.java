@@ -42,9 +42,6 @@ public abstract class OMTCompletion {
             PlatformPatterns.psiElement(OMTMemberListItem.class).inside(
                     OMTImportBlock.class
             );
-
-    protected final String ATTRIBUTES = "attributes";
-
     /**
      * The higher the priority number, the higher it gets listed
      */
@@ -61,12 +58,11 @@ public abstract class OMTCompletion {
     protected static final int LOCAL_COMMAND_PRIORITY = 3;
     protected static final int BUILTIN_MEMBER_PRIORITY = 2;
     protected static final int IMPORTABLE_MEMBER_PRIORITY = 1;
-
-    private final List<LookupElement> resolvedElements = new ArrayList<>();
-    private final List<String> resolvedSuggestions = new ArrayList<>();
-
     private static final InsertHandler<LookupElement> NO_INSERT_HANDLER = (context, item) -> {
     };
+    protected final String ATTRIBUTES = "attributes";
+    private final List<LookupElement> resolvedElements = new ArrayList<>();
+    private final List<String> resolvedSuggestions = new ArrayList<>();
 
     public CompletionProvider<CompletionParameters> getCompletionProvider() {
         return null;

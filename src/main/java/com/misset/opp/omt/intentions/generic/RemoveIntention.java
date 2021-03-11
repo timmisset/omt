@@ -7,7 +7,14 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTImportBlock;
+import com.misset.opp.omt.psi.OMTMemberListItem;
+import com.misset.opp.omt.psi.OMTNamespacePrefix;
+import com.misset.opp.omt.psi.OMTPrefix;
+import com.misset.opp.omt.psi.OMTPrefixBlock;
+import com.misset.opp.omt.psi.OMTSequenceItem;
+import com.misset.opp.omt.psi.OMTVariable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

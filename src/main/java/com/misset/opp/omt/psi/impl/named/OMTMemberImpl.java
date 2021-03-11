@@ -4,9 +4,12 @@ package com.misset.opp.omt.psi.impl.named;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.misset.opp.omt.OMTFileType;
 import com.misset.opp.omt.psi.OMTElementFactory;
-import com.misset.opp.omt.psi.OMTImportSource;
+import com.misset.opp.omt.psi.OMTImport;
 import com.misset.opp.omt.psi.OMTMember;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.references.ExportMemberReference;
@@ -49,12 +52,20 @@ public abstract class OMTMemberImpl extends MemberNamedElementImpl<OMTMember> im
                 new ExportMemberReference(getPsi(), getNameIdentifier().getTextRangeInParent());
     }
 
+    @Override
+    public @NotNull SearchScope getUseScope() {
+        return GlobalSearchScope.getScopeRestrictedByFileTypes(
+                GlobalSearchScope.allScope(getProject()),
+                OMTFileType.INSTANCE
+        );
+    }
+
     @NotNull
     @Override
     public NamedMemberType getType() {
         // do not add this to the constructor, the getPsi() will cause a stackoverflow during construction
         if (type == null) {
-            type = PsiTreeUtil.getParentOfType(getPsi(), OMTImportSource.class) != null ?
+            type = PsiTreeUtil.getParentOfType(getPsi(), OMTImport.class) != null ?
                     NamedMemberType.ImportingMember :
                     NamedMemberType.ExportingMember;
         }

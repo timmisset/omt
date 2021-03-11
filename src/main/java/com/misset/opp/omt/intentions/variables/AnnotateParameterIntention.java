@@ -90,7 +90,6 @@ public class AnnotateParameterIntention {
             existingComment.replace(commentBlock);
         }
 
-
     }
 
 }

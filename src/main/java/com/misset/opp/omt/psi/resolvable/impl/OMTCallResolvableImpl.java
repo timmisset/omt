@@ -53,7 +53,9 @@ public abstract class OMTCallResolvableImpl extends OMTCallImpl implements OMTCa
 
     @Override
     public List<Resource> getFirstArgumentType() {
-        if (getSignature() != null) {
+        if (getSignature() != null &&
+                getSignature().getSignatureArgumentList() != null &&
+                !getSignature().getSignatureArgumentList().isEmpty()) {
             final OMTSignatureArgument omtSignatureArgument = getSignature().getSignatureArgumentList().get(0);
             final List<Resource> resources = omtSignatureArgument.resolveToResource();
             return resources.isEmpty() ? getRDFModelUtil().getAnyTypeAsList() : resources;

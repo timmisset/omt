@@ -53,6 +53,22 @@ public class PlaceholderProvider {
         setContextElement();
     }
 
+    public static List<String> getExpectedTypesFromError(PsiErrorElement errorElement) {
+        List<String> expectedTypes = new ArrayList<>();
+        if (errorElement == null) {
+            return expectedTypes;
+        }
+
+        String errorDescription = errorElement.getErrorDescription();
+        Pattern pattern = Pattern.compile("\\<(.*?)\\>|OMTTokenType.([^ ]*)");
+        Matcher matcher = pattern.matcher(errorDescription);
+        while (matcher.find()) {
+            // every match is grouped as either 1 (<...>) or 2 OMTTokenType.
+            expectedTypes.add(matcher.group(1) != null ? matcher.group(1) : matcher.group(2));
+        }
+        return expectedTypes;
+    }
+
     public String getIdentifier() {
         if (contextElement == null) {
             return PROVIDE_MODEL_ENTRY;
@@ -93,22 +109,6 @@ public class PlaceholderProvider {
 
     private boolean hasErrorState() {
         return getErrorElement() != null;
-    }
-
-    public static List<String> getExpectedTypesFromError(PsiErrorElement errorElement) {
-        List<String> expectedTypes = new ArrayList<>();
-        if (errorElement == null) {
-            return expectedTypes;
-        }
-
-        String errorDescription = errorElement.getErrorDescription();
-        Pattern pattern = Pattern.compile("\\<(.*?)\\>|OMTTokenType.([^ ]*)");
-        Matcher matcher = pattern.matcher(errorDescription);
-        while (matcher.find()) {
-            // every match is grouped as either 1 (<...>) or 2 OMTTokenType.
-            expectedTypes.add(matcher.group(1) != null ? matcher.group(1) : matcher.group(2));
-        }
-        return expectedTypes;
     }
 
     private void setPlaceholder(String placeholder) {

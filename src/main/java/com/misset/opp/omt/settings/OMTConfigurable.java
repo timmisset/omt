@@ -30,7 +30,6 @@ public class OMTConfigurable implements Configurable {
         return settingsComponent.getPanel();
     }
 
-
     @Override
     public JComponent getPreferredFocusedComponent() {
         return null;

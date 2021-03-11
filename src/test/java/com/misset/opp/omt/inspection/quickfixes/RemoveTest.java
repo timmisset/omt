@@ -1,7 +1,8 @@
 package com.misset.opp.omt.inspection.quickfixes;
 
+import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.codeInsight.intention.IntentionAction;
-import com.intellij.openapi.application.ReadAction;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.misset.opp.omt.formatter.OMTFormattingTest;
 import com.misset.opp.omt.inspection.OMTCodeInspectionUnused;
 import org.junit.jupiter.api.AfterAll;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RemoveTest extends OMTFormattingTest {
+    private static final String REMOVE_PARAMETER_AND_REFACTOR = "Remove parameter and refactor call signatures to this Procedure";
 
     @BeforeAll
     @Override
@@ -82,16 +84,14 @@ class RemoveTest extends OMTFormattingTest {
 
     @Test
     void testRemoveModelParameterHasQuickFixes() {
-        List<IntentionAction> allQuickFixes = getAllQuickFixes(removeModelParameterContent);
-        assertEquals(3, allQuickFixes.size());
-        ReadAction.run(() -> allQuickFixes.forEach(
-                intentionAction -> assertEquals("Remove parameter and refactor call signatures to this Procedure", intentionAction.getText())
-        ));
+        assertEquals(3,
+                getQuickFixIntentions(removeModelParameterContent, REMOVE_PARAMETER_AND_REFACTOR)
+                        .size());
     }
 
     @Test
     void testRemoveModelParameterRemovesFirstParameterFromModelItemAndCall() {
-        final IntentionAction intentionAction = getAllQuickFixes(removeModelParameterContent).get(0);
+        final IntentionAction intentionAction = getQuickFixIntentions(removeModelParameterContent, REMOVE_PARAMETER_AND_REFACTOR).get(0);
         String content = "model:\n" +
                 "    Activiteit: !Activity\n" +
                 "        onStart: |\n" +
@@ -108,7 +108,7 @@ class RemoveTest extends OMTFormattingTest {
 
     @Test
     void testRemoveModelParameterRemovesMiddleParameterFromModelItemAndCall() {
-        final IntentionAction intentionAction = getAllQuickFixes(removeModelParameterContent).get(1);
+        final IntentionAction intentionAction = getQuickFixIntentions(removeModelParameterContent, REMOVE_PARAMETER_AND_REFACTOR).get(1);
         String content = "model:\n" +
                 "    Activiteit: !Activity\n" +
                 "        onStart: |\n" +
@@ -125,7 +125,7 @@ class RemoveTest extends OMTFormattingTest {
 
     @Test
     void testRemoveModelParameterRemovesLastParameterFromModelItemAndCall() {
-        final IntentionAction intentionAction = getAllQuickFixes(removeModelParameterContent).get(2);
+        final IntentionAction intentionAction = getQuickFixIntentions(removeModelParameterContent, REMOVE_PARAMETER_AND_REFACTOR).get(2);
         String content = "model:\n" +
                 "    Activiteit: !Activity\n" +
                 "        onStart: |\n" +
@@ -264,11 +264,33 @@ class RemoveTest extends OMTFormattingTest {
                 "        variables:\n" +
                 "        -  $test\n" +
                 "        -  $test2\n";
-        invokeQuickFixIntention(getAllQuickFixes(content).get(0));
+        invokeQuickFixIntention(getQuickFixIntentions(content, "Remove variable").get(0));
         assertFormattingApplied(getFile().getText(), "model:\n" +
                 "    Activiteit: !Activity\n" +
                 "        variables:\n" +
                 "        -   $test2"
         );
+    }
+
+    @Test
+    void testRemoveUnusedModelItemLabelShouldHaveQuickFixForProcedureButNotActivity() {
+        String content = "model:\n" +
+                "    Activiteit: !Activity\n" +
+                "    \n" +
+                "    Procedure: !Procedure\n";
+
+        myFixture.configureByText(getFileName(), content);
+        final List<HighlightInfo> highlightInfos = myFixture.doHighlighting();
+        assertEquals(2, highlightInfos.stream().filter(
+                highlightInfo -> highlightInfo.getSeverity().equals(HighlightSeverity.WARNING)
+        ).count());
+        final IntentionAction removeThisActivity = getQuickFixIntention(content, "Remove this Activity");
+        final IntentionAction removeThisProcedure = getQuickFixIntention(content, "Remove this Procedure");
+        assertNotNull(removeThisProcedure);
+        assertNull(removeThisActivity);
+        invokeQuickFixIntention(removeThisProcedure);
+
+        assertFormattingApplied(getFile().getText(), "model:\n" +
+                "    Activiteit: !Activity");
     }
 }

@@ -47,22 +47,29 @@ public class RDFModelUtil {
      * RDF TYPE alias 'a' in usage => some:thing a ClassName == some:thing rdf:type ClassName
      */
     public static final Property RDF_TYPE = new PropertyImpl("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
-    private final String rootFolder;
-
     public static final Function<Model, Resource> OWL_CLASS = (Model model) -> model.createResource("http://www.w3.org/2002/07/owl#Class");
     public static final Function<Model, Resource> OWL_THING = (Model model) -> model.createResource("http://www.w3.org/2002/07/owl#Thing");
     public static final Function<Model, Resource> NODE_SHAPE = (Model model) -> model.createResource("http://www.w3.org/ns/shacl#NodeShape");
-
     private static final HashMap<Resource, List<Resource>> predicateObjects = new HashMap<>();
     private static final HashMap<Resource, List<Resource>> predicateSubjects = new HashMap<>();
-
-    private Resource owlClass;
-    private Resource owlThing;
     // The ontology is completely refreshed when a change is made to the ttl files in the project
     // while this doesn't happen the same ontology queries will always return the same result
     final Map<String, Object> cache = new HashMap<>();
+    private final String rootFolder;
+    private Resource owlClass;
+    private Resource owlThing;
     private Resource nodeShape;
     private Model model;
+
+    public RDFModelUtil(String rootFolder) {
+        this.rootFolder = rootFolder;
+        this.model = null;
+    }
+
+    public RDFModelUtil(Model model) {
+        this.model = model;
+        this.rootFolder = "";
+    }
 
     public Resource getOwlClass() {
         if (owlClass == null) {
@@ -76,16 +83,6 @@ public class RDFModelUtil {
             owlThing = OWL_THING.apply(model);
         }
         return owlThing;
-    }
-
-    public RDFModelUtil(String rootFolder) {
-        this.rootFolder = rootFolder;
-        this.model = null;
-    }
-
-    public RDFModelUtil(Model model) {
-        this.model = model;
-        this.rootFolder = "";
     }
 
     public boolean isLoaded() {

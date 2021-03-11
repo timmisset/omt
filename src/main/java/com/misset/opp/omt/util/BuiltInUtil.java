@@ -65,7 +65,6 @@ public class BuiltInUtil {
     }
 
     private String getIndexedName(String name, BuiltInType type) {
-        name = name.startsWith("@") && isCommand(type) ? name.substring(1) : name;
         return (isCommand(type) ? COMMAND_NAME_PREFIX : OPERATOR_NAME_PREFIX) + name;
     }
 
