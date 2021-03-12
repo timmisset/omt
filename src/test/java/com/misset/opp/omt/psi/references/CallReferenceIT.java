@@ -246,4 +246,21 @@ class CallReferenceIT extends ReferenceTest {
         assertNoErrors();
     }
 
+    @Test
+    void testNoErrorOnModuleProcedureReferences() {
+        final String fileName = getFileName();
+        addFile(fileName, "" +
+                "model:\n" +
+                "   Procedure: !Procedure");
+        String content = String.format("" +
+                "moduleName: ModuleNaam\n" +
+                "import:\n" +
+                "   ./%s:" +
+                "   -   Procedure\n" +
+                "procedures:\n" +
+                "   - Pro<caret>cedure\n", fileName);
+        assertHasReference(content);
+        assertNoErrors();
+    }
+
 }

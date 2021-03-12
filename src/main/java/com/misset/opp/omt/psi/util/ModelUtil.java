@@ -204,7 +204,10 @@ public class ModelUtil {
             if (member.has(TYPE)) {
                 String memberType = member.get(TYPE).getAsString();
                 if (memberType.endsWith(DEF)) {
-                    member = getAttributes(memberType.substring(0, memberType.length() - 3));
+                    final JsonObject appendAttributes = getAttributes(memberType.substring(0, memberType.length() - 3));
+                    appendAttributes.keySet().forEach(
+                            key -> member.add(key, appendAttributes.get(key))
+                    );
                 }
             }
             return member;
