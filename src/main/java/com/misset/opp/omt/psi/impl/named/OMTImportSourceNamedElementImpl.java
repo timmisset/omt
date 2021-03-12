@@ -1,6 +1,7 @@
 package com.misset.opp.omt.psi.impl.named;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.misset.opp.omt.psi.OMTElementFactory;
@@ -18,7 +19,7 @@ public abstract class OMTImportSourceNamedElementImpl extends NameIdentifierOwne
     @Nullable
     @Override
     public PsiReference getReference() {
-        return new ImportSourceReference(getPsi(), getTextRangeInParent());
+        return new ImportSourceReference(getPsi(), TextRange.create(0, getTextLength() - 1));
     }
 
     @NotNull
