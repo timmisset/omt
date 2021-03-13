@@ -11,6 +11,7 @@ import com.misset.opp.omt.exceptions.IncorrectSignatureArgument;
 import com.misset.opp.omt.exceptions.NumberOfInputParametersMismatchException;
 import com.misset.opp.omt.intentions.members.MemberIntention;
 import com.misset.opp.omt.psi.OMTFile;
+import com.misset.opp.omt.psi.OMTNamespacePrefix;
 import com.misset.opp.omt.psi.OMTSignature;
 import com.misset.opp.omt.psi.OMTSignatureArgument;
 import com.misset.opp.omt.psi.impl.OMTBuiltInMember;
@@ -21,6 +22,7 @@ import com.misset.opp.omt.psi.support.OMTExportMember;
 
 import java.util.List;
 
+import static com.misset.opp.omt.psi.util.ModelUtil.NAMED_REFERENCE;
 import static com.misset.opp.util.UtilManager.getBuiltinUtil;
 import static com.misset.opp.util.UtilManager.getMemberUtil;
 import static com.misset.opp.util.UtilManager.getModelUtil;
@@ -59,7 +61,7 @@ public class MemberAnnotator extends AbstractAnnotator {
     private void annotateSignature(OMTCall call) {
         JsonObject attributes = getModelUtil().getJson(call);
         // if the call is in a scalar that is considered a namedReference, it's not actually a call
-        if (attributes.has("namedReference") && attributes.get("namedReference").getAsBoolean()) return;
+        if (attributes.has(NAMED_REFERENCE) && attributes.get(NAMED_REFERENCE).getAsBoolean()) return;
 
         // validate the call itself, number of arguments, required etc
         try {
@@ -76,7 +78,8 @@ public class MemberAnnotator extends AbstractAnnotator {
         if (resolved == null) {
             if (annotateAsBuiltInMember(call)) return;
             if (annotateAsLocalCommand(call)) return;
-            if (annotateAsType(call)) return;
+            if (getModelUtil().isTypeEntry(call)) return;
+            if (getModelUtil().isIdEntry(call)) return;
 
             // do not error on module files
             // TODO: create specific handler for Module files
@@ -92,15 +95,9 @@ public class MemberAnnotator extends AbstractAnnotator {
                         annotationBuilder.highlightType(ProblemHighlightType.LIKE_UNKNOWN_SYMBOL);
                     });
         } else {
+            if (resolved instanceof OMTNamespacePrefix) return;
             annotateReference(resolved, call);
         }
-    }
-
-    private boolean annotateAsType(OMTCall call) {
-        final JsonObject json = getModelUtil().getJson(call);
-
-        return json != null && json.get("node") != null &&
-                json.get("node").getAsString().equals("type");
     }
 
     private boolean annotateAsLocalCommand(OMTCall call) {

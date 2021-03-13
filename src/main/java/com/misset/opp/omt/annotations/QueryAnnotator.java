@@ -83,7 +83,12 @@ public class QueryAnnotator extends AbstractAnnotator {
             }
         }
 
-        final String message = String.format("Type(s): %s", ((OMTFile) step.getContainingFile()).resourcesAsTypes(resources));
+        List<Resource> annotateWithResource = resources.isEmpty() ?
+                step.resolveToResource() :
+                resources;
+        // annotate the final step with resources present at this point, if could be that the filtering has removed
+        // local classes or invalid type. These should still be annotated with the fully resolved Iri
+        final String message = String.format("Type(s): %s", ((OMTFile) step.getContainingFile()).resourcesAsTypes(annotateWithResource));
         setInformation(message);
     }
 

@@ -224,31 +224,39 @@ public class RDFModelUtil {
         ).flatMap(Collection::stream).distinct().collect(Collectors.toList()));
     }
 
-    public boolean isNumeric(Resource resource) {
+    public boolean isKnownPrimitiveType(String localName) {
+        return isKnownPrimitiveType(getPrimitiveTypeAsResource(localName));
+    }
+
+    public boolean isKnownPrimitiveType(Resource resource) {
+        return isBoolean(resource) ||
+                isNumeric(resource) ||
+                isString(resource) ||
+                isDate(resource);
+    }
+
+    private boolean isXSDType(Resource resource, List<String> types) {
         if (resource == null || resource.getNameSpace() == null || resource.getLocalName() == null) {
             return false;
         }
-        List<String> numericTypes = Arrays.asList("integer", "int", "double", "decimal", "number");
         return resource.getNameSpace().equals(XSD) &&
-                numericTypes.contains(resource.getLocalName());
+                types.contains(resource.getLocalName());
+    }
+
+    public boolean isBoolean(Resource resource) {
+        return isXSDType(resource, Collections.singletonList("boolean"));
+    }
+
+    public boolean isNumeric(Resource resource) {
+        return isXSDType(resource, Arrays.asList("integer", "int", "double", "decimal", "number"));
     }
 
     public boolean isString(Resource resource) {
-        if (resource == null || resource.getNameSpace() == null || resource.getLocalName() == null) {
-            return false;
-        }
-        List<String> stringList = Arrays.asList("string", "interpolatedString");
-        return resource.getNameSpace().equals(XSD) &&
-                stringList.contains(resource.getLocalName());
+        return isXSDType(resource, Arrays.asList("string", "interpolatedString"));
     }
 
     public boolean isDate(Resource resource) {
-        if (resource == null || resource.getNameSpace() == null || resource.getLocalName() == null) {
-            return false;
-        }
-        List<String> dateTypes = Arrays.asList("date", "dateTime");
-        return resource.getNameSpace().equals(XSD) &&
-                dateTypes.contains(resource.getLocalName());
+        return isXSDType(resource, Arrays.asList("date", "dateTime"));
     }
 
     public boolean isAnyType(Resource resource) {

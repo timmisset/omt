@@ -25,9 +25,9 @@ public class PropertyLabelReference extends PsiReferenceBase<OMTPropertyLabel> i
         final OMTFile containingFile = (OMTFile) getElement().getContainingFile();
         // check if it can be resolved to a prefix:
         if (containingFile.getPrefixes().containsKey(name)) {
-            return new ResolveResult[]{new PsiElementResolveResult(
-                    containingFile.getPrefixes().get(name).getNamespacePrefix()
-            )};
+            return PsiElementResolveResult.createResults(
+                    containingFile.getPrefixes().get(myElement.getName()).getNamespacePrefix()
+            );
         }
         return new ResolveResult[0];
     }

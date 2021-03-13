@@ -1,6 +1,8 @@
 package com.misset.opp.omt.psi.resolvable.impl;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.OMTTestSuite;
 import com.misset.opp.omt.psi.OMTQueryStep;
 import com.misset.opp.omt.psi.OMTSignature;
@@ -24,7 +26,10 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 class OMTCallResolvableImplTest extends OMTTestSuite {
 
@@ -69,8 +74,49 @@ class OMTCallResolvableImplTest extends OMTTestSuite {
     void resolveToResourceReturnsPreviousStepWhenNoCallable() {
         doReturn(null).when(memberUtil).getCallable(eq(operatorCall));
         List<Resource> resources = new ArrayList<>();
+        doReturn(operatorCall).when(operatorCall).getPsi();
+        doReturn("").when(operatorCall).getText();
+        final PsiElement prevElement = mock(PsiElement.class);
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.prevVisibleLeaf(eq(operatorCall)), prevElement);
+        doReturn(null).when(prevElement).getParent();
+
         doReturn(resources).when(queryUtil).getPreviousStepResources(Mockito.eq(queryStep));
 
+        assertSame(resources, operatorCall.resolveToResource());
+    }
+
+    @Test
+    void resolveToResourceReturnsPrimitiveWhenIsPrimitive() {
+        final RDFModelUtil rdfModelUtil = mock(RDFModelUtil.class);
+        final Resource resource = mock(Resource.class);
+        doReturn(null).when(memberUtil).getCallable(eq(operatorCall));
+        doReturn(operatorCall).when(operatorCall).getPsi();
+        doReturn("integer").when(operatorCall).getText();
+        doReturn(resource).when(rdfModelUtil).getPrimitiveTypeAsResource(eq("integer"));
+        doReturn(true).when(rdfModelUtil).isKnownPrimitiveType(resource);
+        setUtilMock(rdfModelUtil);
+
+        assertContainsElements(operatorCall.resolveToResource(), resource);
+    }
+
+    @Test
+    void resolveToResourceReturnsPreviousWhenNotAPrimitive() {
+        final RDFModelUtil rdfModelUtil = mock(RDFModelUtil.class);
+        final Resource resource = mock(Resource.class);
+        doReturn(null).when(memberUtil).getCallable(eq(operatorCall));
+        doReturn(operatorCall).when(operatorCall).getPsi();
+        doReturn("integer").when(operatorCall).getText();
+
+        final PsiElement prevElement = mock(PsiElement.class);
+        setPsiTreeUtilMockWhenThenReturn(() -> PsiTreeUtil.prevVisibleLeaf(eq(operatorCall)), prevElement);
+        doReturn(null).when(prevElement).getParent();
+
+        doReturn(resource).when(rdfModelUtil).getPrimitiveTypeAsResource(eq("NotAPrimitive"));
+        doReturn(false).when(rdfModelUtil).isKnownPrimitiveType(resource);
+        setUtilMock(rdfModelUtil);
+
+        List<Resource> resources = new ArrayList<>();
+        doReturn(resources).when(queryUtil).getPreviousStepResources(Mockito.eq(queryStep));
         assertSame(resources, operatorCall.resolveToResource());
     }
 

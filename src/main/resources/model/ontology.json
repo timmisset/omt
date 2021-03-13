@@ -7,8 +7,8 @@
     ],
     "attributes": {
       "prefix": {
-        "type": "string",
-        "node": "sequence",
+        "type": "prefix",
+        "node": "scalar",
         "required": true
       },
       "classes": {
@@ -22,7 +22,7 @@
     "name": "OntologyClass",
     "attributes": {
       "id": {
-        "type": "string",
+        "type": "id",
         "required": true
       },
       "properties": {

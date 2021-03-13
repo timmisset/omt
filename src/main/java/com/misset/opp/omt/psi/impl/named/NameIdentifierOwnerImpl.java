@@ -15,7 +15,7 @@ public abstract class NameIdentifierOwnerImpl<T extends PsiElement> extends ASTW
         this.clazz = clazz;
     }
 
-    protected T getPsi() {
+    public T getPsi() {
         return clazz.cast(getNode().getPsi());
     }
 

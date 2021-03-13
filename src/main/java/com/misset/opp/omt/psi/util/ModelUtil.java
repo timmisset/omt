@@ -26,12 +26,15 @@ import java.util.stream.Collectors;
 import static com.misset.opp.util.UtilManager.getProjectUtil;
 
 public class ModelUtil {
-    private static final String ATTRIBUTES = "attributes";
-    private static final String MAP_OF = "mapOf";
-    private static final String MAP = "map";
-    private static final String NODE = "node";
-    private static final String TYPE = "type";
-    private static final String DEF = "Def";
+    public static final String ATTRIBUTES = "attributes";
+    public static final String MAP_OF = "mapOf";
+    public static final String MAP = "map";
+    public static final String NODE = "node";
+    public static final String TYPE = "type";
+    public static final String SHORTCUT = "shortcut";
+    public static final String ASSIGN_TO = "assignTo";
+    public static final String DEF = "Def";
+    public static final String NAMED_REFERENCE = "namedReference";
 
     /**
      * Returns the ModelItem block containing the element, for example an Activity or Procedure block
@@ -312,6 +315,7 @@ public class ModelUtil {
 
     public boolean isOntology(PsiElement element) {
         return element != null &&
+                getModelItemType(element) != null &&
                 getModelItemType(element).equals("Ontology");
     }
 
@@ -349,11 +353,41 @@ public class ModelUtil {
         return isEntry(element, "query");
     }
 
+    public boolean isPrefixEntry(PsiElement element) {
+        return isEntry(element, "prefix");
+    }
+
+    public boolean isTypeEntry(PsiElement element) {
+        return isEntry(element, "type");
+    }
+
+    public boolean isIdEntry(PsiElement element) {
+        return isEntry(element, "id");
+    }
+
     private boolean isEntry(PsiElement element, String entryType) {
         final JsonObject json = getJson(element);
-        return json != null && (
-                (json.has("type") && json.get("type").getAsString().equals(entryType)) ||
-                        (json.has("node") && json.get("node").getAsString().equals(entryType))
-        );
+        if (json == null) return false;
+        // check if the element can be mapped as destructed node (with properties) of the specified entry type
+        if (isEntry(json, entryType)) {
+            return true;
+        }
+
+        // no destructed info that match the criteria,
+        // check if can be mapped to a shortcut that assigns to such a property:
+        if (json.has(SHORTCUT) &&
+                json.getAsJsonObject(SHORTCUT).has(ASSIGN_TO) &&
+                json.has(ATTRIBUTES)) {
+            final String shortcut = json.getAsJsonObject(SHORTCUT).get(ASSIGN_TO).getAsString();
+            final JsonObject shortcutAssignee = json.getAsJsonObject(ATTRIBUTES).getAsJsonObject(shortcut);
+            return shortcutAssignee != null && isEntry(shortcutAssignee, entryType);
+        }
+        return false;
     }
+
+    private boolean isEntry(JsonObject json, String entryType) {
+        return (json.has(TYPE) && json.get(TYPE).getAsString().equals(entryType)) ||
+                (json.has(NODE) && json.get(NODE).getAsString().equals(entryType));
+    }
+
 }
