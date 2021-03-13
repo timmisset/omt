@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.misset'
-version '3.4'
+version '3.4.1'
 
 sourceCompatibility = 11
 sourceSets.main.java.srcDirs 'src/main/gen'
@@ -46,23 +46,10 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-        <strong>3.4</strong><br />
-        OMT Code Inspection available for unused elements:<br />
-        - variables             incl. removal quick-fix<br />
-        - input parameters      incl. removal + refactor call quick-fix<br />
-        - defined statements    incl. removal<br />
-        A project with code-inspection can now be performed on listed items above<br />
-        <br>
-        Further disconnected YAML from OMT parsing for improved stability<br />
-        Optimized formatter<br />
-        Support for defined queries and commands inside scripts<br />
-        Support for YAML !Tags preceding sequence items<br />
-        <br />
-        bugfixes for:<br />
-        Variable references that were shadowed within nested model attributes<br />
-        Multiline comments that contained * or / inside the block itself<br />
-        Member completion in own file created import statement<br />
-        Semicolon usage for (interpolated)String fields<br />
+        <strong>3.4.1</strong><br />
+        Local ontologies no longer result in errors, prefixes are resolvable. Local ontologies do not
+        support query path validation and code completion<br />
+        Procedures in modules are recognized as named references, references work for goto declaration & find usage
       """
 }
 tasks{
