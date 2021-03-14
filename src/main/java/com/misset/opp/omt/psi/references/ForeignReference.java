@@ -6,6 +6,8 @@ import com.intellij.psi.PsiElementResolveResult;
 import com.intellij.psi.PsiPolyVariantReference;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.ResolveResult;
+import com.misset.opp.omt.psi.OMTModelItemLabel;
+import com.misset.opp.omt.psi.OMTPropertyLabel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,6 +37,9 @@ public class ForeignReference extends PsiReferenceBase<PsiElement> implements Ps
 
     @Override
     public boolean isReferenceTo(@NotNull PsiElement element) {
+        if (element instanceof OMTPropertyLabel && targetElement instanceof OMTModelItemLabel) {
+            return element.getParent().equals(targetElement);
+        }
         return targetElement.equals(element);
     }
 }

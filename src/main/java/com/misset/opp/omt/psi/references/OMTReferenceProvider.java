@@ -36,6 +36,7 @@ public class OMTReferenceProvider extends PsiReferenceContributor {
     public void registerReferenceProviders(@NotNull PsiReferenceRegistrar registrar) {
         registrar.registerReferenceProvider(PlatformPatterns.psiElement().with(pattern),
                 new PsiReferenceProvider() {
+
                     @NotNull
                     @Override
                     public PsiReference[] getReferencesByElement(@NotNull PsiElement element,

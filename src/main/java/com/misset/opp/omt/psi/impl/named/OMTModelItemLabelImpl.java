@@ -3,6 +3,8 @@ package com.misset.opp.omt.psi.impl.named;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import com.misset.opp.omt.psi.OMTModelItemLabel;
 import com.misset.opp.omt.psi.OMTModelItemTypeElement;
 import com.misset.opp.omt.psi.named.NamedMemberType;
@@ -45,5 +47,10 @@ public abstract class OMTModelItemLabelImpl extends MemberNamedElementImpl<OMTMo
     @Override
     public NamedMemberType getType() {
         return NamedMemberType.ModelItem;
+    }
+
+    @Override
+    public @NotNull SearchScope getUseScope() {
+        return GlobalSearchScope.everythingScope(getProject());
     }
 }
