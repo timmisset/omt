@@ -195,6 +195,23 @@ class OMTLexerTest extends OMTTestSuite {
         assertDoesntContain(elements, "BAD_CHARACTER");
     }
 
+    @Test
+    void curieAsScalarValue() {
+        printLexerLog = true;
+        String contentToTest =
+                "prefixes:\n" +
+                        "    abc:   <http://ontology/>\n" +
+                        "model:\n" +
+                        "    MijnOntologie<caret>: !Ontology\n" +
+                        "        prefix: abc\n" +
+                        "        classes:\n" +
+                        "        -   id: LocalClassA\n" +
+                        "            properties:\n" +
+                        "                propC:\n" +
+                        "                    type: abc:LocalClassB\n";
+        final List<String> elements = getElements(contentToTest);
+    }
+
     private List<String> getElements(String content, int start, int end) {
         OMTLexerAdapter lexer = new OMTLexerAdapter(printLexerLog);
         lexer.start(content, start, end, 0);

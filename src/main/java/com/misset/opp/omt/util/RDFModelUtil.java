@@ -11,6 +11,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.rdf.model.impl.PropertyImpl;
+import org.apache.jena.rdf.model.impl.StatementImpl;
 import org.apache.jena.shared.PropertyNotFoundException;
 
 import javax.annotation.Nullable;
@@ -341,6 +342,16 @@ public class RDFModelUtil {
             }
         }
         return isPrimitiveType(resource);
+    }
+
+    /**
+     * Creates a class statement for the iri, returning a statement with the iri as subject, the rdf:type predicate and owl:Class as Object
+     *
+     * @param iri
+     * @return
+     */
+    public Statement getClassStatement(String iri) {
+        return new StatementImpl(getResource(iri), RDF_TYPE, getOwlClass());
     }
 
     public List<Resource> getClasses(List<Resource> implementantions) {

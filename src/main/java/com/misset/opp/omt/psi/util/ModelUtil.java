@@ -53,17 +53,22 @@ public class ModelUtil {
         return modelItemBlock.map(OMTModelItemBlock::getType).orElse(null);
     }
 
+    public Optional<OMTBlockEntry> getEntryBlockEntry(PsiElement element, String propertyLabel) {
+        return getEntryFromBlock(getEntryBlock(element), propertyLabel);
+    }
+
     public Optional<OMTBlockEntry> getModelItemBlockEntry(PsiElement element, String propertyLabel) {
         Optional<OMTModelItemBlock> modelItemBlock = getModelItemBlock(element);
         if (modelItemBlock.isEmpty()) {
             return Optional.empty();
         }
+        return getEntryFromBlock(modelItemBlock.get().getBlock(), propertyLabel);
+    }
 
-        OMTBlock block = modelItemBlock.get().getBlock();
+    private Optional<OMTBlockEntry> getEntryFromBlock(OMTBlock block, String propertyLabel) {
         if (block == null) {
             return Optional.empty();
         }
-
         return block.getBlockEntryList().stream()
                 .filter(omtBlockEntry ->
                         propertyLabel.equals(omtBlockEntry.getName()))
@@ -83,7 +88,12 @@ public class ModelUtil {
     }
 
     public OMTBlock getEntryBlock(PsiElement element) {
-        return PsiTreeUtil.getParentOfType(element, OMTBlock.class);
+        return PsiTreeUtil.getParentOfType(element, OMTBlock.class, false);
+    }
+
+    public String getEntryBlockValue(OMTBlockEntry blockEntry) {
+        final String labelledPrefix = blockEntry.getLabel().getText();
+        return blockEntry.getText().substring(labelledPrefix.length()).trim();
     }
 
     public PsiElement getEntryBlockLabelElement(PsiElement element) {

@@ -131,6 +131,7 @@ public static int getScalarState(String entry) {
 public String currentBlockLabel;
 IElementType toSpecificBlockLabel() {
     currentBlockLabel = yytext().toString();
+    isKeySet = true;
     switch(yytext().toString()) {
         case "prefixes:": return logAndReturn(OMTTypes.PREFIX_BLOCK_START);
         case "commands:": return logAndReturn(OMTTypes.COMMAND_BLOCK_START);
@@ -235,6 +236,12 @@ boolean shouldExitScalar() {
 boolean firstCharacterIs(String firstCharacter) {
     return yytext() != null && yytext().toString().startsWith(firstCharacter);
 }
+boolean isKeySet = false;
+IElementType startCurie() {
+    setState(CURIE);
+    yypushback(yylength() - yytext().toString().indexOf(":"));
+    return returnElement(OMTTypes.PROPERTY);
+}
 IElementType startScalar() {
     IElementType elementType = returnLeadingWhitespaceFirst(OMTIgnored.START_TOKEN);
     if(elementType == OMTIgnored.START_TOKEN) {
@@ -299,7 +306,9 @@ IElementType closeBracket() {
     //          aSecondEntry:
     // Especially the latter requires the indentation to be adjusted to the position of somethingElse to link
     // aSecondEntry: accordingly.
-    {PROPERTY_KEY}                                            { return dent(OMTTypes.PROPERTY); }
+    {PROPERTY_KEY}                                            {
+          return isKeySet ? startCurie() : dent(OMTTypes.PROPERTY);
+      }
     ":"                                                       { return OMTTypes.COLON; }
 
     "!"+{NAME}                                                 { return returnElement(OMTTypes.TAG); }
@@ -337,7 +346,7 @@ IElementType closeBracket() {
           yypushback(currentNonWhiteSpaceSize());                   // pushback all to be processed in the INITIAL state
           return returnElement(TokenType.WHITE_SPACE);              // and return the END token
       }
-    {PROPERTY_KEY}                                           {    return exitScalar(); } // property_key at the start of a line can only be an exit of the Scalar
+    {PROPERTY_KEY}                                            {    return exitScalar(); } // property_key at the start of a line can only be an exit of the Scalar
 
     {GLOBAL_VARIABLE}                                         { return returnElement(OMTTypes.GLOBAL_VARIABLE_NAME); } // capture all whitespace
     {BOOLEAN}                                                 { return returnElement(OMTTypes.BOOLEAN); }
@@ -481,7 +490,10 @@ IElementType closeBracket() {
     // of the line will be matched first and appropriate indentation is set
     // all remaining whitespace characters can be collected and returns
     {WHITE_SPACE}+ | {NEWLINE}+                               { return TokenType.WHITE_SPACE; } // capture all whitespace
-
+    {NEWLINE}+                                                {
+            isKeySet = false;
+            return TokenType.WHITE_SPACE;
+      }
     // END_OF_LINE_COMMENTs are ignored by the parser and can be added to any location in the document
     ^{WHITE_SPACE}*{END_OF_LINE_COMMENT}                      {
           if(yystate() == YAML_SCALAR) {
