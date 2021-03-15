@@ -115,4 +115,19 @@ class NamespacePrefixReferenceIT extends ReferenceTest {
         assertNoErrors();
     }
 
+    @Test
+    void testScalarValueCurieHasReferenceToPrefixes() {
+        String content = "" +
+                "moduleName: ModuleNaam\n" +
+                "prefixes:\n" +
+                "    xsd:    <http://www.w3.org/2001/XMLSchema#>\n" +
+                "declare:\n" +
+                "    ModuleNaam:\n" +
+                "        ActiviteitNaam:\n" +
+                "            type: Activity\n" +
+                "            params:\n" +
+                "            -   xsd<caret>:string\n";
+        assertHasReference(content);
+    }
+
 }

@@ -14,6 +14,7 @@ import com.misset.opp.omt.psi.OMTMember;
 import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.references.ExportMemberReference;
 import com.misset.opp.omt.psi.references.ImportMemberReference;
+import com.misset.opp.omt.psi.references.MemberReference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,9 +48,10 @@ public abstract class OMTMemberImpl extends MemberNamedElementImpl<OMTMember> im
     @Nullable
     @Override
     public PsiReference getReference() {
-        return getType() == NamedMemberType.ImportingMember ?
+        final MemberReference<OMTMember> omtMemberMemberReference = getType() == NamedMemberType.ImportingMember ?
                 new ImportMemberReference(getPsi(), getNameIdentifier().getTextRangeInParent()) :
                 new ExportMemberReference(getPsi(), getNameIdentifier().getTextRangeInParent());
+        return omtMemberMemberReference;
     }
 
     @Override

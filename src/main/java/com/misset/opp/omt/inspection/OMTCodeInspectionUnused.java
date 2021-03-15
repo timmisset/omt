@@ -16,6 +16,7 @@ import com.misset.opp.omt.psi.OMTNamespacePrefix;
 import com.misset.opp.omt.psi.OMTPrefix;
 import com.misset.opp.omt.psi.OMTVariable;
 import com.misset.opp.omt.psi.OMTVariableAssignment;
+import com.misset.opp.omt.psi.named.NamedMemberType;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,7 +61,8 @@ public class OMTCodeInspectionUnused extends AbstractCodeInspection {
                     inspectDefineName((OMTDefineName) element);
                 } else if (element instanceof OMTModelItemLabel) {
                     inspectModelItem((OMTModelItemLabel) element);
-                } else if (element instanceof OMTMember) {
+                } else if (element instanceof OMTMember &&
+                        ((OMTMember) element).getType() == NamedMemberType.ImportingMember) {
                     inspectImportMember((OMTMember) element);
                 }
             }

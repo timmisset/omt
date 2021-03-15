@@ -270,7 +270,8 @@ IElementType closeBracket() {
         setState(getScalarState());
         return returnElement(OMTTypes.TEMPLATE_CLOSED);
     }
-    return returnElement(OMTTypes.CURLY_CLOSED); }
+    return returnElement(OMTTypes.CURLY_CLOSED);
+}
 %}
 
 // YYINITIAL == MAP
@@ -292,6 +293,9 @@ IElementType closeBracket() {
     // will be resolved when the whitespace is gone, will always pushback the single not_white_space character
     ^{WHITE_SPACE}+{INITIAL_TOKENS}                         { return dent(TokenType.WHITE_SPACE); }
 
+    // curie should be resolved as scalar value, not a property/key
+    {CURIE}                                                   { return startScalar(); }
+
     // something:
     // OR
     //     something:
@@ -300,7 +304,7 @@ IElementType closeBracket() {
     // Especially the latter requires the indentation to be adjusted to the position of somethingElse to link
     // aSecondEntry: accordingly.
     {PROPERTY_KEY}                                            { return dent(OMTTypes.PROPERTY); }
-    ":"                                                       { return OMTTypes.COLON; }
+    ":"                                                       { return returnElement(OMTTypes.COLON); }
 
     "!"+{NAME}                                                 { return returnElement(OMTTypes.TAG); }
 

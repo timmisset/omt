@@ -1,22 +1,20 @@
 package com.misset.opp.omt.psi.references;
 
 import com.misset.opp.omt.psi.named.OMTCall;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CallReferenceIT extends ReferenceTest {
 
     @Override
-    @AfterAll
+    @AfterEach
     protected void tearDown() throws Exception {
         super.tearDown();
     }
 
     @Override
-    @BeforeAll
+    @BeforeEach
     protected void setUp() throws Exception {
         super.setName("CallReferenceIT");
         super.setUp(OMTCall.class);

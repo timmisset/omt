@@ -12,6 +12,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.misset.opp.omt.psi.OMTImport;
 import com.misset.opp.omt.psi.OMTMember;
 import com.misset.opp.omt.psi.OMTModelItemLabel;
+import com.misset.opp.omt.psi.named.NamedMemberType;
 import com.misset.opp.omt.psi.support.OMTDefinedStatement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +62,8 @@ public abstract class MemberReference<T extends PsiElement> extends PsiReference
         final PsiElement declaringMember = resolve();
         if (declaringMember == null) return false;
 
-        if (element instanceof OMTMember) {
+        if (element instanceof OMTMember &&
+                ((OMTMember) myElement).getType() == NamedMemberType.ImportingMember) {
             // checks if this is reference to an import member statement, an import can be a reference to
             // an import statement in another file:
             // queries.omt => contains queryA
@@ -86,6 +88,12 @@ public abstract class MemberReference<T extends PsiElement> extends PsiReference
                     containingFile.getVirtualFile() != null &&
                     targetElementOfElement == declaringMember && // resolve to the same final element
                     importedFile.equals(containingFile.getVirtualFile()); // and the current member is importing from the target file
+        } else if (element instanceof OMTMember &&
+                ((OMTMember) myElement).getType() == NamedMemberType.ExportingMember) {
+            final PsiElement targetElementOfElement = element.getReference() != null ? element.getReference().resolve() : null;
+            return targetElementOfElement != null &&
+                    targetElementOfElement == resolve() &&
+                    myElement.getContainingFile() == element.getContainingFile();
         } else {
             return
                     (declaringMember.equals(element) ||

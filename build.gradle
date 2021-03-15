@@ -46,12 +46,16 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-        <strong>3.4.2</strong><br />
-        Fixed: Foreign references from Angular Components -> OTM model items in FindUsage on OMT ModelItems
-        <strong>3.4.1</strong><br />
+        <strong>3.5</strong><br />
+        Added FindUsage code-inspection support for:<br/>
+        - import statements<br/>
+        - export statements<br/>
+        - all model items<br/>
+        <br/>
         Local ontologies no longer result in errors, prefixes are resolvable. Local ontologies do not
         support query path validation and code completion<br />
-        Procedures in modules are recognized as named references, references work for goto declaration & find usage
+        Procedures in modules are recognized as named references, references work for goto declaration & find usage<br/>
+        Fixed: Foreign references from Angular Components -> OTM model items in FindUsage on OMT ModelItems<br/>
       """
 }
 tasks{
