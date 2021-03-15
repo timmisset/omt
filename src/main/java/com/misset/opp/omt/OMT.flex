@@ -7,6 +7,8 @@ import com.misset.opp.omt.psi.OMTTypes;
 import com.misset.opp.omt.psi.OMTIgnored;
 import com.intellij.psi.TokenType;
 import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 %%
 
@@ -63,15 +65,19 @@ int yycolumn;
 int yyline;
 Stack<Integer> indents = new Stack();
 void log(String message) {
-    if(logging) { System.out.println(message); }
+    logger.log(Level.INFO, message);
 }
 void error(String error) {
-    System.out.println(error);
+    logger.log(Level.SEVERE, error);
 }
-boolean logging = false;
-OMTLexer(java.io.Reader in, boolean enableLogging) {
+Logger logger = Logger.getAnonymousLogger();
+OMTLexer(java.io.Reader in, Logger logger) {
     this.zzReader = in;
-    this.logging = enableLogging;
+    this.logger = logger;
+}
+OMTLexer(java.io.Reader in, Level loggingLevel) {
+    this.zzReader = in;
+    logger.setLevel(loggingLevel);
 }
 void yypushback(int number, String id) {
     int position = zzMarkedPos;

@@ -3,26 +3,28 @@ package com.misset.opp.omt;
 import com.intellij.lexer.FlexAdapter;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class OMTLexerAdapter extends FlexAdapter {
     private final String origin;
-    private boolean logging = false;
+    private Logger logger = Logger.getAnonymousLogger();
 
-    public OMTLexerAdapter(boolean enableLogging) {
-        super(new OMTLexer(null, enableLogging));
+    public OMTLexerAdapter(Logger logger) {
+        super(new OMTLexer(null, logger));
         origin = "test";
-        this.logging = enableLogging;
+        this.logger = logger;
     }
 
     public OMTLexerAdapter(String origin) {
-        super(new OMTLexer(null, false));
+        super(new OMTLexer(null, Level.SEVERE));
         this.origin = origin;
+        logger.setLevel(Level.SEVERE);
     }
 
     @Override
     public void start(@NotNull CharSequence buffer, int startOffset, int endOffset, int initialState) {
-        if (logging) {
-            System.out.printf("%s, started with offset %s - %s in state %s%n", origin, startOffset, endOffset, initialState);
-        }
+        logger.log(Level.INFO, String.format("%s, started with offset %s - %s in state %s%n", origin, startOffset, endOffset, initialState));
         if (startOffset > 0) {
             // only the HighlightingLexer will restart at an offset
             initLexerStartState(buffer.toString(), startOffset);
@@ -38,7 +40,7 @@ public class OMTLexerAdapter extends FlexAdapter {
         // this cannot be done by overriding the startOffset since this will cause a shifting
         // error in the parser. Probably the number of returned segments mismatched with the expected
         // amount of segments
-        OMTLexerAdapter lexer = new OMTLexerAdapter(false);
+        OMTLexerAdapter lexer = new OMTLexerAdapter(logger);
         lexer.start(buffer, 0, endOffset, 0);
         boolean cont = true;
         while (cont) {

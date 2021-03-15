@@ -1,14 +1,29 @@
 package com.misset.opp.omt;
 
 import com.intellij.psi.tree.IElementType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.startsWith;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 class OMTLexerTest extends OMTTestSuite {
 
-    boolean printLexerLog = false;
+    Logger logger;
+
+    @BeforeEach
+    protected void setUp() {
+        logger = Mockito.spy(Logger.getLogger("lexerLogger"));
+        logger.setLevel(Level.SEVERE);
+    }
 
     @Test
     void testStringEntry() {
@@ -197,7 +212,6 @@ class OMTLexerTest extends OMTTestSuite {
 
     @Test
     void curieAsScalarValue() {
-        printLexerLog = true;
         String contentToTest =
                 "prefixes:\n" +
                         "    abc:   <http://ontology/>\n" +
@@ -208,13 +222,30 @@ class OMTLexerTest extends OMTTestSuite {
                         "        -   id: LocalClassA\n" +
                         "            properties:\n" +
                         "                propC:\n" +
+                        // the abc:LocalClassB should be returned as property colon namespace_member
                         "                    type: abc:LocalClassB\n";
         final List<String> elements = getElements(contentToTest);
         assertDoesntContain(elements, "BAD_CHARACTER");
+        verify(logger, times(1)).log(eq(Level.INFO), startsWith("Returning LocalClassB as OMTTokenType.NAMESPACE_MEMBER"));
+    }
+
+    @Test
+    void sequenceItemAsScalarValue() {
+        String contentToTest =
+                "prefixes:\n" +
+                        "    abc:   <http://ontology/>\n" +
+                        "model:\n" +
+                        "    MijnOntologie<caret>: !Ontology\n" +
+                        "        prefix: abc\n" +
+                        "        parameters:\n" +
+                        "        -   abc:LocalClassB\n";
+        final List<String> elements = getElements(contentToTest);
+        assertDoesntContain(elements, "BAD_CHARACTER");
+        verify(logger, times(1)).log(eq(Level.INFO), startsWith("Returning LocalClassB as OMTTokenType.NAMESPACE_MEMBER"));
     }
 
     private List<String> getElements(String content, int start, int end) {
-        OMTLexerAdapter lexer = new OMTLexerAdapter(printLexerLog);
+        OMTLexerAdapter lexer = new OMTLexerAdapter(logger);
         lexer.start(content, start, end, 0);
         List<String> elements = new ArrayList<>();
         IElementType element = lexer.getTokenType();
