@@ -36,7 +36,6 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -321,8 +320,9 @@ public class OMTTestSuite extends LightJavaCodeInsightFixtureTestCase {
         assertNotNull("Fixture is not created, run setup", myFixture);
     }
 
+    private static int files = 0;
     protected String getFileName() {
-        return String.format("test-%s.omt", LocalDateTime.now().getNano());
+        return String.format("test-%s.omt", files++);
     }
 
     protected String withPrefixes(String content) {
