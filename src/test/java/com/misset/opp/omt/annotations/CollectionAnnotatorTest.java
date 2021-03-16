@@ -2,7 +2,13 @@ package com.misset.opp.omt.annotations;
 
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
-import com.misset.opp.omt.psi.*;
+import com.misset.opp.omt.psi.OMTBlock;
+import com.misset.opp.omt.psi.OMTBlockEntry;
+import com.misset.opp.omt.psi.OMTMemberList;
+import com.misset.opp.omt.psi.OMTMemberListItem;
+import com.misset.opp.omt.psi.OMTSequence;
+import com.misset.opp.omt.psi.OMTSequenceItem;
+import com.misset.opp.omt.psi.util.ModelUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +18,12 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 class CollectionAnnotatorTest extends OMTAnnotationTest {
     @Mock
@@ -42,13 +53,16 @@ class CollectionAnnotatorTest extends OMTAnnotationTest {
     @Mock
     OMTBlockEntry blockEntrySibling;
 
+    @Mock
+    ModelUtil modelUtil;
+
     @InjectMocks
     CollectionAnnotator collectionAnnotator;
 
     @BeforeEach
     protected void setUp() throws Exception {
         super.setName("CollectionAnnotatorTest");
-        super.setUp();
+        super.setUp(false);
         MockitoAnnotations.openMocks(this);
         doReturn(memberList).when(memberListItem).getParent();
         doReturn(memberList).when(memberListItemSibling).getParent();
@@ -61,6 +75,9 @@ class CollectionAnnotatorTest extends OMTAnnotationTest {
         doReturn(block).when(blockEntry).getParent();
         doReturn(block).when(blockEntrySibling).getParent();
         doReturn(Arrays.asList(blockEntry, blockEntrySibling)).when(block).getBlockEntryList();
+
+        setUtilMock(modelUtil);
+        doReturn(false).when(modelUtil).isDuplicationAllowed(any(PsiElement.class));
     }
 
     @AfterEach
@@ -177,6 +194,17 @@ class CollectionAnnotatorTest extends OMTAnnotationTest {
     void annotateBlockEntryThrowsNoErrorWhenSiblingItemHasNoName() {
         doReturn("Name").when(blockEntry).getName();
         doReturn(null).when(blockEntrySibling).getName();
+        collectionAnnotator.annotate(blockEntry);
+        verifyNoErrors();
+    }
+
+    @Test
+    void annotateBlockEntryThrowsNoErrorWhenDuplicationsAreAllowed() {
+        doReturn("Name").when(blockEntry).getName();
+        doReturn("Name").when(blockEntrySibling).getName();
+
+        doReturn(true).when(modelUtil).isDuplicationAllowed(blockEntry);
+        doReturn(true).when(modelUtil).isDuplicationAllowed(blockEntrySibling);
         collectionAnnotator.annotate(blockEntry);
         verifyNoErrors();
     }

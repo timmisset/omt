@@ -16,7 +16,8 @@
         "required": true
       },
       "params": {
-        "node": "sequence"
+        "node": "sequence",
+        "duplicationAllowed": true
       }
     }
   }

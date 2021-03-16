@@ -12,7 +12,11 @@ import com.misset.opp.omt.OMTTestSuite;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class OMTAnnotationTest extends OMTTestSuite {
 
@@ -22,7 +26,13 @@ public class OMTAnnotationTest extends OMTTestSuite {
 
     @Override
     protected void setUp() throws Exception {
-        super.setUp();
+        setUp(true);
+    }
+
+    protected void setUp(boolean withFixture) throws Exception {
+        if (withFixture) {
+            super.setUp();
+        }
 
         holder = mock(AnnotationHolder.class);          // do not replace this with MockitoAnnotations setup, the inheriting class setup will overwrite them
         builder = mock(AnnotationBuilder.class);        // when they also use MockitoAnnotations and reset the returns to null

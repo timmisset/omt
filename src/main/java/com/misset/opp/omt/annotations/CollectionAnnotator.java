@@ -24,6 +24,7 @@ import com.misset.opp.omt.psi.util.ImportUtil;
 import org.jetbrains.annotations.NotNull;
 
 import static com.misset.opp.util.UtilManager.getImportUtil;
+import static com.misset.opp.util.UtilManager.getModelUtil;
 
 public class CollectionAnnotator extends AbstractAnnotator {
     private static final String DUPLICATION = "Duplication";
@@ -56,7 +57,7 @@ public class CollectionAnnotator extends AbstractAnnotator {
                                 name.equals(element.getDefineName().getName())
                 );
         if (duplication) {
-            setError(DUPLICATION);
+            setDuplicationError(definedStatement);
         }
     }
 
@@ -68,7 +69,7 @@ public class CollectionAnnotator extends AbstractAnnotator {
                                 element.getName().equals(memberListItem.getName())
                 );
         if (duplication) {
-            setError(DUPLICATION);
+            setDuplicationError(memberListItem);
         }
     }
 
@@ -85,7 +86,7 @@ public class CollectionAnnotator extends AbstractAnnotator {
                                         element.getName().equals(sequenceItem.getName())
                 )
         ) {
-            setError(DUPLICATION);
+            setDuplicationError(sequenceItem);
         }
     }
 
@@ -102,7 +103,7 @@ public class CollectionAnnotator extends AbstractAnnotator {
                                         element.getName().equals(blockEntry.getName())
                 )
         ) {
-            setError(DUPLICATION);
+            setDuplicationError(blockEntry);
         }
     }
 
@@ -134,6 +135,12 @@ public class CollectionAnnotator extends AbstractAnnotator {
                                         .withFix(getMergeIntention(currentImport, omtImport))
                                         .withFix(getMergeIntention(omtImport, currentImport))
                 ));
+    }
+
+    private void setDuplicationError(PsiElement element) {
+        if (!getModelUtil().isDuplicationAllowed(element)) {
+            setError(DUPLICATION);
+        }
     }
 
     private IntentionAction getMergeIntention(OMTImport omtImport, OMTImport obsolete) {

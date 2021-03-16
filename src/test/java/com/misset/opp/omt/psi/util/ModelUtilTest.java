@@ -265,4 +265,42 @@ class ModelUtilTest extends OMTTestSuite {
         });
     }
 
+    @Test
+    void isDuplicationAllowedThrowsNoErrorWhenDuplicationIsAllowed() {
+        setOntologyModel();
+        String content = "" +
+                "moduleName: ModuleNaam\n" +
+                "prefixes:\n" +
+                "   abc: <http://abc/>\n" +
+                "\n" +
+                "declare:\n" +
+                "   SomeModule:\n" +
+                "       SomeActivity:\n" +
+                "           type: Activity\n" +
+                "           params:\n" +
+                "           -   abc:string\n" +
+                "           -   abc:string\n";
+        myFixture.configureByText(getFileName(), content);
+        assertNoErrors();
+    }
+
+    @Test
+    void isDuplicationAllowedThrowsErrorWhenDuplicationIsNotAllowed() {
+        setOntologyModel();
+        String content = "" +
+                "moduleName: ModuleNaam\n" +
+                "prefixes:\n" +
+                "   abc: <http://abc/>\n" +
+                "\n" +
+                "declare:\n" +
+                "   SomeModule:\n" +
+                "       SomeActivity:\n" +
+                "           type: Activity\n" +
+                "           type: Activity\n" +
+                "           params:\n" +
+                "           -   abc:string\n" +
+                "           -   abc:string\n";
+        myFixture.configureByText(getFileName(), content);
+        assertHasError("Duplication");
+    }
 }

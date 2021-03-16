@@ -390,4 +390,9 @@ public class ModelUtil {
                 (json.has(NODE) && json.get(NODE).getAsString().equals(entryType));
     }
 
+    public boolean isDuplicationAllowed(PsiElement element) {
+        final JsonObject json = getJson(element);
+        return json.has("duplicationAllowed") &&
+                json.get("duplicationAllowed").getAsBoolean();
+    }
 }
