@@ -41,6 +41,11 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
     }
 
     @Override
+    public boolean isComponent() {
+        return type == ExportMemberType.Component;
+    }
+
+    @Override
     public boolean isCommand() {
         return !isOperator();
     }
@@ -62,6 +67,7 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
             case Activity:
             case StandaloneQuery:
             case Procedure:
+            case Component:
                 return ((OMTModelItemBlock) element).getModelItemLabel();
 
             case Command:
@@ -118,7 +124,7 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
                 break;
 
             case Activity:
-
+            case Component:
             case Command:
             default:
                 return super.getReturnType();
@@ -131,6 +137,7 @@ public class OMTExportMemberImpl extends OMTCallableImpl implements OMTExportMem
             case Activity:
             case StandaloneQuery:
             case Procedure:
+            case Component:
                 OMTModelItemBlock modelItemBlock = (OMTModelItemBlock) this.element;
                 setName(modelItemBlock.getName());
                 setParametersFromModelItem(modelItemBlock);

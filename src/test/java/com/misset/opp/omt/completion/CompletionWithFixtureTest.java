@@ -149,10 +149,16 @@ class CompletionWithFixtureTest extends OMTCompletionTestSuite {
     // used by the import completion tests
     private void setExportingFile() {
         String exportData = "queries: |\n" +
-                "   DEFINE QUERY myQuery() => 'hello';\n" +
-                "   DEFINE QUERY myQuery2() => 'hello';\n" +
+                "   DEFINE QUERY myQuery => 'hello';\n" +
+                "   DEFINE QUERY myQuery2 => 'hello';\n" +
+                "\n" +
+                "model:\n" +
+                "   MijnActiviteit: !Activity\n" +
+                "       queries:\n" +
+                "           DEFINE QUERY myQuery3 => 'hello';\n" +
+                "   MijnProcedure: !Procedure\n" +
+                "   MijnComponent: !Component\n" +
                 "";
-
         myFixture.addFileToProject("frontend/libs/exportFile.omt", exportData);
     }
 
@@ -162,7 +168,9 @@ class CompletionWithFixtureTest extends OMTCompletionTestSuite {
                 "   '@client/exportFile.omt':\n" +
                 "   - <caret>\n";
 
-        assertCompletionContains(content, "myQuery", "myQuery2");
+        final List<String> completionLookupElements = getCompletionLookupElements(content);
+        assertContainsElements(completionLookupElements, "myQuery", "myQuery2", "MijnActiviteit", "MijnProcedure", "MijnComponent");
+        assertDoesntContain(completionLookupElements, "myQuery3");
     }
 
     @Test
@@ -175,7 +183,6 @@ class CompletionWithFixtureTest extends OMTCompletionTestSuite {
         final List<String> completionLookupElements = getCompletionLookupElements(content);
         assertContainsElements(completionLookupElements, "myQuery2");
         assertDoesntContain(completionLookupElements, "myQuery");
-        assertEquals(1, completionLookupElements.size());
     }
 
     @Test

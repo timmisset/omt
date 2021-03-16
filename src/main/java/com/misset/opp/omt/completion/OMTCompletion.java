@@ -230,6 +230,7 @@ public abstract class OMTCompletion {
         final PsiElement resolvingElement = exportMember.getResolvingElement();
         final PsiFile containingFile = resolvingElement != null ? resolvingElement.getContainingFile() : null;
         if (!includeImport(containingFile)) return;
+        if (exportMember.isComponent() && !((OMTFile) originalFile).isModuleFile()) return;
 
         assert containingFile != null;
 

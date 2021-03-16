@@ -342,6 +342,8 @@ public class OMTFile extends PsiFileBase {
                             return new OMTExportMemberImpl(omtModelItemBlock, ExportMemberType.Procedure);
                         case "STANDALONEQUERY":
                             return new OMTExportMemberImpl(omtModelItemBlock, ExportMemberType.StandaloneQuery);
+                        case "COMPONENT":
+                            return new OMTExportMemberImpl(omtModelItemBlock, ExportMemberType.Component);
                         default:
                             return null;
                     }
